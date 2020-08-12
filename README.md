@@ -49,7 +49,7 @@ $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_physics.py 				# Or run_physics_standalone.py
 ```
-`run_trace.py` replays and compare to a trace saved in [`trace_1.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/validation_traces/trace_1.pkl)
+`run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/validation_traces/trace.pkl)
 ```
 $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/scripts/
@@ -73,8 +73,8 @@ $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_learning.py
 ```
-<img src="images/learn1.gif" alt="alt text" width="400"> <img src="images/learn3.gif" alt="alt text" width="400">
-<img src="images/learn2.gif" alt="alt text" width="400"> <img src="images/learn4.gif" alt="alt text" width="400">
+<img src="images/learn1.gif" alt="alt text" width="400"> <img src="images/learn2.gif" alt="alt text" width="400">
+<img src="images/learn3.gif" alt="alt text" width="400"> <img src="images/learn4.gif" alt="alt text" width="400">
 
 
 

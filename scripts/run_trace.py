@@ -17,7 +17,7 @@ DRONE = DroneModel.CF2X
 GUI = False
 RECORD_VIDEO = False
 SAVE_TO_FILE = True
-TRACE_FILE = "trace_1.pkl"
+TRACE_FILE = "trace.pkl"
 
 if __name__ == "__main__":
 
