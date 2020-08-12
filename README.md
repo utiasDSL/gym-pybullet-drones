@@ -18,8 +18,8 @@ $ pip install stable-baselines3
 $ brew install ffmpeg				# on macOS
 $ sudo apt install ffmpeg			# on Linux
 ```
-In a `conda` environment ([instructions](https://github.com/JacopoPan/a-minimalist-guide#install-conda)), 
-dependencies (excluding `ffmpeg`), can be installed from `conda-req-list.txt`
+With [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#install-conda), 
+dependencies (except `ffmpeg`), can be installed from file
 ```
 $ cd gym-pybullet-drones/
 $ conda create -n myenv --file /gym_pybullet_drones/assets/conda-req-list.txt
@@ -49,7 +49,7 @@ $ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_physics.py 			# use run_physics_standalone.py for a simple script that only depends on PyBullet
 ```
-`run_trace.py` runs a comparison with a 1D trace saved in [`trace_1.pkl`](/gym-pybullet-drones/gym_pybullet_drones/assets/trace_1.pkl) **using PID control** implemented in `SingleDroneEnv.control()`
+`run_trace.py` replays and compare to a trace saved in [`trace_1.pkl`](/gym-pybullet-drones/gym_pybullet_drones/assets/trace_1.pkl)
 ```
 $ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
@@ -67,7 +67,7 @@ $ python run_flight.py
 <img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
 
 
-`run_learning.py` is a minimal RL example using [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) from `stable-baselines3` to learn how to take-off
+`run_learning.py` is a minimal **RL example** using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)' to learn how to take-off
 ```
 $ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
@@ -91,7 +91,7 @@ A single quadrotor enviroment can be created with
 >>>		record=False)					# Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
 >>>										# See run_flight.py for an example
 ````
-Or (having installed the environment with `pip`) using
+Or using
 ```
 >>> env = gym.make('single-drone-v0')	# See run_learning_test.py for an example
 ```
