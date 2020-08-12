@@ -9,7 +9,7 @@ Everything after a `$` is entered on a terminal, everything after `>>>` is passe
 
 
 ### Requirements
-The repo was written using Python 3.7.6 on macOS 10.15.5. Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
+The repo was written using Python 3.7.6 on macOS 10.15: major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`ffmpeg`](https://ffmpeg.org) (only used for video recording)
 ```
 $ pip install gym
