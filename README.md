@@ -1,7 +1,7 @@
 # gym-pybullet-drones
 
-![alt text](Untitled-1.gif "Title")
+![alt text](test.gif "Title")
 
-![alt text](PyBullet GIFs.gif "Title")
+![alt text](Untitled-1.gif "Title")
 
 ![alt text](flight_2.png "Title")
