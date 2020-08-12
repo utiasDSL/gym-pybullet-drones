@@ -2,11 +2,10 @@
 
 
 <img src="learn1.gif" alt="alt text" width="300">
+<img src="learn2.gif" alt="alt text" width="300">
+<img src="learn3.gif" alt="alt text" width="300">
+<img src="learn4.gif" alt="alt text" width="300">
 
-![alt text](learn2.gif "Title")
-![alt text](learn3.gif "Title")
-![alt text](learn4.gif "Title")
-![alt text](wp.gif "Title")
 
 ![alt text](crash.gif "Title")
 
