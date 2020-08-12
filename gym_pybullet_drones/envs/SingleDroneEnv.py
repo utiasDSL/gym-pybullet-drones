@@ -416,7 +416,8 @@ class SingleDroneEnv(gym.Env):
 			if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of _isDone()".format(state[13], state[14], state[15]))
 			if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of _isDone()".format(state[13], state[14], state[15]))
 		normalized_pos = clipped_pos
-		normalized_rp = state[7:9]/(np.pi/3); normalized_y = state[9]/np.pi
+		normalized_rp = clipped_rp/(np.pi/3)
+		normalized_y = state[9]/np.pi
 		normalized_vel = clipped_vel
 		normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
 		normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)

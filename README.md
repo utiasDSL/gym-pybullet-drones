@@ -10,11 +10,12 @@ Everything after a `$` is entered on a terminal, everything after `>>>` is passe
 
 ### Requirements
 The repo was written using Python 3.7.6 on macOS 10.15: major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
-[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`ffmpeg`](https://ffmpeg.org) (only used for video recording)
+[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [`rllib`](https://docs.ray.io/en/master/rllib.html) and [`ffmpeg`](https://ffmpeg.org) (only used for video recording)
 ```
 $ pip install gym
 $ pip install pybullet
 $ pip install stable-baselines3
+$ pip install `ray[rllib]`
 $ brew install ffmpeg					# on macOS
 $ sudo apt install ffmpeg				# on Linux
 ```
@@ -67,7 +68,7 @@ $ python run_flight.py
 <img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
 
 
-`run_learning.py` is a minimal **RL example** using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) to learn how to take-off
+`run_learning.py` is a minimal **RL example** to learn how to take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
 $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/scripts/
