@@ -135,11 +135,12 @@ The reward function can be customized in [`_computeReward()`](https://github.com
 The halting conditions can be customized in [`_isDone()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L458), for example
 ```
 >>> def _isDone(self, state):
->>> 	if np.abs(state[0])>.5 or np.abs(state[1])>.5 or np.abs(state[2])>=1 or np.abs(state[7])>np.pi/2 or np.abs(state[8])>np.pi/2 \
->>> 				or self.step_counter > 5*self.SIM_FREQ: 
->>> 		return True
+>>> 	if np.abs(state[0])>.5 or np.abs(state[1])>.5 or np.abs(state[2])>=1 \
+>>>             or np.abs(state[7])>np.pi/2 or np.abs(state[8])>np.pi/2 \
+>>> 				    or self.step_counter > 5*self.SIM_FREQ: 
+>>> 	  return True
 >>> 	else: 
->>> 		return False
+>>> 	  return False
 ```
 
 
