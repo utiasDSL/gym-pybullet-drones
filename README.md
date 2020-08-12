@@ -58,7 +58,7 @@ $ python run_trace.py
 <img src="images/trace_comparison.gif" alt="alt text" width="360"> <img src="images/trace_comparison.png" alt="alt text" width="450">
 
 
-`run_flight.py` runs an independent flight **using PID control** implemented in `SingleDroneEnv.control()`
+`run_flight.py` runs an independent flight **using PID control** implemented in `control()`
 ```
 $ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
@@ -82,18 +82,18 @@ $ python run_learning.py
 ## SingleDroneEnv
 A single quadrotor enviroment can be created with
 ```
->>> env = SingleDroneEnv(drone_model=DroneModel.CF2X, \		# See gym-pybullet-drones/gym_pybullet_drones/envs/DroneModel.py for other quadcopter models (remove this comment)
-		pybullet=True, \				# Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() of gym-pybullet-drones/gym_pybullet_drones/env/SingleDroneEnv.py (remove this comment)
-		normalized_spaces=True, \		# Whether to use normalized action and observation spaces—set to True for learning (default), False for flight simulation (remove this comment)
-		freq=240, \						# The stepping frequency of the simulation (remove this comment)
-		gui=True, \						# Whether to display PyBullet's GUI (remove this comment)
-		obstacles=False, \				# Whether to add obstacles to the environment (remove this comment)
-		record=False)					# Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
-										# See run_flight.py for an example
+>>> env = SingleDroneEnv(drone_model=DroneModel.CF2X, \		# See DroneModel.py for other quadcopter models (remove this comment)
+>>>		pybullet=True, \				# Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
+>>>		normalized_spaces=True, \		# Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
+>>>		freq=240, \						# The stepping frequency of the simulation (remove this comment)
+>>>		gui=True, \						# Whether to display PyBullet's GUI (remove this comment)
+>>>		obstacles=False, \				# Whether to add obstacles to the environment (remove this comment)
+>>>		record=False)					# Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
+>>>										# See run_flight.py for an example
 ````
 Or (having installed the environment with `pip`) using
 ```
->>> env = gym.make('single-drone-v0')						# See run_learning_test.py for an example
+>>> env = gym.make('single-drone-v0')	# See run_learning_test.py for an example
 ```
 Then, the environment can be stepped with
 ```
@@ -109,17 +109,21 @@ Then, the environment can be stepped with
 
 
 ### Action Space
-The action space is a [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing the desired rotation speed of each motor
-
-If `normalized_spaces=True`, ranging from -1 to 1, if `normalized_spaces=False` ranging from 0 to `SingleDroneEnv.MAX_RPM`
+The action space is a [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing the desired rotation speed of each motor, if `normalized_spaces=True`, they range from -1 to 1, if `False` from 0 to `SingleDroneEnv.MAX_RPM`
 
 ### Observation Space
-The observation space is a [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing the drone's position, quaternion, roll/pitch/yaw, velocity, angular velocity, and the motors' speeds
+The observation space is a [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing the drone's
+- XYZ position
+- Quaternion pose
+- Roll, Pitch and Yaw angles
+- Velocity
+- Angular velocity 
+- Motors' speeds
 
-Check method `_clipAndNormalizeState()` in `gym-pybullet-drones/gym_pybullet_drones/envs/SingleDroneEnv.py` to understand the difference between `normalized_spaces=False` (using the raw simulation information) and `normalized_spaces=True` (using [-1,1] ranges) 
+Check `_clipAndNormalizeState()` for the mapping from raw simulation data to normalized observations in the [-1,1] ranges (when using `normalized_spaces=False`)
 
 ### Reward
-The reward function can be customized in method `_computeReward()` of `gym-pybullet-drones/gym_pybullet_drones/envs/SingleDroneEnv.py`, for example
+The reward function can be customized in `_computeReward()`, for example
 ```
 def _computeReward(self, state):
 	if state[2] > 0.5: return 1000
@@ -128,7 +132,7 @@ def _computeReward(self, state):
 ```
 
 ### Done
-The halting conditions can be customized in method `_isDone()` of `gym-pybullet-drones/gym_pybullet_drones/envs/SingleDroneEnv.py`, for example
+The halting conditions can be customized in `_isDone()`, for example
 ```
 def _isDone(self, state):
 	if np.abs(state[0])>.5 or np.abs(state[1])>.5 or np.abs(state[2])>=1 or np.abs(state[7])>np.pi/2 or np.abs(state[8])>np.pi/2 \
