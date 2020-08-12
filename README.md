@@ -45,13 +45,13 @@ There are 4 scripts in the repo: `run_physics.py`, `run_trace.py`, `run_flight.p
 
 `run_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
-$ conda activate myenv		# If using a conda environment
+$ conda activate myenv			# If using a conda environment
 $ cd gym-pybullet-drones/
-$ python run_physics.py 	# Or run_physics_standalone.py
+$ python run_physics.py 		# Or run_physics_standalone.py
 ```
 `run_trace.py` replays and compare to a trace saved in [`trace_1.pkl`](/gym-pybullet-drones/gym_pybullet_drones/assets/trace_1.pkl)
 ```
-$ conda activate myenv		# If using a conda environment
+$ conda activate myenv			# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_trace.py
 ```
@@ -60,7 +60,7 @@ $ python run_trace.py
 
 `run_flight.py` runs an independent flight **using PID control** implemented in `control()`
 ```
-$ conda activate myenv		# If using a conda environment
+$ conda activate myenv			# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_flight.py
 ```
@@ -69,7 +69,7 @@ $ python run_flight.py
 
 `run_learning.py` is a minimal **RL example** using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)' to learn how to take-off
 ```
-$ conda activate myenv		# If using a conda environment
+$ conda activate myenv			# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_learning.py
 ```
@@ -84,12 +84,12 @@ A single quadrotor enviroment can be created with
 ```
 >>> env = SingleDroneEnv(drone_model=DroneModel.CF2X, \		# See DroneModel.py for other quadcopter models (remove this comment)
 >>>		pybullet=True, \				# Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
->>>		normalized_spaces=True, \		# Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
->>>		freq=240, \						# The stepping frequency of the simulation (remove this comment)
->>>		gui=True, \						# Whether to display PyBullet's GUI (remove this comment)
+>>>		normalized_spaces=True, \			# Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
+>>>		freq=240, \					# The stepping frequency of the simulation (remove this comment)
+>>>		gui=True, \					# Whether to display PyBullet's GUI (remove this comment)
 >>>		obstacles=False, \				# Whether to add obstacles to the environment (remove this comment)
 >>>		record=False)					# Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
->>>										# See run_flight.py for an example
+>>>								# See run_flight.py for an example
 ````
 Or using
 ```
