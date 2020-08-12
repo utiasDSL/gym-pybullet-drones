@@ -19,7 +19,7 @@ $ pip install `ray[rllib]`
 $ brew install ffmpeg					# on macOS
 $ sudo apt install ffmpeg				# on Linux
 ```
-With [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#install-conda), 
+With a [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#install-conda), 
 dependencies (except `ffmpeg`), can be installed from file
 ```
 $ cd gym-pybullet-drones/
