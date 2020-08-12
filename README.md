@@ -1,7 +1,7 @@
 # gym-pybullet-drones
 
 
-<img src="learn1.gif" alt="alt text" width="200">
+<img src="learn1.gif" alt="alt text" width="300">
 
 ![alt text](learn2.gif "Title")
 ![alt text](learn3.gif "Title")
