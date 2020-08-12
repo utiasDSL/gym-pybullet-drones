@@ -136,8 +136,8 @@ The halting conditions can be customized in [`_isDone()`](https://github.com/Jac
 ```
 >>> def _isDone(self, state):
 >>> 	if np.abs(state[0])>.5 or np.abs(state[1])>.5 or np.abs(state[2])>=1 \
->>>             or np.abs(state[7])>np.pi/2 or np.abs(state[8])>np.pi/2 \
->>> 				    or self.step_counter > 5*self.SIM_FREQ: 
+>>>           or np.abs(state[7])>np.pi/2 or np.abs(state[8])>np.pi/2 \
+>>>           or self.step_counter > 5*self.SIM_FREQ: 
 >>> 	  return True
 >>> 	else: 
 >>> 	  return False
