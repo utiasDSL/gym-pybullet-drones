@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+
+<robot name="cf2">
+
+  <properties arm="0.0397" kf="3.16e-10" km="7.94e-12" thrust2weight="2.25"/>
+
+  <link name="base_link"> 
+
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.027"/>
+      <inertia ixx="1.4e-5" ixy="0.0" ixz="0.0" iyy="1.4e-5" iyz="0.0" izz="2.17e-5"/>
+    </inertial>
+
+    <!-- links>
+      <carlos url="https://arxiv.org/pdf/1608.05786.pdf" />
+      <julian url="http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf" />
+      <mit url="http://groups.csail.mit.edu/robotics-center/public_papers/Landry15.pdf" />
+    </links -->
+
+    <visual>
+      <origin rpy="0 0 55" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="./cf2.dae" scale=" 1 1 1"/>
+      </geometry> 
+      <material name="grey">
+        <color rgba=".5 .5 .5 1"/>
+      </material> 
+    </visual>
+
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <cylinder radius=".06" length=".025"/>
+      </geometry>
+    </collision>  
+
+  </link>
+
+</robot>
+

@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+
+<robot name="quad">
+
+  <properties arm="0.175" kf="6.11e-8" km="1.5e-9" thrust2weight="2"/>
+  <!-- [GRASP hummingbird] properties arm="0.175" kf="6.11e-8" km="1.5e-9" thrust2weight="2"/ -->
+  <!-- [GRASP nano quad] properties arm="0.0635" kf="2.0e-9" km="4.74e-12" thrust2weight="2"/ -->
+
+  <link name="base_link"> 
+
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0.5"/>
+      <!-- [GRASP hummingbird] mass value="0.5"/ -->
+      <!-- [GRASP nano quad] mass value="0.075"/ -->
+      <inertia ixx="0.0023" ixy="0.0" ixz="0.0" iyy="0.0023" iyz="0.0" izz="0.004"/>
+      <!-- [GRASP hummingbird] inertia ixx="0.0023" ixy="0.0" ixz="0.0" iyy="0.0023" iyz="0.0" izz="0.004"/ -->
+      <!-- [GRASP nano quad] inertia ixx="4.28-5" ixy="0.0" ixz="0.0" iyy="4.28-5" iyz="0.0" izz="8.36-5"/ -->
+    </inertial>
+
+    <!-- links>
+      <grap url="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.169.1687&rep=rep1&type=pdf" />
+    </links -->
+
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 -0.02"/>
+      <geometry>
+        <mesh filename="./quad.obj" scale=".0875 .0875 .0875"/>
+      </geometry> 
+      <material name="grey">
+        <color rgba=".2 .2 .2 1"/>
+      </material> 
+    </visual>
+
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 -0.075"/>
+      <geometry>
+        <cylinder radius=".25" length=".15"/>
+      </geometry>
+    </collision>  
+
+  </link>
+
+</robot>
+
