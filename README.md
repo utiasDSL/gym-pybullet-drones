@@ -127,9 +127,9 @@ The reward function can/should be modified in [`_computeReward()`](https://githu
 ```
 >>> def _computeReward(self, state):
 >>>   height = state[2]
->>> 	if height > 0.5: return 1000
->>> 	elif height > 0.1: return 100
->>> 	else: return -1
+>>>   if height > 0.5: return 1000
+>>>   elif height > 0.1: return 100
+>>>   else: return -1
 ```
 
 ### Done
@@ -138,12 +138,12 @@ The halting conditions can/should be modified in [`_isDone()`](https://github.co
 >>> def _isDone(self, state):
 >>>   x = state[0]; y = state[1]; z = state[2] 
 >>>   roll = state[7]; pitch = state[8]
->>> 	if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
+>>>   if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
 >>>           or np.abs(roll)>np.pi/2 or np.abs(pitch)>np.pi/2 \
 >>>           or self.step_counter > 5*self.SIM_FREQ: 
->>> 	  return True
->>> 	else: 
->>> 	  return False
+>>>       return True
+>>>   else: 
+>>>       return False
 ```
 
 
