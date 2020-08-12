@@ -51,7 +51,7 @@ $ conda activate myenv										# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_trace_test.py
 ```
-<img src="images/trace_comparison.gif" alt="alt text" width="400"> <img src="images/trace_comparison.png" alt="alt text" width="400">
+<img src="images/trace_comparison.gif" alt="alt text" width="360"> <img src="images/trace_comparison.png" alt="alt text" width="450">
 
 
 `run_flight_test.py` runs an independent flight **using PID control** implemented in `SingleDroneEnv.control()`
@@ -60,7 +60,7 @@ $ conda activate myenv										# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_flight_test.py
 ```
-<img src="images/crash.gif" alt="alt text" width="400"> <img src="images/crash.png" alt="alt text" width="400">
+<img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
 
 
 `run_learning_test.py` is a minimal RL example using [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) from `stable-baselines3` to learn how to take off the ground
