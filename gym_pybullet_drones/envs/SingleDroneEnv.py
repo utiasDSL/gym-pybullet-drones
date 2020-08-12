@@ -32,13 +32,13 @@ class SingleDroneEnv(gym.Env):
 	#### Initialize the environment ####################################################################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - drone_model (DroneModel)			the type of drone to use (associated to an .urdf file) #####
-	#### - pybullet (Boolean)				whether to use PyBullet's physics engine ###################
-	#### - normalized_spaces (Boolean)		whether to use normalized OpenAI Gym spaces	################
-	#### - freq (Integer)					the freqeuency (Hz) at which the simulation steps ##########
-	#### - gui (Boolean)					whether to use PyBullet's GUI ##############################
-	#### - obstacles (Boolean)				whether to add obstacles in the simulation #################
-	#### - record (Boolean)					whether to save the simulation as an .mp4 video ############
+	#### - drone_model (DroneModel)		the type of drone to use (associated to an .urdf file) #####
+	#### - pybullet (Boolean)		whether to use PyBullet's physics engine ###################
+	#### - normalized_spaces (Boolean)	whether to use normalized OpenAI Gym spaces ################
+	#### - freq (Integer)			the freqeuency (Hz) at which the simulation steps ##########
+	#### - gui (Boolean)			whether to use PyBullet's GUI ##############################
+	#### - obstacles (Boolean)		whether to add obstacles in the simulation #################
+	#### - record (Boolean)			whether to save the simulation as an .mp4 video ############
 	####################################################################################################
 	def __init__(self, drone_model: DroneModel=DroneModel.CF2X, pybullet=True, normalized_spaces=True, freq=240, gui=False, obstacles=False, record=False):
 		super(SingleDroneEnv, self).__init__()
@@ -83,12 +83,12 @@ class SingleDroneEnv(gym.Env):
 			self.action_space = spaces.Box(	low=np.array([-1,-1,-1,-1]), high=np.array([1,1,1,1]), dtype=np.float32)
 			#### Observations ################################	X		Y		Z		Q1		Q2		Q3		Q4		R		P		Y		VX		VY		VZ		WR		WP		WY		P1		P2		P3		P4
 			self.observation_space = spaces.Box(low=np.array([	-1,		-1,		0,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1,		-1]), \
-		 									high=np.array([	 	1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1]), dtype=np.float32)
+		 					high=np.array([	 	1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1,		1]), dtype=np.float32)
 		else:
 			self.action_space = spaces.Box(	low=np.array([0.,0.,0.,0.]), high=np.array([self.MAX_RPM,self.MAX_RPM,self.MAX_RPM,self.MAX_RPM]), dtype=np.float32)
-			#### Observations ################################	X			Y			Z		Q1		Q2		Q3		Q4		R			P			Y			VX			VY			VZ			WR			WP			WY			P1				P2				P3				P4
-			self.observation_space = spaces.Box(low=np.array([	-np.inf,	-np.inf,	0.,		-1.,	-1.,	-1.,	-1.,	-np.pi,		-np.pi,		-np.pi,		-np.inf,	-np.inf,	-np.inf,	-np.inf,	-np.inf,	-np.inf,	0.,				0.,				0.,				0.]), \
-		 									high=np.array([	 np.inf,	np.inf,		np.inf,	1.,		1.,		1.,		1.,		np.pi,		np.pi,		np.pi,		np.inf,		np.inf,		np.inf,		np.inf,		np.inf,		np.inf,		self.MAX_RPM,	self.MAX_RPM,	self.MAX_RPM,	self.MAX_RPM]), dtype=np.float32)
+			#### Observations ################################	X		Y		Z		Q1	Q2	Q3	Q4	R		P		Y		VX		VY		VZ		WR		WP		WY		P1		P2		P3		P4
+			self.observation_space = spaces.Box(low=np.array([	-np.inf,	-np.inf,	0.,		-1.,	-1.,	-1.,	-1.,	-np.pi,		-np.pi,		-np.pi,		-np.inf,	-np.inf,	-np.inf,	-np.inf,	-np.inf,	-np.inf,	0.,		0.,		0.,		0.]), \
+		 						high=np.array([	 np.inf,	np.inf,		np.inf,		1.,	1.,	1.,	1.,	np.pi,		np.pi,		np.pi,		np.inf,		np.inf,		np.inf,		np.inf,		np.inf,		np.inf,		self.MAX_RPM,	self.MAX_RPM,	self.MAX_RPM,	self.MAX_RPM]), dtype=np.float32)
 		####################################################################################################
 		#### Add input sliders to the GUI ##################################################################
 		####################################################################################################
@@ -130,13 +130,13 @@ class SingleDroneEnv(gym.Env):
 	#### Advance the environment by one simulation step ################################################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - action (Gym's Box(4,))			the motors' speed (normalized or unnormalized) #############
+	#### - action (Gym's Box(4,))		the motors' speed (normalized or unnormalized) #############
 	####################################################################################################
 	#### Returns #######################################################################################
-	#### - state (Gym's Box(20,))			the observation vector (normalized or unnormalized) ########
-	#### - reward (Float)					the reward value of the current state ######################
-	#### - done (Boolean)					whether the current episode is over/meets halt conditions ##
-	#### - info (Dict)						additional custom information ##############################
+	#### - state (Gym's Box(20,))		the observation vector (normalized or unnormalized) ########
+	#### - reward (Float)			the reward value of the current state ######################
+	#### - done (Boolean)			whether the current episode is over/meets halt conditions ##
+	#### - info (Dict)			additional custom information ##############################
 	####################################################################################################
 	def step(self, action):
 		self.step_counter += 1
@@ -288,7 +288,7 @@ class SingleDroneEnv(gym.Env):
 	#### PyBullet physics implementation ###############################################################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - rpm (4by1 list/array)			the RPM values of the 4 motors #############################
+	#### - rpm (4by1 list/array)		the RPM values of the 4 motors #############################
 	####################################################################################################
 	def _physics(self, rpm):
 		forces = np.array(rpm**2)*self.KF
@@ -316,7 +316,7 @@ class SingleDroneEnv(gym.Env):
 	#### Alternative PyBullet physics implementation ############################# currently unused ####
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - rpm (4by1 list/array)			the RPM values of the 4 motors #############################
+	#### - rpm (4by1 list/array)		the RPM values of the 4 motors #############################
 	####################################################################################################
 	def _physicsWithExplicitTorques(self, rpm): 
 		forces = np.array(rpm**2)*self.KF
@@ -340,7 +340,7 @@ class SingleDroneEnv(gym.Env):
 	#### Custom dynamics implementation ################################################################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - rpm (4by1 list/array)			the RPM values of the 4 motors #############################
+	#### - rpm (4by1 list/array)		the RPM values of the 4 motors #############################
 	####################################################################################################
 	def _noPyBulletDynamics(self, rpm):
 		pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
@@ -372,10 +372,10 @@ class SingleDroneEnv(gym.Env):
 	#### Normalize the [0, MAX RPM] range to the [-1,1] range #################### currently unused ####
 	####################################################################################################	
 	#### Arguments #####################################################################################
-	#### - rpm (4by1 list/array)			the RPM values of the 4 motors #############################
+	#### - rpm (4by1 list/array)		the RPM values of the 4 motors #############################
 	####################################################################################################
 	#### Returns #######################################################################################
-	#### - action (4by1 list/array)			the normalized action to apply to the 4 motors #############
+	#### - action (4by1 list/array)		the normalized action to apply to the 4 motors #############
 	####################################################################################################
 	def _rpmToNormAction(self, rpm):
 		if np.any(rpm) < 0: print("\n[ERROR] it:", self.step_counter, "in _rpmToNormAction(), negative RPM")
@@ -385,10 +385,10 @@ class SingleDroneEnv(gym.Env):
 	#### Denormalize the [-1,1] range to the [0, MAX RPM] range ########################################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - action (4by1 list/array)			the normalized [-1,1] actions applied to the 4 motors ######
+	#### - action (4by1 list/array)		the normalized [-1,1] actions applied to the 4 motors ######
 	####################################################################################################
 	#### Returns #######################################################################################
-	#### - rpm (4by1 list/array)			the RPM values to apply to the 4 motors ####################
+	#### - rpm (4by1 list/array)		the RPM values to apply to the 4 motors ####################
 	####################################################################################################
 	def _normActionToRPM(self, action): 
 		if np.any(np.abs(action)) > 1: print("\n[ERROR] it:", self.step_counter, "in _normActionToRPM(), out-of-bound action")
@@ -398,7 +398,7 @@ class SingleDroneEnv(gym.Env):
 	#### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - state (20by1 list/array)			the simulation state #######################################
+	#### - state (20by1 list/array)		the simulation state #######################################
 	####################################################################################################
 	#### Returns #######################################################################################
 	#### - norm. state (20by1 list/array)	the clipped and normalized simulation state ################
@@ -429,7 +429,7 @@ class SingleDroneEnv(gym.Env):
 	#### - norm. state (20by1 list/array)	the clipped and normalized simulation state ################
 	####################################################################################################
 	#### Returns #######################################################################################
-	#### - reward (Float)					the reward value ###########################################
+	#### - reward (Float)			the reward value ###########################################
 	####################################################################################################
 	def _computeReward(self, state):
 		####################################################################################################
@@ -453,7 +453,7 @@ class SingleDroneEnv(gym.Env):
 	#### - norm. state (20by1 list/array)	the clipped and normalized simulation state ################
 	####################################################################################################
 	#### Returns #######################################################################################
-	#### - done (Boolean)					whether the halting conditions of the episode are met ######
+	#### - done (Boolean)			whether the halting conditions of the episode are met ######
 	####################################################################################################
 	def _isDone(self, state):
 		####################################################################################################
@@ -485,20 +485,20 @@ class SingleDroneEnv(gym.Env):
 	#### 2 variants of custom PID control ##############################################################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - control_timestep (Float)			the timestep at which control is computed ##################
-	#### - cur_pos (3by1 list/array)		the current position #######################################
+	#### - control_timestep (Float)		the timestep at which control is computed ##################
+	#### - cur_pos (3by1 list/array)	the current position #######################################
 	#### - cur_quat_rpy (4by1 list/array)	the current orientation as a quaternion ####################
-	#### - cur_vel (3by1 list/array)		the current velocity #######################################
+	#### - cur_vel (3by1 list/array)	the current velocity #######################################
 	#### - cur_ang_vel (3by1 list/array)	the current angular velocity ###############################
-	#### - target_pos (3by1 list/array)		the desired position #######################################
+	#### - target_pos (3by1 list/array)	the desired position #######################################
 	#### - target_rpy (3by1 list/array) 	the desired orientation as roll, pitch, yaw ################
 	#### - target_vel (3by1 list/array) 	the desired velocity #######################################
 	#### - target_ang_vel (3by1 list/array)	the desired angular velocity ###############################
 	####################################################################################################
 	#### Returns #######################################################################################
-	#### - rpm (4by1 list/array)			the RPM values to apply to the 4 motors ####################
-	#### - pos err (3by1 list/array)		the current XYZ position error #############################
-	#### - yaw err (Float)					the current yaw error ######################################
+	#### - rpm (4by1 list/array)		the RPM values to apply to the 4 motors ####################
+	#### - pos err (3by1 list/array)	the current XYZ position error #############################
+	#### - yaw err (Float)			the current yaw error ######################################
 	####################################################################################################
 	def control(self, control_timestep, cur_pos, cur_quat_rpy, cur_vel, cur_ang_vel, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
 		cur_rpy = p.getEulerFromQuaternion(cur_quat_rpy)
@@ -578,13 +578,13 @@ class SingleDroneEnv(gym.Env):
 	#### Non-negative Least Squares (NNLS) derivation of RPM from thrust and torques  ##################
 	####################################################################################################
 	#### Arguments #####################################################################################
-	#### - thrust (Float)					desired thrust along the local z-axis ######################
-	#### - x_torque (Float)					desired x-axis torque ######################################
-	#### - y_torque (Float)					desired y-axis torque ######################################
-	#### - z_torque (Float)					desired z-axis torque ######################################
+	#### - thrust (Float)			desired thrust along the local z-axis ######################
+	#### - x_torque (Float)			desired x-axis torque ######################################
+	#### - y_torque (Float)			desired y-axis torque ######################################
+	#### - z_torque (Float)			desired z-axis torque ######################################
 	####################################################################################################
 	#### Returns #######################################################################################
-	#### - rpm (4by1 list/array)			the RPM values to apply to the 4 motors ####################
+	#### - rpm (4by1 list/array)		the RPM values to apply to the 4 motors ####################
 	####################################################################################################
 	def _physicsToRPM(self, thrust, x_torque, y_torque, z_torque):
 		new_line = True
