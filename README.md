@@ -1,24 +1,28 @@
 # gym-pybullet-drones
-A simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) to simulate one (or more TBD) quadrotors 
-
-Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
+Simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) to simulate one (or more, WIP) quadrotors 
 
 <img src="images/wp.gif" alt="alt text" width="360"> <img src="images/wp.png" alt="alt text" width="450">
+
+Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
 
 
 
 ### Requirements
-This project was written in Python 3.7.6 on macOS 10.15.5
-
-Major dependencies are `gym` (`$ pip install gym`),  `pybullet`  (`$ pip install pybullet`), 
-`stable-baselines3` (`$ pip install stable-baselines3`), and `ffmpeg` 
-(only used for video recording, on macOS, install with `$ brew install ffmpeg`, on Linux `$ sudo apt install ffmpeg`)
-
-Using a `conda` environment ([see these instructions](https://github.com/JacopoPan/a-minimalist-guide#install-conda)), 
-dependencies (excluding `ffmpeg`), can be installed from file `conda-req-list.txt`
+This was written using Python 3.7.6 on macOS 10.15.5. Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
+[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`ffmpeg`](https://ffmpeg.org) (only used for video recording)
 ```
-$ conda create -n myenv --file /gym-pybullet-drones/gym_pybullet_drones/assets/conda-req-list.txt
+$ pip install gym
+$ pip install pybullet
+$ pip install stable-baselines3
+$ brew install ffmpeg				# on macOS
+$ sudo apt install ffmpeg			# on Linux
+```
+In a `conda` environment ([instructions](https://github.com/JacopoPan/a-minimalist-guide#install-conda)), 
+dependencies (excluding `ffmpeg`), can be installed from `conda-req-list.txt`
+```
+$ cd gym-pybullet-drones/
+$ conda create -n myenv --file /gym_pybullet_drones/assets/conda-req-list.txt
 ```
 
 
@@ -26,7 +30,7 @@ $ conda create -n myenv --file /gym-pybullet-drones/gym_pybullet_drones/assets/c
 
 ## Installation
 The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
-and can be installed with `pip`
+and can be installed with `pip install --editable`
 ```
 $ git clone https://github.com/JacopoPan/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
@@ -37,37 +41,37 @@ $ pip install -e .
 
 
 ## Use
-There are 4 main scripts in the repo
+There are 4 scripts in the repo: `run_physics.py`, `run_trace.py`, `run_flight.py`, `run_physics.py`
 
-`run_physics_test.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
+`run_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
-$ conda activate myenv							# If using a conda environment
+$ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
-$ python run_physics_test.py 					# use run_physics_test.py for a simple script that only depends on pybullet
+$ python run_physics.py 			# use run_physics_standalone.py for a simple script that only depends on PyBullet
 ```
-`run_trace_test.py` runs a comparison with a previos trace saved in `/gym-pybullet-drones/gym_pybullet_drones/assets/trace_1.pkl` **using PID control** implemented in `SingleDroneEnv.control()`
+`run_trace.py` runs a comparison with a 1D trace saved in [`trace_1.pkl`](/gym-pybullet-drones/gym_pybullet_drones/assets/trace_1.pkl) **using PID control** implemented in `SingleDroneEnv.control()`
 ```
-$ conda activate myenv										# If using a conda environment
+$ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
-$ python run_trace_test.py
+$ python run_trace.py
 ```
 <img src="images/trace_comparison.gif" alt="alt text" width="360"> <img src="images/trace_comparison.png" alt="alt text" width="450">
 
 
-`run_flight_test.py` runs an independent flight **using PID control** implemented in `SingleDroneEnv.control()`
+`run_flight.py` runs an independent flight **using PID control** implemented in `SingleDroneEnv.control()`
 ```
-$ conda activate myenv										# If using a conda environment
+$ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
-$ python run_flight_test.py
+$ python run_flight.py
 ```
 <img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
 
 
-`run_learning_test.py` is a minimal RL example using [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) from `stable-baselines3` to learn how to take off the ground
+`run_learning.py` is a minimal RL example using [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) from `stable-baselines3` to learn how to take-off
 ```
-$ conda activate myenv										# If using a conda environment
+$ conda activate myenv				# If using a conda environment
 $ cd gym-pybullet-drones/
-$ python run_learning_test.py
+$ python run_learning.py
 ```
 <img src="images/learn1.gif" alt="alt text" width="400"> <img src="images/learn3.gif" alt="alt text" width="400">
 <img src="images/learn2.gif" alt="alt text" width="400"> <img src="images/learn4.gif" alt="alt text" width="400">
@@ -79,13 +83,13 @@ $ python run_learning_test.py
 A single quadrotor enviroment can be created with
 ```
 >>> env = SingleDroneEnv(drone_model=DroneModel.CF2X, \		# See gym-pybullet-drones/gym_pybullet_drones/envs/DroneModel.py for other quadcopter models (remove this comment)
-							pybullet=True, \				# Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() of gym-pybullet-drones/gym_pybullet_drones/env/SingleDroneEnv.py (remove this comment)
-							normalized_spaces=True, \		# Whether to use normalized action and observation spaces—set to True for learning (default), False for flight simulation (remove this comment)
-							freq=240, \						# The stepping frequency of the simulation (remove this comment)
-							gui=True, \						# Whether to display PyBullet's GUI (remove this comment)
-							obstacles=False, \				# Whether to add obstacles to the environment (remove this comment)
-							record=False)					# Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
-															# See run_flight_test.py for an example
+		pybullet=True, \				# Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() of gym-pybullet-drones/gym_pybullet_drones/env/SingleDroneEnv.py (remove this comment)
+		normalized_spaces=True, \		# Whether to use normalized action and observation spaces—set to True for learning (default), False for flight simulation (remove this comment)
+		freq=240, \						# The stepping frequency of the simulation (remove this comment)
+		gui=True, \						# Whether to display PyBullet's GUI (remove this comment)
+		obstacles=False, \				# Whether to add obstacles to the environment (remove this comment)
+		record=False)					# Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
+										# See run_flight.py for an example
 ````
 Or (having installed the environment with `pip`) using
 ```
@@ -138,15 +142,15 @@ def _isDone(self, state):
 
 
 ## MultiDroneEnv
-TBD
+WIP
 ### Actions
-TBD
+...
 ### Observation Space
-aaa
+...
 ### Reward
-aaa
+...
 ### Done
-aaa
+...
 
 
 
