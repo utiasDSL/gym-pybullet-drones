@@ -9,7 +9,7 @@ Everything after a `$` is entered on a terminal, everything after `>>>` is passe
 
 
 ### Requirements
-This was written using Python 3.7.6 on macOS 10.15.5. Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
+The repo was written using Python 3.7.6 on macOS 10.15.5. Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`ffmpeg`](https://ffmpeg.org) (only used for video recording)
 ```
 $ pip install gym
@@ -41,18 +41,18 @@ $ pip install -e .
 
 
 ## Use
-There are 4 scripts in the repo: `run_physics.py`, `run_trace.py`, `run_flight.py`, `run_physics.py`
+There are 4 main files in `scripts/`: `run_physics.py`, `run_trace.py`, `run_flight.py`, `run_physics.py`
 
 `run_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
 $ conda activate myenv					# If using a conda environment
-$ cd gym-pybullet-drones/
+$ cd gym-pybullet-drones/scripts/
 $ python run_physics.py 				# Or run_physics_standalone.py
 ```
 `run_trace.py` replays and compare to a trace saved in [`trace_1.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/validation_traces/trace_1.pkl)
 ```
 $ conda activate myenv					# If using a conda environment
-$ cd gym-pybullet-drones/
+$ cd gym-pybullet-drones/scripts/
 $ python run_trace.py
 ```
 <img src="images/trace_comparison.gif" alt="alt text" width="360"> <img src="images/trace_comparison.png" alt="alt text" width="450">
@@ -61,7 +61,7 @@ $ python run_trace.py
 `run_flight.py` runs an independent flight **using PID control** implemented in [`control()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L503)
 ```
 $ conda activate myenv					# If using a conda environment
-$ cd gym-pybullet-drones/
+$ cd gym-pybullet-drones/scripts/
 $ python run_flight.py
 ```
 <img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
@@ -70,7 +70,7 @@ $ python run_flight.py
 `run_learning.py` is a minimal **RL example** using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) to learn how to take-off
 ```
 $ conda activate myenv					# If using a conda environment
-$ cd gym-pybullet-drones/
+$ cd gym-pybullet-drones/scripts/
 $ python run_learning.py
 ```
 <img src="images/learn1.gif" alt="alt text" width="400"> <img src="images/learn3.gif" alt="alt text" width="400">
