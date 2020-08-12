@@ -120,10 +120,10 @@ The observation space is a [`Box(20,)`](https://github.com/openai/gym/blob/maste
 - Angular velocity 
 - Motors' speeds
 
-Check [`_clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L406) for the mapping from raw simulation data to normalized observations in the [-1,1] ranges (when using `normalized_spaces=False`)
+Check [`_clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L406) for the mapping from raw simulation data to normalized observations in the [-1,1] range (i.e., when using `normalized_spaces=False`)
 
 ### Reward
-The reward function can be customized in [`_computeReward()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L434), for example
+The reward function can/should be modified in [`_computeReward()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L434), for example
 ```
 >>> def _computeReward(self, state):
 >>> 	if state[2] > 0.5: return 1000
@@ -132,7 +132,7 @@ The reward function can be customized in [`_computeReward()`](https://github.com
 ```
 
 ### Done
-The halting conditions can be customized in [`_isDone()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L458), for example
+The halting conditions can/should be modified in [`_isDone()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L458), for example
 ```
 >>> def _isDone(self, state):
 >>> 	if np.abs(state[0])>.5 or np.abs(state[1])>.5 or np.abs(state[2])>=1 \
