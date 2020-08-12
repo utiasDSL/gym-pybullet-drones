@@ -1,6 +1,6 @@
 # gym-pybullet-drones
 
-![alt text](learn1.gif "Title")
+![alt text](learn1.gif | width=100)
 ![alt text](learn2.gif "Title")
 ![alt text](learn3.gif "Title")
 ![alt text](learn4.gif "Title")
