@@ -45,13 +45,13 @@ There are 4 scripts in the repo: `run_physics.py`, `run_trace.py`, `run_flight.p
 
 `run_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
-$ conda activate myenv			# If using a conda environment
+$ conda activate myenv		# If using a conda environment
 $ cd gym-pybullet-drones/
-$ python run_physics.py 		# use run_physics_standalone.py for a simple script that only depends on PyBullet
+$ python run_physics.py 	# Or run_physics_standalone.py
 ```
 `run_trace.py` replays and compare to a trace saved in [`trace_1.pkl`](/gym-pybullet-drones/gym_pybullet_drones/assets/trace_1.pkl)
 ```
-$ conda activate myenv			# If using a conda environment
+$ conda activate myenv		# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_trace.py
 ```
@@ -60,7 +60,7 @@ $ python run_trace.py
 
 `run_flight.py` runs an independent flight **using PID control** implemented in `control()`
 ```
-$ conda activate myenv			# If using a conda environment
+$ conda activate myenv		# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_flight.py
 ```
@@ -69,7 +69,7 @@ $ python run_flight.py
 
 `run_learning.py` is a minimal **RL example** using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)' to learn how to take-off
 ```
-$ conda activate myenv			# If using a conda environment
+$ conda activate myenv		# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_learning.py
 ```
