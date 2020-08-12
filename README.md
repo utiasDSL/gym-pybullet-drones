@@ -49,7 +49,7 @@ $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/
 $ python run_physics.py 				# Or run_physics_standalone.py
 ```
-`run_trace.py` replays and compare to a trace saved in [`trace_1.pkl`](/gym-pybullet-drones/gym_pybullet_drones/assets/trace_1.pkl)
+`run_trace.py` replays and compare to a trace saved in [`trace_1.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/validation_traces/trace_1.pkl)
 ```
 $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/
@@ -58,7 +58,7 @@ $ python run_trace.py
 <img src="images/trace_comparison.gif" alt="alt text" width="360"> <img src="images/trace_comparison.png" alt="alt text" width="450">
 
 
-`run_flight.py` runs an independent flight **using PID control** implemented in `control()`
+`run_flight.py` runs an independent flight **using PID control** implemented in [`control()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L503)
 ```
 $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/
@@ -120,10 +120,10 @@ The observation space is a [`Box(20,)`](https://github.com/openai/gym/blob/maste
 - Angular velocity 
 - Motors' speeds
 
-Check `_clipAndNormalizeState()` for the mapping from raw simulation data to normalized observations in the [-1,1] ranges (when using `normalized_spaces=False`)
+Check [`_clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L406) for the mapping from raw simulation data to normalized observations in the [-1,1] ranges (when using `normalized_spaces=False`)
 
 ### Reward
-The reward function can be customized in `_computeReward()`, for example
+The reward function can be customized in [`_computeReward()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L434), for example
 ```
 >>> def _computeReward(self, state):
 >>> 	if state[2] > 0.5: return 1000
@@ -132,7 +132,7 @@ The reward function can be customized in `_computeReward()`, for example
 ```
 
 ### Done
-The halting conditions can be customized in `_isDone()`, for example
+The halting conditions can be customized in [`_isDone()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L458), for example
 ```
 >>> def _isDone(self, state):
 >>> 	if np.abs(state[0])>.5 or np.abs(state[1])>.5 or np.abs(state[2])>=1 or np.abs(state[7])>np.pi/2 or np.abs(state[8])>np.pi/2 \
