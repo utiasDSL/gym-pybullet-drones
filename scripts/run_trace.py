@@ -24,7 +24,7 @@ if __name__ == "__main__":
 	####################################################################################################
 	#### Load a trace and control reference from a .pkl file ###########################################
 	####################################################################################################
-	with open(os.path.dirname(os.path.abspath(__file__))+"/validation_traces/"+TRACE_FILE, 'rb') as in_file:
+	with open(os.path.dirname(os.path.abspath(__file__))+"/../validation_traces/"+TRACE_FILE, 'rb') as in_file:
 		trace_timestamps, trace_data, trace_control_reference, _, trace_error, trace_rmse = pickle.load(in_file)
 	SIMULATION_FREQ_HZ = int(len(trace_timestamps)/trace_timestamps[-1])
 	DURATION_SEC = int(trace_timestamps[-1])
@@ -76,7 +76,7 @@ if __name__ == "__main__":
 	#### Save the simulation results ###################################################################
 	####################################################################################################
 	if SAVE_TO_FILE:
-		with open(os.path.dirname(os.path.abspath(__file__))+"/save-trace-comparison-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
+		with open(os.path.dirname(os.path.abspath(__file__))+"/../save-trace-comparison-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
 			np.save(out_file, simulation_timestamps); np.save(out_file, simulation_data); np.save(out_file, simulation_control_reference)
 
 	####################################################################################################

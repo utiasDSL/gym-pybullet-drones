@@ -56,8 +56,8 @@ if __name__ == "__main__":
 		if i%control_every_n_steps==0:
 			target_rpy=np.array([0,0,-45])*env.DEG2RAD
 			action, pos_err, yaw_err = env.control(control_timestep=control_every_n_steps*env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
-										# target_pos=current_wp)											# DroneModel.CF2: waypoints
-										target_pos=np.array([0., 0., 0.3]), target_rpy=target_rpy)	# Hover and yaw			
+										target_pos=current_wp)											# DroneModel.CF2: waypoints
+										#target_pos=np.array([0., 0., 0.3]), target_rpy=target_rpy)	# Hover and yaw			
 			####################################################################################################
 			#### Go to the next waypoint #######################################################################
 			####################################################################################################
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 	#### Save the simulation results ###################################################################
 	####################################################################################################
 	if SAVE_TO_FILE:
-		with open(os.path.dirname(os.path.abspath(__file__))+"/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
+		with open(os.path.dirname(os.path.abspath(__file__))+"/../save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
 			np.save(out_file, simulation_timestamps); np.save(out_file, simulation_data); np.save(out_file, simulation_control_reference)
 
 	####################################################################################################
