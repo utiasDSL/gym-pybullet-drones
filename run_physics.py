@@ -47,20 +47,20 @@ if __name__ == "__main__":
 		####################################################################################################
 		#### Apply x-axis torque ###########################################################################
 		####################################################################################################
-		p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT) 				# CORRECT
-		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT) 				# INCORRECT
+		p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT) 			# CORRECT
+		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT) 			# INCORRECT
 		
 		####################################################################################################
 		#### Apply y-axis torque ###########################################################################
 		####################################################################################################
-		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT) 				# CORRECT
-		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT) 				# INCORRECT
+		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT) 			# CORRECT
+		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT) 			# INCORRECT
 		
 		####################################################################################################
 		#### Apply z-axis torque ###########################################################################
 		####################################################################################################
-		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT) 				# CORRECT
-		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT) 				# INCORRECT
+		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT) 			# CORRECT
+		# p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT) 			# INCORRECT
 
 		####################################################################################################
 		#### Step, printout, and sync ######################################################################
