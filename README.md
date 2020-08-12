@@ -126,8 +126,9 @@ Check [`_clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-dro
 The reward function can/should be modified in [`_computeReward()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L434), for example
 ```
 >>> def _computeReward(self, state):
->>> 	if state[2] > 0.5: return 1000
->>> 	elif state[2] > 0.1: return 100
+>>>   height = state[2]
+>>> 	if height > 0.5: return 1000
+>>> 	elif height > 0.1: return 100
 >>> 	else: return -1
 ```
 
@@ -135,8 +136,10 @@ The reward function can/should be modified in [`_computeReward()`](https://githu
 The halting conditions can/should be modified in [`_isDone()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L458), for example
 ```
 >>> def _isDone(self, state):
->>> 	if np.abs(state[0])>.5 or np.abs(state[1])>.5 or np.abs(state[2])>=1 \
->>>           or np.abs(state[7])>np.pi/2 or np.abs(state[8])>np.pi/2 \
+>>>   x = state[0]; y = state[1]; z = state[2] 
+>>>   roll = state[7]; pitch = state[8]
+>>> 	if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
+>>>           or np.abs(roll)>np.pi/2 or np.abs(pitch)>np.pi/2 \
 >>>           or self.step_counter > 5*self.SIM_FREQ: 
 >>> 	  return True
 >>> 	else: 
