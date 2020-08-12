@@ -3,7 +3,7 @@ A simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) 
 
 Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
-<img src="images/wp.gif" alt="alt text" width="350"> <img src="images/wp.png" alt="alt text" width="450">
+<img src="images/wp.gif" alt="alt text" width="360"> <img src="images/wp.png" alt="alt text" width="450">
 
 
 
