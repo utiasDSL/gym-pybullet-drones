@@ -67,7 +67,7 @@ $ python run_flight.py
 <img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
 
 
-`run_learning.py` is a minimal **RL example** using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html)' to learn how to take-off
+`run_learning.py` is a minimal **RL example** using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) to learn how to take-off
 ```
 $ conda activate myenv					# If using a conda environment
 $ cd gym-pybullet-drones/
