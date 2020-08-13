@@ -46,13 +46,13 @@ There are 4 main files in `scripts/`: `run_physics.py`, `run_trace.py`, `run_fli
 
 `run_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
-$ conda activate myenv                    # If using a conda environment
+$ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
-$ python run_physics.py                 # Or run_physics_standalone.py
+$ python run_physics.py                  # Or run_physics_standalone.py
 ```
 `run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/validation_traces/trace.pkl)
 ```
-$ conda activate myenv                    # If using a conda environment
+$ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_trace.py
 ```
@@ -61,7 +61,7 @@ $ python run_trace.py
 
 `run_flight.py` runs an independent flight **using PID control** implemented in [`control()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L504)
 ```
-$ conda activate myenv                    # If using a conda environment
+$ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_flight.py
 ```
@@ -70,7 +70,7 @@ $ python run_flight.py
 
 `run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
-$ conda activate myenv                    # If using a conda environment
+$ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_learning.py
 ```
@@ -84,25 +84,25 @@ $ python run_learning.py
 A single quadrotor enviroment can be created with
 ```
 >>> env = SingleDroneEnv(drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
->>>            pybullet=True, \        # Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
->>>            normalized_spaces=True, \    # Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
->>>            freq=240, \            # The stepping frequency of the simulation (remove this comment)
->>>            gui=True, \            # Whether to display PyBullet's GUI (remove this comment)
->>>            obstacles=False, \        # Whether to add obstacles to the environment (remove this comment)
->>>            record=False)            # Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
->>>                            # See run_flight.py for an example
+>>>            pybullet=True, \                            # Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
+>>>            normalized_spaces=True, \                   # Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
+>>>            freq=240, \                                 # The stepping frequency of the simulation (remove this comment)
+>>>            gui=True, \                                 # Whether to display PyBullet's GUI (remove this comment)
+>>>            obstacles=False, \                          # Whether to add obstacles to the environment (remove this comment)
+>>>            record=False)                               # Whether to save a .mp4 video in gym-pybullet-drones/ (remove this comment)
+>>>                                                        # See run_flight.py for an example
 ````
 Or using
 ```
->>> env = gym.make('single-drone-v0')            # See run_learning_test.py
+>>> env = gym.make('single-drone-v0')                      # See run_learning_test.py
 ```
 Then, the environment can be stepped with
 ```
 >>> obs = env.reset()
 >>> for _ in range(10*240):
->>>        obs, reward, done, info = env.step(env.action_space.sample())
->>>        env.render()
->>>        if done: obs = env.reset()
+>>>     obs, reward, done, info = env.step(env.action_space.sample())
+>>>     env.render()
+>>>     if done: obs = env.reset()
 >>> env.close()
 ```
 
@@ -127,24 +127,24 @@ Check [`_clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-dro
 The reward function can/should be modified in [`_computeReward()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L435), for example
 ```
 >>> def _computeReward(self, state):
->>>   height = state[2]
->>>   if height > 0.5: return 1000
->>>   elif height > 0.1: return 100
->>>   else: return -1
+>>>     height = state[2]
+>>>     if height > 0.5: return 1000
+>>>     elif height > 0.1: return 100
+>>>     else: return -1
 ```
 
 ### Done
 The halting conditions can/should be modified in [`_isDone()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py#L459), for example
 ```
 >>> def _isDone(self, state):
->>>   x = state[0]; y = state[1]; z = state[2] 
->>>   roll = state[7]; pitch = state[8]
->>>   if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
+>>>     x = state[0]; y = state[1]; z = state[2] 
+>>>     roll = state[7]; pitch = state[8]
+>>>     if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
 >>>           or np.abs(roll)>np.pi/2 or np.abs(pitch)>np.pi/2 \
 >>>           or self.step_counter > 5*self.SIM_FREQ: 
->>>       return True
->>>   else: 
->>>       return False
+>>>         return True
+>>>     else: 
+>>>         return False
 ```
 
 
