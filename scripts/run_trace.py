@@ -12,9 +12,9 @@ from utils import *
 from gym_pybullet_drones.envs.DroneModel import DroneModel
 from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
 from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
+from gym_pybullet_drones.envs.ControlType import ControlType
 from gym_pybullet_drones.envs.Control import Control
 
-DRONE = DroneModel.CF2X
 GUI = False
 RECORD_VIDEO = False
 SAVE_TO_FILE = True
@@ -35,13 +35,17 @@ if __name__ == "__main__":
     #### Initialize the simulation #####################################################################
     ####################################################################################################
     start = time.time()
-    env = SingleDroneEnv(drone_model=DRONE, pybullet=True, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
+    env = SingleDroneEnv(drone_model=DroneModel.CF2X, pybullet=True, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
     initial_state = env.reset()
     action = np.zeros(4); pos_err = 9999.
     trace_control_reference[:,2] = initial_state[2]         # i.e drone starts at (0, 0, initial_state[2])
     simulation_data = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,16))
     simulation_control_reference = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,12))
     simulation_timestamps = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,1))
+    ####################################################################################################
+    #### Setup the controller ##########################################################################
+    ####################################################################################################
+    ctrl = Control(env, control_type=ControlType.PID)
     for i in range(DURATION_SEC*env.SIM_FREQ):
 
         ####################################################################################################
@@ -49,21 +53,10 @@ if __name__ == "__main__":
         ####################################################################################################
         state, reward, done, info = env.step(action)
 
-
-
-###########
-
-        ctrl = Control(env)    
-        ctrl.computeControl()    
-
-###########
-        
-
-
         ####################################################################################################
         #### Compute the next action using the set points from the trace file ##############################
         ####################################################################################################
-        action, pos_err, yaw_err = env.control(control_timestep=env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
+        action, pos_err, yaw_err = ctrl.computeControl(control_timestep=env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
                                     target_pos=trace_control_reference[i,0:3], target_rpy=np.array([0,0,0]), target_vel=trace_control_reference[i,3:6])
 
         ####################################################################################################

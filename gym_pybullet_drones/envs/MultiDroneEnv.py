@@ -4,8 +4,6 @@ from datetime import datetime
 import pdb
 import math
 import numpy as np
-from scipy.optimize import nnls
-from scipy.spatial.transform import Rotation
 import pybullet as p
 import pybullet_data
 import gym

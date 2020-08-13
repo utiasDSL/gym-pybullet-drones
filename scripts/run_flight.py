@@ -12,14 +12,16 @@ from utils import *
 from gym_pybullet_drones.envs.DroneModel import DroneModel
 from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
 from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
+from gym_pybullet_drones.envs.ControlType import ControlType
+from gym_pybullet_drones.envs.Control import Control
 
-DRONE = DroneModel.CF2X
+DRONE = DroneModel.CFX
 GUI = True
 RECORD_VIDEO = True
 SAVE_TO_FILE = True
 SIMULATION_FREQ_HZ = 240
 CONTROL_FREQ_HZ = 48
-DURATION_SEC = 30
+DURATION_SEC = 10
 NUM_RESTARTS = 0
 
 if __name__ == "__main__":
@@ -43,6 +45,10 @@ if __name__ == "__main__":
     simulation_data = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,16))
     simulation_control_reference = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,12))
     simulation_timestamps = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,1))
+    ####################################################################################################
+    #### Setup the controller ##########################################################################
+    ####################################################################################################
+    ctrl = Control(env, control_type=ControlType.PID)
     for i in range(DURATION_SEC*env.SIM_FREQ):
 
         ####################################################################################################
@@ -55,9 +61,10 @@ if __name__ == "__main__":
         ####################################################################################################
         if i%control_every_n_steps==0:
             target_rpy=np.array([0,0,-45])*env.DEG2RAD
-            action, pos_err, yaw_err = env.control(control_timestep=control_every_n_steps*env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
-                                        target_pos=current_wp)                                            # DroneModel.CF2: waypoints
-                                        #target_pos=np.array([0., 0., 0.3]), target_rpy=target_rpy)    # Hover and yaw            
+            action, pos_err, yaw_err = ctrl.computeControl(control_timestep=control_every_n_steps*env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
+                                        target_pos=current_wp)                                          # Waypoints
+                                        # target_pos=np.array([-1., -1., 0.8]))                         # XYZ transfer
+                                        # target_pos=np.array([0., 0., 0.5]), target_rpy=target_rpy)    # Hover and yaw         
             ####################################################################################################
             #### Go to the next waypoint #######################################################################
             ####################################################################################################
