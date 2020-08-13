@@ -12,6 +12,7 @@ from utils import *
 from gym_pybullet_drones.envs.DroneModel import DroneModel
 from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
 from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
+from gym_pybullet_drones.envs.Control import Control
 
 DRONE = DroneModel.CF2X
 GUI = False
@@ -47,7 +48,18 @@ if __name__ == "__main__":
 		#### Step the simulation  ##########################################################################
 		####################################################################################################
 		state, reward, done, info = env.step(action)
+
+
+
+###########
+
+		ctrl = Control(env)	
+		ctrl.computeControl()	
+
+###########
 		
+
+
 		####################################################################################################
 		#### Compute the next action using the set points from the trace file ##############################
 		####################################################################################################
@@ -65,7 +77,7 @@ if __name__ == "__main__":
 		#### Printout and sync #############################################################################
 		####################################################################################################
 		env.render()
-		if GUI: sync_sim(i, start, env.TIMESTEP)
+		if GUI: sync(i, start, env.TIMESTEP)
 
 	####################################################################################################
 	#### Close the environment #########################################################################

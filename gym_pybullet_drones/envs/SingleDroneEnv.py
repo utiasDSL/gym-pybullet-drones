@@ -13,7 +13,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 import xml.etree.ElementTree as etxml
 
-from .DroneModel import DroneModel
+from gym_pybullet_drones.envs.DroneModel import DroneModel
 
 
 

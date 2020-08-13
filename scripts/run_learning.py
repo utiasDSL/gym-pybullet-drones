@@ -64,7 +64,7 @@ if __name__ == "__main__":
 		else: action, _states, _dict = policy.compute_single_action(obs)
 		obs, reward, done, info = env.step(action)
 		env.render()
-		sync_sim(i, start, env.TIMESTEP)
+		sync(i, start, env.TIMESTEP)
 		if done: obs = env.reset()
 	env.close()
 

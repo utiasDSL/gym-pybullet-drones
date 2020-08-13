@@ -68,7 +68,7 @@ if __name__ == "__main__":
 		p.stepSimulation(physicsClientId=PYB_CLIENT)
 		env._showFrame()
 		env.render()
-		sync_sim(i, start, env.TIMESTEP)
+		sync(i, start, env.TIMESTEP)
 
 		####################################################################################################
 		#### Reset #########################################################################################
