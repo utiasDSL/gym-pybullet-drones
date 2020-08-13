@@ -140,8 +140,8 @@ The halting conditions can/should be modified in [`_isDone()`](https://github.co
 >>>     x = state[0]; y = state[1]; z = state[2] 
 >>>     roll = state[7]; pitch = state[8]
 >>>     if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
->>>           or np.abs(roll)>np.pi/2 or np.abs(pitch)>np.pi/2 \
->>>           or self.step_counter > 5*self.SIM_FREQ: 
+>>>             or np.abs(roll)>np.pi/2 or np.abs(pitch)>np.pi/2 \
+>>>             or self.step_counter > 5*self.SIM_FREQ: 
 >>>         return True
 >>>     else: 
 >>>         return False
