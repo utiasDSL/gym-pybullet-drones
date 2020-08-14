@@ -83,3 +83,4 @@ if __name__ == "__main__":
         if i>1 and i%((DURATION_SEC/(NUM_RESTARTS+1))*240)==0: p.resetSimulation(physicsClientId=PYB_CLIENT)
 
     p.disconnect(physicsClientId=PYB_CLIENT)
+    

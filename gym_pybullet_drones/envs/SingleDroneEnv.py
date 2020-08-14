@@ -467,9 +467,3 @@ class SingleDroneEnv(gym.Env):
         self.Y_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,LENGTH,0],lineColorRGB=[0,1,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Y_AX,physicsClientId=self.CLIENT)
         self.Z_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,0,LENGTH],lineColorRGB=[0,0,1],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Z_AX,physicsClientId=self.CLIENT)
         
-
-
-
-
-
-

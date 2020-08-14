@@ -123,13 +123,3 @@ class MultiDroneEnv(gym.Env):
     def _physicsToRPMs(self, thrust, x_torque, y_torque, z_torque):
         pass
 
-
-
-
-
-
-
-
-
-
-
