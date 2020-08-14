@@ -14,12 +14,12 @@ class Control():
     #### Initialize the controller #####################################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - env (SingleDroneEnv)                                aaa
-    #### - control_type (ControlType)                                aaa
+    #### - env (SingleDroneEnv)             simulation environment #####################################
+    #### - control_type (ControlType)       type of controller #########################################
     ####################################################################################################
     def __init__(self, env: SingleDroneEnv, control_type: ControlType=ControlType.PID):
         ####################################################################################################
-        #### TBD ###########################################################################
+        #### Set general use constants #####################################################################
         ####################################################################################################
         self.DRONE_MODEL = env.DRONE_MODEL; self.GRAVITY = env.GRAVITY; self.KF = env.KF; self.KT = env.KM
         self.MAX_THRUST = env.MAX_THRUST; self.MAX_XY_TORQUE = env.MAX_XY_TORQUE; self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
@@ -28,7 +28,7 @@ class Control():
         self.B_COEFF = np.array([1/env.KF, 1/(env.KF*env.L), 1/(env.KF*env.L), 1/env.KM]) 
         self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
         ####################################################################################################
-        #### TBD ###########################################################################
+        #### Set drone model-specific constants  ###########################################################
         ####################################################################################################
         if self.DRONE_MODEL==DroneModel.HB:
             self.P_COEFF_FOR = np.array([.1, .1, .2]); self.I_COEFF_FOR = np.array([.0001, .0001, .0001]); self.D_COEFF_FOR = np.array([.3, .3, .4])
@@ -54,18 +54,18 @@ class Control():
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (Float)         timestep at which control is computed ######################
-    #### - cur_pos (3by1 list/array)        current position ###########################################
-    #### - cur_quat_rpy (4by1 list/array)   current orientation as a quaternion ########################
-    #### - cur_vel (3by1 list/array)        current velocity ###########################################
-    #### - cur_ang_vel (3by1 list/array)    current angular velocity ###################################
-    #### - target_pos (3by1 list/array)     desired position ###########################################
-    #### - target_rpy (3by1 list/array)     desired orientation as roll, pitch, yaw ####################
-    #### - target_vel (3by1 list/array)     desired velocity ###########################################
-    #### - target_ang_vel (3by1 list/array) desired angular velocity ###################################
+    #### - cur_pos (3-by-1 array)           current position ###########################################
+    #### - cur_quat_rpy (4-by-1 array)      current orientation as a quaternion ########################
+    #### - cur_vel (3-by-1 array)           current velocity ###########################################
+    #### - cur_ang_vel (3-by-1 array)       current angular velocity ###################################
+    #### - target_pos (3-by-1 array)        desired position ###########################################
+    #### - target_rpy (3-by-1 array)        desired orientation as roll, pitch, yaw ####################
+    #### - target_vel (3-by-1 array)        desired velocity ###########################################
+    #### - target_ang_vel (3-by-1 array)    desired angular velocity ###################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - rpm (4by1 list/array)            RPM values to apply to the 4 motors ########################
-    #### - pos_err (3by1 list/array)        current XYZ position error #################################
+    #### - rpm (4-by-1 array)               RPM values to apply to the 4 motors ########################
+    #### - pos_err (3-by-1 array)           current XYZ position error #################################
     #### - yaw_err (Float)                  current yaw error ##########################################
     ####################################################################################################
     def computeControl(self, control_timestep, cur_pos, cur_quat_rpy, cur_vel, cur_ang_vel, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
@@ -77,33 +77,33 @@ class Control():
             ####################################################################################################
             if self.DRONE_MODEL==DroneModel.HB:
                 if target_rpy[2] != 0: print("\n[WARNING] ctrl it:", self.control_counter, "in computeControl(), desired yaw={:.0f}deg but yaw control is NOT implemented for DroneModel.HB".format(target_rpy[2]*self.RAD2DEG))
-                thrust, computed_target_rpy, pos_err = self._simplePositionControl(control_timestep, cur_pos, cur_quat_rpy, target_pos)
-                rpm = self._simpleAttitudeControl(control_timestep, cur_quat_rpy, thrust, computed_target_rpy)
+                thrust, computed_target_rpy, pos_err = self._simplePIDPositionControl(control_timestep, cur_pos, cur_quat_rpy, target_pos)
+                rpm = self._simplePIDAttitudeControl(control_timestep, cur_quat_rpy, thrust, computed_target_rpy)
             ####################################################################################################
             #### PID control tuned for Bitcraze's Crazyflie 2.x ################################################
             ####################################################################################################
             elif self.DRONE_MODEL==DroneModel.CF2X or self.DRONE_MODEL==DroneModel.CF2P:  
-                base_thrust, computed_target_rpy, pos_err = self._dslPositionControl(control_timestep, cur_pos, cur_quat_rpy, cur_vel, target_pos, target_rpy, target_vel)
-                rpm = self._dslAttitudeControl(control_timestep, cur_quat_rpy, base_thrust, computed_target_rpy, cur_ang_vel, target_ang_vel)
+                base_thrust, computed_target_rpy, pos_err = self._dslPIDPositionControl(control_timestep, cur_pos, cur_quat_rpy, cur_vel, target_pos, target_rpy, target_vel)
+                rpm = self._dslPIDAttitudeControl(control_timestep, cur_quat_rpy, base_thrust, computed_target_rpy, cur_ang_vel, target_ang_vel)
             cur_rpy = p.getEulerFromQuaternion(cur_quat_rpy)
             return rpm, pos_err, computed_target_rpy[2]-cur_rpy[2]
         else: print("[ERROR] ctrl it:", self.control_counter, "ControlleType not yet implemented")
 
     ####################################################################################################
-    #### TBD ##############################################################
+    #### Generic PID position control (without yaw) ####################################################
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (Float)         timestep at which control is computed ######################
-    #### - cur_pos (3by1 list/array)        current position ###########################################
-    #### - cur_quat_rpy (4by1 list/array)   current orientation as a quaternion ########################
-    #### - target_pos (3by1 list/array)     desired position ###########################################
+    #### - cur_pos (3-by-1 array)           current position ###########################################
+    #### - cur_quat_rpy (4-by-1 array)      current orientation as a quaternion ########################
+    #### - target_pos (3-by-1 array)        desired position ###########################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - thrust (Float)            
-    #### - target_rpy (3by1 list/array)        
-    #### - yaw_err (Float)                  
+    #### - thrust (Float)                   thrust along the drone z-axis ##############################
+    #### - target_rpy (3-by-1 array)        computed target roll, pitch, and yaw #######################
+    #### - yaw_err (Float)                  current yaw error ##########################################
     ####################################################################################################
-    def _simplePositionControl(self, control_timestep, cur_pos, cur_quat_rpy, target_pos):
+    def _simplePIDPositionControl(self, control_timestep, cur_pos, cur_quat_rpy, target_pos):
         pos_e = target_pos - np.array(cur_pos).reshape(3)
         d_pos_e = (pos_e - self.last_pos_e) / control_timestep
         self.last_pos_e = pos_e
@@ -122,18 +122,18 @@ class Control():
         return target_force[2], computed_target_rpy, pos_e
 
     ####################################################################################################
-    #### TBD ####################################################################
+    #### Generic PID attiutude control (without yaw) ###################################################
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (Float)         timestep at which control is computed ######################
-    #### - cur_quat_rpy (4by1 list/array)   current orientation as a quaternion ########################
-    #### - thrust (Float)                   aa
-    #### - comp_tar_rpy (3by1 list/array)   aa
+    #### - cur_quat_rpy (4-by-1 array)      current orientation as a quaternion ########################
+    #### - thrust (Float)                   desired thrust along the drone z-axis ######################
+    #### - comp_tar_rpy (3-by-1 array)      computed target roll, pitch, and yaw #######################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - rpm (4by1 list/array)            RPM values to apply to the 4 motors ########################
+    #### - rpm (4-by-1 array)               RPM values to apply to the 4 motors ########################
     ####################################################################################################
-    def _simpleAttitudeControl(self, control_timestep, cur_quat_rpy, thrust, computed_target_rpy):
+    def _simplePIDAttitudeControl(self, control_timestep, cur_quat_rpy, thrust, computed_target_rpy):
         cur_rpy = p.getEulerFromQuaternion(cur_quat_rpy)
         rpy_e = computed_target_rpy - np.array(cur_rpy).reshape(3,) 
         if rpy_e[2] > np.pi: rpy_e[2] = rpy_e[2] - 2*np.pi
@@ -145,23 +145,23 @@ class Control():
         return self._physicsToRPM(thrust, target_torques[0], target_torques[1], target_torques[2])
 
     ####################################################################################################
-    #### TBD ##############################################################
+    #### DSL's CF2.x PID position control ##############################################################
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (Float)         timestep at which control is computed ######################
-    #### - cur_pos (3by1 list/array)        current position ###########################################
-    #### - cur_quat_rpy (4by1 list/array)   current orientation as a quaternion ########################
-    #### - cur_vel (3by1 list/array)        current velocity ###########################################
-    #### - target_pos (3by1 list/array)     desired position ###########################################
-    #### - target_rpy (3by1 list/array)     desired orientation as roll, pitch, yaw ####################
-    #### - target_vel (3by1 list/array)     desired velocity ###########################################
+    #### - cur_pos (3-by-1 array)           current position ###########################################
+    #### - cur_quat_rpy (4-by-1 array)      current orientation as a quaternion ########################
+    #### - cur_vel (3-by-1 array)           current velocity ###########################################
+    #### - target_pos (3-by-1 array)        desired position ###########################################
+    #### - target_rpy (3-by-1 array)        desired orientation as roll, pitch, yaw ####################
+    #### - target_vel (3-by-1 array)        desired velocity ###########################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - thrust (Float)            
-    #### - target_rpy (3by1 list/array)        
-    #### - yaw_err (Float)                  
+    #### - thrust (Float)                   thrust along the drone z-axis ##############################
+    #### - target_rpy (3-by-1 array)        target roll, pitch, and yaw ################################
+    #### - yaw_err (Float)                  current yaw error ##########################################
     ####################################################################################################
-    def _dslPositionControl(self, control_timestep, cur_pos, cur_quat_rpy, cur_vel, target_pos, target_rpy, target_vel):
+    def _dslPIDPositionControl(self, control_timestep, cur_pos, cur_quat_rpy, cur_vel, target_pos, target_rpy, target_vel):
         cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat_rpy)).reshape(3,3)
         pos_err = target_pos - cur_pos
         vel_err = target_vel - cur_vel 
@@ -180,20 +180,20 @@ class Control():
         return base_thrust, target_euler, pos_err
 
     ####################################################################################################
-    #### Compute the control action ####################################################################
+    #### DSL's CF2.x PID attitude control ##############################################################
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (Float)         timestep at which control is computed ######################
-    #### - cur_quat_rpy (4by1 list/array)   current orientation as a quaternion ########################
-    #### - base_thrust (Float)              aa
-    #### - target_euler (3by1 list/array)   aa
-    #### - cur_ang_vel (3by1 list/array)    current angular velocity ###################################
-    #### - target_ang_vel (3by1 list/array) desired angular velocity ###################################
+    #### - cur_quat_rpy (4-by-1 array)      current orientation as a quaternion ########################
+    #### - base_thrust (Float)              desired thrust along the drone z-axis ######################
+    #### - target_euler (3-by-1 array)      computed target euler angles ###############################
+    #### - cur_ang_vel (3-by-1 array)       current angular velocity ###################################
+    #### - target_ang_vel (3-by-1 array)    desired angular velocity ###################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - rpm (4by1 list/array)            RPM values to apply to the 4 motors ########################
+    #### - rpm (4-by-1 array)               RPM values to apply to the 4 motors ########################
     ####################################################################################################
-    def _dslAttitudeControl(self, control_timestep, cur_quat_rpy, base_thrust, target_euler, cur_ang_vel, target_ang_vel):
+    def _dslPIDAttitudeControl(self, control_timestep, cur_quat_rpy, base_thrust, target_euler, cur_ang_vel, target_ang_vel):
         cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat_rpy)).reshape(3,3)
         target_quat = (Rotation.from_euler('XYZ', target_euler, degrees=False)).as_quat()
         w,x,y,z = target_quat
@@ -219,7 +219,7 @@ class Control():
     #### - z_torque (Float)                 desired z-axis torque ######################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - rpm (4by1 list/array)            the RPM values to apply to the 4 motors ####################
+    #### - rpm (4-by-1 array)               RPM values to apply to the 4 motors ########################
     ####################################################################################################
     def _physicsToRPM(self, thrust, x_torque, y_torque, z_torque):
         new_line = True
@@ -237,6 +237,9 @@ class Control():
             print("[WARNING] ctrl it:", self.control_counter, "in _physicsToRPM(), unfeasible YAW torque {:.2f} outside range [{:.2f}, {:.2f}]".format(z_torque, -self.MAX_Z_TORQUE, self.MAX_Z_TORQUE))
         B = np.multiply(np.array([thrust, x_torque, y_torque, z_torque]), self.B_COEFF)
         sq_rpm = np.dot(self.INV_A, B)
+        ####################################################################################################
+        #### Use NNLS if any of the desired angular velocities is negative #################################
+        ####################################################################################################
         if np.min(sq_rpm) < 0:
             sol, res = nnls(self.A, B, maxiter=3*self.A.shape[1])
             if new_line: print(); new_line = False

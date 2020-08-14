@@ -246,15 +246,15 @@ class SingleDroneEnv(gym.Env):
         return self.DRONE_ID
 
     ####################################################################################################
-    #### Normalize the [0, MAX RPM] range to the [-1,1] range #################### currently unused ####
+    #### Normalize the [0, MAX RPM] range to the [-1,1] range ##########################################
     ####################################################################################################    
     #### Arguments #####################################################################################
-    #### - rpm (4by1 list/array)            RPM values of the 4 motors #################################
+    #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - action (4by1 list/array)         normalized action to apply to the 4 motors #################
+    #### - action (4-by-1 array)            normalized action to apply to the 4 motors #################
     ####################################################################################################
-    def _rpmToNormAction(self, rpm):
+    def _rpmToNormAction(self, rpm): ############################################# Currently unused ####
         if np.any(rpm) < 0: print("\n[ERROR] it:", self.step_counter, "in _rpmToNormAction(), negative RPM")
         return np.where(rpm <= self.HOVER_RPM, (rpm/self.HOVER_RPM)-1, rpm/self.MAX_RPM)
 
@@ -262,10 +262,10 @@ class SingleDroneEnv(gym.Env):
     #### Denormalize the [-1,1] range to the [0, MAX RPM] range ########################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - action (4by1 list/array)         normalized [-1,1] actions applied to the 4 motors ##########
+    #### - action (4-by-1 array)            normalized [-1,1] actions applied to the 4 motors ##########
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - rpm (4by1 list/array)            RPM values to apply to the 4 motors ########################
+    #### - rpm (4-by-1 array)               RPM values to apply to the 4 motors ########################
     ####################################################################################################
     def _normActionToRPM(self, action): 
         if np.any(np.abs(action)) > 1: print("\n[ERROR] it:", self.step_counter, "in _normActionToRPM(), out-of-bound action")
@@ -275,10 +275,10 @@ class SingleDroneEnv(gym.Env):
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - state (20by1 list/array)         raw simulation state #######################################
+    #### - state (20-by-1 array)            raw simulation state #######################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - norm. state (20by1 list/array)   clipped and normalized simulation state ####################
+    #### - norm. state (20-by-1 array)      clipped and normalized simulation state ####################
     ####################################################################################################
     def _clipAndNormalizeState(self, state):
         clipped_pos = np.clip(state[0:3], -1, 1)
@@ -304,7 +304,7 @@ class SingleDroneEnv(gym.Env):
     #### Compute the current state's reward ############################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - norm. state (20by1 list/array)   clipped and normalized simulation state ####################
+    #### - norm. state (20-by-1 array)      clipped and normalized simulation state ####################
     ####################################################################################################
     #### Returns #######################################################################################
     #### - reward (Float)                   reward value ###############################################
@@ -328,7 +328,7 @@ class SingleDroneEnv(gym.Env):
     #### Evaluate the current state's halting conditions ###############################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - norm. state (20by1 list/array)   clipped and normalized simulation state ####################
+    #### - norm. state (20-by-1 array)      clipped and normalized simulation state ####################
     ####################################################################################################
     #### Returns #######################################################################################
     #### - done (Boolean)                   whether the halting conditions of the episode are met ######
@@ -387,7 +387,7 @@ class SingleDroneEnv(gym.Env):
     #### PyBullet physics implementation ###############################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - rpm (4by1 list/array)            RPM values of the 4 motors #################################
+    #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
     ####################################################################################################
     def _physics(self, rpm):
         forces = np.array(rpm**2)*self.KF
@@ -412,12 +412,12 @@ class SingleDroneEnv(gym.Env):
         p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=[0,0,z_torque], flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
         
     ####################################################################################################
-    #### Alternative PyBullet physics implementation ############################# currently unused ####
+    #### Alternative PyBullet physics implementation ###################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - rpm (4by1 list/array)            RPM values of the 4 motors #################################
+    #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
     ####################################################################################################
-    def _physicsWithExplicitTorques(self, rpm): 
+    def _physicsWithExplicitTorques(self, rpm): ################################## Currently unused ####
         forces = np.array(rpm**2)*self.KF
         torques = np.array(rpm**2)*self.KM
         z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
@@ -439,7 +439,7 @@ class SingleDroneEnv(gym.Env):
     #### Custom dynamics implementation ################################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - rpm (4by1 list/array)            RPM values of the 4 motors #################################
+    #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
     ####################################################################################################
     def _noPyBulletDynamics(self, rpm):
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
