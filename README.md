@@ -129,7 +129,7 @@ The reward function can/should be modified in class [`UserDefinedFunctions`](htt
 >>> def rewardFunction(self, state):
 >>>     if self.USER == "Default":
 >>>     ...
->>>     elif self.USER == "Custom":                        # Use with: >>> env = SingleDroneEnv(user="Custom")
+>>>     elif self.USER == "Custom":         # Use with: >>> env = SingleDroneEnv(user="Custom")
 >>>         height = state[2]
 >>>         if height > 0.5: return 1000
 >>>         elif height > 0.1: return 100
@@ -143,7 +143,7 @@ The halting conditions can/should be modified in class [`UserDefinedFunctions`](
 >>> def doneFunction(self, state, sim_time):
 >>>     if self.USER == "Default":
 >>>     ...
->>>     elif self.USER == "Custom":                        # Use with: >>> env = SingleDroneEnv(user="Custom")
+>>>     elif self.USER == "Custom":         # Use with: >>> env = SingleDroneEnv(user="Custom")
 >>>         x = state[0]; y = state[1]; z = state[2] 
 >>>         roll = state[7]; pitch = state[8]
 >>>         if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
