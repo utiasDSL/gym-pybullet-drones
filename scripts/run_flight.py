@@ -15,7 +15,7 @@ from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
 from gym_pybullet_drones.envs.ControlType import ControlType
 from gym_pybullet_drones.envs.Control import Control
 
-DRONE = DroneModel.CFX
+DRONE = DroneModel.CF2X
 GUI = True
 RECORD_VIDEO = True
 SAVE_TO_FILE = True
