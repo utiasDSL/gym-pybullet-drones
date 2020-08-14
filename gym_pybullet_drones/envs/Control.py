@@ -196,7 +196,7 @@ class Control():
         target_x_ax = np.cross(target_y_ax, target_z_ax)
         target_rotation = (np.vstack([target_x_ax, target_y_ax, target_z_ax])).transpose()
         target_euler = (Rotation.from_matrix(target_rotation)).as_euler('XYZ', degrees=False)
-        if np.any(np.abs(target_euler) > math.pi): print("\n[ERROR] ctrl it:", self.control_counter, "in _dslPositionControl, values outside range [-pi,pi]")
+        if np.any(np.abs(target_euler) > math.pi): print("\n[ERROR] ctrl it:", self.control_counter, "in _dslPositionControl(), values outside range [-pi,pi]")
         return base_thrust, target_euler, pos_err
 
     ####################################################################################################

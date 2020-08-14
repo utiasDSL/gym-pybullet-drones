@@ -37,7 +37,7 @@ if __name__ == "__main__":
     #### Initialize the simulation #####################################################################
     ####################################################################################################
     start = time.time()
-    env = SingleDroneEnv(drone_model=DRONE, pybullet=True, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
+    env = SingleDroneEnv(drone_model=DRONE, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
     initial_state = env.reset()
     PYB_CLIENT = env.getPyBulletClient(); DRONE_ID = env.getDroneId()
     action = np.zeros(4); pos_err = 9999.

@@ -35,7 +35,7 @@ if __name__ == "__main__":
     #### Initialize the simulation #####################################################################
     ####################################################################################################
     start = time.time()
-    env = SingleDroneEnv(drone_model=DroneModel.CF2X, pybullet=True, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
+    env = SingleDroneEnv(drone_model=DroneModel.CF2X, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
     initial_state = env.reset()
     action = np.zeros(4); pos_err = 9999.
     trace_control_reference[:,2] = initial_state[2]         # i.e drone starts at (0, 0, initial_state[2])

@@ -64,6 +64,7 @@ class SingleDroneEnv(gym.Env):
         self.M = float(URDF_TREE[1][0][1].attrib['value']); self.L = float(URDF_TREE[0].attrib['arm']); self.THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib['thrust2weight'])
         self.IXX = float(URDF_TREE[1][0][2].attrib['ixx']); self.IYY = float(URDF_TREE[1][0][2].attrib['iyy']); self.IZZ = float(URDF_TREE[1][0][2].attrib['izz'])
         self.KF = float(URDF_TREE[0].attrib['kf']); self.KM = float(URDF_TREE[0].attrib['km'])
+        if not self.PYBULLET: self.J = np.diag([self.IXX, self.IYY, self.IZZ]); self.J_INV = np.linalg.inv(self.J)
         print("[INFO] SingleDroneEnv.__init__() loaded from the drone's .urdf file the following physical parameters (m, L, ixx, iyy, izz, kf, km, t2w):", self.M, self.L, self.IXX, self.IYY, self.IZZ, self.KF, self.KM, self.THRUST2WEIGHT_RATIO)
         ####################################################################################################
         #### Compute constants #############################################################################
@@ -363,6 +364,8 @@ class SingleDroneEnv(gym.Env):
         self.X_AX = -1; self.Y_AX = -1; self.Z_AX = -1;
         if self.NORM_SPACES: self.last_action = -1*np.ones(4)
         else: self.last_action = np.zeros(4)
+        if not self.PYBULLET: 
+            self.no_pybullet_vel = np.zeros(3); self.no_pybullet_ang_vel = np.zeros(3); self.no_pybullet_acc = np.zeros(3)
         ####################################################################################################
         #### Set PyBullet's parameters #####################################################################
         ####################################################################################################
@@ -451,20 +454,36 @@ class SingleDroneEnv(gym.Env):
     #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
     ####################################################################################################
     def _noPyBulletDynamics(self, rpm):
+        ####################################################################################################
+        #### Based on github.com/utiasDSL/dsl__projects__benchmark/tree/gym-wrapper/python_sim #############
+        ####################################################################################################
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)
+        rotation = np.array(p.getMatrixFromQuaternion(quat)).reshape(3,3)
         forces = np.array(rpm**2)*self.KF
-        torques = np.array(rpm**2)*self.KM
-        ####################################################################################################
-        ####################################################################################################
-        ####################################################################################################
-        #### To be implemented: github.com/utiasDSL/dsl__projects__benchmark/tree/gym-wrapper/python_sim ###
-        ####################################################################################################
-        ####################################################################################################
-        self.no_pybullet_vel = np.zeros(3)
-        self.no_pybullet_ang_vel = np.zeros(3)
-        pos = np.ones(3); quat = np.ones(4)
-        p.resetBasePositionAndOrientation(self.DRONE_ID, pos, quat)
+        thrust = np.array([0, 0, np.sum(forces)])
+        thrust_world_frame = np.dot(rotation,thrust)
+        force_world_frame = thrust_world_frame - np.array([0, 0, self.GRAVITY])
+        z_torques = np.array(rpm**2)*self.KM
+        z_torque = (z_torques[0] - z_torques[1] + z_torques[2] - z_torques[3])
+        if self.DRONE_MODEL==DroneModel.HB:
+            x_torque = (forces[1] - forces[3])*self.L
+            y_torque = (-forces[0] + forces[2])*self.L
+        elif self.DRONE_MODEL==DroneModel.CF2X:
+            x_torque = (forces[0] + forces[1] - forces[2] - forces[3])*self.L/np.sqrt(2)
+            y_torque = (- forces[0] + forces[1] + forces[2] - forces[3])*self.L/np.sqrt(2)
+        elif self.DRONE_MODEL==DroneModel.CF2P:
+            x_torque = (forces[1] - forces[3])*self.L
+            y_torque = (-forces[0] + forces[2])*self.L
+        torques = np.array([x_torque, y_torque, z_torque])
+        torques = torques - np.cross(self.no_pybullet_ang_vel, np.dot(self.J, self.no_pybullet_ang_vel))
+        ang_vel_deriv = np.dot(self.J_INV, torques)
+        self.no_pybullet_acc = force_world_frame / self.M
+        self.no_pybullet_vel = self.no_pybullet_vel + self.TIMESTEP * self.no_pybullet_acc
+        self.no_pybullet_ang_vel = self.no_pybullet_ang_vel + self.TIMESTEP * ang_vel_deriv
+        pos = pos + self.TIMESTEP * self.no_pybullet_vel
+        rpy = rpy + self.TIMESTEP * self.no_pybullet_ang_vel
+        p.resetBasePositionAndOrientation(self.DRONE_ID, pos, p.getQuaternionFromEuler(rpy))
 
     ####################################################################################################
     #### Draw the local frame of the drone #############################################################
