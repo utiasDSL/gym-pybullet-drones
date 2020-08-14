@@ -32,17 +32,19 @@ class SingleDroneEnv(gym.Env):
     #### Arguments #####################################################################################
     #### - drone_model (DroneModel)         the type of drone to use (associated to an .urdf file) #####
     #### - pybullet (Boolean)               whether to use PyBullet's physics engine ###################
+    #### - aero_effects (Boolean)           simple drag and ground effect in PyBullet ##################
     #### - normalized_spaces (Boolean)      whether to use normalized OpenAI Gym spaces ################
     #### - freq (Integer)                   the freqeuency (Hz) at which the simulation steps ##########
     #### - gui (Boolean)                    whether to use PyBullet's GUI ##############################
     #### - obstacles (Boolean)              whether to add obstacles in the simulation #################
     #### - record (Boolean)                 whether to save the simulation as an .mp4 video ############
     ####################################################################################################
-    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, pybullet=True, normalized_spaces=True, freq=240, gui=False, obstacles=False, record=False):
+    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, pybullet=True, aero_effects=False, normalized_spaces=True, freq=240, gui=False, obstacles=False, record=False):
         super(SingleDroneEnv, self).__init__()
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
-        self.DRONE_MODEL = drone_model; self.PYBULLET = pybullet; self.NORM_SPACES = normalized_spaces; self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; 
-        self.GUI=gui; self.OBSTACLES = obstacles; self.RECORD = record
+        self.DRONE_MODEL = drone_model; self.PYBULLET = pybullet; self.AERO_EFFECTS = aero_effects; self.NORM_SPACES = normalized_spaces
+        self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; self.GUI=gui; self.OBSTACLES = obstacles; self.RECORD = record
+        if self.AERO_EFFECTS and not self.PYBULLET: print("[WARNING] aerodynamic effect will not be computed because SingleDroneEnv was initalized with pybullet=False")
         ####################################################################################################
         #### Connect to PyBullet ###########################################################################
         ####################################################################################################
@@ -167,6 +169,7 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         if self.PYBULLET:
             self._physics(clipped_rpm)
+            if self.AERO_EFFECTS: self._simpleAerodynamicEffects()
             p.stepSimulation(physicsClientId=self.CLIENT)
             vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
         ####################################################################################################
@@ -410,7 +413,13 @@ class SingleDroneEnv(gym.Env):
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[2]], posObj=[-self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[3]], posObj=[0,-self.L,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
         p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=[0,0,z_torque], flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
-        
+   
+    ####################################################################################################
+    #### PyBullet implementation of drag and ground effect #############################################
+    ####################################################################################################
+    def _simpleAerodynamicEffects(self):
+        pass
+
     ####################################################################################################
     #### Alternative PyBullet physics implementation ###################################################
     ####################################################################################################
