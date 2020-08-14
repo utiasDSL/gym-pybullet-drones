@@ -138,8 +138,8 @@ class Control():
         computed_target_rpy[0] = np.clip(computed_target_rpy[0], -self.MAX_ROLL_PITCH, self.MAX_ROLL_PITCH)
         computed_target_rpy[1] = np.clip(computed_target_rpy[1], -self.MAX_ROLL_PITCH, self.MAX_ROLL_PITCH)
         cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat_rpy)).reshape(3,3)
-        target_force = np.dot(cur_rotation, target_force)
-        return target_force[2], computed_target_rpy, pos_e
+        thrust = np.dot(cur_rotation, target_force)
+        return thrust[2], computed_target_rpy, pos_e
 
     ####################################################################################################
     #### Generic PID attiutude control (without yaw) ###################################################
