@@ -9,11 +9,9 @@ import pickle
 import matplotlib.pyplot as plt
 
 from utils import *
-from gym_pybullet_drones.envs.DroneModel import DroneModel
-from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
+from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
 from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
-from gym_pybullet_drones.envs.ControlType import ControlType
-from gym_pybullet_drones.envs.Control import Control
+from gym_pybullet_drones.envs.Control import ControlType, Control
 
 DRONE = DroneModel.CF2X
 GUI = True

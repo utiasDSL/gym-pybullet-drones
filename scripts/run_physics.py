@@ -6,9 +6,7 @@ import numpy as np
 import pybullet as p
 
 from utils import *
-from gym_pybullet_drones.envs.DroneModel import DroneModel
-from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
-from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
+from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
 
 DURATION_SEC = 60
 NUM_RESTARTS = 0

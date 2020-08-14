@@ -16,9 +16,7 @@ from ray import tune
 from ray.rllib.agents import ppo
 
 from utils import *
-from gym_pybullet_drones.envs.DroneModel import DroneModel
-from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
-from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
+from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
 
 RLLIB = False
 

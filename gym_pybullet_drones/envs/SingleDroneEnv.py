@@ -1,17 +1,33 @@
 import os
 import time
-from datetime import datetime
 import pdb
 import math
 import numpy as np
 import pybullet as p
 import pybullet_data
 import gym
+import xml.etree.ElementTree as etxml
 from gym import error, spaces, utils
 from gym.utils import seeding
-import xml.etree.ElementTree as etxml
+from enum import Enum
+from datetime import datetime
 
-from gym_pybullet_drones.envs.DroneModel import DroneModel
+from gym_pybullet_drones.envs.UserDefinedFunctions import UserDefinedFunctions
+
+
+
+
+
+
+######################################################################################################################################################
+#### Drone models enumeration ########################################################################################################################
+######################################################################################################################################################
+
+
+class DroneModel(Enum):
+    HB = 0                   # Generic quadrotor (with AscTec Hummingbird intertial properties)
+    CF2X = 1                 # Bitcraze Craziflie 2.0 in the X configuration
+    CF2P = 2                 # Bitcraze Craziflie 2.0 in the + configuration
 
 
 

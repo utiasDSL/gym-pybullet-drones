@@ -1,12 +1,24 @@
 import math
 import numpy as np
 import pybullet as p
+from enum import Enum
 from scipy.optimize import nnls
 from scipy.spatial.transform import Rotation
 
-from gym_pybullet_drones.envs.ControlType import ControlType
-from gym_pybullet_drones.envs.DroneModel import DroneModel
-from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
+from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
+
+
+
+
+
+
+######################################################################################################################################################
+#### Control types enumeration #######################################################################################################################
+######################################################################################################################################################
+
+
+class ControlType(Enum):
+    PID = 0                  # PID control
 
 
 
@@ -18,7 +30,7 @@ from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
 ######################################################################################################################################################
 
 
-class Control():
+class Control(object):
 
     ####################################################################################################
     #### Initialize the controller #####################################################################
