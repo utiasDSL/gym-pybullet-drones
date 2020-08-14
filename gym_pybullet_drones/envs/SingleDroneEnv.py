@@ -54,12 +54,13 @@ class SingleDroneEnv(gym.Env):
     #### - gui (Boolean)                    whether to use PyBullet's GUI ##############################
     #### - obstacles (Boolean)              whether to add obstacles in the simulation #################
     #### - record (Boolean)                 whether to save the simulation as an .mp4 video ############
+    #### - user (String)                    passed to the __init__() of UserDefinedFunctions ###########
     ####################################################################################################
-    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, pybullet=True, aero_effects=False, normalized_spaces=True, freq=240, gui=False, obstacles=False, record=False):
+    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, pybullet=True, aero_effects=False, normalized_spaces=True, freq=240, gui=False, obstacles=False, record=False, user="Default"):
         super(SingleDroneEnv, self).__init__()
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
         self.DRONE_MODEL = drone_model; self.PYBULLET = pybullet; self.AERO_EFFECTS = aero_effects; self.NORM_SPACES = normalized_spaces
-        self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; self.GUI=gui; self.OBSTACLES = obstacles; self.RECORD = record
+        self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; self.GUI=gui; self.OBSTACLES = obstacles; self.RECORD = record; self.USER = user
         if self.AERO_EFFECTS and not self.PYBULLET: print("[WARNING] aerodynamic effect will not be computed because SingleDroneEnv was initalized with pybullet=False")
         ####################################################################################################
         #### Connect to PyBullet ###########################################################################
@@ -199,8 +200,8 @@ class SingleDroneEnv(gym.Env):
         rpy = p.getEulerFromQuaternion(quat)
         if self.NORM_SPACES: state = self._clipAndNormalizeState(np.hstack([pos, quat, rpy, vel, ang_v, self.last_action]))
         else: state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action])
-        reward = self._computeReward(state)
-        done = self._isDone(state) 
+        reward = self.USER_DEFINED_FUNCTIONS.rewardFunction(state)
+        done = self.USER_DEFINED_FUNCTIONS.doneFunction(state, self.step_counter/self.SIM_FREQ) 
         info = {"answer": 42}
         return state.reshape(20,), reward, done, info
 
@@ -303,11 +304,11 @@ class SingleDroneEnv(gym.Env):
         clipped_ang_vel_rp = np.clip(state[13:15], -10*np.pi, 10*np.pi)
         clipped_ang_vel_y = np.clip(state[15], -20*np.pi, 20*np.pi)
         if self.GUI:
-            if not(clipped_pos==np.array(state[0:3])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound position [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of _isDone()".format(state[0], state[1], state[2]))
-            if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound roll/pitch [{:.2f} {:.2f}], consider a more conservative implementation of _isDone()".format(state[7], state[8]))
-            if not(clipped_vel==np.array(state[10:13])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of _isDone()".format(state[10], state[11], state[12]))
-            if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of _isDone()".format(state[13], state[14], state[15]))
-            if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of _isDone()".format(state[13], state[14], state[15]))
+            if not(clipped_pos==np.array(state[0:3])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound position [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[0], state[1], state[2]))
+            if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound roll/pitch [{:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[7], state[8]))
+            if not(clipped_vel==np.array(state[10:13])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[10], state[11], state[12]))
+            if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[13], state[14], state[15]))
+            if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[13], state[14], state[15]))
         normalized_pos = clipped_pos
         normalized_rp = clipped_rp/(np.pi/3)
         normalized_y = state[9]/np.pi
@@ -315,55 +316,6 @@ class SingleDroneEnv(gym.Env):
         normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
         normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
         return np.hstack([normalized_pos, state[3:7], normalized_rp, normalized_y, normalized_vel, normalized_ang_vel_rp, normalized_ang_vel_y, self.last_action]).reshape(20,)
-
-    ####################################################################################################
-    #### Compute the current state's reward ############################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - norm. state (20-by-1 array)      clipped and normalized simulation state ####################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - reward (Float)                   reward value ###############################################
-    ####################################################################################################
-    def _computeReward(self, state):
-        ####################################################################################################
-        #### Customize the reward function #################################################################
-        ####################################################################################################
-        if state[2] > 0.8: reward = -1
-        elif state[2] > 0.5: reward = 2000
-        elif state[2] > 0.3: reward = 1000
-        elif state[2] > 0.2: reward = 500
-        elif state[2] > 0.15: reward = 100
-        elif state[2] > 0.1: reward = 10
-        else: reward = -1
-        ####################################################################################################
-        ####################################################################################################
-        return reward
-
-    ####################################################################################################
-    #### Evaluate the current state's halting conditions ###############################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - norm. state (20-by-1 array)      clipped and normalized simulation state ####################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - done (Boolean)                   whether the halting conditions of the episode are met ######
-    ####################################################################################################
-    def _isDone(self, state):
-        ####################################################################################################
-        #### Customize the episodes' halting conditions ####################################################
-        ####################################################################################################
-        if np.abs(state[0])>=1 or np.abs(state[1])>=1 or state[2]>=1 \
-                    or np.abs(state[7])>=np.pi/3 or np.abs(state[8])>=np.pi/3 \
-                    or np.abs(state[10])>=1 or np.abs(state[11])>=1 or np.abs(state[12])>=1 \
-                    or np.abs(state[13])>=10*np.pi or np.abs(state[14])>=10*np.pi or np.abs(state[15])>=20*np.pi \
-                    or self.step_counter > 3*self.SIM_FREQ: 
-            done = True
-        else: 
-            done = False
-        ####################################################################################################
-        ####################################################################################################
-        return done
 
     ####################################################################################################
     #### Housekeeping shared by the __init__() and reset() functions ###################################
@@ -375,6 +327,7 @@ class SingleDroneEnv(gym.Env):
         self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
         self.X_AX = -1; self.Y_AX = -1; self.Z_AX = -1; 
         self.GUI_INPUT_TEXT = -1; self.USE_GUI_RPM=False; self.last_input_switch = 0
+        self.USER_DEFINED_FUNCTIONS = UserDefinedFunctions(self.USER)
         if self.NORM_SPACES: self.last_action = -1*np.ones(4)
         else: self.last_action = np.zeros(4)
         if not self.PYBULLET: 
