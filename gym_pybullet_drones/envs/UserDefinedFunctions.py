@@ -46,7 +46,7 @@ class UserDefinedFunctions(object):
             else: return -1
         elif self.USER == "Custom": # Use with: >>> env = SingleDroneEnv(user="Custom")
             pass
-        else: print("[ERROR] in rewardFunctionExample(), unknown user")
+        else: print("[ERROR] in rewardFunction(), unknown user")
 
     ####################################################################################################
     #### Evaluate the current state's halting conditions ###############################################
