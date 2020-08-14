@@ -37,7 +37,7 @@ if __name__ == "__main__":
     start = time.time()
     env = SingleDroneEnv(drone_model=DRONE, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
     initial_state = env.reset()
-    PYB_CLIENT = env.getPyBulletClient(); DRONE_ID = env.getDroneId()
+    # PYB_CLIENT = env.getPyBulletClient(); DRONE_ID = env.getDroneId() # Use PYB_CLIENT, DRONE_ID to apply additional forces, if desired
     action = np.zeros(4); pos_err = 9999.
     control_every_n_steps = int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
     simulation_data = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,16))

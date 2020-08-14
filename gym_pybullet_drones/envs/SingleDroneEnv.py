@@ -111,10 +111,7 @@ class SingleDroneEnv(gym.Env):
         self.P2_SLIDER = p.addUserDebugParameter('Propeller 2 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
         self.P3_SLIDER = p.addUserDebugParameter('Propeller 3 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
         self.P4_SLIDER = p.addUserDebugParameter('Propeller 4 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
-        self.INPUT_TYPE = p.addUserDebugParameter('[0:1][1:13/24)[2:12/34][3:14/23][4:!]', 0, 4, 0, physicsClientId=self.CLIENT)
-        self.INPUT_SWITCH = p.addUserDebugParameter('Use GUI RPM (set to > 0.5)', 0, 1, 0, physicsClientId=self.CLIENT)
-        self.DISTURBANCE_SLIDER_1 = p.addUserDebugParameter('Push down', 0, 0.5, 0, physicsClientId=self.CLIENT)
-        self.DISTURBANCE_SLIDER_2 = p.addUserDebugParameter('Slap left', 0, 0.5, 0, physicsClientId=self.CLIENT)
+        self.INPUT_SWITCH = p.addUserDebugParameter('Use GUI RPM', 9999., -1., 0, physicsClientId=self.CLIENT)
         ####################################################################################################
         #### Housekeeping ##################################################################################
         ####################################################################################################
@@ -159,18 +156,17 @@ class SingleDroneEnv(gym.Env):
         #### Read the GUI's input parameters ###############################################################
         ####################################################################################################
         if self.GUI: 
-            input_switch_val = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,-p.readUserDebugParameter(self.DISTURBANCE_SLIDER_1, physicsClientId=self.CLIENT)], posObj=[self.L,0.,0.], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,p.readUserDebugParameter(self.DISTURBANCE_SLIDER_2, physicsClientId=self.CLIENT),0], posObj=[self.L,0.,0.], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        if self.GUI and input_switch_val > 0.5:
-            input_type_val = p.readUserDebugParameter(self.INPUT_TYPE, physicsClientId=self.CLIENT)
+            current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
+            if current_input_switch > self.last_input_switch:
+                self.last_input_switch = current_input_switch
+                if self.USE_GUI_RPM==False: self.USE_GUI_RPM=True
+                else: self.USE_GUI_RPM=False
+        if self.USE_GUI_RPM:
             p1, p2 = p.readUserDebugParameter(self.P1_SLIDER, physicsClientId=self.CLIENT), p.readUserDebugParameter(self.P2_SLIDER, physicsClientId=self.CLIENT)
             p3, p4 = p.readUserDebugParameter(self.P3_SLIDER, physicsClientId=self.CLIENT), p.readUserDebugParameter(self.P4_SLIDER, physicsClientId=self.CLIENT)
-            if input_type_val < 1: clipped_rpm = np.array([p1,p1,p1,p1])
-            elif input_type_val < 2: clipped_rpm = np.array([p1,p2,p1,p2])
-            elif input_type_val < 3: clipped_rpm = np.array([p1,p1,p3,p3])
-            elif input_type_val < 4: clipped_rpm = np.array([p1,p2,p2,p1])
-            elif input_type_val < 5: clipped_rpm = np.array([p1,p2,p3,p4])
+            clipped_rpm = np.array([p1,p2,p3,p4])
+            if self.step_counter%(self.SIM_FREQ/2)==0:
+                self.GUI_INPUT_TEXT = p.addUserDebugText("Using GUI RPM",textPosition=[0,0,0],textColorRGB=[1,0,0],lifeTime=1,textSize=2,parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.GUI_INPUT_TEXT,physicsClientId=self.CLIENT)
         ####################################################################################################
         #### Denormalize (if necessary) and clip the action to the maximum RPM #############################
         ####################################################################################################
@@ -376,8 +372,9 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         #### Initialize/reset counters and zero-valued variables ###########################################
         ####################################################################################################
-        self.step_counter = 0; self.RESET_TIME = time.time(); self.first_render_call = True
-        self.X_AX = -1; self.Y_AX = -1; self.Z_AX = -1;
+        self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
+        self.X_AX = -1; self.Y_AX = -1; self.Z_AX = -1; 
+        self.GUI_INPUT_TEXT = -1; self.USE_GUI_RPM=False; self.last_input_switch = 0
         if self.NORM_SPACES: self.last_action = -1*np.ones(4)
         else: self.last_action = np.zeros(4)
         if not self.PYBULLET: 
@@ -450,15 +447,12 @@ class SingleDroneEnv(gym.Env):
         torques = np.array(rpm**2)*self.KM
         z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
         thrust = np.array([0,0,np.sum(forces)])
-        if self.DRONE_MODEL==DroneModel.HB:
+        if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
             x_torque = (forces[1] - forces[3])*self.L
             y_torque = (-forces[0] + forces[2])*self.L
         elif self.DRONE_MODEL==DroneModel.CF2X:
             x_torque = (forces[0] + forces[1] - forces[2] - forces[3])*self.L/np.sqrt(2)
             y_torque = (- forces[0] + forces[1] + forces[2] - forces[3])*self.L/np.sqrt(2)
-        elif self.DRONE_MODEL==DroneModel.CF2P:
-            x_torque = (forces[1] - forces[3])*self.L
-            y_torque = (-forces[0] + forces[2])*self.L
         torques = np.array([x_torque,y_torque,z_torque])
         p.applyExternalForce(self.DRONE_ID, -1, forceObj=thrust, posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
         p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=torques, flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
@@ -482,15 +476,12 @@ class SingleDroneEnv(gym.Env):
         force_world_frame = thrust_world_frame - np.array([0, 0, self.GRAVITY])
         z_torques = np.array(rpm**2)*self.KM
         z_torque = (z_torques[0] - z_torques[1] + z_torques[2] - z_torques[3])
-        if self.DRONE_MODEL==DroneModel.HB:
+        if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
             x_torque = (forces[1] - forces[3])*self.L
             y_torque = (-forces[0] + forces[2])*self.L
         elif self.DRONE_MODEL==DroneModel.CF2X:
             x_torque = (forces[0] + forces[1] - forces[2] - forces[3])*self.L/np.sqrt(2)
             y_torque = (- forces[0] + forces[1] + forces[2] - forces[3])*self.L/np.sqrt(2)
-        elif self.DRONE_MODEL==DroneModel.CF2P:
-            x_torque = (forces[1] - forces[3])*self.L
-            y_torque = (-forces[0] + forces[2])*self.L
         torques = np.array([x_torque, y_torque, z_torque])
         torques = torques - np.cross(self.no_pybullet_ang_vel, np.dot(self.J, self.no_pybullet_ang_vel))
         ang_vel_deriv = np.dot(self.J_INV, torques)
