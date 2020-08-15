@@ -97,14 +97,14 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         if self.NORM_SPACES:
             self.action_space = spaces.Box(    low=np.array([-1,-1,-1,-1]), high=np.array([1,1,1,1]), dtype=np.float32)
-            #### Observations ################################    X        Y        Z        Q1        Q2        Q3        Q4        R        P        Y        VX        VY        VZ        WR        WP        WY        P1        P2        P3        P4
-            self.observation_space = spaces.Box(low=np.array([    -1,        -1,        0,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1,        -1]), \
-                             high=np.array([         1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1,        1]), dtype=np.float32)
+            #### Observations ################################       X       Y       Z       Q1      Q2      Q3      Q4      R       P       Y       VX      VY      VZ      WR      WP      WY      P1      P2      P3      P4
+            self.observation_space = spaces.Box(low=np.array([      -1,     -1,     0,      -1,     -1,     -1,     -1,     -1,     -1,     -1,     -1,      -1,    -1,     -1,     -1,     -1,     -1,     -1,     -1,     -1]), \
+                                               high=np.array([       1,      1,      1,      1,      1,      1,      1,      1,      1,      1,      1,       1,     1,      1,      1,      1,      1,      1,      1,      1]), dtype=np.float32)
         else:
             self.action_space = spaces.Box(    low=np.array([0.,0.,0.,0.]), high=np.array([self.MAX_RPM,self.MAX_RPM,self.MAX_RPM,self.MAX_RPM]), dtype=np.float32)
-            #### Observations ################################    X        Y        Z        Q1    Q2    Q3    Q4    R        P        Y        VX        VY        VZ        WR        WP        WY        P1        P2        P3        P4
-            self.observation_space = spaces.Box(low=np.array([    -np.inf,    -np.inf,    0.,        -1.,    -1.,    -1.,    -1.,    -np.pi,        -np.pi,        -np.pi,        -np.inf,    -np.inf,    -np.inf,    -np.inf,    -np.inf,    -np.inf,    0.,        0.,        0.,        0.]), \
-                                 high=np.array([     np.inf,    np.inf,        np.inf,        1.,    1.,    1.,    1.,    np.pi,        np.pi,        np.pi,        np.inf,        np.inf,        np.inf,        np.inf,        np.inf,        np.inf,        self.MAX_RPM,    self.MAX_RPM,    self.MAX_RPM,    self.MAX_RPM]), dtype=np.float32)
+            #### Observations ################################       X       Y       Z       Q1      Q2      Q3      Q4      R       P       Y       VX      VY      VZ      WR      WP      WY          P1              P2              P3              P4
+            self.observation_space = spaces.Box(low=np.array([      -np.inf,-np.inf,0.,     -1.,    -1.,    -1.,    -1.,    -np.pi, -np.pi, -np.pi, -np.inf,-np.inf,-np.inf,-np.inf,-np.inf,-np.inf,    0.,             0.,             0.,             0.]), \
+                                              high=np.array([        np.inf, np.inf, np.inf, 1.,     1.,     1.,     1.,     np.pi,  np.pi,  np.pi,  np.inf, np.inf, np.inf, np.inf, np.inf, np.inf,    self.MAX_RPM,   self.MAX_RPM,   self.MAX_RPM,   self.MAX_RPM]), dtype=np.float32)
         ####################################################################################################
         #### Add input sliders to the GUI ##################################################################
         ####################################################################################################
@@ -443,7 +443,7 @@ class SingleDroneEnv(gym.Env):
         self.no_pybullet_ang_vel = self.no_pybullet_ang_vel + self.TIMESTEP * ang_vel_deriv
         pos = pos + self.TIMESTEP * self.no_pybullet_vel
         rpy = rpy + self.TIMESTEP * self.no_pybullet_ang_vel
-        p.resetBasePositionAndOrientation(self.DRONE_ID, pos, p.getQuaternionFromEuler(rpy))
+        p.resetBasePositionAndOrientation(self.DRONE_ID, pos, p.getQuaternionFromEuler(rpy), physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Draw the local frame of the drone #############################################################

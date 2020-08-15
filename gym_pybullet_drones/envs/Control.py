@@ -174,6 +174,8 @@ class Control(object):
         self.last_rpy_e = rpy_e
         self.integral_rpy_e = self.integral_rpy_e + rpy_e*control_timestep
         target_torques = np.multiply(self.P_COEFF_TOR,rpy_e) + np.multiply(self.I_COEFF_TOR,self.integral_rpy_e) + np.multiply(self.D_COEFF_TOR,d_rpy_e)
+        # cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat_rpy)).reshape(3,3)
+        # target_torques = np.dot(cur_rotation, target_torques)     # Unnecessary for fixed yaw
         return self._physicsToRPM(thrust, target_torques[0], target_torques[1], target_torques[2])
 
     ####################################################################################################

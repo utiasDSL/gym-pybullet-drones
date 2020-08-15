@@ -37,7 +37,7 @@ if __name__ == "__main__":
     start = time.time()
     env = SingleDroneEnv(drone_model=DRONE, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
     initial_state = env.reset()
-    # PYB_CLIENT = env.getPyBulletClient(); DRONE_ID = env.getDroneId() # Use PYB_CLIENT, DRONE_ID to apply additional forces, if desired
+    PYB_CLIENT = env.getPyBulletClient(); DRONE_ID = env.getDroneId() # Use PYB_CLIENT, DRONE_ID to apply additional forces, if desired
     action = np.zeros(4); pos_err = 9999.
     control_every_n_steps = int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
     simulation_data = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,16))
@@ -61,7 +61,7 @@ if __name__ == "__main__":
             target_rpy=np.array([0,0,-45])*env.DEG2RAD
             action, pos_err, yaw_err = ctrl.computeControl(control_timestep=control_every_n_steps*env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
                                         target_pos=current_wp)                                          # Waypoints
-                                        # target_pos=np.array([-1., -1., 0.8]))                         # XYZ transfer
+                                        # target_pos=np.array([-.5, -1., .8]))                          # XYZ transfer
                                         # target_pos=np.array([0., 0., 0.5]), target_rpy=target_rpy)    # Hover and yaw         
             ####################################################################################################
             #### Go to the next waypoint #######################################################################
