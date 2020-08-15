@@ -15,10 +15,6 @@ from datetime import datetime
 from gym_pybullet_drones.envs.UserDefinedFunctions import UserDefinedFunctions
 
 
-
-
-
-
 ######################################################################################################################################################
 #### Drone models enumeration ########################################################################################################################
 ######################################################################################################################################################
@@ -28,10 +24,6 @@ class DroneModel(Enum):
     HB = 0                   # Generic quadrotor (with AscTec Hummingbird intertial properties)
     CF2X = 1                 # Bitcraze Craziflie 2.0 in the X configuration
     CF2P = 2                 # Bitcraze Craziflie 2.0 in the + configuration
-
-
-
-
 
 
 ######################################################################################################################################################
@@ -192,7 +184,7 @@ class SingleDroneEnv(gym.Env):
         else:
             self._noPyBulletDynamics(clipped_rpm)
             vel, ang_v = self.no_pybullet_vel, self.no_pybullet_ang_vel 
-        self._showFrame()
+        self._showDroneFrame()
         ####################################################################################################
         #### Prepare the return values #####################################################################
         ####################################################################################################
@@ -240,16 +232,6 @@ class SingleDroneEnv(gym.Env):
         if self.RECORD: p.stopStateLogging(self.VIDEO_ID, physicsClientId=self.CLIENT)
         p.disconnect(physicsClientId=self.CLIENT)
 
-
-
-
-
-
-######################################################################################################################################################
-#### Internals #######################################################################################################################################
-######################################################################################################################################################
-
-
     ####################################################################################################
     #### Return the PyBullet Client Id #################################################################
     ####################################################################################################
@@ -262,18 +244,11 @@ class SingleDroneEnv(gym.Env):
     def getDroneId(self):
         return self.DRONE_ID
 
-    ####################################################################################################
-    #### Normalize the [0, MAX RPM] range to the [-1,1] range ##########################################
-    ####################################################################################################    
-    #### Arguments #####################################################################################
-    #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - action (4-by-1 array)            normalized action to apply to the 4 motors #################
-    ####################################################################################################
-    def _rpmToNormAction(self, rpm): ############################################# Currently unused ####
-        if np.any(rpm) < 0: print("\n[ERROR] it:", self.step_counter, "in _rpmToNormAction(), negative RPM")
-        return np.where(rpm <= self.HOVER_RPM, (rpm/self.HOVER_RPM)-1, rpm/self.MAX_RPM)
+
+######################################################################################################################################################
+#### Internals #######################################################################################################################################
+######################################################################################################################################################
+
 
     ####################################################################################################
     #### Denormalize the [-1,1] range to the [0, MAX RPM] range ########################################
@@ -287,6 +262,19 @@ class SingleDroneEnv(gym.Env):
     def _normActionToRPM(self, action): 
         if np.any(np.abs(action)) > 1: print("\n[ERROR] it:", self.step_counter, "in _normActionToRPM(), out-of-bound action")
         return np.where(action <= 0, (action+1)*self.HOVER_RPM, action*self.MAX_RPM)
+
+    ####################################################################################################
+    #### Normalize the [0, MAX RPM] range to the [-1,1] range ##########################################
+    ####################################################################################################    
+    #### Arguments #####################################################################################
+    #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
+    ####################################################################################################
+    #### Returns #######################################################################################
+    #### - action (4-by-1 array)            normalized action to apply to the 4 motors #################
+    ####################################################################################################
+    # def _rpmToNormAction(self, rpm): 
+    #     if np.any(rpm) < 0: print("\n[ERROR] it:", self.step_counter, "in _rpmToNormAction(), negative RPM")
+    #     return np.where(rpm <= self.HOVER_RPM, (rpm/self.HOVER_RPM)-1, rpm/self.MAX_RPM)
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
@@ -356,6 +344,16 @@ class SingleDroneEnv(gym.Env):
             p.loadURDF("sphere2.urdf", [0,2,.5], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 
     ####################################################################################################
+    #### Draw the local frame of the drone #############################################################
+    ####################################################################################################
+    def _showDroneFrame(self):
+        if self.DRONE_MODEL==DroneModel.HB: LENGTH = 0.35
+        elif self.DRONE_MODEL==DroneModel.CF2X or self.DRONE_MODEL==DroneModel.CF2P: LENGTH = 0.1
+        self.X_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[LENGTH,0,0],lineColorRGB=[1,0,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.X_AX,physicsClientId=self.CLIENT)
+        self.Y_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,LENGTH,0],lineColorRGB=[0,1,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Y_AX,physicsClientId=self.CLIENT)
+        self.Z_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,0,LENGTH],lineColorRGB=[0,0,1],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Z_AX,physicsClientId=self.CLIENT)
+    
+    ####################################################################################################
     #### PyBullet physics implementation ###############################################################
     ####################################################################################################
     #### Arguments #####################################################################################
@@ -395,20 +393,20 @@ class SingleDroneEnv(gym.Env):
     #### Arguments #####################################################################################
     #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
     ####################################################################################################
-    def _physicsWithExplicitTorques(self, rpm): ################################## Currently unused ####
-        forces = np.array(rpm**2)*self.KF
-        torques = np.array(rpm**2)*self.KM
-        z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
-        thrust = np.array([0,0,np.sum(forces)])
-        if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
-            x_torque = (forces[1] - forces[3])*self.L
-            y_torque = (-forces[0] + forces[2])*self.L
-        elif self.DRONE_MODEL==DroneModel.CF2X:
-            x_torque = (forces[0] + forces[1] - forces[2] - forces[3])*self.L/np.sqrt(2)
-            y_torque = (- forces[0] + forces[1] + forces[2] - forces[3])*self.L/np.sqrt(2)
-        torques = np.array([x_torque,y_torque,z_torque])
-        p.applyExternalForce(self.DRONE_ID, -1, forceObj=thrust, posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=torques, flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
+    # def _physicsWithExplicitTorques(self, rpm):
+    #     forces = np.array(rpm**2)*self.KF
+    #     torques = np.array(rpm**2)*self.KM
+    #     z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
+    #     thrust = np.array([0,0,np.sum(forces)])
+    #     if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
+    #         x_torque = (forces[1] - forces[3])*self.L
+    #         y_torque = (-forces[0] + forces[2])*self.L
+    #     elif self.DRONE_MODEL==DroneModel.CF2X:
+    #         x_torque = (forces[0] + forces[1] - forces[2] - forces[3])*self.L/np.sqrt(2)
+    #         y_torque = (- forces[0] + forces[1] + forces[2] - forces[3])*self.L/np.sqrt(2)
+    #     torques = np.array([x_torque,y_torque,z_torque])
+    #     p.applyExternalForce(self.DRONE_ID, -1, forceObj=thrust, posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+    #     p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=torques, flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
 
     ####################################################################################################
     #### Custom dynamics implementation ################################################################
@@ -445,13 +443,4 @@ class SingleDroneEnv(gym.Env):
         rpy = rpy + self.TIMESTEP * self.no_pybullet_ang_vel
         p.resetBasePositionAndOrientation(self.DRONE_ID, pos, p.getQuaternionFromEuler(rpy), physicsClientId=self.CLIENT)
 
-    ####################################################################################################
-    #### Draw the local frame of the drone #############################################################
-    ####################################################################################################
-    def _showFrame(self):
-        if self.DRONE_MODEL==DroneModel.HB: LENGTH = 0.35
-        elif self.DRONE_MODEL==DroneModel.CF2X or self.DRONE_MODEL==DroneModel.CF2P: LENGTH = 0.1
-        self.X_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[LENGTH,0,0],lineColorRGB=[1,0,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.X_AX,physicsClientId=self.CLIENT)
-        self.Y_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,LENGTH,0],lineColorRGB=[0,1,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Y_AX,physicsClientId=self.CLIENT)
-        self.Z_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,0,LENGTH],lineColorRGB=[0,0,1],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Z_AX,physicsClientId=self.CLIENT)
         

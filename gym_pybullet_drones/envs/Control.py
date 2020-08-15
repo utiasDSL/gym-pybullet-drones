@@ -8,10 +8,6 @@ from scipy.spatial.transform import Rotation
 from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
 
 
-
-
-
-
 ######################################################################################################################################################
 #### Control types enumeration #######################################################################################################################
 ######################################################################################################################################################
@@ -19,10 +15,6 @@ from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
 
 class ControlType(Enum):
     PID = 0                  # PID control
-
-
-
-
 
 
 ######################################################################################################################################################
@@ -110,10 +102,6 @@ class Control(object):
             cur_rpy = p.getEulerFromQuaternion(cur_quat_rpy)
             return rpm, pos_err, computed_target_rpy[2]-cur_rpy[2]
         else: print("[ERROR] ctrl it:", self.control_counter, "ControlleType not yet implemented")
-
-
-
-
 
 
 ######################################################################################################################################################
