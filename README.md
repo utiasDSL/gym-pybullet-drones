@@ -87,16 +87,17 @@ $ python run_learning.py
 ## SingleDroneEnv
 A single quadrotor enviroment can be created with
 ```
->>> env = SingleDroneEnv(drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
->>>            pybullet=True, \                            # Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
->>>            aero_effects=False \                        # Whether to include PyBullet-based drag, ground effect, and downwash (WIP) (remove this comment)
->>>            normalized_spaces=True, \                   # Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
->>>            freq=240, \                                 # The stepping frequency of the simulation (remove this comment)
->>>            gui=True, \                                 # Whether to display PyBullet's GUI (remove this comment)
->>>            obstacles=False, \                          # Whether to add obstacles to the environment (remove this comment)
->>>            record=False, \                             # Whether to save a .mp4 video in gym-pybullet-drones/assets/saves/ (remove this comment)
->>>            user="Default")                             # String to choose reward and done functions in class UserDefinedFunctions (remove this comment)
->>>                                                        # See run_flight.py for an example
+>>> env = SingleDroneEnv( \                 
+>>>       drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
+>>>       pybullet=True, \                  # Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
+>>>       aero_effects=False \              # Whether to include PyBullet-based drag, ground effect, and downwash (WIP) (remove this comment)
+>>>       normalized_spaces=True, \         # Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
+>>>       freq=240, \                       # The stepping frequency of the simulation (remove this comment)
+>>>       gui=True, \                       # Whether to display PyBullet's GUI (remove this comment)
+>>>       obstacles=False, \                # Whether to add obstacles to the environment (remove this comment)
+>>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/assets/saves/ (remove this comment)
+>>>       user="Default")                   # String to choose reward and done functions in class UserDefinedFunctions (remove this comment)
+>>>                                         # See run_flight.py for an example
 ````
 Or using
 ```
