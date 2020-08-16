@@ -3,11 +3,11 @@ Simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) ba
 
 <img src="files/images/wp.gif" alt="alt text" width="360"> <img src="files/images/wp.png" alt="alt text" width="450">
 
-The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x nano-quadrotor](https://www.bitcraze.io/documentation/hardware/crazyflie_2_1/crazyflie_2_1-datasheet.pdf)
+- The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x nano-quadrotor](https://www.bitcraze.io/documentation/hardware/crazyflie_2_1/crazyflie_2_1-datasheet.pdf)
 
-Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
+- Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
-Suggestions and corrections are very welcome in the form of [issues](https://github.com/JacopoPan/gym-pybullet-drones/issues) and [pull requests](https://github.com/JacopoPan/gym-pybullet-drones/pulls), repectively
+- Suggestions and corrections are very welcome in the form of [issues](https://github.com/JacopoPan/gym-pybullet-drones/issues) and [pull requests](https://github.com/JacopoPan/gym-pybullet-drones/pulls), repectively
 
 
 ### Requirements
