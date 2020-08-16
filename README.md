@@ -89,8 +89,8 @@ A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`run
 ```
 >>> env = SingleDroneEnv( \                 
 >>>       drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
->>>       initial_xyz=[0,0,0.1], \         # Initial XYZ position of the drone (remove this comment)
->>>       initial_rpy=[0,0,0], \         # Initial roll, pitch, and yaw of the drone in radians (remove this comment)
+>>>       initial_xyz=[0,0,0.1], \          # Initial XYZ position of the drone (remove this comment)
+>>>       initial_rpy=[0,0,0], \            # Initial roll, pitch, and yaw of the drone in radians (remove this comment)
 >>>       pybullet=True, \                  # Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
 >>>       aero_effects=False \              # Whether to include PyBullet-based drag, ground effect, and downwash (WIP) (remove this comment)
 >>>       normalized_spaces=True, \         # Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
