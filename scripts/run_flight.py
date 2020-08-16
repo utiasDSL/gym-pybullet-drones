@@ -97,7 +97,7 @@ if __name__ == "__main__":
     #### Save the simulation results ###################################################################
     ####################################################################################################
     if SAVE_TO_FILE:
-        with open(os.path.dirname(os.path.abspath(__file__))+"/../assets/saves/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
+        with open(os.path.dirname(os.path.abspath(__file__))+"/../files/saves/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
             np.save(out_file, simulation_timestamps); np.save(out_file, simulation_data); np.save(out_file, simulation_control_reference)
 
     ####################################################################################################

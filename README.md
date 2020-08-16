@@ -1,7 +1,7 @@
 # gym-pybullet-drones
 Simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) to simulate one (or more, WIP) quadrotors 
 
-<img src="assets/images/wp.gif" alt="alt text" width="360"> <img src="assets/images/wp.png" alt="alt text" width="450">
+<img src="files/images/wp.gif" alt="alt text" width="360"> <img src="files/images/wp.png" alt="alt text" width="450">
 
 The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x nano-quadrotor](https://www.bitcraze.io/documentation/hardware/crazyflie_2_1/crazyflie_2_1-datasheet.pdf)
 
@@ -25,7 +25,7 @@ With a [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#ins
 dependencies (except `ffmpeg`), can be installed from file
 ```
 $ cd gym-pybullet-drones/
-$ conda create -n myenv --file /assets/conda_req_list.txt
+$ conda create -n myenv --file /files/conda_req_list.txt
 ```
 
 
@@ -54,13 +54,13 @@ $ python run_physics.py
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
 
-- `run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/assets/traces)
+- `run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/traces)
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_trace.py
 ```
-<img src="assets/images/trace_comparison.gif" alt="alt text" width="360"> <img src="assets/images/trace_comparison.png" alt="alt text" width="450">
+<img src="files/images/trace_comparison.gif" alt="alt text" width="360"> <img src="files/images/trace_comparison.png" alt="alt text" width="450">
 
 - `run_flight.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/Control.py)
 ```
@@ -70,7 +70,7 @@ $ python run_flight.py
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override control with interactive input
 
-<img src="assets/images/crash.gif" alt="alt text" width="360"> <img src="assets/images/crash.png" alt="alt text" width="450">
+<img src="files/images/crash.gif" alt="alt text" width="360"> <img src="files/images/crash.png" alt="alt text" width="450">
 
 - `run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
@@ -78,8 +78,8 @@ $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_learning.py
 ```
-<img src="assets/images/learn1.gif" alt="alt text" width="400"> <img src="assets/images/learn2.gif" alt="alt text" width="400">
-<img src="assets/images/learn3.gif" alt="alt text" width="400"> <img src="assets/images/learn4.gif" alt="alt text" width="400">
+<img src="files/images/learn1.gif" alt="alt text" width="400"> <img src="files/images/learn2.gif" alt="alt text" width="400">
+<img src="files/images/learn3.gif" alt="alt text" width="400"> <img src="files/images/learn4.gif" alt="alt text" width="400">
 
 
 
@@ -95,7 +95,7 @@ A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`run
 >>>       freq=240, \                       # The stepping frequency of the simulation (remove this comment)
 >>>       gui=True, \                       # Whether to display PyBullet's GUI (remove this comment)
 >>>       obstacles=False, \                # Whether to add obstacles to the environment (remove this comment)
->>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/assets/saves/ (remove this comment)
+>>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/files/saves/ (remove this comment)
 >>>       user="Default")                   # String to choose reward and done functions in class UserDefinedFunctions (remove this comment)
 ````
 Or using `gym.make()`—see [`run_learning.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/scripts/run_learning.py) for an example
