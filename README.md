@@ -68,7 +68,7 @@ $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/examples/
 $ python run_flight.py
 ```
-> Tip: use the GUI's sliders and button `Use GUI RPM` to override control with interactive input
+> Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
 
 <img src="files/images/crash.gif" alt="alt text" width="360"> <img src="files/images/crash.png" alt="alt text" width="450">
 
