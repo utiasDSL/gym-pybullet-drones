@@ -119,7 +119,7 @@ class SingleDroneEnv(gym.Env):
         #### Housekeeping ##################################################################################
         ####################################################################################################
         self._housekeeping()
-        if self.RECORD: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
+        if self.RECORD: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../assets/saves/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
         ####################################################################################################
         #### Return the initial observation ################################################################
         ####################################################################################################
@@ -127,7 +127,7 @@ class SingleDroneEnv(gym.Env):
         rpy = p.getEulerFromQuaternion(quat)
         if self.PYBULLET: vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
         else: vel, ang_v = self.no_pybullet_vel, self.no_pybullet_ang_vel
-        if self.NORM_SPACES: state = self._clipAndNormalizeState(np.hstack([pos, quat, rpy, vel, ang_v, self.last_action]))
+        if self.NORM_SPACES: state = self.USER_DEFINED_FUNCTIONS.clipAndNormalizeState(np.hstack([pos, quat, rpy, vel, ang_v, self.last_action]), self.step_counter)
         else: state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action])
         return state.reshape(20,)
 
@@ -190,7 +190,7 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)
-        if self.NORM_SPACES: state = self._clipAndNormalizeState(np.hstack([pos, quat, rpy, vel, ang_v, self.last_action]))
+        if self.NORM_SPACES: state = self.USER_DEFINED_FUNCTIONS.clipAndNormalizeState(np.hstack([pos, quat, rpy, vel, ang_v, self.last_action]), self.step_counter)
         else: state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action])
         reward = self.USER_DEFINED_FUNCTIONS.rewardFunction(state)
         done = self.USER_DEFINED_FUNCTIONS.doneFunction(state, self.step_counter/self.SIM_FREQ) 
@@ -277,35 +277,6 @@ class SingleDroneEnv(gym.Env):
     #     return np.where(rpm <= self.HOVER_RPM, (rpm/self.HOVER_RPM)-1, rpm/self.MAX_RPM)
 
     ####################################################################################################
-    #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - state (20-by-1 array)            raw simulation state #######################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - norm. state (20-by-1 array)      clipped and normalized simulation state ####################
-    ####################################################################################################
-    def _clipAndNormalizeState(self, state):
-        clipped_pos = np.clip(state[0:3], -1, 1)
-        clipped_rp = np.clip(state[7:9], -np.pi/3, np.pi/3)
-        clipped_vel = np.clip(state[10:13], -1, 1)
-        clipped_ang_vel_rp = np.clip(state[13:15], -10*np.pi, 10*np.pi)
-        clipped_ang_vel_y = np.clip(state[15], -20*np.pi, 20*np.pi)
-        if self.GUI:
-            if not(clipped_pos==np.array(state[0:3])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound position [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[0], state[1], state[2]))
-            if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound roll/pitch [{:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[7], state[8]))
-            if not(clipped_vel==np.array(state[10:13])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[10], state[11], state[12]))
-            if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[13], state[14], state[15]))
-            if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it:", self.step_counter, "in _clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of doneFunction()".format(state[13], state[14], state[15]))
-        normalized_pos = clipped_pos
-        normalized_rp = clipped_rp/(np.pi/3)
-        normalized_y = state[9]/np.pi
-        normalized_vel = clipped_vel
-        normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
-        normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
-        return np.hstack([normalized_pos, state[3:7], normalized_rp, normalized_y, normalized_vel, normalized_ang_vel_rp, normalized_ang_vel_y, self.last_action]).reshape(20,)
-
-    ####################################################################################################
     #### Housekeeping shared by the __init__() and reset() functions ###################################
     ####################################################################################################
     def _housekeeping(self):
@@ -315,7 +286,7 @@ class SingleDroneEnv(gym.Env):
         self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
         self.X_AX = -1; self.Y_AX = -1; self.Z_AX = -1; 
         self.GUI_INPUT_TEXT = -1; self.USE_GUI_RPM=False; self.last_input_switch = 0
-        self.USER_DEFINED_FUNCTIONS = UserDefinedFunctions(self.USER)
+        self.USER_DEFINED_FUNCTIONS = UserDefinedFunctions(self.CLIENT, self.GUI, self.USER)
         if self.NORM_SPACES: self.last_action = -1*np.ones(4)
         else: self.last_action = np.zeros(4)
         if not self.PYBULLET: 
@@ -338,10 +309,7 @@ class SingleDroneEnv(gym.Env):
         elif self.DRONE_MODEL==DroneModel.CF2P:
             self.DRONE_ID = p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/cf2+.urdf",[0,0,0.1], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
         if self.OBSTACLES:
-            p.loadURDF("samurai.urdf", physicsClientId=self.CLIENT)
-            p.loadURDF("duck_vhacd.urdf", [-.5,-.5,.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-            p.loadURDF("cube_no_rotation.urdf", [-.5,-2.5,.5], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-            p.loadURDF("sphere2.urdf", [0,2,.5], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+            self.USER_DEFINED_FUNCTIONS.addObstacles()
 
     ####################################################################################################
     #### Draw the local frame of the drone #############################################################

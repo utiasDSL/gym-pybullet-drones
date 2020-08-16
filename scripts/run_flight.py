@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from utils import *
 from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
 from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
-from gym_pybullet_drones.envs.Control import ControlType, Control
+from gym_pybullet_drones.control.Control import ControlType, Control
 
 DRONE = DroneModel.CF2X
 GUI = True
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     #### Save the simulation results ###################################################################
     ####################################################################################################
     if SAVE_TO_FILE:
-        with open(os.path.dirname(os.path.abspath(__file__))+"/../save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
+        with open(os.path.dirname(os.path.abspath(__file__))+"/../assets/saves/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
             np.save(out_file, simulation_timestamps); np.save(out_file, simulation_data); np.save(out_file, simulation_control_reference)
 
     ####################################################################################################

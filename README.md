@@ -44,13 +44,15 @@ $ pip install -e .
 ## Use
 There are 4 main files in `scripts/`: `run_physics.py`, `run_trace.py`, `run_flight.py`, `run_physics.py`
 
-`run_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
+- `run_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
-$ python run_physics.py                  # Or run_physics_standalone.py
+$ python run_physics.py
 ```
-`run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/validation_traces/trace.pkl)
+> Also check the examples in repo [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
+
+- `run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/validation_traces/trace.pkl)
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
@@ -58,8 +60,7 @@ $ python run_trace.py
 ```
 <img src="images/trace_comparison.gif" alt="alt text" width="360"> <img src="images/trace_comparison.png" alt="alt text" width="450">
 
-
-`run_flight.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py)
+- `run_flight.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py)
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
@@ -67,8 +68,7 @@ $ python run_flight.py
 ```
 <img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
 
-
-`run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
+- `run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/

@@ -37,34 +37,46 @@ if __name__ == "__main__":
     for i in range(DURATION_SEC*env.SIM_FREQ):
         
         ####################################################################################################
+        #### Apply x-axis force ############################################################################
+        ####################################################################################################
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[1e-4,0.,0,], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[1e-4,0.,0,], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)
+
+        ####################################################################################################
+        #### Apply y-axis force ############################################################################
+        ####################################################################################################
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,1e-4,0.], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,1e-4,0.], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)
+
+        ####################################################################################################
         #### Apply z-axis force ############################################################################
         ####################################################################################################
-        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,0.,1e-4], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)     # CORRECT
-        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,0.,1e-4], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT) # INCORRECT
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,0.,1e-4], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)     # INCORRECT
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,0.,1e-4], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)      # CORRECT
         
         ####################################################################################################
         #### Apply x-axis torque ###########################################################################
         ####################################################################################################
-        p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)             # CORRECT
-        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)             # INCORRECT
+        p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)                        # CORRECT
+        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[5e-6,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)                       # INCORRECT
         
         ####################################################################################################
         #### Apply y-axis torque ###########################################################################
         ####################################################################################################
-        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)             # CORRECT
-        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)             # INCORRECT
+        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)                      # CORRECT
+        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,5e-6,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)                       # INCORRECT
         
         ####################################################################################################
         #### Apply z-axis torque ###########################################################################
         ####################################################################################################
-        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)             # CORRECT
-        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)             # INCORRECT
+        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)                      # CORRECT
+        # p.applyExternalTorque(DRONE_ID, -1, torqueObj=[0.,0.,5e-6], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)                       # INCORRECT
 
         ####################################################################################################
         #### Step, printout, and sync ######################################################################
         ####################################################################################################
         p.stepSimulation(physicsClientId=PYB_CLIENT)
-        env._showFrame()
+        env._showDroneFrame()
         env.render()
         sync(i, start, env.TIMESTEP)
 
