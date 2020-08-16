@@ -34,7 +34,8 @@ class SingleDroneControl(object):
         self.DRONE_MODEL = env.DRONE_MODEL; self.GRAVITY = env.GRAVITY; self.KF = env.KF; self.KT = env.KM
         self.MAX_THRUST = env.MAX_THRUST; self.MAX_XY_TORQUE = env.MAX_XY_TORQUE; self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
         self.CONTROLTYPE = control_type
-        self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [1, -1, 1, -1] ]); self.INV_A = np.linalg.inv(self.A)
+        #self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [1, -1, 1, -1] ]); self.INV_A = np.linalg.inv(self.A)
+        self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ]); self.INV_A = np.linalg.inv(self.A)
         self.B_COEFF = np.array([1/env.KF, 1/(env.KF*env.L), 1/(env.KF*env.L), 1/env.KM]) 
         self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
         ####################################################################################################
@@ -48,8 +49,10 @@ class SingleDroneControl(object):
             self.P_COEFF_FOR = np.array([.4, .4, 1.25]); self.I_COEFF_FOR = np.array([.05, .05, .05]); self.D_COEFF_FOR = np.array([.2, .2, .5]) 
             self.P_COEFF_TOR = np.array([70000., 70000., 60000.]); self.I_COEFF_TOR = np.array([.0, .0, 500.]); self.D_COEFF_TOR = np.array([20000., 20000., 12000.])
             self.PWM2RPM_SCALE = 0.2685; self.PWM2RPM_CONST = 4070.3; self.MIN_PWM = 20000; self.MAX_PWM = 65535
-            if self.DRONE_MODEL==DroneModel.CF2X: self.MIXER_MATRIX = np.array([ [.5, -.5,  1], [.5, .5, -1], [-.5,  .5,  1], [-.5, -.5, -1] ]) 
-            elif self.DRONE_MODEL==DroneModel.CF2P: self.MIXER_MATRIX = np.array([ [0, -1,  1], [+1, 0, -1], [0,  1,  1], [-1, 0, -1] ])
+            #if self.DRONE_MODEL==DroneModel.CF2X: self.MIXER_MATRIX = np.array([ [.5, -.5,  1], [.5, .5, -1], [-.5,  .5,  1], [-.5, -.5, -1] ]) 
+            #elif self.DRONE_MODEL==DroneModel.CF2P: self.MIXER_MATRIX = np.array([ [0, -1,  1], [+1, 0, -1], [0,  1,  1], [-1, 0, -1] ])
+            if self.DRONE_MODEL==DroneModel.CF2X: self.MIXER_MATRIX = np.array([ [.5, -.5,  -1], [.5, .5, 1], [-.5,  .5,  -1], [-.5, -.5, 1] ]) 
+            elif self.DRONE_MODEL==DroneModel.CF2P: self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
         self.reset()
 
     ####################################################################################################

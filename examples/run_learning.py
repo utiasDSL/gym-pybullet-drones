@@ -16,7 +16,7 @@ from ray import tune
 from ray.rllib.agents import ppo
 
 from utils import *
-from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
+from gym_pybullet_drones.envs.SingleDroneEnv import SingleDroneEnv
 
 RLLIB = False
 
@@ -51,8 +51,6 @@ if __name__ == "__main__":
     ####################################################################################################
     env = SingleDroneEnv(normalized_spaces=True, gui=True, record=True)
     obs = env.reset()
-    PYB_CLIENT = env.getPyBulletClient()
-    DRONE_ID = env.getDroneId()
     start = time.time()
     for i in range(10*env.SIM_FREQ):
         if not RLLIB: action, _states = model.predict(obs, deterministic=True)

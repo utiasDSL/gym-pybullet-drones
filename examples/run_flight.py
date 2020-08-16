@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 from utils import *
 from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
 from gym_pybullet_drones.control.SingleDroneControl import ControlType, SingleDroneControl
-from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
 
 DRONE = DroneModel.CF2X
 GUI = True

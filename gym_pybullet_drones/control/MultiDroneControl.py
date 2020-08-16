@@ -7,6 +7,7 @@ from scipy.spatial.transform import Rotation
 
 from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel
 from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
+from gym_pybullet_drones.control.SingleDroneControl import ControlType
 
 
 ######################################################################################################################################################

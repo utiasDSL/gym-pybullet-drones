@@ -92,7 +92,7 @@ if __name__ == "__main__":
     labels = ['X', 'Y', 'Z', 'VX', 'VY', 'VZ', 'R', 'P', 'Yaw', 'WR', 'WP', 'WY', 'PWM1', 'PWM2', 'PWM3', 'PWM4']
     for i in range(16):
         axs[i%8,i//8].plot(t, trace_plot_data[:,i], '-b', label='trace')
-        if i > 11:        # Comparison to CF2's PWM instead of RPM for file trace_1.pkl
+        if i > 11:        # Comparison to CF2's PWM instead of RPM is specific to file trace.pkl
             simulation_plot_data[:,i] = (simulation_plot_data[:,i] - 4070.3) / 0.2685
         axs[i%8,i//8].plot(t, simulation_plot_data[:,i], '--r', label='sim.')
         axs[i%8,i//8].set_xlabel('time')

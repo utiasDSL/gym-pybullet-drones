@@ -323,7 +323,8 @@ class SingleDroneEnv(gym.Env):
     def _physics(self, rpm):
         forces = np.array(rpm**2)*self.KF
         torques = np.array(rpm**2)*self.KM
-        z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
+        #z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
+        z_torque = (-torques[0] + torques[1] - torques[2] + torques[3])
         if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[0]], posObj=[self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[1]], posObj=[0,self.L,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
@@ -386,7 +387,8 @@ class SingleDroneEnv(gym.Env):
         thrust_world_frame = np.dot(rotation,thrust)
         force_world_frame = thrust_world_frame - np.array([0, 0, self.GRAVITY])
         z_torques = np.array(rpm**2)*self.KM
-        z_torque = (z_torques[0] - z_torques[1] + z_torques[2] - z_torques[3])
+        #z_torque = (z_torques[0] - z_torques[1] + z_torques[2] - z_torques[3])
+        z_torque = (-z_torques[0] + z_torques[1] - z_torques[2] + z_torques[3])
         if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
             x_torque = (forces[1] - forces[3])*self.L
             y_torque = (-forces[0] + forces[2])*self.L
