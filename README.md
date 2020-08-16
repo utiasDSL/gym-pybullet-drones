@@ -85,7 +85,7 @@ $ python run_learning.py
 
 
 ## SingleDroneEnv
-A single quadrotor enviroment can be created with SingleDroneEnv() (see [`run_flight.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/scripts/run_flight.py) for an example)
+A single quadrotor enviroment can be created with `SingleDroneEnv()` (see [`run_flight.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/scripts/run_flight.py) for an example)
 ```
 >>> env = SingleDroneEnv( \                 
 >>>       drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
