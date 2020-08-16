@@ -1,1 +1,1 @@
-from gym_pybullet_drones.control.Control import Control
+from gym_pybullet_drones.control.SingleDroneControl import SingleDroneControl

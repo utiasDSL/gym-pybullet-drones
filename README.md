@@ -7,7 +7,7 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 
 Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
-
+Suggestions and corrections are very welcome in the form of [issues](https://github.com/JacopoPan/gym-pybullet-drones/issues) and [pull requests](https://github.com/JacopoPan/gym-pybullet-drones/pulls), repectively
 
 
 ### Requirements
@@ -44,12 +44,12 @@ $ pip install -e .
 
 
 ## Use
-There are 4 main files in `scripts/`: `run_physics.py`, `run_trace.py`, `run_flight.py`, `test_physics.py`
+There are 4 main scripts in `examples/`: `run_physics.py`, `run_trace.py`, `run_flight.py`, `test_physics.py`
 
 - `test_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
 $ conda activate myenv                   # If using a conda environment
-$ cd gym-pybullet-drones/scripts/
+$ cd gym-pybullet-drones/examples/
 $ python run_physics.py
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
@@ -57,15 +57,15 @@ $ python run_physics.py
 - `run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/traces)
 ```
 $ conda activate myenv                   # If using a conda environment
-$ cd gym-pybullet-drones/scripts/
+$ cd gym-pybullet-drones/examples/
 $ python run_trace.py
 ```
 <img src="files/images/trace_comparison.gif" alt="alt text" width="360"> <img src="files/images/trace_comparison.png" alt="alt text" width="450">
 
-- `run_flight.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/Control.py)
+- `run_flight.py` runs an independent flight **using PID control** implemented in class [`SingleDroneControl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/SingleDroneControl.py)
 ```
 $ conda activate myenv                   # If using a conda environment
-$ cd gym-pybullet-drones/scripts/
+$ cd gym-pybullet-drones/examples/
 $ python run_flight.py
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override control with interactive input
@@ -75,7 +75,7 @@ $ python run_flight.py
 - `run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
 $ conda activate myenv                   # If using a conda environment
-$ cd gym-pybullet-drones/scripts/
+$ cd gym-pybullet-drones/examples/
 $ python run_learning.py
 ```
 <img src="files/images/learn1.gif" alt="alt text" width="400"> <img src="files/images/learn2.gif" alt="alt text" width="400">
@@ -85,10 +85,12 @@ $ python run_learning.py
 
 
 ## SingleDroneEnv
-A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`run_flight.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/scripts/run_flight.py) for an example
+A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`run_flight.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/run_flight.py) for an example
 ```
 >>> env = SingleDroneEnv( \                 
 >>>       drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
+>>>       initial_xyz=[0.,0.,.1], \         # Initial XYZ position of the drone (remove this comment)
+>>>       initial_rpy=[0.,0.,0.], \         # Initial roll, pitch, and yaw of the drone in radians (remove this comment)
 >>>       pybullet=True, \                  # Whether to use PyBullet physics or the dynamics in method _noPyBulletDynamics() (remove this comment)
 >>>       aero_effects=False \              # Whether to include PyBullet-based drag, ground effect, and downwash (WIP) (remove this comment)
 >>>       normalized_spaces=True, \         # Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
@@ -96,9 +98,9 @@ A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`run
 >>>       gui=True, \                       # Whether to display PyBullet's GUI (remove this comment)
 >>>       obstacles=False, \                # Whether to add obstacles to the environment (remove this comment)
 >>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/files/saves/ (remove this comment)
->>>       user="Default")                   # String to choose reward and done functions in class UserDefinedFunctions (remove this comment)
+>>>       user="Default")                   # String to choose reward and done functions in class SingleDroneUserDefinedFunctions (remove this comment)
 ````
-Or using `gym.make()`—see [`run_learning.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/scripts/run_learning.py) for an example
+Or using `gym.make()`—see [`run_learning.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/run_learning.py) for an example
 ```
 >>> env = gym.make('single-drone-v0')                      # See run_learning_test.py
 ```
@@ -127,10 +129,10 @@ The observation space is a [`Box(20,)`](https://github.com/openai/gym/blob/maste
 - Angular velocity 
 - Motors' speeds
 
-Check [`UserDefinedFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/UserDefinedFunctions.py) for the mapping from raw simulation data to normalized observations in the [-1,1] range (i.e., when using `normalized_spaces=False`)
+Check [`SingleDroneUserDefinedFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneUserDefinedFunctions.py) for the mapping from raw simulation data to normalized observations in the [-1,1] range (i.e., when using `normalized_spaces=False`)
 
 ### Reward
-The reward function can/should be modified in class [`UserDefinedFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/UserDefinedFunctions.py), for example
+The reward function can/should be modified in class [`SingleDroneUserDefinedFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneUserDefinedFunctions.py), for example
 ```
 >>> def rewardFunction(self, state):
 >>>     if self.USER == "Default":
@@ -144,7 +146,7 @@ The reward function can/should be modified in class [`UserDefinedFunctions`](htt
 ```
 
 ### Done
-The halting conditions can/should be modified in class [`UserDefinedFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/UserDefinedFunctions.py), for example
+The halting conditions can/should be modified in class [`SingleDroneUserDefinedFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneUserDefinedFunctions.py), for example
 ```
 >>> def doneFunction(self, state, sim_time):
 >>>     if self.USER == "Default":

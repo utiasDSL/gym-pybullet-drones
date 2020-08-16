@@ -10,39 +10,43 @@ import matplotlib.pyplot as plt
 
 from utils import *
 from gym_pybullet_drones.envs.SingleDroneEnv import DroneModel, SingleDroneEnv
-from gym_pybullet_drones.control.Control import ControlType, Control
+from gym_pybullet_drones.control.SingleDroneControl import ControlType, SingleDroneControl
+from gym_pybullet_drones.envs.MultiDroneEnv import MultiDroneEnv
 
-GUI = False
-RECORD_VIDEO = False
+DRONE = DroneModel.CF2X
+GUI = True
+RECORD_VIDEO = True
 SAVE_TO_FILE = True
-TRACE_FILE = "trace.pkl"
+SIMULATION_FREQ_HZ = 240
+CONTROL_FREQ_HZ = 48
+DURATION_SEC = 10
+NUM_RESTARTS = 0
 
 if __name__ == "__main__":
 
     ####################################################################################################
-    #### Load a trace and control reference from a .pkl file ###########################################
+    #### Alternatively, initialize a 1m by 1m, 41-waypoint trajectory ##################################
     ####################################################################################################
-    with open(os.path.dirname(os.path.abspath(__file__))+"/../files/traces/"+TRACE_FILE, 'rb') as in_file:
-        trace_timestamps, trace_data, trace_control_reference, _, trace_error, trace_rmse = pickle.load(in_file)
-    SIMULATION_FREQ_HZ = int(len(trace_timestamps)/trace_timestamps[-1])
-    DURATION_SEC = int(trace_timestamps[-1])
-    trace_control_reference = np.array(trace_control_reference)
+    zeros = np.zeros(20); ones = -1*np.ones(20); zero2one = np.array([-x/20-0.05 for x in range(20)]); one2zero = np.flip(zero2one)
+    waypoints = (np.vstack([np.hstack([0,zero2one,ones,one2zero,zeros]), np.hstack([0,zeros,zero2one,ones,one2zero]),.4*np.ones(81)])).transpose()
+    wp_counter = 0; current_wp = waypoints[wp_counter]
     
     ####################################################################################################
     #### Initialize the simulation #####################################################################
     ####################################################################################################
     start = time.time()
-    env = SingleDroneEnv(drone_model=DroneModel.CF2X, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
+    env = SingleDroneEnv(drone_model=DRONE, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
     initial_state = env.reset()
+    # PYB_CLIENT = env.getPyBulletClient(); DRONE_ID = env.getDroneId() # Use PYB_CLIENT, DRONE_ID to apply additional forces, if desired
     action = np.zeros(4); pos_err = 9999.
-    trace_control_reference[:,2] = initial_state[2]         # i.e drone starts at (0, 0, initial_state[2])
+    control_every_n_steps = int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
     simulation_data = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,16))
     simulation_control_reference = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,12))
     simulation_timestamps = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,1))
     ####################################################################################################
     #### Setup the controller ##########################################################################
     ####################################################################################################
-    ctrl = Control(env, control_type=ControlType.PID)
+    ctrl = SingleDroneControl(env, control_type=ControlType.PID)
     for i in range(DURATION_SEC*env.SIM_FREQ):
 
         ####################################################################################################
@@ -51,23 +55,38 @@ if __name__ == "__main__":
         state, reward, done, info = env.step(action)
 
         ####################################################################################################
-        #### Compute the next action using the set points from the trace file ##############################
+        #### Alternatively, navigate the waypoints in the waypoint list ####################################
         ####################################################################################################
-        action, pos_err, yaw_err = ctrl.computeControl(control_timestep=env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
-                                    target_pos=trace_control_reference[i,0:3], target_rpy=np.array([0,0,0]), target_vel=trace_control_reference[i,3:6])
+        if i%control_every_n_steps==0:
+            target_rpy=np.array([0,0,-45])*env.DEG2RAD
+            action, pos_err, yaw_err = ctrl.computeControl(control_timestep=control_every_n_steps*env.TIMESTEP, cur_pos=state[0:3], cur_quat_rpy=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16], \
+                                        target_pos=current_wp)                                          # Waypoints
+                                        # target_pos=np.array([-.5, -1., .8]))                          # XYZ transfer
+                                        # target_pos=np.array([0., 0., 0.5]), target_rpy=target_rpy)    # Hover and yaw         
+            ####################################################################################################
+            #### Go to the next waypoint #######################################################################
+            ####################################################################################################
+            if np.linalg.norm(pos_err) < 0.05 and np.linalg.norm(state[10:13])<0.1: 
+                wp_counter = 0 if wp_counter==(len(waypoints)-1) else wp_counter+1
+                current_wp = waypoints[wp_counter]
 
         ####################################################################################################
         #### Log the simulation ############################################################################
         #################################################################################################### 
         simulation_timestamps[i] = i/env.SIM_FREQ
         simulation_data[i,:] = np.hstack([state[0:3], state[10:13], state[7:10], state[13:20]])
-        simulation_control_reference[i,:] = np.hstack([trace_control_reference[i,:], np.zeros(3), np.zeros(3)])
+        simulation_control_reference[i,:] = np.hstack([current_wp, np.zeros(3), target_rpy, np.zeros(3)])
         
         ####################################################################################################
         #### Printout and sync #############################################################################
         ####################################################################################################
         env.render()
         if GUI: sync(i, start, env.TIMESTEP)
+
+        ####################################################################################################
+        #### Reset the simulation ##########################################################################
+        ####################################################################################################
+        if i>1 and i%((DURATION_SEC/(NUM_RESTARTS+1))*env.SIM_FREQ)==0: initial_state = env.reset(); wp_counter = 0
 
     ####################################################################################################
     #### Close the environment #########################################################################
@@ -78,22 +97,18 @@ if __name__ == "__main__":
     #### Save the simulation results ###################################################################
     ####################################################################################################
     if SAVE_TO_FILE:
-        with open(os.path.dirname(os.path.abspath(__file__))+"/../files/saves/save-trace-comparison-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
+        with open(os.path.dirname(os.path.abspath(__file__))+"/../files/saves/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
             np.save(out_file, simulation_timestamps); np.save(out_file, simulation_data); np.save(out_file, simulation_control_reference)
 
     ####################################################################################################
     #### Plot the simulation results ###################################################################
     ####################################################################################################
-    min_last_step = min(trace_data.shape[0],simulation_data.shape[0]) 
+    min_last_step = simulation_data.shape[0]
     simulation_plot_data = simulation_data[:min_last_step,:]
-    trace_plot_data = trace_data[:min_last_step,:]
     fig, axs = plt.subplots(8,2)
     t = np.arange(0, DURATION_SEC, 1/SIMULATION_FREQ_HZ)
-    labels = ['X', 'Y', 'Z', 'VX', 'VY', 'VZ', 'R', 'P', 'Yaw', 'WR', 'WP', 'WY', 'PWM1', 'PWM2', 'PWM3', 'PWM4']
+    labels = ['X', 'Y', 'Z', 'VX', 'VY', 'VZ', 'R', 'P', 'Yaw', 'WR', 'WP', 'WY', 'RPM1', 'RPM2', 'RPM3', 'RPM4']
     for i in range(16):
-        axs[i%8,i//8].plot(t, trace_plot_data[:,i], '-b', label='trace')
-        if i > 11:        # Comparison to CF2's PWM instead of RPM for file trace_1.pkl
-            simulation_plot_data[:,i] = (simulation_plot_data[:,i] - 4070.3) / 0.2685
         axs[i%8,i//8].plot(t, simulation_plot_data[:,i], '--r', label='sim.')
         axs[i%8,i//8].set_xlabel('time')
         axs[i%8,i//8].set_ylabel(labels[i])

@@ -12,14 +12,12 @@ from gym.utils import seeding
 from enum import Enum
 from datetime import datetime
 
-from gym_pybullet_drones.envs.UserDefinedFunctions import UserDefinedFunctions
+from gym_pybullet_drones.envs.SingleDroneUserDefinedFunctions import SingleDroneUserDefinedFunctions
 
 
 ######################################################################################################################################################
 #### Drone models enumeration ########################################################################################################################
 ######################################################################################################################################################
-
-
 class DroneModel(Enum):
     HB = 0                   # Generic quadrotor (with AscTec Hummingbird intertial properties)
     CF2X = 1                 # Bitcraze Craziflie 2.0 in the X configuration
@@ -29,8 +27,6 @@ class DroneModel(Enum):
 ######################################################################################################################################################
 #### Single drone environment class ##################################################################################################################
 ######################################################################################################################################################
-
-
 class SingleDroneEnv(gym.Env):
     metadata = {'render.modes': ['human']}
 
@@ -39,6 +35,8 @@ class SingleDroneEnv(gym.Env):
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - drone_model (DroneModel)         the type of drone to use (associated to an .urdf file) #####
+    #### - initial_xyz (3-by-1 list)        initial XYZ position of the drone ##########################
+    #### - initial_rpy (3-by-1 list)        initial roll, pitch, and yaw of the drone (radians) ########
     #### - pybullet (Boolean)               whether to use PyBullet's physics engine ###################
     #### - aero_effects (Boolean)           simple drag and ground effect in PyBullet ##################
     #### - normalized_spaces (Boolean)      whether to use normalized OpenAI Gym spaces ################
@@ -46,14 +44,18 @@ class SingleDroneEnv(gym.Env):
     #### - gui (Boolean)                    whether to use PyBullet's GUI ##############################
     #### - obstacles (Boolean)              whether to add obstacles in the simulation #################
     #### - record (Boolean)                 whether to save the simulation as an .mp4 video ############
-    #### - user (String)                    passed to the __init__() of UserDefinedFunctions ###########
+    #### - user (String)                    passed to __init__() of SingleDroneUserDefinedFunctions ####
     ####################################################################################################
-    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, pybullet=True, aero_effects=False, normalized_spaces=True, freq=240, gui=False, obstacles=False, record=False, user="Default"):
+    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, initial_xyz=[0.,0.,.1], initial_rpy=[0.,0.,0.], pybullet=True, aero_effects=False, normalized_spaces=True, freq=240, gui=False, obstacles=False, record=False, user="Default"):
         super(SingleDroneEnv, self).__init__()
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
-        self.DRONE_MODEL = drone_model; self.PYBULLET = pybullet; self.AERO_EFFECTS = aero_effects; self.NORM_SPACES = normalized_spaces
+        self.DRONE_MODEL = drone_model; self.INIT_XYZ = initial_xyz; self.INIT_RPY = initial_rpy 
+        self.PYBULLET = pybullet; self.AERO_EFFECTS = aero_effects; self.NORM_SPACES = normalized_spaces
         self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; self.GUI=gui; self.OBSTACLES = obstacles; self.RECORD = record; self.USER = user
-        if self.AERO_EFFECTS and not self.PYBULLET: print("[WARNING] aerodynamic effect will not be computed because SingleDroneEnv was initalized with pybullet=False")
+        if self.DRONE_MODEL == DroneModel.HB: self.URDF = "hb.urdf"
+        elif self.DRONE_MODEL == DroneModel.CF2X: self.URDF = "cf2x.urdf"
+        elif self.DRONE_MODEL == DroneModel.CF2P: self.URDF = "cf2p.urdf"
+        if self.AERO_EFFECTS and not self.PYBULLET: print("[WARNING] SingleDroneEnv was initalized with pybullet=False, aerodynamic effects will not be computed")
         ####################################################################################################
         #### Connect to PyBullet ###########################################################################
         ####################################################################################################
@@ -67,9 +69,7 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         #### Load the drone properties from the .urdf file #################################################
         ####################################################################################################
-        if self.DRONE_MODEL == DroneModel.HB: URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/hb.urdf").getroot()
-        elif self.DRONE_MODEL == DroneModel.CF2X: URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/cf2x.urdf").getroot()
-        elif self.DRONE_MODEL == DroneModel.CF2P: URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/cf2+.urdf").getroot()
+        URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF).getroot()
         self.M = float(URDF_TREE[1][0][1].attrib['value']); self.L = float(URDF_TREE[0].attrib['arm']); self.THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib['thrust2weight'])
         self.IXX = float(URDF_TREE[1][0][2].attrib['ixx']); self.IYY = float(URDF_TREE[1][0][2].attrib['iyy']); self.IZZ = float(URDF_TREE[1][0][2].attrib['izz'])
         self.KF = float(URDF_TREE[0].attrib['kf']); self.KM = float(URDF_TREE[0].attrib['km'])
@@ -249,7 +249,6 @@ class SingleDroneEnv(gym.Env):
 #### Internals #######################################################################################################################################
 ######################################################################################################################################################
 
-
     ####################################################################################################
     #### Denormalize the [-1,1] range to the [0, MAX RPM] range ########################################
     ####################################################################################################
@@ -286,7 +285,7 @@ class SingleDroneEnv(gym.Env):
         self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
         self.X_AX = -1; self.Y_AX = -1; self.Z_AX = -1; 
         self.GUI_INPUT_TEXT = -1; self.USE_GUI_RPM=False; self.last_input_switch = 0
-        self.USER_DEFINED_FUNCTIONS = UserDefinedFunctions(self.CLIENT, self.GUI, self.USER)
+        self.USER_DEFINED_FUNCTIONS = SingleDroneUserDefinedFunctions(self.CLIENT, self.GUI, self.USER)
         if self.NORM_SPACES: self.last_action = -1*np.ones(4)
         else: self.last_action = np.zeros(4)
         if not self.PYBULLET: 
@@ -302,12 +301,7 @@ class SingleDroneEnv(gym.Env):
         #### Load ground plane, drone and obstacles models #################################################
         ####################################################################################################
         p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)
-        if self.DRONE_MODEL==DroneModel.HB:
-            self.DRONE_ID = p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/hb.urdf",[0,0,0.25], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-        elif self.DRONE_MODEL==DroneModel.CF2X:
-            self.DRONE_ID = p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/cf2x.urdf",[0,0,0.1], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-        elif self.DRONE_MODEL==DroneModel.CF2P:
-            self.DRONE_ID = p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/cf2+.urdf",[0,0,0.1], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+        self.DRONE_ID = p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF,self.INIT_XYZ, p.getQuaternionFromEuler(self.INIT_RPY), physicsClientId=self.CLIENT)
         if self.OBSTACLES:
             self.USER_DEFINED_FUNCTIONS.addObstacles()
 
@@ -315,11 +309,10 @@ class SingleDroneEnv(gym.Env):
     #### Draw the local frame of the drone #############################################################
     ####################################################################################################
     def _showDroneFrame(self):
-        if self.DRONE_MODEL==DroneModel.HB: LENGTH = 0.35
-        elif self.DRONE_MODEL==DroneModel.CF2X or self.DRONE_MODEL==DroneModel.CF2P: LENGTH = 0.1
-        self.X_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[LENGTH,0,0],lineColorRGB=[1,0,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.X_AX,physicsClientId=self.CLIENT)
-        self.Y_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,LENGTH,0],lineColorRGB=[0,1,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Y_AX,physicsClientId=self.CLIENT)
-        self.Z_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,0,LENGTH],lineColorRGB=[0,0,1],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Z_AX,physicsClientId=self.CLIENT)
+        AXIS_LENGTH = 2*self.L
+        self.X_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[AXIS_LENGTH,0,0],lineColorRGB=[1,0,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.X_AX,physicsClientId=self.CLIENT)
+        self.Y_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,AXIS_LENGTH,0],lineColorRGB=[0,1,0],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Y_AX,physicsClientId=self.CLIENT)
+        self.Z_AX = p.addUserDebugLine(lineFromXYZ=[0,0,0],lineToXYZ=[0,0,AXIS_LENGTH],lineColorRGB=[0,0,1],parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.Z_AX,physicsClientId=self.CLIENT)
     
     ####################################################################################################
     #### PyBullet physics implementation ###############################################################
@@ -331,7 +324,7 @@ class SingleDroneEnv(gym.Env):
         forces = np.array(rpm**2)*self.KF
         torques = np.array(rpm**2)*self.KM
         z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
-        if self.DRONE_MODEL==DroneModel.HB:
+        if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[0]], posObj=[self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[1]], posObj=[0,self.L,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[2]], posObj=[-self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
@@ -342,11 +335,6 @@ class SingleDroneEnv(gym.Env):
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[1]], posObj=[-dist,dist,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[2]], posObj=[-dist,-dist,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
             p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[3]], posObj=[dist,-dist,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        elif self.DRONE_MODEL==DroneModel.CF2P:
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[0]], posObj=[self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[1]], posObj=[0,self.L,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[2]], posObj=[-self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[3]], posObj=[0,-self.L,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
         p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=[0,0,z_torque], flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
    
     ####################################################################################################
@@ -354,6 +342,10 @@ class SingleDroneEnv(gym.Env):
     ####################################################################################################
     def _simpleAerodynamicEffects(self):
         pass
+        # BODY DRAG
+        p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,0], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+        # GROUND EFFECT
+        p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,0], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Alternative PyBullet physics implementation ###################################################
@@ -384,7 +376,7 @@ class SingleDroneEnv(gym.Env):
     ####################################################################################################
     def _noPyBulletDynamics(self, rpm):
         ####################################################################################################
-        #### Based on github.com/utiasDSL/dsl__projects__benchmark/tree/gym-wrapper/python_sim #############
+        #### Based on: github.com/utiasDSL/dsl__projects__benchmark/tree/gym-wrapper/python_sim ############
         ####################################################################################################
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)

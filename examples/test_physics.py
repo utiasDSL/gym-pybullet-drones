@@ -17,7 +17,7 @@ NUM_RESTARTS = 0
 
 if __name__ == "__main__":
     start = time.time()
-    env = SingleDroneEnv(drone_model=DroneModel.CF2X, gui=True, record=False, obstacles=True)
+    env = SingleDroneEnv(drone_model=DroneModel.CF2X, initial_xyz=[-.7,-.5,.3], initial_rpy=[0,0,0], gui=True, record=False, obstacles=True)
     env.reset()
     PYB_CLIENT = env.getPyBulletClient()
     DRONE_ID = env.getDroneId()
@@ -26,27 +26,19 @@ if __name__ == "__main__":
     #### Make the drone weightless #####################################################################
     ####################################################################################################
     p.setGravity(0, 0, 0, physicsClientId=PYB_CLIENT)
-    
-    ####################################################################################################
-    #### Set the initial pose ##########################################################################
-    ####################################################################################################
-    p.resetBasePositionAndOrientation(DRONE_ID, posObj=[-.7,-.5,.3], ornObj=p.getQuaternionFromEuler([0,0,0], physicsClientId=PYB_CLIENT), physicsClientId=PYB_CLIENT)
-    # p.resetBasePositionAndOrientation(DRONE_ID, posObj=[.7,-.5,.3], ornObj=p.getQuaternionFromEuler([0,0,60*env.DEG2RAD], physicsClientId=PYB_CLIENT), physicsClientId=PYB_CLIENT)
-    # p.resetBasePositionAndOrientation(DRONE_ID, posObj=[-.7,-.5,.3], ornObj=p.getQuaternionFromEuler([0,60*env.DEG2RAD,0], physicsClientId=PYB_CLIENT), physicsClientId=PYB_CLIENT)
-
     for i in range(DURATION_SEC*env.SIM_FREQ):
         
         ####################################################################################################
         #### Apply x-axis force ############################################################################
         ####################################################################################################
-        # p.applyExternalForce(DRONE_ID, -1, forceObj=[1e-4,0.,0,], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)
-        # p.applyExternalForce(DRONE_ID, -1, forceObj=[1e-4,0.,0,], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[1e-4,0.,0,], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)    # N/A
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[1e-4,0.,0,], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)     # N/A
 
         ####################################################################################################
         #### Apply y-axis force ############################################################################
         ####################################################################################################
-        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,1e-4,0.], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)
-        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,1e-4,0.], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,1e-4,0.], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)    # N/A
+        # p.applyExternalForce(DRONE_ID, -1, forceObj=[0.,1e-4,0.], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)     # N/A
 
         ####################################################################################################
         #### Apply z-axis force ############################################################################
