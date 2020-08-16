@@ -1,7 +1,7 @@
 # gym-pybullet-drones
 Simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) to simulate one (or more, WIP) quadrotors 
 
-<img src="images/wp.gif" alt="alt text" width="360"> <img src="images/wp.png" alt="alt text" width="450">
+<img src="assets/images/wp.gif" alt="alt text" width="360"> <img src="assets/images/wp.png" alt="alt text" width="450">
 
 Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
@@ -58,7 +58,7 @@ $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_trace.py
 ```
-<img src="images/trace_comparison.gif" alt="alt text" width="360"> <img src="images/trace_comparison.png" alt="alt text" width="450">
+<img src="assets/images/trace_comparison.gif" alt="alt text" width="360"> <img src="assets/images/trace_comparison.png" alt="alt text" width="450">
 
 - `run_flight.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py)
 ```
@@ -66,7 +66,7 @@ $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_flight.py
 ```
-<img src="images/crash.gif" alt="alt text" width="360"> <img src="images/crash.png" alt="alt text" width="450">
+<img src="assets/images/crash.gif" alt="alt text" width="360"> <img src="assets/images/crash.png" alt="alt text" width="450">
 
 - `run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
@@ -74,8 +74,8 @@ $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/scripts/
 $ python run_learning.py
 ```
-<img src="images/learn1.gif" alt="alt text" width="400"> <img src="images/learn2.gif" alt="alt text" width="400">
-<img src="images/learn3.gif" alt="alt text" width="400"> <img src="images/learn4.gif" alt="alt text" width="400">
+<img src="assets/images/learn1.gif" alt="alt text" width="400"> <img src="assets/images/learn2.gif" alt="alt text" width="400">
+<img src="assets/images/learn3.gif" alt="alt text" width="400"> <img src="assets/images/learn4.gif" alt="alt text" width="400">
 
 
 
