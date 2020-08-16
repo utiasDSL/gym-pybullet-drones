@@ -86,7 +86,7 @@ class SingleDroneControl(object):
             #### based on https://github.com/prfraanje/quadcopter_sim ##########################################
             ####################################################################################################
             if self.DRONE_MODEL==DroneModel.HB:
-                if target_rpy[2] != 0: print("\n[WARNING] ctrl it:", self.control_counter, "in computeControl(), desired yaw={:.0f}deg but yaw control is NOT implemented for DroneModel.HB".format(target_rpy[2]*self.RAD2DEG))
+                if target_rpy[2] != 0: print("\n[WARNING] ctrl it:", self.control_counter, "in computeControl(), desired yaw={:.0f}deg but locked to 0. for DroneModel.HB".format(target_rpy[2]*self.RAD2DEG))
                 thrust, computed_target_rpy, pos_err = self._simplePIDPositionControl(control_timestep, cur_pos, cur_quat_rpy, target_pos)
                 rpm = self._simplePIDAttitudeControl(control_timestep, cur_quat_rpy, thrust, computed_target_rpy)
             ####################################################################################################
@@ -105,7 +105,7 @@ class SingleDroneControl(object):
 ######################################################################################################################################################
 
     ####################################################################################################
-    #### Generic PID position control (without yaw) ####################################################
+    #### Generic PID position control (with yaw locked to 0.) ##########################################
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (Float)         timestep at which control is computed ######################
@@ -137,7 +137,7 @@ class SingleDroneControl(object):
         return thrust[2], computed_target_rpy, pos_e
 
     ####################################################################################################
-    #### Generic PID attiutude control (without yaw) ###################################################
+    #### Generic PID attiutude control (with yaw locked to 0.) #########################################
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (Float)         timestep at which control is computed ######################
@@ -157,8 +157,6 @@ class SingleDroneControl(object):
         self.last_rpy_e = rpy_e
         self.integral_rpy_e = self.integral_rpy_e + rpy_e*control_timestep
         target_torques = np.multiply(self.P_COEFF_TOR,rpy_e) + np.multiply(self.I_COEFF_TOR,self.integral_rpy_e) + np.multiply(self.D_COEFF_TOR,d_rpy_e)
-        # cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat_rpy)).reshape(3,3)
-        # target_torques = np.dot(cur_rotation, target_torques)     # Unnecessary for fixed yaw
         return self._physicsToRPM(thrust, target_torques[0], target_torques[1], target_torques[2])
 
     ####################################################################################################
@@ -227,7 +225,7 @@ class SingleDroneControl(object):
         return self.PWM2RPM_SCALE*motor_pwm + self.PWM2RPM_CONST
 
     ####################################################################################################
-    #### Non-negative Least Squares (NNLS) derivation of RPM from thrust and torques  ##################
+    #### Non-negative Least Squares (NNLS) RPM from desired thrust and torques  ########################
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - thrust (Float)                   desired thrust along the local z-axis ######################
