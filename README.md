@@ -85,7 +85,7 @@ $ python run_learning.py
 
 
 ## SingleDroneEnv
-A single quadrotor enviroment can be created with
+A single quadrotor enviroment can be created with SingleDroneEnv() (see [`run_flight.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/scripts/run_flight.py) for an example)
 ```
 >>> env = SingleDroneEnv( \                 
 >>>       drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
@@ -97,9 +97,8 @@ A single quadrotor enviroment can be created with
 >>>       obstacles=False, \                # Whether to add obstacles to the environment (remove this comment)
 >>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/assets/saves/ (remove this comment)
 >>>       user="Default")                   # String to choose reward and done functions in class UserDefinedFunctions (remove this comment)
->>>                                         # See run_flight.py for an example
 ````
-Or using
+Or using `gym.make` (see [`run_learning.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/scripts/run_learning.py) for an example)
 ```
 >>> env = gym.make('single-drone-v0')                      # See run_learning_test.py
 ```
