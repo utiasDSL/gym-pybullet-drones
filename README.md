@@ -69,6 +69,7 @@ $ cd gym-pybullet-drones/scripts/
 $ python run_flight.py
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override control with interactive input
+
 <img src="assets/images/crash.gif" alt="alt text" width="360"> <img src="assets/images/crash.png" alt="alt text" width="450">
 
 - `run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
