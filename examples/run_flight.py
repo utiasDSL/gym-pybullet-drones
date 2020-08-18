@@ -14,11 +14,12 @@ from gym_pybullet_drones.control.SingleDroneControl import ControlType, SingleDr
 
 DRONE = DroneModel.CF2X
 GUI = True
+AERO_EFFECTS = False
 RECORD_VIDEO = True
 SAVE_TO_FILE = True
 SIMULATION_FREQ_HZ = 240
 CONTROL_FREQ_HZ = 48
-DURATION_SEC = 10
+DURATION_SEC = 30
 NUM_RESTARTS = 0
 
 if __name__ == "__main__":
@@ -34,9 +35,9 @@ if __name__ == "__main__":
     #### Initialize the simulation #####################################################################
     ####################################################################################################
     start = time.time()
-    env = SingleDroneEnv(drone_model=DRONE, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
+    start_xyz = [0,0,.35] if DRONE == DroneModel.HB else [0,0,.1]
+    env = SingleDroneEnv(drone_model=DRONE, initial_xyz=start_xyz, pybullet=True, aero_effects=AERO_EFFECTS, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
     initial_state = env.reset()
-    # PYB_CLIENT = env.getPyBulletClient(); DRONE_ID = env.getDroneId() # Use PYB_CLIENT, DRONE_ID to apply additional forces, if desired
     action = np.zeros(4); pos_err = 9999.
     control_every_n_steps = int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
     simulation_data = np.zeros((DURATION_SEC*SIMULATION_FREQ_HZ,16))

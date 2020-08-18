@@ -46,7 +46,7 @@ $ pip install -e .
 ## Use
 There are 4 main scripts in `examples/`: `run_physics.py`, `run_trace.py`, `run_flight.py`, `test_physics.py`
 
-- `test_physics.py` is meant to test PyBullet's forces and torques in `p.WORLD_FRAME` and `p.LINK_FRAME`
+- `test_physics.py` applies PyBullet's forces and torques to different [links](http://wiki.ros.org/urdf/XML/link) in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/examples/
@@ -166,6 +166,14 @@ The halting conditions can/should be modified in class [`SingleDroneUserDefinedF
 
 
 
+### Drag and Ground Effect Models
+WIP
+- [(Forster, 2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf)
+- [(Shi et al., 2019)](https://arxiv.org/pdf/1811.08027.pdf)
+
+
+
+
 ## MultiDroneEnv
 WIP
 ### Actions
@@ -180,8 +188,34 @@ WIP
 
 
 
-## Drag, Ground Effect, and Downwash Models
+### Downwash Model
 WIP
+
+
+
+
+## VelocitySwarmEnv
+WIP
+
+
+
+
+## PointMassSwarmEnv
+WIP
+
+
+
+
+## Citation
+If you wish, please refer to this work as
+```
+@MISC{gym-pybullet-drones2020,
+        author =   {Panerati, Jacopo and Zhou, SiQi and Zheng, Hehui and Xu, James and Prorok, Amanda and Schoellig, Angela P.},
+        title =    {A PyBullet-based Gym environment to simulate and learn nano-quadcopter control},
+        howpublished = {\url{https://github.com/JacopoPan/gym-pybullet-drones}},
+        year = {2020}
+}
+```
 
 
 
@@ -191,7 +225,8 @@ WIP
 - Benoit Landry (2014) [*Planning and Control for Quadrotor Flight through Cluttered Environments*](http://groups.csail.mit.edu/robotics-center/public_papers/Landry15)
 - Julian Forster (2015) [*System Identification of the Crazyflie 2.0 Nano Quadrocopter*](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf)
 - Carlos Luis and Jeroome Le Ny (2016) [*Design of a Trajectory Tracking Controller for a Nanoquadcopter*](https://arxiv.org/pdf/1608.05786.pdf)
-
+- Guanya Shi, Xichen Shi, Michael O’Connell, Rose Yu, Kamyar Azizzadenesheli, Animashree Anandkumar, Yisong Yue, Soon-Jo Chung (2019)
+[*Neural Lander: Stable Drone Landing Control Using Learned Dynamics*](https://arxiv.org/pdf/1811.08027.pdf)
 
 -----
 

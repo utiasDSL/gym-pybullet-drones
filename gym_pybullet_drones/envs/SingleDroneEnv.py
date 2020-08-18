@@ -89,21 +89,21 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         if self.NORM_SPACES:
             self.action_space = spaces.Box(    low=np.array([-1,-1,-1,-1]), high=np.array([1,1,1,1]), dtype=np.float32)
-            #### Observations ################################       X       Y       Z       Q1      Q2      Q3      Q4      R       P       Y       VX      VY      VZ      WR      WP      WY      P1      P2      P3      P4
+            #### Observations ################################       X       Y       Z       Q1      Q2      Q3      Q4      R       P       Y       VX      VY      VZ      WR      WP      WY      P0      P1      P2      P3
             self.observation_space = spaces.Box(low=np.array([      -1,     -1,     0,      -1,     -1,     -1,     -1,     -1,     -1,     -1,     -1,      -1,    -1,     -1,     -1,     -1,     -1,     -1,     -1,     -1]), \
                                                high=np.array([       1,      1,      1,      1,      1,      1,      1,      1,      1,      1,      1,       1,     1,      1,      1,      1,      1,      1,      1,      1]), dtype=np.float32)
         else:
             self.action_space = spaces.Box(    low=np.array([0.,0.,0.,0.]), high=np.array([self.MAX_RPM,self.MAX_RPM,self.MAX_RPM,self.MAX_RPM]), dtype=np.float32)
-            #### Observations ################################       X       Y       Z       Q1      Q2      Q3      Q4      R       P       Y       VX      VY      VZ      WR      WP      WY          P1              P2              P3              P4
+            #### Observations ################################       X       Y       Z       Q1      Q2      Q3      Q4      R       P       Y       VX      VY      VZ      WR      WP      WY          P0              P1              P2              P3
             self.observation_space = spaces.Box(low=np.array([      -np.inf,-np.inf,0.,     -1.,    -1.,    -1.,    -1.,    -np.pi, -np.pi, -np.pi, -np.inf,-np.inf,-np.inf,-np.inf,-np.inf,-np.inf,    0.,             0.,             0.,             0.]), \
                                               high=np.array([        np.inf, np.inf, np.inf, 1.,     1.,     1.,     1.,     np.pi,  np.pi,  np.pi,  np.inf, np.inf, np.inf, np.inf, np.inf, np.inf,    self.MAX_RPM,   self.MAX_RPM,   self.MAX_RPM,   self.MAX_RPM]), dtype=np.float32)
         ####################################################################################################
         #### Add input sliders to the GUI ##################################################################
         ####################################################################################################
+        self.P0_SLIDER = p.addUserDebugParameter('Propeller 0 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
         self.P1_SLIDER = p.addUserDebugParameter('Propeller 1 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
         self.P2_SLIDER = p.addUserDebugParameter('Propeller 2 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
         self.P3_SLIDER = p.addUserDebugParameter('Propeller 3 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
-        self.P4_SLIDER = p.addUserDebugParameter('Propeller 4 RPM', 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
         self.INPUT_SWITCH = p.addUserDebugParameter('Use GUI RPM', 9999., -1., 0, physicsClientId=self.CLIENT)
         ####################################################################################################
         #### Housekeeping ##################################################################################
@@ -152,20 +152,18 @@ class SingleDroneEnv(gym.Env):
             current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
             if current_input_switch > self.last_input_switch:
                 self.last_input_switch = current_input_switch
-                if self.USE_GUI_RPM==False: self.USE_GUI_RPM=True
-                else: self.USE_GUI_RPM=False
+                self.USE_GUI_RPM = True if self.USE_GUI_RPM==False else False
         if self.USE_GUI_RPM:
-            p1, p2 = p.readUserDebugParameter(self.P1_SLIDER, physicsClientId=self.CLIENT), p.readUserDebugParameter(self.P2_SLIDER, physicsClientId=self.CLIENT)
-            p3, p4 = p.readUserDebugParameter(self.P3_SLIDER, physicsClientId=self.CLIENT), p.readUserDebugParameter(self.P4_SLIDER, physicsClientId=self.CLIENT)
-            clipped_rpm = np.array([p1,p2,p3,p4])
+            p0, p1 = p.readUserDebugParameter(self.P0_SLIDER, physicsClientId=self.CLIENT), p.readUserDebugParameter(self.P1_SLIDER, physicsClientId=self.CLIENT)
+            p2, p3 = p.readUserDebugParameter(self.P2_SLIDER, physicsClientId=self.CLIENT), p.readUserDebugParameter(self.P3_SLIDER, physicsClientId=self.CLIENT)
+            clipped_rpm = np.array([p0,p1,p2,p3])
             if self.step_counter%(self.SIM_FREQ/2)==0:
                 self.GUI_INPUT_TEXT = p.addUserDebugText("Using GUI RPM",textPosition=[0,0,0],textColorRGB=[1,0,0],lifeTime=1,textSize=2,parentObjectUniqueId=self.DRONE_ID,parentLinkIndex=-1,replaceItemUniqueId=self.GUI_INPUT_TEXT,physicsClientId=self.CLIENT)
         ####################################################################################################
         #### Denormalize (if necessary) and clip the action to the maximum RPM #############################
         ####################################################################################################
         else:
-            if self.NORM_SPACES: rpm = self._normActionToRPM(action)
-            else: rpm = np.array(action)
+            rpm = self._normActionToRPM(action) if self.NORM_SPACES else np.array(action)
             clipped_rpm = np.clip(np.array(rpm), 0, self.MAX_RPM)
             if self.GUI and not(clipped_rpm==np.array(rpm)).all():
                 print("\n[WARNING] it:", self.step_counter, "in step(), out-of-range rotor speeds [{:.0f} {:.0f} {:.0f} {:.0f}], max RPM: {:.0f}".format(rpm[0], rpm[1], rpm[2], rpm[3], self.MAX_RPM)) 
@@ -286,8 +284,7 @@ class SingleDroneEnv(gym.Env):
         self.X_AX = -1; self.Y_AX = -1; self.Z_AX = -1; 
         self.GUI_INPUT_TEXT = -1; self.USE_GUI_RPM=False; self.last_input_switch = 0
         self.USER_DEFINED_FUNCTIONS = SingleDroneUserDefinedFunctions(self.CLIENT, self.GUI, self.USER)
-        if self.NORM_SPACES: self.last_action = -1*np.ones(4)
-        else: self.last_action = np.zeros(4)
+        self.last_action = -1*np.ones(4) if self.NORM_SPACES else np.zeros(4)
         if not self.PYBULLET: 
             self.no_pybullet_vel = np.zeros(3); self.no_pybullet_ang_vel = np.zeros(3); self.no_pybullet_acc = np.zeros(3)
         ####################################################################################################
@@ -323,30 +320,73 @@ class SingleDroneEnv(gym.Env):
     def _physics(self, rpm):
         forces = np.array(rpm**2)*self.KF
         torques = np.array(rpm**2)*self.KM
-        #z_torque = (torques[0] - torques[1] + torques[2] - torques[3])
         z_torque = (-torques[0] + torques[1] - torques[2] + torques[3])
-        if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[0]], posObj=[self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[1]], posObj=[0,self.L,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[2]], posObj=[-self.L,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[3]], posObj=[0,-self.L,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        elif self.DRONE_MODEL==DroneModel.CF2X:
-            dist = self.L/np.sqrt(2)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[0]], posObj=[dist,dist,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[1]], posObj=[-dist,dist,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[2]], posObj=[-dist,-dist,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-            p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,forces[3]], posObj=[dist,-dist,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=[0,0,z_torque], flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
-   
+        for i in range(4): p.applyExternalForce(self.DRONE_ID, i, forceObj=[0,0,forces[i]], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+        p.applyExternalTorque(self.DRONE_ID, 4, torqueObj=[0,0,z_torque], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+
     ####################################################################################################
     #### PyBullet implementation of drag and ground effect #############################################
     ####################################################################################################
     def _simpleAerodynamicEffects(self):
-        pass
-        # BODY DRAG
-        p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,0], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        # GROUND EFFECT
-        p.applyExternalForce(self.DRONE_ID, -1, forceObj=[0,0,0], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+        # Parameters
+        self.AIR_DENSITY = 1.204 # move to init
+        URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF).getroot() # move to init, set the new parameters in urdf
+        self.COLLISION_H = float(URDF_TREE[1][2][1][0].attrib['length'])
+        self.COLLISION_R = float(URDF_TREE[1][2][1][0].attrib['radius'])
+        COLLISION_SHAPE_OFFSETS = [float(s) for s in URDF_TREE[1][2][0].attrib['xyz'].split(' ')]
+        self.COLLISION_Z_OFFSET = COLLISION_SHAPE_OFFSETS[2]
+        self.DRAG_COEFF = float(URDF_TREE[0].attrib['drag_coeff'])
+        self.GND_EFF_COEFF = float(URDF_TREE[0].attrib['gnd_eff_coeff'])
+   
+        # relevant kinematic info
+        base_pos, base_quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
+        base_vel, base_ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
+        
+        link_states = np.array(p.getLinkStates(self.DRONE_ID, linkIndices=[0,1,2,3,4], computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.CLIENT))
+        # print("link 0, 1, 2, 3, 4 link_states")
+        # print("linkWorldPosition", link_states[0,0], link_states[1,0], link_states[2,0], link_states[3,0], link_states[4,0] )
+        # print("linkWorldOrientation", link_states[0,1], link_states[1,1], link_states[2,1], link_states[3,1], link_states[4,1])
+        # print("localInertialFramePosition", link_states[0,2], link_states[1,2], link_states[2,2], link_states[3,2], link_states[4,2])
+        # print("localInertialFrameOrientation", link_states[0,3], link_states[1,3], link_states[2,3], link_states[3,3], link_states[4,3])
+        # print("worldLinkFramePosition", link_states[0,4], link_states[1,4], link_states[2,4], link_states[3,4], link_states[4,4])
+        # print("worldLinkFrameOrientation", link_states[0,5], link_states[1,5], link_states[2,5], link_states[3,5], link_states[4,5])
+        # print("worldLinkLinearVelocity", link_states[0,6], link_states[1,6], link_states[2,6], link_states[3,6], link_states[4,6])
+        # print("worldLinkAngularVelocity", link_states[0,7], link_states[1,7], link_states[2,7], link_states[3,7], link_states[4,7]) 
+
+        # These are the same as the base
+        center_of_mass_pos = link_states[4,0]
+        center_of_mass_quat = link_states[4,1]
+        center_of_mass_vel = link_states[4,6]
+        center_of_mass_ang_v = link_states[4,7]
+
+        p0_pos = link_states[0,0]
+        p0_quat = link_states[0,1]
+        p0_vel = link_states[0,6]
+        p0_ang_v = link_states[0,7]
+
+        p1_pos = link_states[1,0]
+        p1_quat = link_states[1,1]
+        p1_vel = link_states[1,6]
+        p1_ang_v = link_states[1,7]
+
+        p2_pos = link_states[2,0]
+        p2_quat = link_states[2,1]
+        p2_vel = link_states[2,6]
+        p2_ang_v = link_states[2,7]
+
+        p3_pos = link_states[3,0]
+        p3_quat = link_states[3,1]
+        p3_vel = link_states[3,6]
+        p3_ang_v = link_states[3,7]
+
+        # GROUND EFFECT, 4 additional negative thrusts as function of the z of the propeller (in LINK_FRAME)
+        gnd_effects = np.array([-0,-0,-0,-0])
+        for i in range(4): p.applyExternalForce(self.DRONE_ID, i, forceObj=[0,0,gnd_effects[i]], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+        # TODO: more realistic model accounting for the z velocity component and attitude
+
+        # DRAG, force opposite to the linear motion of each propeller (in WORLD_FRAME)
+        drags = np.array([[-0,-0,-0],[-0,-0,-0],[-0,-0,-0],[-0,-0,-0]])
+        for i in range(4): p.applyExternalForce(self.DRONE_ID, i, forceObj=drags[i], posObj=[0,0,0], flags=p.WORLD_FRAME, physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Alternative PyBullet physics implementation ###################################################
@@ -366,8 +406,8 @@ class SingleDroneEnv(gym.Env):
     #         x_torque = (forces[0] + forces[1] - forces[2] - forces[3])*self.L/np.sqrt(2)
     #         y_torque = (- forces[0] + forces[1] + forces[2] - forces[3])*self.L/np.sqrt(2)
     #     torques = np.array([x_torque,y_torque,z_torque])
-    #     p.applyExternalForce(self.DRONE_ID, -1, forceObj=thrust, posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-    #     p.applyExternalTorque(self.DRONE_ID, -1, torqueObj=torques, flags=p.WORLD_FRAME, physicsClientId=self.CLIENT) # Note: bug fix, WORLD_FRAME for LINK FRAME, see run_physics_test.py
+    #     p.applyExternalForce(self.DRONE_ID, 4, forceObj=thrust, posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+    #     p.applyExternalTorque(self.DRONE_ID, 4, torqueObj=torques, flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Custom dynamics implementation ################################################################
@@ -387,7 +427,6 @@ class SingleDroneEnv(gym.Env):
         thrust_world_frame = np.dot(rotation,thrust)
         force_world_frame = thrust_world_frame - np.array([0, 0, self.GRAVITY])
         z_torques = np.array(rpm**2)*self.KM
-        #z_torque = (z_torques[0] - z_torques[1] + z_torques[2] - z_torques[3])
         z_torque = (-z_torques[0] + z_torques[1] - z_torques[2] + z_torques[3])
         if self.DRONE_MODEL==DroneModel.HB or self.DRONE_MODEL==DroneModel.CF2P:
             x_torque = (forces[1] - forces[3])*self.L
