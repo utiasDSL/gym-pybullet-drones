@@ -46,7 +46,7 @@ $ pip install -e .
 ## Use
 There are 4 main scripts in `examples/`: `run_physics.py`, `run_trace.py`, `run_flight.py`, `test_physics.py`
 
-- `test_physics.py` can be used to test PyBullet's forces and torques to different [links](http://wiki.ros.org/urdf/XML/link) in `p.WORLD_FRAME` and `p.LINK_FRAME`
+- `test_physics.py` can be used to test the effects of PyBullet's forces and torques to different [URDF links](http://wiki.ros.org/urdf/XML/link) in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/examples/
