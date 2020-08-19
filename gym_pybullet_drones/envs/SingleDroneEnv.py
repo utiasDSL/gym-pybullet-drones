@@ -131,10 +131,9 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)
-        if self.PYBULLET: vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
-        else: vel, ang_v = self.no_pybullet_vel, self.no_pybullet_ang_vel
-        if self.NORM_SPACES: state = self.USER_DEFINED_FUNCTIONS.clipAndNormalizeState(np.hstack([pos, quat, rpy, vel, ang_v, self.last_action]), self.step_counter)
-        else: state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action])
+        vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
+        state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action])
+        if self.NORM_SPACES: state = self.USER_DEFINED_FUNCTIONS.clipAndNormalizeState(state, self.step_counter)
         return state.reshape(20,)
 
     ####################################################################################################
@@ -181,21 +180,19 @@ class SingleDroneEnv(gym.Env):
             self._physics(clipped_rpm)
             if self.AERO_EFFECTS: self._simpleAerodynamicEffects(clipped_rpm)
             p.stepSimulation(physicsClientId=self.CLIENT)
-            vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
         ####################################################################################################
         #### Step the simulation with a custom dynamics implementation #####################################
         ####################################################################################################
-        else:
-            self._noPyBulletDynamics(clipped_rpm)
-            vel, ang_v = self.no_pybullet_vel, self.no_pybullet_ang_vel 
-        self._showDroneFrame()
+        else: self._noPyBulletDynamics(clipped_rpm)
         ####################################################################################################
         #### Prepare the return values #####################################################################
         ####################################################################################################
+        self._showDroneFrame()
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)
-        if self.NORM_SPACES: state = self.USER_DEFINED_FUNCTIONS.clipAndNormalizeState(np.hstack([pos, quat, rpy, vel, ang_v, self.last_action]), self.step_counter)
-        else: state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action])
+        vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
+        state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action])
+        if self.NORM_SPACES: state = self.USER_DEFINED_FUNCTIONS.clipAndNormalizeState(state, self.step_counter)
         reward = self.USER_DEFINED_FUNCTIONS.rewardFunction(state)
         done = self.USER_DEFINED_FUNCTIONS.doneFunction(state, self.step_counter/self.SIM_FREQ) 
         info = {"answer": 42}
@@ -210,8 +207,7 @@ class SingleDroneEnv(gym.Env):
             print("[WARNING] render() is implemented as text-only, re-initialize the environment using singleDroneEnv(gui=True) to use PyBullet's graphical interface")
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)
-        if self.PYBULLET: vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
-        else: vel, ang_v = self.no_pybullet_vel, self.no_pybullet_ang_vel
+        vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
         print("——— step number {:d}".format(self.step_counter), 
             "——— wall-clock time {:.1f}".format(time.time()-self.RESET_TIME), 
             "——— simulation time {:.1f}@{:d}Hz ({:.2f}x)".format(self.step_counter*self.TIMESTEP, self.SIM_FREQ, (self.step_counter*self.TIMESTEP)/(time.time()-self.RESET_TIME)), 
@@ -225,8 +221,7 @@ class SingleDroneEnv(gym.Env):
     def close(self):
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)
-        if self.PYBULLET: vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
-        else: vel, ang_v = self.no_pybullet_vel, self.no_pybullet_ang_vel
+        vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
         print("——— step number {:d}".format(self.step_counter), 
             "——— wall-clock time {:.1f}".format(time.time()-self.RESET_TIME), 
             "——— simulation time {:.1f}@{:d}Hz ({:.2f}x)".format(self.step_counter*self.TIMESTEP, self.SIM_FREQ, (self.step_counter*self.TIMESTEP)/(time.time()-self.RESET_TIME)), 
@@ -291,8 +286,7 @@ class SingleDroneEnv(gym.Env):
         self.GUI_INPUT_TEXT = -1; self.USE_GUI_RPM=False; self.last_input_switch = 0
         self.USER_DEFINED_FUNCTIONS = SingleDroneUserDefinedFunctions(self.CLIENT, self.GUI, self.USER)
         self.last_action = -1*np.ones(4) if self.NORM_SPACES else np.zeros(4)
-        if not self.PYBULLET: 
-            self.no_pybullet_vel = np.zeros(3); self.no_pybullet_ang_vel = np.zeros(3); self.no_pybullet_acc = np.zeros(3)
+        if not self.PYBULLET: self.no_pybullet_acc = np.zeros(3)
         ####################################################################################################
         #### Set PyBullet's parameters #####################################################################
         ####################################################################################################
@@ -393,6 +387,7 @@ class SingleDroneEnv(gym.Env):
         #### Based on: github.com/utiasDSL/dsl__projects__benchmark/tree/gym-wrapper/python_sim ############
         ####################################################################################################
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
+        vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
         rpy = p.getEulerFromQuaternion(quat)
         rotation = np.array(p.getMatrixFromQuaternion(quat)).reshape(3,3)
         forces = np.array(rpm**2)*self.KF
@@ -408,13 +403,14 @@ class SingleDroneEnv(gym.Env):
             x_torque = (forces[0] + forces[1] - forces[2] - forces[3])*self.L/np.sqrt(2)
             y_torque = (- forces[0] + forces[1] + forces[2] - forces[3])*self.L/np.sqrt(2)
         torques = np.array([x_torque, y_torque, z_torque])
-        torques = torques - np.cross(self.no_pybullet_ang_vel, np.dot(self.J, self.no_pybullet_ang_vel))
+        torques = torques - np.cross(ang_v, np.dot(self.J, ang_v))
         ang_vel_deriv = np.dot(self.J_INV, torques)
         self.no_pybullet_acc = force_world_frame / self.M
-        self.no_pybullet_vel = self.no_pybullet_vel + self.TIMESTEP * self.no_pybullet_acc
-        self.no_pybullet_ang_vel = self.no_pybullet_ang_vel + self.TIMESTEP * ang_vel_deriv
-        pos = pos + self.TIMESTEP * self.no_pybullet_vel
-        rpy = rpy + self.TIMESTEP * self.no_pybullet_ang_vel
+        vel = vel + self.TIMESTEP * self.no_pybullet_acc
+        ang_v = ang_v + self.TIMESTEP * ang_vel_deriv
+        pos = pos + self.TIMESTEP * vel
+        rpy = rpy + self.TIMESTEP * ang_v
         p.resetBasePositionAndOrientation(self.DRONE_ID, pos, p.getQuaternionFromEuler(rpy), physicsClientId=self.CLIENT)
+        p.resetBaseVelocity(self.DRONE_ID, vel, ang_v, physicsClientId=self.CLIENT)
 
         
