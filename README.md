@@ -44,39 +44,39 @@ $ pip install -e .
 
 
 ## Use
-There are 4 main scripts in `examples/`: `run_physics.py`, `run_trace.py`, `run_flight.py`, `test_physics.py`
+There are 4 main scripts in `examples/`: `sa_trace.py`, `sa_flight.py`, `sa_learning.py`, `test_physics.py`
 
 - `test_physics.py` can be used to test the effects of PyBullet's forces and torques to different [URDF links](http://wiki.ros.org/urdf/XML/link) in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python run_physics.py
+$ python test_physics.py
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
 
-- `run_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/traces)
+- `sa_trace.py` replays and compare to a trace saved in [`trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/traces)
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python run_trace.py
+$ python sa_trace.py
 ```
 <img src="files/images/trace_comparison.gif" alt="alt text" width="360"> <img src="files/images/trace_comparison.png" alt="alt text" width="450">
 
-- `run_flight.py` runs an independent flight **using PID control** implemented in class [`SingleDroneControl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/SingleDroneControl.py)
+- `sa_flight.py` runs an independent flight **using PID control** implemented in class [`SingleDroneControl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/SingleDroneControl.py)
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python run_flight.py
+$ python sa_flight.py
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
 
 <img src="files/images/crash.gif" alt="alt text" width="360"> <img src="files/images/crash.png" alt="alt text" width="450">
 
-- `run_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
+- `sa_learning.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
 $ conda activate myenv                   # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python run_learning.py
+$ python sa_learning.py
 ```
 <img src="files/images/learn1.gif" alt="alt text" width="400"> <img src="files/images/learn2.gif" alt="alt text" width="400">
 <img src="files/images/learn3.gif" alt="alt text" width="400"> <img src="files/images/learn4.gif" alt="alt text" width="400">
@@ -85,7 +85,7 @@ $ python run_learning.py
 
 
 ## SingleDroneEnv
-A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`run_flight.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/run_flight.py) for an example
+A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`sa_flight.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/sa_flight.py) for an example
 ```
 >>> env = SingleDroneEnv( \                 
 >>>       drone_model=DroneModel.CF2X, \    # See DroneModel.py for other quadcopter models (remove this comment)
@@ -100,9 +100,9 @@ A single quadrotor enviroment can be created with `SingleDroneEnv()`—see [`run
 >>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/files/saves/ (remove this comment)
 >>>       user="Default")                   # String to choose reward and done functions in class SingleDroneUserDefinedFunctions (remove this comment)
 ````
-Or using `gym.make()`—see [`run_learning.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/run_learning.py) for an example
+Or using `gym.make()`—see [`sa_learning.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/sa_learning.py) for an example
 ```
->>> env = gym.make('single-drone-v0')                      # See run_learning_test.py
+>>> env = gym.make('single-drone-v0')                      # See sa_learning.py
 ```
 Then, the environment can be stepped with
 ```
@@ -167,7 +167,7 @@ The halting conditions can/should be modified in class [`SingleDroneUserDefinedF
 
 
 ### Drag and Ground Effect Models
-Simple drag and ground effect models can be included in the simulation initializing `SingleDroneEnv()` with `aero_effects=True`, these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (see Ch. 4) 
+Simple drag and ground effect models can be included in the simulation initializing `SingleDroneEnv()` with `aero_effects=True`, these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (see Eq. 4.2) 
 and the analytical model used as a baseline for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (see Eq. 15)
 
 Check the implementation of `_simpleAerodynamicEffects()` in class [`SingleDroneEnv`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py) for more detail
@@ -176,7 +176,7 @@ Check the implementation of `_simpleAerodynamicEffects()` in class [`SingleDrone
 
 
 ## MultiDroneEnv
-WIP
+A multi-agent extension of SingleDroneEnv (WIP)
 ### Actions
 ...
 ### Observation Space
@@ -195,14 +195,20 @@ WIP
 
 
 
-## VelocitySwarmEnv
+## Simpler Environments for Swarm Applications
 WIP
 
 
 
 
-## PointMassSwarmEnv
-WIP
+### PointMassSwarmEnv
+A multi-agent environment with simplifed dynamics, using point-mass models (WIP)
+
+
+
+
+### VelocitySwarmEnv
+A multi-agent environment without dynamics, where velocities can be arbitrarily set (WIP)
 
 
 
