@@ -129,7 +129,7 @@ The observation space is a [`Box(20,)`](https://github.com/openai/gym/blob/maste
 - Angular velocity 
 - Motors' speeds
 
-Check [`SingleDroneUserDefinedFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneUserDefinedFunctions.py) for the mapping from raw simulation data to normalized observations in the [-1,1] range (i.e., when using `normalized_spaces=False`)
+Check [`SingleDroneUserDefinedFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneUserDefinedFunctions.py) for the mapping from raw simulation data to normalized observations in the [-1,1] range (i.e., when using `normalized_spaces=True`)
 
 ### Reward
 The reward function can/should be modified in class [`SingleDroneUserDefinedFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneUserDefinedFunctions.py), for example
@@ -156,7 +156,7 @@ The halting conditions can/should be modified in class [`SingleDroneUserDefinedF
 >>>         roll = state[7]; pitch = state[8]
 >>>         if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
 >>>                 or np.abs(roll)>np.pi/2 or np.abs(pitch)>np.pi/2 \
->>>                 or self.step_counter > 5*self.SIM_FREQ: 
+>>>                 or sim_time > 5: 
 >>>             return True
 >>>         else: 
 >>>             return False

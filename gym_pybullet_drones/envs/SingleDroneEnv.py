@@ -355,7 +355,7 @@ class SingleDroneEnv(gym.Env):
             for i in range(4): p.applyExternalForce(self.DRONE_ID, i, forceObj=[0,0,gnd_effects[i]], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
         #### TODO: a more realistic model would account for the drone's attitude and its z-axis velocity in the world frame 
         ####################################################################################################
-        #### Simple draft model in the base/center of mass frame, from (Forster, 2015) #####################
+        #### Simple draft model applied to the base/center of mass, from (Forster, 2015) ###################
         ####################################################################################################
         drag_factors = -1 * self.DRAG_COEFF * np.sum(np.array(2*np.pi*rpm/60))
         drag = np.dot(base_rot,drag_factors*np.array(base_vel))
