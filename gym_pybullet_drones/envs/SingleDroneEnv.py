@@ -73,8 +73,14 @@ class SingleDroneEnv(gym.Env):
         self.M = float(URDF_TREE[1][0][1].attrib['value']); self.L = float(URDF_TREE[0].attrib['arm']); self.THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib['thrust2weight'])
         self.IXX = float(URDF_TREE[1][0][2].attrib['ixx']); self.IYY = float(URDF_TREE[1][0][2].attrib['iyy']); self.IZZ = float(URDF_TREE[1][0][2].attrib['izz'])
         self.KF = float(URDF_TREE[0].attrib['kf']); self.KM = float(URDF_TREE[0].attrib['km'])
+        self.COLLISION_H = float(URDF_TREE[1][2][1][0].attrib['length']); self.COLLISION_R = float(URDF_TREE[1][2][1][0].attrib['radius'])
+        COLLISION_SHAPE_OFFSETS = [float(s) for s in URDF_TREE[1][2][0].attrib['xyz'].split(' ')]; self.COLLISION_Z_OFFSET = COLLISION_SHAPE_OFFSETS[2]
+        self.GND_EFF_COEFF = float(URDF_TREE[0].attrib['gnd_eff_coeff']); self.PROP_RADIUS = float(URDF_TREE[0].attrib['prop_radius'])
+        self.DRAG_COEFF_XY = float(URDF_TREE[0].attrib['drag_coeff_xy']); self.DRAG_COEFF_Z = float(URDF_TREE[0].attrib['drag_coeff_z'])
+        self.DRAG_COEFF = np.array([self.DRAG_COEFF_XY, self.DRAG_COEFF_XY, self.DRAG_COEFF_Z])
         if not self.PYBULLET: self.J = np.diag([self.IXX, self.IYY, self.IZZ]); self.J_INV = np.linalg.inv(self.J)
         print("[INFO] SingleDroneEnv.__init__() loaded from the drone's .urdf file the following physical parameters (m, L, ixx, iyy, izz, kf, km, t2w):", self.M, self.L, self.IXX, self.IYY, self.IZZ, self.KF, self.KM, self.THRUST2WEIGHT_RATIO)
+        if self.AERO_EFFECTS: print("[INFO] SingleDroneEnv.__init__() loaded from the drone's .urdf file the following aerodynamic parameters (gnd_eff_coeff, prop_radius, drag_xy_coeff, drag_z_coeff):", self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF_XY, self.DRAG_COEFF_Z)
         ####################################################################################################
         #### Compute constants #############################################################################
         ####################################################################################################
@@ -173,7 +179,7 @@ class SingleDroneEnv(gym.Env):
         ####################################################################################################
         if self.PYBULLET:
             self._physics(clipped_rpm)
-            if self.AERO_EFFECTS: self._simpleAerodynamicEffects()
+            if self.AERO_EFFECTS: self._simpleAerodynamicEffects(clipped_rpm)
             p.stepSimulation(physicsClientId=self.CLIENT)
             vel, ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
         ####################################################################################################
@@ -327,66 +333,33 @@ class SingleDroneEnv(gym.Env):
     ####################################################################################################
     #### PyBullet implementation of drag and ground effect #############################################
     ####################################################################################################
-    def _simpleAerodynamicEffects(self):
-        # Parameters
-        self.AIR_DENSITY = 1.204 # move to init
-        URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF).getroot() # move to init, set the new parameters in urdf
-        self.COLLISION_H = float(URDF_TREE[1][2][1][0].attrib['length'])
-        self.COLLISION_R = float(URDF_TREE[1][2][1][0].attrib['radius'])
-        COLLISION_SHAPE_OFFSETS = [float(s) for s in URDF_TREE[1][2][0].attrib['xyz'].split(' ')]
-        self.COLLISION_Z_OFFSET = COLLISION_SHAPE_OFFSETS[2]
-        self.DRAG_COEFF = float(URDF_TREE[0].attrib['drag_coeff'])
-        self.GND_EFF_COEFF = float(URDF_TREE[0].attrib['gnd_eff_coeff'])
-   
-        # relevant kinematic info
+    #### Arguments #####################################################################################
+    #### - rpm (4-by-1 array)               RPM values of the 4 motors #################################
+    ####################################################################################################
+    def _simpleAerodynamicEffects(self, rpm):
+        ####################################################################################################
+        #### Kinematic information of the base and all links (propellers and center of mass) ###############
+        ####################################################################################################
         base_pos, base_quat = p.getBasePositionAndOrientation(self.DRONE_ID, physicsClientId=self.CLIENT)
+        base_rpy = p.getEulerFromQuaternion(base_quat)
+        base_rot = np.array(p.getMatrixFromQuaternion(base_quat)).reshape(3,3)
         base_vel, base_ang_v = p.getBaseVelocity(self.DRONE_ID, physicsClientId=self.CLIENT)
-        
         link_states = np.array(p.getLinkStates(self.DRONE_ID, linkIndices=[0,1,2,3,4], computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.CLIENT))
-        # print("link 0, 1, 2, 3, 4 link_states")
-        # print("linkWorldPosition", link_states[0,0], link_states[1,0], link_states[2,0], link_states[3,0], link_states[4,0] )
-        # print("linkWorldOrientation", link_states[0,1], link_states[1,1], link_states[2,1], link_states[3,1], link_states[4,1])
-        # print("localInertialFramePosition", link_states[0,2], link_states[1,2], link_states[2,2], link_states[3,2], link_states[4,2])
-        # print("localInertialFrameOrientation", link_states[0,3], link_states[1,3], link_states[2,3], link_states[3,3], link_states[4,3])
-        # print("worldLinkFramePosition", link_states[0,4], link_states[1,4], link_states[2,4], link_states[3,4], link_states[4,4])
-        # print("worldLinkFrameOrientation", link_states[0,5], link_states[1,5], link_states[2,5], link_states[3,5], link_states[4,5])
-        # print("worldLinkLinearVelocity", link_states[0,6], link_states[1,6], link_states[2,6], link_states[3,6], link_states[4,6])
-        # print("worldLinkAngularVelocity", link_states[0,7], link_states[1,7], link_states[2,7], link_states[3,7], link_states[4,7]) 
-
-        # These are the same as the base
-        center_of_mass_pos = link_states[4,0]
-        center_of_mass_quat = link_states[4,1]
-        center_of_mass_vel = link_states[4,6]
-        center_of_mass_ang_v = link_states[4,7]
-
-        p0_pos = link_states[0,0]
-        p0_quat = link_states[0,1]
-        p0_vel = link_states[0,6]
-        p0_ang_v = link_states[0,7]
-
-        p1_pos = link_states[1,0]
-        p1_quat = link_states[1,1]
-        p1_vel = link_states[1,6]
-        p1_ang_v = link_states[1,7]
-
-        p2_pos = link_states[2,0]
-        p2_quat = link_states[2,1]
-        p2_vel = link_states[2,6]
-        p2_ang_v = link_states[2,7]
-
-        p3_pos = link_states[3,0]
-        p3_quat = link_states[3,1]
-        p3_vel = link_states[3,6]
-        p3_ang_v = link_states[3,7]
-
-        # GROUND EFFECT, 4 additional negative thrusts as function of the z of the propeller (in LINK_FRAME)
-        gnd_effects = np.array([-0,-0,-0,-0])
-        for i in range(4): p.applyExternalForce(self.DRONE_ID, i, forceObj=[0,0,gnd_effects[i]], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
-        # TODO: more realistic model accounting for the z velocity component and attitude
-
-        # DRAG, force opposite to the linear motion of each propeller (in WORLD_FRAME)
-        drags = np.array([[-0,-0,-0],[-0,-0,-0],[-0,-0,-0],[-0,-0,-0]])
-        for i in range(4): p.applyExternalForce(self.DRONE_ID, i, forceObj=drags[i], posObj=[0,0,0], flags=p.WORLD_FRAME, physicsClientId=self.CLIENT)
+        ####################################################################################################
+        #### Simple, per-propeller ground effects, from (Shi et al., 2019) #################################
+        ####################################################################################################       
+        prop_heights = np.array([link_states[0,0][2], link_states[1,0][2], link_states[2,0][2], link_states[3,0][2]])
+        gnd_effects = np.array(rpm**2) * self.KF * self.GND_EFF_COEFF * (self.PROP_RADIUS/(4 * prop_heights))**2
+        gnd_effects = np.clip(gnd_effects, 0, self.MAX_THRUST/10)
+        if np.abs(base_rpy[0])<np.pi/2 and np.abs(base_rpy[1])<np.pi/2:
+            for i in range(4): p.applyExternalForce(self.DRONE_ID, i, forceObj=[0,0,gnd_effects[i]], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+        #### TODO: a more realistic model would account for the drone's attitude and its z-axis velocity in the world frame 
+        ####################################################################################################
+        #### Simple draft model in the base/center of mass frame, from (Forster, 2015) #####################
+        ####################################################################################################
+        drag_factors = -1 * self.DRAG_COEFF * np.sum(np.array(2*np.pi*rpm/60))
+        drag = np.dot(base_rot,drag_factors*np.array(base_vel))
+        p.applyExternalForce(self.DRONE_ID, 4, forceObj=drag, posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)       
 
     ####################################################################################################
     #### Alternative PyBullet physics implementation ###################################################

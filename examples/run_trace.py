@@ -32,7 +32,7 @@ if __name__ == "__main__":
     #### Initialize the simulation #####################################################################
     ####################################################################################################
     start = time.time()
-    env = SingleDroneEnv(drone_model=DroneModel.CF2X, pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
+    env = SingleDroneEnv(drone_model=DroneModel.CF2X, initial_xyz=[0,0,.1], pybullet=True, aero_effects=False, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
     initial_state = env.reset()
     action = np.zeros(4); pos_err = 9999.
     trace_control_reference[:,2] = initial_state[2] # assuming TRACE_FILE starts at position (0,0,0) while the sim starts at (0,0,initial_state[2])

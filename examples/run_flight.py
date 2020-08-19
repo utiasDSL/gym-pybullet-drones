@@ -19,7 +19,7 @@ RECORD_VIDEO = True
 SAVE_TO_FILE = True
 SIMULATION_FREQ_HZ = 240
 CONTROL_FREQ_HZ = 48
-DURATION_SEC = 30
+DURATION_SEC = 15
 NUM_RESTARTS = 0
 
 if __name__ == "__main__":
@@ -27,15 +27,16 @@ if __name__ == "__main__":
     ####################################################################################################
     #### Alternatively, initialize a 1m by 1m, 41-waypoint trajectory ##################################
     ####################################################################################################
+    height = .4
     zeros = np.zeros(20); ones = -1*np.ones(20); zero2one = np.array([-x/20-0.05 for x in range(20)]); one2zero = np.flip(zero2one)
-    waypoints = (np.vstack([np.hstack([0,zero2one,ones,one2zero,zeros]), np.hstack([0,zeros,zero2one,ones,one2zero]),.4*np.ones(81)])).transpose()
+    waypoints = (np.vstack([np.hstack([0,zero2one,ones,one2zero,zeros]), np.hstack([0,zeros,zero2one,ones,one2zero]),height*np.ones(81)])).transpose()
     wp_counter = 0; current_wp = waypoints[wp_counter]
     
     ####################################################################################################
     #### Initialize the simulation #####################################################################
     ####################################################################################################
     start = time.time()
-    start_xyz = [0,0,.35] if DRONE == DroneModel.HB else [0,0,.1]
+    start_xyz = [0,0,.35] if DRONE == DroneModel.HB else [0,0,.025]
     env = SingleDroneEnv(drone_model=DRONE, initial_xyz=start_xyz, pybullet=True, aero_effects=AERO_EFFECTS, normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO)
     initial_state = env.reset()
     action = np.zeros(4); pos_err = 9999.
