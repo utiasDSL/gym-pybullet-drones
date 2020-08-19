@@ -168,7 +168,7 @@ The halting conditions can/should be modified in class [`SingleDroneUserDefinedF
 
 ### Drag and Ground Effect Models
 Simple drag and ground effect models can be included in the simulation initializing `SingleDroneEnv()` with `aero_effects=True`, these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (see Ch. 4) 
-and the analytical model used for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (see Eq. 15)
+and the analytical model used as a baseline for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (see Eq. 15)
 
 Check the implementation of `_simpleAerodynamicEffects()` in class [`SingleDroneEnv`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/SingleDroneEnv.py) for more detail
 
