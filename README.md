@@ -54,7 +54,7 @@ $ python compare.py
 ```
 <img src="files/readme_images/trace_comparison.gif" alt="alt text" width="360"> <img src="files/readme_images/trace_comparison.png" alt="alt text" width="450">
 
-- `fly.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/env/Control.py)
+- `fly.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/envs/Control.py)
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
