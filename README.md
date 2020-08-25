@@ -61,6 +61,7 @@ $ cd gym-pybullet-drones/examples/
 $ python fly.py
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
+
 <img src="files/readme_images/wp.gif" alt="alt text" width="360"> <img src="files/readme_images/wp.png" alt="alt text" width="450">
 
 <img src="files/readme_images/crash.gif" alt="alt text" width="360"> <img src="files/readme_images/crash.png" alt="alt text" width="450">
@@ -120,11 +121,11 @@ Then, the environment can be stepped with
 ### Action Space
 The action space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py)'s containing the desired control inputs
 
-Keys are `"0"`, `"1"`, .., `"n"`, where `n` is the number of drones
+Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
-For all `Physics` implementations, except `PYB_PM` and `PYB_KIN`, these are the rotation speeds of all motors ranging from `-1` to `1` if  `normalized_spaces=True`, or from `0` to `SingleDroneEnv.MAX_RPM` otherwise
+For all `Physics` implementations—except `PYB_PM` and `PYB_KIN`—these are the rotation speeds of all motors ranging from `-1` to `1` if  `normalized_spaces=True`, or from `0` to `SingleDroneEnv.MAX_RPM` otherwise
 
-For `physics=Physics.PYB_PM` and `Physics.PYB_KIN`, the control inputs are the desired acceleration and velocity, respectively
+For `physics=Physics.PYB_PM` and `PYB_KIN`, the control inputs are the desired acceleration and velocity, respectively
 
 
 
@@ -132,7 +133,7 @@ For `physics=Physics.PYB_PM` and `Physics.PYB_KIN`, the control inputs are the d
 ### Observation Space
 The observation space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of pairs `{"state": Box(20,), "neighbors": MultiBinary(num_drones)}`
 
-Keys are `"0"`, `"1"`, .., `"n"`, where `n` is the number of drones
+Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
 Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) contains the drone's
 - X, Y, Z position in `WORLD_FRAME` (3 value, meters unless normalized)
@@ -147,14 +148,14 @@ Check [`ProblemSpecificFunctions.clipAndNormalizeState()`](https://github.com/Ja
 Each  [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
 
 
-### IMPORTANT NOTE: Single Agent Action and Observation Spaces
+### NOTE: Single-agent Spaces
 When `num_drones==1`, action and observations spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
 
 
 
 
 ## ProblemSpecificFunctions
-Class [`ProblemSpecificFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/ProblemSpecificFunctions.py) contains implementations of reward, done, and normalization functions that can be selected when create an environment with `problem=Problem.CUSTOM`
+Class [`ProblemSpecificFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/ProblemSpecificFunctions.py) contains implementations of *reward*, *done*, and *normalization* functions that can be selected when create an environment with `problem=Problem.CUSTOM`
 
 
 
@@ -198,7 +199,7 @@ Stopping conditions can/should be modified in class [`ProblemSpecificFunctions`]
 
 
 ### Drag, Ground Effect, and Downwash Models
-Simple drag, ground effect, and downwash models can be included in the simulation initializing `Aviary()` with `physics=Physics.PYB_GND_DRAG_DW`; these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (see Eq. 4.2), the analytical model used as a baseline for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (see Eq. 15), and [DSL](https://www.dynsyslab.org/vision-news/)'s experimental work by SiQi Zhou
+Simple drag, ground effect, and downwash models can be included in the simulation initializing `Aviary()` with `physics=Physics.PYB_GND_DRAG_DW`, these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (Eq. 4.2), the analytical model used as a baseline for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (Eq. 15), and [DSL](https://www.dynsyslab.org/vision-news/)'s experimental work
 
 Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in class [`Aviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Aviary.py) for more detail
 
@@ -206,7 +207,7 @@ Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in 
 
 
 ## Control
-Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains implementations of controllers that can be used to command the quadcopters, for example
+Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains implementations of controllers to command the quadcopters, for example
 ```   
 >>> ctrl = [Control(env, control_type=ControlType.PID) for i in range(num_drones)]  # Initialize "num_drones" controllers
 >>> ...
@@ -221,7 +222,7 @@ Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/g
 
 
 ## Logger
-Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains helper functions to save an plot the simulation data, for example
+Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains helper functions to save and plot simulation data, for example
 ```
 >>> logger = Logger(duration_sec=T, simulation_freq_hz=freq, num_drones=num_drones) # Initialize the logger
 >>> ...
