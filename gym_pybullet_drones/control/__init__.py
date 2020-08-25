@@ -1,2 +1,0 @@
-from gym_pybullet_drones.control.SingleDroneControl import SingleDroneControl
-from gym_pybullet_drones.control.MultiDroneControl import MultiDroneControl

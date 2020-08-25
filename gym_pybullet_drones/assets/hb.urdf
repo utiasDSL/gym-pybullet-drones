@@ -2,7 +2,7 @@
 
 <robot name="quad">
 
-  <properties arm="0.175" kf="6.11e-8" km="1.5e-9" thrust2weight="2" gnd_eff_coeff="0" prop_radius="0" drag_coeff_xy="0" drag_coeff_z="0"/>
+  <properties arm="0.175" kf="6.11e-8" km="1.5e-9" thrust2weight="2" max_speed_kmh="50" gnd_eff_coeff="0" prop_radius="0" drag_coeff_xy="0" drag_coeff_z="0"/>
   <!-- [GRASP hummingbird] properties arm="0.175" kf="6.11e-8" km="1.5e-9" thrust2weight="2"/ -->
   <!-- [GRASP nano quad] properties arm="0.0635" kf="2.0e-9" km="4.74e-12" thrust2weight="2"/ -->
 
