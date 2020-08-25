@@ -222,7 +222,7 @@ Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/g
 
 
 ## Logger
-Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains helper functions to save and plot simulation data, for example
+Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Logger.py) contains helper functions to save and plot simulation data, for example
 ```
 >>> logger = Logger(duration_sec=T, simulation_freq_hz=freq, num_drones=num_drones) # Initialize the logger
 >>> ...
