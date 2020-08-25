@@ -14,7 +14,7 @@ from gym_pybullet_drones.envs.Logger import Logger
 from gym_pybullet_drones.envs.Control import ControlType, Control
 
 DRONE = DroneModel.CF2X
-NUM_DRONES = 3
+NUM_DRONES = 1
 GUI = True
 PHYSICS = Physics.PYB
 RECORD_VIDEO = False
@@ -32,7 +32,7 @@ if __name__ == "__main__":
     #### Initialize a circular trajectory ##############################################################
     PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
     for i in range(NUM_WP): TARGET_POS[i,:] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0,0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0,1], INIT_XYZS[0,2]  
-    wp_counters = [ int(i*NUM_WP/NUM_DRONES) for i in range(NUM_DRONES) ]
+    wp_counters = np.array([ int(i*NUM_WP/NUM_DRONES) for i in range(NUM_DRONES) ])
     
     #### Initialize the logger #########################################################################
     logger = Logger(duration_sec=DURATION_SEC, simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     #### Run the simulation ############################################################################
     CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
     action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) } if NUM_DRONES>1 else np.array([0,0,0,0])
-    START = time.time()
+    START = time.time(); temp_action = {}
     for i in range(DURATION_SEC*env.SIM_FREQ):
 
         #### Step the simulation ###########################################################################
@@ -56,9 +56,14 @@ if __name__ == "__main__":
         if i%CTRL_EVERY_N_STEPS==0:
 
             #### Compute control for the current waypoint ######################################################
-            for j in range(NUM_DRONES): action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, \
-                                                                                state=obs[str(j)]["state"], target_pos=TARGET_POS[wp_counters[j],:])
-       
+            for j in range(NUM_DRONES): 
+                temp_action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, \
+                                                                                state=obs[str(j)]["state"], \
+                                                                                target_pos=TARGET_POS[wp_counters[j],:])
+                
+                #### Transform multi-drone actions into the Box format of a single drone to simplify the code ######
+                action = temp_action if NUM_DRONES>1 else temp_action["0"]
+
             #### Go to the next waypoint and loop ##############################################################
             for j in range(NUM_DRONES): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
 
