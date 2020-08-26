@@ -214,7 +214,7 @@ Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/g
 >>> for i in range(num_drones):                                                     # Compute control for each drone
 >>>     action[str(i)], _, _ = ctrl[i].computeControlFromState( \                   # Write the action in a dictionary
 >>>                                    control_timestep=env.TIMESTEP, \
->>>                                    state=obs[str(j)]["state"], \
+>>>                                    state=obs[str(i)]["state"], \
 >>>                                    target_pos=TARGET_POS)
 ```
 
