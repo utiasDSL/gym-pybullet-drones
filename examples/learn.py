@@ -18,7 +18,7 @@ from ray.rllib.agents import ppo
 from utils import *
 from gym_pybullet_drones.envs.Aviary import Aviary
 
-RLLIB = True
+RLLIB = False
 
 if __name__ == "__main__":
 
