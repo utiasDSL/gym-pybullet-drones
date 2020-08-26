@@ -1,7 +1,7 @@
 # gym-pybullet-drones
 Simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) to simulate one or more quadrotors 
 
-<img src="files/readme_images/3_drones.gif" alt="alt text" width="360"> <img src="files/readme_images/3_drones.png" alt="alt text" width="450">
+<img src="files/readme_images/helix.gif" alt="alt text" width="360"> <img src="files/readme_images/helix.png" alt="alt text" width="450">
 
 - The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x nano-quadrotor](https://www.bitcraze.io/documentation/hardware/crazyflie_2_1/crazyflie_2_1-datasheet.pdf)
 
@@ -207,7 +207,7 @@ Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in 
 
 
 ## Control
-Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains implementations of controllers to command the quadcopters, for example
+Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains implementations of 2 PID controllers to command the quadcopters, for example
 ```   
 >>> ctrl = [Control(env, control_type=ControlType.PID) for i in range(num_drones)]  # Initialize "num_drones" controllers
 >>> ...
@@ -243,7 +243,7 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 If you wish, please refer to this work as
 ```
 @MISC{gym-pybullet-drones2020,
-        author =   {Panerati, Jacopo and Zheng, Hehui and Zhou, SiQi and Xu, James and Prorok, Amanda and Schoellig, Angela P.},
+        author =   {Panerati, Jacopo and Zheng, Hehui and Zhou, SiQi and Xu, James and Prorok, Amanda and Sch\"{o}llig, Angela P.},
         title =    {Learning to Fly: a Gym environment based on PyBullet to simulate and learn the control of multiple nano-quadcopters},
         howpublished = {\url{https://github.com/JacopoPan/gym-pybullet-drones}},
         year = {2020}
