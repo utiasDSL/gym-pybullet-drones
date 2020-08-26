@@ -14,7 +14,7 @@ from gym_pybullet_drones.envs.Logger import Logger
 from gym_pybullet_drones.envs.Control import ControlType, Control
 
 DRONE = DroneModel.CF2X
-NUM_DRONES = 1
+NUM_DRONES = 3
 GUI = True
 PHYSICS = Physics.PYB
 RECORD_VIDEO = False
