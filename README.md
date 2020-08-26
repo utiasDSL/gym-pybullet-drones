@@ -7,7 +7,7 @@ Simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) ba
 
 - Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
-- Suggestions and corrections are very welcome in the form of [issues](https://github.com/JacopoPan/gym-pybullet-drones/issues) and [pull requests](https://github.com/JacopoPan/gym-pybullet-drones/pulls), repectively
+- Suggestions and corrections are very welcome in the form of [issues](https://github.com/JacopoPan/gym-pybullet-drones/issues) and [pull requests](https://github.com/JacopoPan/gym-pybullet-drones/pulls), respectively
 
 
 ### Requirements
@@ -145,7 +145,7 @@ Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) c
 
 Check [`ProblemSpecificFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/ProblemSpecificFunctions.py) for the mapping from raw simulation data to normalized observations in the `[-1,1]` range (i.e., when `normalized_spaces==True`)
 
-Each  [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
+Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
 
 
 ### NOTE: Single-agent Spaces
