@@ -36,7 +36,7 @@ class Physics(Enum):
     PYB_DW = 4               # PyBullet physics update with downwash
     PYB_GND_DRAG_DW = 5      # PyBullet physics update with ground effect, drag, and downwash
     PYB_PM = 6               # Simpler PyBullet physics update with point-mass models
-    PYB_KIN = 7              # Update with a desired kinmatics input
+    PYB_KIN = 7              # Update with a desired kinematics input
 
 
 ######################################################################################################################################################
@@ -56,7 +56,7 @@ class Aviary(gym.Env):
     #### - initial_rpy ((3,1) array)        initial orientations of the drones (radians) ###############
     #### - physics (Physics)                desired implementation of physics/dynamics #################
     #### - normalized_spaces (bool)         whether to use normalized OpenAI Gym spaces ################
-    #### - freq (int)                       the freqeuency (Hz) at which the simulation steps ##########
+    #### - freq (int)                       the frequency (Hz) at which the simulation steps ###########
     #### - gui (bool)                       whether to use PyBullet's GUI ##############################
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - record (bool)                    whether to save the simulation as an .mp4 video ############
@@ -461,7 +461,7 @@ class Aviary(gym.Env):
         p.resetBaseVelocity(self.DRONE_IDS[nth_drone], vel, ang_v, physicsClientId=self.CLIENT)
 
     ####################################################################################################
-    #### Work in progess ###############################################################################
+    #### Work in progress ##############################################################################
     ####################################################################################################
     def _downwash(self, nth_drone):
         pass # TODO
