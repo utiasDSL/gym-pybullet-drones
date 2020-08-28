@@ -152,7 +152,7 @@ Check [`ProblemSpecificFunctions.clipAndNormalizeState()`](https://github.com/Ja
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
 
 
-> **Note**: when `num_drones==1`, action and observation spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
+> **Note**: when `num_drones==1`, action and obs spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
 
 
 
