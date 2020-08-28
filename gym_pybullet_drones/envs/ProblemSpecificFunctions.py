@@ -16,7 +16,7 @@ from enum import Enum
 class Problem(Enum):
     DEFAULT = 0              # Default "reward" and "done" functions, state normalization, obstacles (i.e. fly upwards from the origin)
     CUSTOM = 1               # Placeholder for custom "reward" and "done" functions, state normalization, obstacles, etc.
-
+    MA_FLOCK = 2             # "reward" functions for multi-agent flocking task
 
 ######################################################################################################################################################
 #### A class for problem-specific "reward" and "done" functions, state normalization, etc. ###########################################################
@@ -54,6 +54,54 @@ class ProblemSpecificFunctions(object):
             else: return -1
         elif self.PROBLEM==Problem.CUSTOM:
             pass
+        elif self.PROBLEM==Problem.MA_FLOCK:
+            n_drones = len(obs)     # obs here is dictionary of the form {"i":{"state": Box(20,), 
+                                    # "neighbors": MultiBinary(NUM_DRONES)}}
+            # parse velocity and position
+            vel = np.zeros((1, n_drones, 3))
+            pos = np.zeros((1, n_drones, 3))
+            for i in range(n_drones):
+                pos[0][i][0] = obs[str(i)]["state"][0]
+                pos[0][i][1] = obs[str(i)]["state"][1]
+                pos[0][i][2] = obs[str(i)]["state"][2]
+                vel[0][i][0] = obs[str(i)]["state"][10]
+                vel[0][i][1] = obs[str(i)]["state"][11]
+                vel[0][i][2] = obs[str(i)]["state"][12]
+            # compute metrics
+            # velocity alignment
+            ali = 0
+            EPSILON = 1e-3  # avoid divide by zero
+            linear_vel_norm = np.linalg.norm(vel, axis=2)
+            for i in range(n_drones):
+                for j in range(n_drones):
+                    if j != i:
+                        d = np.einsum('ij,ij->i', vel[:, i, :], vel[:, j, :])
+                        ali += (d / (linear_vel_norm[:, i] + EPSILON) / (linear_vel_norm[:, j] + EPSILON))
+            ali /= (n_drones * (n_drones - 1))
+            # flocking speed
+            cof_v = np.mean(vel, axis=1)  # centre of flock speed
+            avg_flock_linear_speed = np.linalg.norm(cof_v, axis=-1)
+            # spacing
+            whole_flock_spacing = []
+            for i in range(n_drones):
+                flck_neighbor_pos = np.delete(pos, [i], 1)
+                drone_neighbor_pos_diff = flck_neighbor_pos - np.reshape(pos[:, i, :], (pos[:, i, :].shape[0], 1, -1))
+                drone_neighbor_dis = np.linalg.norm(drone_neighbor_pos_diff, axis=-1)
+                drone_spacing = np.amin(drone_neighbor_dis, axis=-1)
+                whole_flock_spacing.append(drone_spacing)
+            whole_flock_spacing = np.stack(whole_flock_spacing, axis=-1)
+            avg_flock_spacing = np.mean(whole_flock_spacing, axis=-1)
+            var_flock_spacing = np.var(whole_flock_spacing, axis=-1)
+            # flocking metrics
+            FLOCK_SPACING_MIN = 1.0
+            FLOCK_SPACING_MAX = 3.0
+            if FLOCK_SPACING_MIN < avg_flock_spacing[0] < FLOCK_SPACING_MAX:
+                avg_flock_spac_rew = 0.0
+            else:
+                avg_flock_spac_rew = min(math.fabs(avg_flock_spacing[0] - FLOCK_SPACING_MIN),
+                                         math.fabs(avg_flock_spacing[0] - FLOCK_SPACING_MAX))
+            reward = ali[0] + avg_flock_linear_speed[0] - avg_flock_spac_rew - var_flock_spacing[0]
+            return reward
         else: print("[ERROR] in ProblemSpecificFunctions.rewardFunction(), unknown Problem")
 
     ####################################################################################################
