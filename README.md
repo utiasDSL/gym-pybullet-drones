@@ -247,7 +247,7 @@ If you wish, please refer to this work as
 ```
 @MISC{gym-pybullet-drones2020,
         author =   {Panerati, Jacopo and Zheng, Hehui and Zhou, SiQi and Xu, James and Prorok, Amanda and Sch\"{o}llig, Angela P.},
-        title =    {Learning to Fly: a Gym environment based on PyBullet to simulate and learn the control of multiple nano-quadcopters},
+        title =    {Learning to Fly: a PyBullet-based Gym environment to simulate and learn the control of multiple nano-quadcopters},
         howpublished = {\url{https://github.com/JacopoPan/gym-pybullet-drones}},
         year = {2020}
 }
