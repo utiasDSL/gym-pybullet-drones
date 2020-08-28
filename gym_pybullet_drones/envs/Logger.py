@@ -29,7 +29,7 @@ class Logger(object):
                                                                                 # roll, pitch, yaw, 
                                                                                 # ang_vel_x, ang_vel_y, ang_vel_z, 
                                                                                 # rpm0, rpm1, rpm2, rpm3
-        #### Note that this is not the same order returned in obs["i"]["state"] by Aviary.step() #######
+        #### Note: this is not the same order nor length returned in obs["i"]["state"] by Aviary.step() ####
         self.controls = np.zeros((num_drones, self.NUM_STEPS, 12)) #### 12 control targets: pos_x, pos_y, pos_z,
                                                                                             # vel_x, vel_y, vel_z, 
                                                                                             # roll, pitch, yaw, 
@@ -47,7 +47,7 @@ class Logger(object):
     def log(self, drone: int, timestamp, state, control):
         current_counter = int(self.counters[drone])
         if drone<0 or drone>=self.NUM_DRONES or timestamp<0 or timestamp>self.DURATION_SEC \
-            or len(state)!=16 or len(control)!=12 or current_counter>=self.NUM_STEPS: print("[ERROR] in Logger.log(), invalid data")
+            or len(state)!=20 or len(control)!=12 or current_counter>=self.NUM_STEPS: print("[ERROR] in Logger.log(), invalid data")
         self.timestamps[drone, current_counter] = timestamp
         self.states[drone, current_counter,:] = np.hstack([ state[0:3], state[10:13], state[7:10], state[13:20] ])
         self.controls[drone, current_counter,:] = control

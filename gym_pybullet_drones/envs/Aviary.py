@@ -78,9 +78,9 @@ class Aviary(gym.Env):
         elif self.DRONE_MODEL==DroneModel.CF2P: self.URDF = "cf2p.urdf"
         elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"  
         #### Load the drone properties from the .urdf file #################################################
-        self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF = self._loadURDF()
-        print("[INFO] Aviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f}".format(\
-                                                                        self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2]) )
+        self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF, self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3 = self._loadURDF()
+        print("[INFO] Aviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(\
+                                                                        self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3) )
         #### Compute constants #############################################################################
         self.GRAVITY = self.G*self.M; self.HOVER_RPM = np.sqrt(self.GRAVITY/(4*self.KF))
         self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY)/(4*self.KF)); self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
@@ -317,7 +317,8 @@ class Aviary(gym.Env):
         COLLISION_SHAPE_OFFSETS = [float(s) for s in URDF_TREE[1][2][0].attrib['xyz'].split(' ')]; COLLISION_Z_OFFSET = COLLISION_SHAPE_OFFSETS[2]
         MAX_SPEED_KMH = float(URDF_TREE[0].attrib['max_speed_kmh']); GND_EFF_COEFF = float(URDF_TREE[0].attrib['gnd_eff_coeff']); PROP_RADIUS = float(URDF_TREE[0].attrib['prop_radius'])
         DRAG_COEFF_XY = float(URDF_TREE[0].attrib['drag_coeff_xy']); DRAG_COEFF_Z = float(URDF_TREE[0].attrib['drag_coeff_z']); DRAG_COEFF = np.array([DRAG_COEFF_XY, DRAG_COEFF_XY, DRAG_COEFF_Z])
-        return M, L, THRUST2WEIGHT_RATIO, J, J_INV, KF, KM, COLLISION_H, COLLISION_R, COLLISION_Z_OFFSET, MAX_SPEED_KMH, GND_EFF_COEFF, PROP_RADIUS, DRAG_COEFF
+        DW_COEFF_1 = float(URDF_TREE[0].attrib['dw_coeff_1']); DW_COEFF_2 = float(URDF_TREE[0].attrib['dw_coeff_2']); DW_COEFF_3 = float(URDF_TREE[0].attrib['dw_coeff_3'])
+        return M, L, THRUST2WEIGHT_RATIO, J, J_INV, KF, KM, COLLISION_H, COLLISION_R, COLLISION_Z_OFFSET, MAX_SPEED_KMH, GND_EFF_COEFF, PROP_RADIUS, DRAG_COEFF, DW_COEFF_1, DW_COEFF_2, DW_COEFF_3
 
     ####################################################################################################
     #### Housekeeping shared by the __init__() and reset() functions ###################################
@@ -422,6 +423,25 @@ class Aviary(gym.Env):
         p.applyExternalForce(self.DRONE_IDS[nth_drone], 4, forceObj=drag, posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT) 
 
     ####################################################################################################
+    #### PyBullet implementation of ground effect, SiQi Zhou's modelling ###############################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
+    ####################################################################################################
+    def _downwash(self, nth_drone):
+        # self.DW_COEFF_1 = 2267.18
+        # self.DW_COEFF_2 = .16
+        # self.DW_COEFF_3 = -.11
+        pos, _ = p.getBasePositionAndOrientation(self.DRONE_IDS[nth_drone], physicsClientId=self.CLIENT)
+        for i in range(self.NUM_DRONES):
+            pos_other, _ = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+            delta_z = pos_other[2]-pos[2]; delta_xy = np.linalg.norm(np.array(pos_other[0:2])-np.array(pos[0:2]))
+            if delta_z>0 and delta_xy<10: # Ignore drones more than 10 meters away
+                alpha = self.DW_COEFF_1 * (self.PROP_RADIUS/(4*delta_z))**2; beta = self.DW_COEFF_2 * delta_z + self.DW_COEFF_3
+                downwash = [0, 0,  - alpha * np.exp(-.5*(delta_xy/beta)**2)]
+                p.applyExternalForce(self.DRONE_IDS[nth_drone], 4, forceObj=downwash, posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
+
+    ####################################################################################################
     #### Explicit dynamics implementation from github.com/utiasDSL/dsl__projects__benchmark ############
     ####################################################################################################
     #### Arguments #####################################################################################
@@ -463,9 +483,6 @@ class Aviary(gym.Env):
     ####################################################################################################
     #### Work in progress ##############################################################################
     ####################################################################################################
-    def _downwash(self, nth_drone):
-        pass # TODO
-
     def _normActionToAcceleration(self, action):
         pass # add checks
 
