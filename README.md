@@ -66,7 +66,7 @@ $ python fly.py
 
 <img src="files/readme_images/crash.gif" alt="alt text" width="360"> <img src="files/readme_images/crash.png" alt="alt text" width="450">
 
-> `downwash.py` is a flight script with only 2 drones, to test the downwash model
+> **Note**: `downwash.py` is a flight script with only 2 drones, to test the downwash model
 
 <img src="files/readme_images/downwash.gif" alt="alt text" width="360"> <img src="files/readme_images/downwash.png" alt="alt text" width="450">
 
@@ -152,8 +152,7 @@ Check [`ProblemSpecificFunctions.clipAndNormalizeState()`](https://github.com/Ja
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
 
 
-### NOTE: Single-agent Spaces
-When `num_drones==1`, action and observations spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
+> **Note**: when `num_drones==1`, action and observation spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
 
 
 
