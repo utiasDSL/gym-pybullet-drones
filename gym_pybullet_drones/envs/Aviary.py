@@ -221,8 +221,8 @@ class Aviary(gym.Env):
         else:
             adjacency_mat = self.getAdjacencyMatrix()
             obs = {str(i): {"state": self._getDroneState(i), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
-            reward = 0.         # TODO,  self.RL_FUNCTIONS.rewardFunction(obs)
-            done = False        # TODO,  self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
+            reward = self.RL_FUNCTIONS.rewardFunction(obs)
+            done = self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
         return obs, reward, done, {}
 
     ####################################################################################################
