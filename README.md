@@ -103,7 +103,7 @@ A `gym.Env` flight arena for one (ore more) quadrotor can be created with `Aviar
 >>>       gui=True, \                       # Whether to display PyBullet's GUI (remove this comment)
 >>>       obstacles=False, \                # Whether to add obstacles to the environment (remove this comment)
 >>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/files/ (remove this comment)
->>>       problem: Problem=Problem.DEFAULT) # Choice of reward and done functions in class ProblemSpecificFunctions (remove this comment)
+>>>       problem: Problem=Problem.DEFAULT) # Choice of reward and done functions in class RLFunctions (remove this comment)
 ````
 Or using `gym.make()`—see [`learn.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/learn.py) for an example
 ```
@@ -147,7 +147,7 @@ Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) c
 - Angular velocities in `WORLD_FRAME` (3 values, rad/s unless normalized)
 - Motors' speeds (4 values, RPM)
 
-Check [`ProblemSpecificFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/ProblemSpecificFunctions.py) for the mapping from raw simulation data to normalized observations in the `[-1,1]` range (i.e., when `normalized_spaces==True`)
+Check [`RLFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) for the mapping from raw simulation data to normalized observations in the `[-1,1]` range (i.e., when `normalized_spaces==True`)
 
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
 
@@ -157,14 +157,14 @@ Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/s
 
 
 
-## ProblemSpecificFunctions
-Class [`ProblemSpecificFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/ProblemSpecificFunctions.py) contains implementations of *reward*, *done*, and *normalization* functions that can be selected when create an environment with `problem=Problem.CUSTOM`
+## RLFunctions
+Class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) contains implementations of *reward*, *done*, and *normalization* functions that can be selected when create an environment with `problem=Problem.CUSTOM`
 
 
 
 
 ### Reward
-Reward functions can/should be modified in class [`ProblemSpecificFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/ProblemSpecificFunctions.py), for example
+Reward functions can/should be modified in class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py), for example
 ```
 >>> def rewardFunction(self, obs):
 >>>     if self.PROBLEM==Problem.DEFAULT:
@@ -181,7 +181,7 @@ Reward functions can/should be modified in class [`ProblemSpecificFunctions`](ht
 
 
 ### Done
-Stopping conditions can/should be modified in class [`ProblemSpecificFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/ProblemSpecificFunctions.py), for example
+Stopping conditions can/should be modified in class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py), for example
 ```
 >>> def doneFunction(self, obs, sim_time):
 >>>     if self.PROBLEM==Problem.DEFAULT:

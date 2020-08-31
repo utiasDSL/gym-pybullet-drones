@@ -13,7 +13,7 @@ from gym.utils import seeding
 from enum import Enum
 from datetime import datetime
 
-from gym_pybullet_drones.envs.ProblemSpecificFunctions import Problem, ProblemSpecificFunctions 
+from gym_pybullet_drones.envs.RLFunctions import Problem, RLFunctions 
 
 
 ######################################################################################################################################################
@@ -65,7 +65,7 @@ class Aviary(gym.Env):
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, \
                         visibility_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
                         physics: Physics=Physics.PYB, normalized_spaces=True, freq: int=240, \
-                        gui=False, obstacles=False, record=False, problem: Problem=Problem.DEFAULT):
+                        gui=False, obstacles=False, record=False, problem: Problem=Problem.SA_TAKEOFF):
         super(Aviary, self).__init__()
         #### Parameters ####################################################################################
         self.DRONE_MODEL = drone_model; self.NUM_DRONES = num_drones; self.VISIBILITY_RADIUS = visibility_radius
@@ -216,13 +216,13 @@ class Aviary(gym.Env):
         #### Prepare the return values #####################################################################
         if self.NUM_DRONES==1:
             obs = self._getDroneState(0)
-            reward = self.PROBLEM_SPECIFIC_FUNCTIONS.rewardFunction(obs)
-            done = self.PROBLEM_SPECIFIC_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
+            reward = self.RL_FUNCTIONS.rewardFunction(obs)
+            done = self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
         else:
             adjacency_mat = self.getAdjacencyMatrix()
             obs = {str(i): {"state": self._getDroneState(i), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
-            reward = 0.         # TODO,  self.PROBLEM_SPECIFIC_FUNCTIONS.rewardFunction(obs)
-            done = False        # TODO,  self.PROBLEM_SPECIFIC_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
+            reward = 0.         # TODO,  self.RL_FUNCTIONS.rewardFunction(obs)
+            done = False        # TODO,  self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
         return obs, reward, done, {}
 
     ####################################################################################################
@@ -328,7 +328,7 @@ class Aviary(gym.Env):
         self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES); self.Y_AX = -1*np.ones(self.NUM_DRONES); self.Z_AX = -1*np.ones(self.NUM_DRONES);
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES); self.USE_GUI_RPM=False; self.last_input_switch = 0
-        self.PROBLEM_SPECIFIC_FUNCTIONS = ProblemSpecificFunctions(self.CLIENT, self.GUI, self.PROBLEM)
+        self.RL_FUNCTIONS = RLFunctions(self.CLIENT, self.GUI, self.PROBLEM)
         self.last_action = -1*np.ones((self.NUM_DRONES,4)) if self.NORM_SPACES else np.zeros((self.NUM_DRONES,4))
         self.last_clipped_action = np.zeros((self.NUM_DRONES,4)); self.gui_input = np.zeros(4)
         self.no_pybullet_dyn_accs = np.zeros((self.NUM_DRONES,3)); 
@@ -340,7 +340,7 @@ class Aviary(gym.Env):
         #### Load ground plane, drone and obstacles models #################################################
         p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)        
         self.DRONE_IDS = np.array([p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF, self.INIT_XYZS[i,:], p.getQuaternionFromEuler(self.INIT_RPYS[i,:]), physicsClientId=self.CLIENT) for i in range(self.NUM_DRONES)])
-        if self.OBSTACLES: self.PROBLEM_SPECIFIC_FUNCTIONS.addObstacles()
+        if self.OBSTACLES: self.RL_FUNCTIONS.addObstacles()
 
     ####################################################################################################
     #### Return the state vector of the nth drone ######################################################
@@ -356,7 +356,7 @@ class Aviary(gym.Env):
         rpy = p.getEulerFromQuaternion(quat)
         vel, ang_v = p.getBaseVelocity(self.DRONE_IDS[nth_drone], physicsClientId=self.CLIENT)
         state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action[nth_drone,:]])
-        if self.NORM_SPACES: state = self.PROBLEM_SPECIFIC_FUNCTIONS.clipAndNormalizeState(state, self.step_counter)
+        if self.NORM_SPACES: state = self.RL_FUNCTIONS.clipAndNormalizeState(state, self.step_counter)
         return state.reshape(20,)
 
     ####################################################################################################
