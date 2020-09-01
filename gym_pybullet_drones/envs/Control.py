@@ -297,8 +297,8 @@ class Control(object):
     #### Work in progress ##############################################################################
     ####################################################################################################
     def siqisFunction(val, scale: float=0.2685, const: float=4070.3, ct: float=3.1582e-10, mi: float=20000.0, ma: float=65535.0):
-        res = np.clip((1/scale) * (np.sqrt(np.array(val) / (ct*(4/len(np.array(val))))) - const), mi, ma)
-        if len(np.array(val)) in [1, 4]: return np.repeat(res, 4/len(np.array(val)))
-        elif len(np.array(val))==2: return np.hstack([res, np.flip(res)])
+        val_l = len(np.array(val)); res = np.clip((np.sqrt(np.array(val)/(ct*(4/val_l)))-const)/scale, mi, ma)
+        if val_l in [1, 4]: return np.repeat(res, 4/val_l)
+        elif val_l==2: return np.hstack([res, np.flip(res)])
         else: print("[ERROR] in siqisFunction()"); exit()
 
