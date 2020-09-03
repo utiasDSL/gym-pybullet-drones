@@ -25,15 +25,24 @@ class Problem(Enum):
 class RLFunctions(object):
 
     ####################################################################################################
-    #### Initialization with the desired reinforcement learning problem ################################
+    #### Initialization with the desired reinforcement learning problem and check on the nuber of drones
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - client (PyBullet client id)      id of the pybullet client to connect to ####################
+    #### - num_drones (int)                 number of drones in the Aviary #############################
     #### - gui (bool)                       whether PyBullet's GUI is in use ###########################
     #### - RL problem (Problem)             to disambiguate between function implementations ###########
     ####################################################################################################
-    def __init__(self, client, gui=False, problem: Problem=Problem.SA_TAKEOFF):
-        self.CLIENT = client; self.GUI = gui; self.PROBLEM = problem
+    def __init__(self, client, num_drones: int, gui=False, problem: Problem=Problem.SA_TAKEOFF):
+        self.CLIENT = client; self.GUI = gui; self.NUM_DRONES = num_drones; self.PROBLEM = problem
+        if self.PROBLEM==Problem.SA_TAKEOFF:
+            if self.NUM_DRONES!=1: print("[ERROR] in RLFunctions.__init__(), SA_TAKEOFF is a single agent problem"); exit()
+        elif self.PROBLEM==Problem.MA_FLOCK:
+            if self.NUM_DRONES<2: print("[ERROR] in RLFunctions.__init__(), MA_FLOCK is a multi-agent problem"); exit()
+        elif self.PROBLEM==Problem.CUSTOM:
+            pass
+        else: print("[ERROR] in RLFunctions.__init__(), unknown Problem")
+
 
     ####################################################################################################
     #### Compute the current state's reward ############################################################
@@ -156,6 +165,7 @@ class RLFunctions(object):
     #### Reward ########################################################################################
     def _maFlockRewardFunction(self, obs):
         N_DRONES = len(obs)     # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
+        # you ca now use self.NUM_DRONES
         # parse velocity and position
         vel = np.zeros((1, N_DRONES, 3))
         pos = np.zeros((1, N_DRONES, 3))
@@ -203,31 +213,17 @@ class RLFunctions(object):
         return reward
     #### Done ##########################################################################################
     def _maFlockDoneFunction(self, obs, sim_time):
-        # if np.abs(obs[0])>=1 or np.abs(obs[1])>=1 or obs[2]>=1 \
-        #     or np.abs(obs[7])>=np.pi/3 or np.abs(obs[8])>=np.pi/3 \
-        #     or np.abs(obs[10])>=1 or np.abs(obs[11])>=1 or np.abs(obs[12])>=1 \
-        #     or np.abs(obs[13])>=10*np.pi or np.abs(obs[14])>=10*np.pi or np.abs(obs[15])>=20*np.pi \
-        #     or sim_time > 3: return True
-        # else: return False
-        return False
+        BOOL = False if sim_time<10 else True
+        done = {str(i): self._saTakeoffDoneFunction(obs[str(i)]["state"],sim_time) for i in range(self.NUM_DRONES)}
+        done["__all__"] = True if True in done.values() else False
+        return done
+
     #### Normalization #################################################################################
     def _maFlockClipAndNormalizeState(self, state, step_counter):
-        # clipped_pos = np.clip(state[0:3], -1, 1)
-        # clipped_rp = np.clip(state[7:9], -np.pi/3, np.pi/3)
-        # clipped_vel = np.clip(state[10:13], -1, 1)
-        # clipped_ang_vel_rp = np.clip(state[13:15], -10*np.pi, 10*np.pi)
-        # clipped_ang_vel_y = np.clip(state[15], -20*np.pi, 20*np.pi)
-        # if self.GUI:
-        #     if not(clipped_pos==np.array(state[0:3])).all(): print("[WARNING] it", step_counter, "in RLFunctions.clipAndNormalizeState(), out-of-bound position [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLFunctions.doneFunction()".format(state[0], state[1], state[2]))
-        #     if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it", step_counter, "in RLFunctions.clipAndNormalizeState(), out-of-bound roll/pitch [{:.2f} {:.2f}], consider a more conservative implementation of RLFunctions.doneFunction()".format(state[7], state[8]))
-        #     if not(clipped_vel==np.array(state[10:13])).all(): print("[WARNING] it", step_counter, "in RLFunctions.clipAndNormalizeState(), out-of-bound velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLFunctions.doneFunction()".format(state[10], state[11], state[12]))
-        #     if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it", step_counter, "in RLFunctions.clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLFunctions.doneFunction()".format(state[13], state[14], state[15]))
-        #     if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it", step_counter, "in RLFunctions.clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLFunctions.doneFunction()".format(state[13], state[14], state[15]))
-        # normalized_pos = clipped_pos
-        # normalized_rp = clipped_rp/(np.pi/3)
-        # normalized_y = state[9]/np.pi
-        # normalized_vel = clipped_vel
-        # normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
-        # normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
-        # return np.hstack([normalized_pos, state[3:7], normalized_rp, normalized_y, normalized_vel, normalized_ang_vel_rp, normalized_ang_vel_y, state[16:20] ]).reshape(20,)
-        return 42
+        return self._saTakeoffClipAndNormalizeState(state, step_counter)
+        
+
+
+
+
+

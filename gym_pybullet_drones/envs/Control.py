@@ -296,7 +296,7 @@ class Control(object):
     ####################################################################################################
     #### Work in progress ##############################################################################
     ####################################################################################################
-    def one23DInterface(thrust, SCALE: float=0.2685, CONST: float=4070.3, CT: float=3.1582e-10, MI: float=20000.0, MI: float=65535.0):
+    def one23DInterface(thrust, SCALE: float=0.2685, CONST: float=4070.3, CT: float=3.1582e-10, MI: float=20000.0, MA: float=65535.0):
         DIM = len(np.array(thrust)); pwm = np.clip((np.sqrt(np.array(thrust)/(CT*(4/DIM)))-CONST)/SCALE, MI, MA)
         if DIM in [1, 4]: return np.repeat(pwm, 4/DIM)
         elif DIM==2: return np.hstack([pwm, np.flip(pwm)])
