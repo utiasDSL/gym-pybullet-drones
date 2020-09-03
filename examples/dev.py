@@ -7,6 +7,13 @@ import numpy as np
 import pybullet as p
 import pickle
 import matplotlib.pyplot as plt
+import gym
+from gym import error, spaces, utils
+from gym.utils import seeding
+import ray
+from ray import tune
+from ray.rllib.agents import ppo
+from ray.rllib.utils.test_utils import check_learning_achieved
 
 from utils import *
 from gym_pybullet_drones.envs.Aviary import DroneModel, Physics, Aviary
@@ -25,7 +32,7 @@ DURATION_SEC = 10
 
 if __name__ == "__main__":
 
-    if True:
+    if False:
 
         #### Initialize the simulation #####################################################################
         H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
@@ -102,4 +109,43 @@ if __name__ == "__main__":
 
     else:
 
-        pass
+        config = {
+            "env": Aviary,
+            "num_workers": 2,
+            "env_config": {
+                "drone_model": DRONE,
+                "num_drones": NUM_DRONES,
+                "visibility_radius": np.inf,
+                "initial_xyzs": None,
+                "initial_rpy": None,
+                "physics": PHYSICS,
+                "normalized_spaces": True,
+                "freq": SIMULATION_FREQ_HZ,
+                "gui": False,
+                "obstacles": False,
+                "record": False,
+                "problem": Problem.MA_FLOCK,
+            },
+            # "multiagent": {
+            #     "policies": {
+            #         "pol1": (None, o_s, a_s, {"agent_id": 0,}),
+            #         "pol2": (None, o_s, a_s, {"agent_id": 1,}),
+            #     },
+            #     "policy_mapping_fn": lambda agent_id: "pol1" if agent_id == 0 else "pol2",
+            # },
+        }
+
+        stop = {
+            "timesteps_total": 10000,
+        }
+
+        ray.shutdown()
+        ray.init(ignore_reinit_error=True)
+        print("Dashboard URL: http://{}".format(ray.get_webui_url()))
+
+        results = tune.run("PPO", stop=stop, config=config, verbose=True)
+
+        check_learning_achieved(results, 1.0)
+
+        ray.shutdown()
+

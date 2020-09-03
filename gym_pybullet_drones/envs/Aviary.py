@@ -74,6 +74,9 @@ class Aviary(gym.Env):
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
         self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ
         self.GUI = gui; self.OBSTACLES = obstacles; self.RECORD = record; self.PROBLEM = problem
+
+        self.URDF = "cf2x.urdf"
+
         if self.DRONE_MODEL==DroneModel.CF2X: self.URDF = "cf2x.urdf"
         elif self.DRONE_MODEL==DroneModel.CF2P: self.URDF = "cf2p.urdf"
         elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"  
