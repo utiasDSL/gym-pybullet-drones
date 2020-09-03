@@ -110,6 +110,7 @@ if __name__ == "__main__":
     else:
 
         #### WIP ###########################################################################################
+        #### based on https://github.com/ray-project/ray/issues/9123
 
         config = {
             "env": Aviary,
@@ -145,9 +146,34 @@ if __name__ == "__main__":
         ray.init(ignore_reinit_error=True)
         print("Dashboard URL: http://{}".format(ray.get_webui_url()))
 
-        results = tune.run("PPO", stop=stop, config=config, verbose=True)
+        agent = ppo.PPOTrainer(config)
+        results = tune.run(
+            "PPO", 
+            stop=stop, 
+            config=config, 
+            verbose=True,
+            checkpoint_at_end=True)
 
-        check_learning_achieved(results, 1.0)
+        #check_learning_achieved(results, 1.0)
+
+        checkpoints = results.get_trial_checkpoints_paths(trial=results.get_best_trial('episode_reward_mean'), metric='episode_reward_mean')
+        checkpoint_path = checkpoints[0][0]
+        agent = ppo.PPOTrainer(config=config)
+        agent.restore(checkpoint_path)
+        policy = agent.get_policy()
+        print(policy.model.base_model.summary())
+
+        env = Aviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=None, physics=PHYSICS, visibility_radius=10, \
+                        normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO, problem=Problem.MA_FLOCK)
+        obs = env.reset()
+        start = time.time()
+        for i in range(10*env.SIM_FREQ):
+            action, _states, _dict = policy.compute_single_action(obs)
+            obs, reward, done, info = env.step(action)
+            env.render()
+            sync(i, start, env.TIMESTEP)
+            if done["__all__"]: obs = env.reset()
+        env.close()
 
         ray.shutdown()
 
