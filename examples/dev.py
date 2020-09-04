@@ -13,6 +13,8 @@ from gym.utils import seeding
 import ray
 from ray import tune
 from ray.rllib.agents import ppo
+from ray.rllib.agents.ppo import PPOTrainer, PPOTFPolicy, PPOTorchPolicy
+from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.utils.test_utils import check_learning_achieved
 
 from utils import *
@@ -32,6 +34,9 @@ DURATION_SEC = 10
 
 if __name__ == "__main__":
 
+    ####################################################################################################
+    #### Flight with control example ###################################################################
+    ####################################################################################################
     if False:
 
         #### Initialize the simulation #####################################################################
@@ -107,36 +112,55 @@ if __name__ == "__main__":
         #### Plot the simulation results ###################################################################
         logger.plot()
 
+
+
+
+    ####################################################################################################
+    #### Learning example ##############################################################################
+    ####################################################################################################
     else:
 
-        #### WIP ###########################################################################################
-        #### based on https://github.com/ray-project/ray/issues/9123
+        
+        
 
-        config = {
-            "env": Aviary,
-            "num_workers": 2,
-            "env_config": {
-                "drone_model": DRONE,
-                "num_drones": NUM_DRONES,
-                "visibility_radius": np.inf,
-                "initial_xyzs": None,
-                "initial_rpy": None,
-                "physics": PHYSICS,
-                "normalized_spaces": True,
-                "freq": SIMULATION_FREQ_HZ,
-                "gui": False,
-                "obstacles": False,
-                "record": False,
-                "problem": Problem.MA_FLOCK,
-            },
-            # "multiagent": {
-            #     "policies": {
-            #         "pol1": (None, o_s, a_s, {"agent_id": 0,}),
-            #         "pol2": (None, o_s, a_s, {"agent_id": 1,}),
-            #     },
-            #     "policy_mapping_fn": lambda agent_id: "pol1" if agent_id == 0 else "pol2",
-            # },
-        }
+        #### WIP ###########################################################################################
+        #### (partially) based on this issue https://github.com/ray-project/ray/issues/9123
+        #### Multiple inheritance https://www.datacamp.com/community/tutorials/super-multiple-inheritance-diamond-problem
+        #### MultiAgentEnv https://github.com/ray-project/ray/blob/master/rllib/examples/env/two_step_game.py
+
+        config = ppo.DEFAULT_CONFIG.copy()
+        config["num_workers"] = 1
+        config["env"] = Aviary
+        config["env_config"] = {"drone_model": DRONE,
+                                "num_drones": NUM_DRONES,
+                                "visibility_radius": np.inf,
+                                "initial_xyzs": None,
+                                "initial_rpy": None,
+                                "physics": PHYSICS,
+                                "normalized_spaces": True,
+                                "freq": SIMULATION_FREQ_HZ,
+                                "gui": False,
+                                "obstacles": False,
+                                "record": False,
+                                "problem": Problem.MA_FLOCK,
+                                }
+        
+        #### class Aviary(gym.Env, MultiAgentEnv): -> "trial did not complete"
+        #### Fix by returning dictionaries for rewards, dones, infos as well
+        if False:
+            env = Aviary(num_drones=NUM_DRONES, normalized_spaces=True, problem=Problem.MA_FLOCK)
+            config["multiagent"] = { # Map of type MultiAgentPolicyConfigDict from policy ids to tuples
+                                    # of (policy_cls, obs_space, act_space, config). This defines the
+                                    # observation and action spaces of the policies and any extra config.
+                                    "policies": {
+                                        "pol0": (None, env.observation_space["0"], env.action_space["0"], {"framework": "torch"}),
+                                        "pol1": (None, env.observation_space["1"], env.action_space["1"], {"framework": "torch"}),
+                                        "pol2": (None, env.observation_space["2"], env.action_space["2"], {"framework": "torch"}),
+                                    },
+                                    # Function mapping agent ids to policy ids.
+                                    "policy_mapping_fn": lambda agent_id: "pol"+str(agent_id),
+                                    # "observation_fn": None,  # See rllib/evaluation/observation_function.py for more info.
+                                    }
 
         stop = {
             "timesteps_total": 10000,
@@ -153,8 +177,7 @@ if __name__ == "__main__":
             config=config, 
             verbose=True,
             checkpoint_at_end=True)
-
-        #check_learning_achieved(results, 1.0)
+        # check_learning_achieved(results, 1.0)
 
         checkpoints = results.get_trial_checkpoints_paths(trial=results.get_best_trial('episode_reward_mean'), metric='episode_reward_mean')
         checkpoint_path = checkpoints[0][0]
@@ -166,9 +189,15 @@ if __name__ == "__main__":
         env = Aviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=None, physics=PHYSICS, visibility_radius=10, \
                         normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO, problem=Problem.MA_FLOCK)
         obs = env.reset()
+        action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) } 
         start = time.time()
         for i in range(10*env.SIM_FREQ):
-            action, _states, _dict = policy.compute_single_action(obs)
+
+
+            # action, _states, _dict = policy.compute_single_action(obs)
+            # for j in range(NUM_DRONES): action[str(j)] = policy.compute_single_action(obs[str(j)]["state"])
+            
+
             obs, reward, done, info = env.step(action)
             env.render()
             sync(i, start, env.TIMESTEP)

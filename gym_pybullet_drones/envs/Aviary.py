@@ -12,6 +12,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from enum import Enum
 from datetime import datetime
+from ray.rllib.env.multi_agent_env import MultiAgentEnv, ENV_STATE
 
 from gym_pybullet_drones.envs.RLFunctions import Problem, RLFunctions 
 
@@ -42,7 +43,7 @@ class Physics(Enum):
 ######################################################################################################################################################
 #### Multi-drone environment class ###################################################################################################################
 ######################################################################################################################################################
-class Aviary(gym.Env):
+class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
     metadata = {'render.modes': ['human']}
 
     ####################################################################################################
