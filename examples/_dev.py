@@ -14,7 +14,7 @@ import ray
 from ray import tune
 from ray.tune import register_env
 from ray.rllib.agents import ppo
-from ray.rllib.agents.ppo import PPOTrainer, PPOTFPolicy, PPOTorchPolicy
+from ray.rllib.agents.ppo import PPOTrainer, PPOTFPolicy
 from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.utils.test_utils import check_learning_achieved
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     ####################################################################################################
     #### Flight with control example ###################################################################
     ####################################################################################################
-    if True:
+    if False:
 
         CONTROL_FREQ_HZ = 48
         DURATION_SEC = 10
@@ -132,28 +132,27 @@ if __name__ == "__main__":
                                                             freq=SIMULATION_FREQ_HZ, problem=Problem.MA_FLOCK))
 
         config = ppo.DEFAULT_CONFIG.copy()
-        config["num_workers"] = 1
+        config["num_workers"] = 0
         config["env"] = "ma-aviary"
         
         env = RLlibMAAviary(num_drones=NUM_DRONES, problem=Problem.MA_FLOCK)
-        config["multiagent"] = { # Map of type MultiAgentPolicyConfigDict from policy ids to tuples
-                                # of (policy_cls, obs_space, act_space, config). This defines the
-                                # observation and action spaces of the policies and any extra config.
+        config["multiagent"] = { # Map of type MultiAgentPolicyConfigDict from policy ids to tuples of (policy_cls, obs_space, act_space, config).
+                                # This defines the observation and action spaces of the policies and any extra config.
                                 "policies": {
-                                    "pol0": (None, env.observation_space["0"], env.action_space["0"], {"framework": "torch"}),
-                                    "pol1": (None, env.observation_space["1"], env.action_space["1"], {"framework": "torch"}),
-                                    "pol2": (None, env.observation_space["2"], env.action_space["2"], {"framework": "torch"}),
+                                    "pol0": (PPOTFPolicy, env.observation_space["0"], env.action_space["0"], {"framework": "torch"}),
+                                    "pol1": (PPOTFPolicy, env.observation_space["1"], env.action_space["1"], {"framework": "torch"}),
+                                    "pol2": (PPOTFPolicy, env.observation_space["2"], env.action_space["2"], {"framework": "torch"}),
                                 },
                                 # Function mapping agent ids to policy ids.
                                 "policy_mapping_fn": lambda agent_id: "pol"+str(agent_id),
-                                # "observation_fn": None,  # See rllib/evaluation/observation_function.py for more info.
+                                # An additional observation function, see rllib/evaluation/observation_function.py for more info.
+                                # "observation_fn": None,
                                 }
 
         stop = {
-            "timesteps_total": 10000,
+            "timesteps_total": 8000,
         }
 
-        agent = ppo.PPOTrainer(config)
         results = tune.run(
             "PPO", 
             stop=stop, 
@@ -162,25 +161,36 @@ if __name__ == "__main__":
             checkpoint_at_end=True)
         # check_learning_achieved(results, 1.0)
 
-        ####################################################################################################
-        #### WIP from here #################################################################################
-        ####################################################################################################
+        
 
         checkpoints = results.get_trial_checkpoints_paths(trial=results.get_best_trial('episode_reward_mean'), metric='episode_reward_mean')
         checkpoint_path = checkpoints[0][0]
         agent = ppo.PPOTrainer(config=config); agent.restore(checkpoint_path)
-        policy = agent.get_policy()
-        print(policy.model.base_model.summary())
+
+        policy0 = agent.get_policy("pol0")
+        policy1 = agent.get_policy("pol1")
+        policy2 = agent.get_policy("pol2")
+
+        print(policy0.model.base_model.summary())
+        print(policy1.model.base_model.summary())
+        print(policy2.model.base_model.summary())
 
         env = RLlibMAAviary(drone_model=DRONE, num_drones=NUM_DRONES, physics=PHYSICS, freq=SIMULATION_FREQ_HZ, \
-                                gui=True, record=True, problem=Problem.MA_FLOCK, obstacles=True)
+                                gui=True, record=False, problem=Problem.MA_FLOCK, obstacles=True)
         obs = env.reset()
         action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) } 
         start = time.time()
         for i in range(10*env.SIM_FREQ):
 
-            # action, _states, _dict = policy.compute_single_action(obs)
-            # for j in range(NUM_DRONES): action[str(j)] = policy.compute_single_action(obs[str(j)]["state"])
+            print("Debug Obs", obs)
+            temp = {}
+            temp["0"] = policy0.compute_single_action(np.hstack([ obs["0"]["state"], obs["0"]["neighbors"] ]))
+            temp["1"] = policy1.compute_single_action(np.hstack([ obs["1"]["state"], obs["1"]["neighbors"] ]))
+            temp["2"] = policy2.compute_single_action(np.hstack([ obs["2"]["state"], obs["2"]["neighbors"] ]))
+            print("Debug Act", temp)
+
+            # action = agent.compute_action(obs)
+            action = {"0": temp["0"][0], "1": temp["1"][0], "2": temp["2"][0]}
             
             obs, reward, done, info = env.step(action)
             env.render()
