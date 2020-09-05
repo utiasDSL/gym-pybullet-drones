@@ -8,14 +8,14 @@ import pybullet as p
 from utils import *
 from gym_pybullet_drones.envs.Aviary import DroneModel, Aviary
 
-DURATION_SEC = 60
-NUM_RESETS = 0
+DURATION_SEC = 30
+NUM_RESETS = 2
 
 if __name__ == "__main__":
     
     #### Initialize the simulation #####################################################################
     env = Aviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([-.7, -.5, .3]).reshape(1,3), \
-                    initial_rpys=np.array([0, -30*(np.pi/180), 0]).reshape(1,3), gui=True, obstacles=True); env.reset()
+                    initial_rpys=np.array([0, -30*(np.pi/180), 0]).reshape(1,3), gui=True, obstacles=True)
 
     #### Get PyBullet's and drone's ids ################################################################
     PYB_CLIENT = env.getPyBulletClient(); DRONE_IDS = env.getDroneIds()
@@ -66,11 +66,12 @@ if __name__ == "__main__":
         #### Draw base frame ###############################################################################
         env._showDroneFrame(0)
 
-        #### Step, printout the state, and sync the simulation #############################################
-        p.stepSimulation(physicsClientId=PYB_CLIENT); env.render(); sync(i, START, env.TIMESTEP)
+        #### Step, sync the simulation, printout the state #################################################
+        p.stepSimulation(physicsClientId=PYB_CLIENT); sync(i, START, env.TIMESTEP)
+        if i%env.SIM_FREQ==0: env.render() 
 
         #### Reset #########################################################################################
-        if i>1 and i%((DURATION_SEC/(NUM_RESETS+1))*env.SIM_FREQ)==0: env.reset()
+        if i>1 and i%((DURATION_SEC/(NUM_RESETS+1))*env.SIM_FREQ)==0: env.reset(); p.setGravity(0, 0, 0, physicsClientId=PYB_CLIENT)
 
     #### Close the environment #########################################################################
     env.close()

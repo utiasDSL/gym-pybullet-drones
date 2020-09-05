@@ -36,13 +36,12 @@ class RLFunctions(object):
     def __init__(self, client, num_drones: int, gui=False, problem: Problem=Problem.SA_TAKEOFF):
         self.CLIENT = client; self.GUI = gui; self.NUM_DRONES = num_drones; self.PROBLEM = problem
         if self.PROBLEM==Problem.SA_TAKEOFF:
-            if self.NUM_DRONES!=1: print("[ERROR] in RLFunctions.__init__(), SA_TAKEOFF is a single agent problem"); exit()
+            if self.NUM_DRONES!=1: print("[WARNING] in RLFunctions.__init__(), SA_TAKEOFF is a single agent problem"); exit()
         elif self.PROBLEM==Problem.MA_FLOCK:
-            if self.NUM_DRONES<2: print("[ERROR] in RLFunctions.__init__(), MA_FLOCK is a multi-agent problem"); exit()
+            if self.NUM_DRONES<2: print("[WARNING] in RLFunctions.__init__(), MA_FLOCK is a multi-agent problem"); exit()
         elif self.PROBLEM==Problem.CUSTOM:
             pass
         else: print("[ERROR] in RLFunctions.__init__(), unknown Problem")
-
 
     ####################################################################################################
     #### Compute the current state's reward ############################################################
@@ -101,18 +100,6 @@ class RLFunctions(object):
         else: print("[ERROR] in RLFunctions.clipAndNormalizeState(), unknown Problem")
 
     ####################################################################################################
-    #### Add obstacles to the environment from .urdf files #############################################
-    ####################################################################################################
-    def addObstacles(self):
-        if self.PROBLEM==Problem.SA_TAKEOFF:
-            self._saTakeoffAddObstacles()
-        elif self.PROBLEM==Problem.MA_FLOCK:
-            pass
-        elif self.PROBLEM==Problem.CUSTOM:
-            pass
-        else: print("[ERROR] in RLFunctions.addObstacles(), unknown Problem")
-
-    ####################################################################################################
     #### Problem=Problem.SA_TAKEOFF implementations ####################################################
     ####################################################################################################
     #### Reward ########################################################################################
@@ -152,12 +139,6 @@ class RLFunctions(object):
         normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
         normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
         return np.hstack([normalized_pos, state[3:7], normalized_rp, normalized_y, normalized_vel, normalized_ang_vel_rp, normalized_ang_vel_y, state[16:20] ]).reshape(20,)
-    #### Obstacles #####################################################################################
-    def _saTakeoffAddObstacles(self):
-        p.loadURDF("samurai.urdf", physicsClientId=self.CLIENT)
-        p.loadURDF("duck_vhacd.urdf", [-.5,-.5,.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-        p.loadURDF("cube_no_rotation.urdf", [-.5,-2.5,.5], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-        p.loadURDF("sphere2.urdf", [0,2,.5], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Problem=Problem.MA_FLOCK implementations ######################################################

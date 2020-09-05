@@ -24,24 +24,19 @@ if __name__ == "__main__":
     with open(os.path.dirname(os.path.abspath(__file__))+"/../files/"+TRACE_FILE, 'rb') as in_file:
         TRACE_TIMESTAMPS, TRACE_DATA, TRACE_CTRL_REFERENCE, _, _, _ = pickle.load(in_file)
     
-
-    #TRACE_CTRL_REFERENCE = np.array(TRACE_CTRL_REFERENCE); TRACE_DATA = np.array(TRACE_DATA)
-
-
-
     #### Compute trace's parameters ####################################################################
     DURATION_SEC = int(TRACE_TIMESTAMPS[-1]); SIMULATION_FREQ_HZ = int(len(TRACE_TIMESTAMPS)/TRACE_TIMESTAMPS[-1])
     
     #### Initialize the simulation #####################################################################
-    env = Aviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([0,0,.1]).reshape(1,3), physics=PHYSICS, \
-                    normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=False, record=RECORD_VIDEO)
+    env = Aviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([0,0,.1]).reshape(1,3), \
+                    physics=PHYSICS, freq=SIMULATION_FREQ_HZ, gui=GUI, record=RECORD_VIDEO, obstacles=False)
     INITIAL_STATE = env.reset(); action = np.zeros(4); pos_err = 9999.
 
     #### Assuming TRACE_FILE starts at position [0,0,0] and the sim starts at [0,0,INITIAL_STATE[2]] ###
     TRACE_CTRL_REFERENCE[:,2] = INITIAL_STATE[2]
     
     #### Initialize the logger #########################################################################
-    logger = Logger(duration_sec=DURATION_SEC, simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=2)
+    logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=2)
 
     #### Initialize the controller #####################################################################
     ctrl = Control(env, control_type=ControlType.PID)
@@ -68,7 +63,7 @@ if __name__ == "__main__":
         logger.log(drone=1, timestamp=i/env.SIM_FREQ, state=obs, control=np.hstack([TRACE_CTRL_REFERENCE[i,:], np.zeros(6)]))
         
         #### Printout ######################################################################################
-        env.render()
+        if i%env.SIM_FREQ==0: env.render()
 
         #### Sync the simulation ###########################################################################
         if GUI: sync(i, START, env.TIMESTEP)

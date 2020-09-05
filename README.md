@@ -17,7 +17,7 @@ The repo was written using Python 3.7.6 on macOS 10.15: major dependencies are [
 $ pip install gym
 $ pip install pybullet
 $ pip install stable-baselines3
-$ pip install `ray[rllib]`
+$ pip install 'ray[rllib]'
 $ brew install ffmpeg                       # on macOS
 $ sudo apt install ffmpeg                   # on Linux
 ```
@@ -98,16 +98,15 @@ A `gym.Env` flight arena for one (ore more) quadrotor can be created with `Aviar
 >>>       initial_xyzs=None, \              # Initial XYZ positions of the drones (remove this comment)
 >>>       initial_rpys=None, \              # Initial roll, pitch, and yaw of the drones in radians (remove this comment)
 >>>       physics: Physics=Physics.PYB, \   # Choice of (PyBullet) physics implementation (remove this comment)
->>>       normalized_spaces=True, \         # Whether to use normalized action and observation spaces—use True for learning (default), False for simulation (remove this comment)
 >>>       freq=240, \                       # Stepping frequency of the simulation (remove this comment)
 >>>       gui=True, \                       # Whether to display PyBullet's GUI (remove this comment)
->>>       obstacles=False, \                # Whether to add obstacles to the environment (remove this comment)
 >>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/files/ (remove this comment)
->>>       problem: Problem=Problem.DEFAULT) # Choice of reward and done functions in class RLFunctions (remove this comment)
+>>>       problem: Problem=None \           # Choice of reward and done functions in class RLFunctions (remove this comment)
+>>>       obstacles=False)                  # Whether to add obstacles to the environment (remove this comment)
 ````
 Or using `gym.make()`—see [`learn.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/learn.py) for an example
 ```
->>> env = gym.make('the-aviary-v1')         # See learn.py
+>>> env = gym.make('the-aviary-v1', problem=..)       # See learn.py
 ```
 Then, the environment can be stepped with
 ```
@@ -127,9 +126,7 @@ The action space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/s
 
 Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
-For all `Physics` implementations—except `PYB_PM` and `PYB_KIN`—these are the rotation speeds of all motors ranging from `-1` to `1` if  `normalized_spaces=True`, or from `0` to `SingleDroneEnv.MAX_RPM` otherwise
-
-For `physics=Physics.PYB_PM` and `PYB_KIN`, the control inputs are the desired acceleration and velocity, respectively
+For all `Physics` implementations—except `PYB_PM` and `PYB_KIN`—these are the rotation speeds of all motors ranging from `0` to `SingleDroneEnv.MAX_RPM`if argument `problem` was not specified in the instantiation of `Aviary()`, or from `-1` to `1` otherwise
 
 
 
@@ -147,10 +144,9 @@ Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) c
 - Angular velocities in `WORLD_FRAME` (3 values, rad/s unless normalized)
 - Motors' speeds (4 values, RPM)
 
-Check [`RLFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) for the mapping from raw simulation data to normalized observations in the `[-1,1]` range (i.e., when `normalized_spaces==True`)
+Check [`RLFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) for the mapping from raw simulation data to normalized observations in the `[-1,1]` range (i.e., when `problem is not None`)
 
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
-
 
 > **Note**: when `num_drones==1`, action and obs spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
 
@@ -158,7 +154,7 @@ Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/s
 
 
 ## RLFunctions
-Class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) contains implementations of *reward*, *done*, and *normalization* functions that can be selected when create an environment with `problem=Problem.CUSTOM`
+Class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) contains implementations of *reward*, *done*, and *normalization* functions that can be selected when create an environment with `problem=Problem.YOURCHOICE`
 
 
 
@@ -227,7 +223,7 @@ Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/g
 ## Logger
 Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Logger.py) contains helper functions to save and plot simulation data, for example
 ```
->>> logger = Logger(duration_sec=T, simulation_freq_hz=freq, num_drones=num_drones) # Initialize the logger
+>>> logger = Logger(simulation_freq_hz=freq, num_drones=num_drones)                 # Initialize the logger
 >>> ...
 >>> for i in range(NUM_DRONES):             # Log information for each drone
 >>>     logger.log(drone=i, \

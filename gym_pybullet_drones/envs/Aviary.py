@@ -43,7 +43,7 @@ class Physics(Enum):
 ######################################################################################################################################################
 #### Multi-drone environment class ###################################################################################################################
 ######################################################################################################################################################
-class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
+class Aviary(gym.Env):
     metadata = {'render.modes': ['human']}
 
     ####################################################################################################
@@ -53,31 +53,27 @@ class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
     #### - drone_model (DroneModel)         desired drone type (associated to an .urdf file) ###########
     #### - num_drones (int)                 desired number of drones in the aviary #####################
     #### - visibility_radius (float)        used to compute the drones' adjacency matrix, in meters ####
-    #### - initial_xyz ((3,1) array)        initial XYZ position of the drones #########################
-    #### - initial_rpy ((3,1) array)        initial orientations of the drones (radians) ###############
+    #### - initial_xyzs ((3,1) array)       initial XYZ position of the drones #########################
+    #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
     #### - physics (Physics)                desired implementation of physics/dynamics #################
-    #### - normalized_spaces (bool)         whether to use normalized OpenAI Gym spaces ################
     #### - freq (int)                       the frequency (Hz) at which the simulation steps ###########
     #### - gui (bool)                       whether to use PyBullet's GUI ##############################
-    #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - record (bool)                    whether to save the simulation as an .mp4 video ############
     #### - problem (Problem)                used to select reward, done, and normalization functions ###
+    #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, \
                         visibility_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
-                        physics: Physics=Physics.PYB, normalized_spaces=True, freq: int=240, \
-                        gui=False, obstacles=False, record=False, problem: Problem=Problem.SA_TAKEOFF):
-        super(Aviary, self).__init__()
+                        physics: Physics=Physics.PYB, freq: int=240, \
+                        gui=False, record=False, problem: Problem=None, obstacles=False):
         #### Parameters ####################################################################################
         self.DRONE_MODEL = drone_model; self.NUM_DRONES = num_drones; self.VISIBILITY_RADIUS = visibility_radius
-        self.PHYSICS = physics; self.NORM_SPACES = normalized_spaces
+        self.PHYSICS = physics; self.PROBLEM = problem; self.NORM_SPACES = False if self.PROBLEM is None else True
         #### Constants #####################################################################################
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
         self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ
-        self.GUI = gui; self.OBSTACLES = obstacles; self.RECORD = record; self.PROBLEM = problem
-
-        self.URDF = "cf2x.urdf"
-
+        #### Options #######################################################################################
+        self.GUI = gui; self.RECORD = record; self.OBSTACLES = obstacles
         if self.DRONE_MODEL==DroneModel.CF2X: self.URDF = "cf2x.urdf"
         elif self.DRONE_MODEL==DroneModel.CF2P: self.URDF = "cf2p.urdf"
         elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"  
@@ -138,8 +134,8 @@ class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
             self.observation_space = spaces.Dict({ str(i): spaces.Dict ({"state": spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32), \
                                                                         "neighbors": spaces.MultiBinary(self.NUM_DRONES) }) for i in range(self.NUM_DRONES) })
         
-        #### Housekeeping ##################################################################################
-        self._housekeeping()
+        #### Initial reset #################################################################################
+        self.reset()
 
     ####################################################################################################
     #### Reset the environment #########################################################################
@@ -220,14 +216,16 @@ class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
         #### Prepare the return values #####################################################################
         if self.NUM_DRONES==1:
             obs = self._getDroneState(0)
-            reward = self.RL_FUNCTIONS.rewardFunction(obs)
-            done = self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
+            reward = 0 if self.PROBLEM is None else self.RL_FUNCTIONS.rewardFunction(obs)
+            done = False if self.PROBLEM is None else self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
+            info = {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
         else:
             adjacency_mat = self.getAdjacencyMatrix()
             obs = {str(i): {"state": self._getDroneState(i), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
-            reward = self.RL_FUNCTIONS.rewardFunction(obs)
-            done = self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
-        return obs, reward, done, {}
+            reward = 0 if self.PROBLEM is None else {str(i): self.RL_FUNCTIONS.rewardFunction(obs) for i in range(self.NUM_DRONES) }
+            done = False if self.PROBLEM is None else self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
+            info = {str(i): {} for i in range(self.NUM_DRONES) }
+        return obs, reward, done, info
 
     ####################################################################################################
     #### Print a textual output of the environment #####################################################
@@ -280,7 +278,7 @@ class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
             for j in range(self.NUM_DRONES-i-1):
                 pos_i, _ = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
                 pos_j, _ = p.getBasePositionAndOrientation(self.DRONE_IDS[j+i+1], physicsClientId=self.CLIENT)
-                if np.linalg.norm(np.array(pos_i)-np.array(pos_j))<self.VISIBILITY_RADIUS: adjacency_mat[i,j] = adjacency_mat[j,i] = 1
+                if np.linalg.norm(np.array(pos_i)-np.array(pos_j))<self.VISIBILITY_RADIUS: adjacency_mat[i,j+i+1] = adjacency_mat[j+i+1,i] = 1
         return adjacency_mat
 
     ####################################################################################################
@@ -332,7 +330,7 @@ class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
         self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES); self.Y_AX = -1*np.ones(self.NUM_DRONES); self.Z_AX = -1*np.ones(self.NUM_DRONES);
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES); self.USE_GUI_RPM=False; self.last_input_switch = 0
-        self.RL_FUNCTIONS = RLFunctions(self.CLIENT, self.NUM_DRONES, self.GUI, self.PROBLEM)
+        if self.PROBLEM is not None: self.RL_FUNCTIONS = RLFunctions(self.CLIENT, self.NUM_DRONES, self.GUI, self.PROBLEM)
         self.last_action = -1*np.ones((self.NUM_DRONES,4)) if self.NORM_SPACES else np.zeros((self.NUM_DRONES,4))
         self.last_clipped_action = np.zeros((self.NUM_DRONES,4)); self.gui_input = np.zeros(4)
         self.no_pybullet_dyn_accs = np.zeros((self.NUM_DRONES,3)); 
@@ -344,7 +342,16 @@ class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
         #### Load ground plane, drone and obstacles models #################################################
         p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)        
         self.DRONE_IDS = np.array([p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF, self.INIT_XYZS[i,:], p.getQuaternionFromEuler(self.INIT_RPYS[i,:]), physicsClientId=self.CLIENT) for i in range(self.NUM_DRONES)])
-        if self.OBSTACLES: self.RL_FUNCTIONS.addObstacles()
+        if self.OBSTACLES: self._addObstacles()
+
+    ####################################################################################################
+    #### Add obstacles to the environment from .urdf files #############################################
+    ####################################################################################################
+    def _addObstacles(self):
+        p.loadURDF("samurai.urdf", physicsClientId=self.CLIENT)
+        p.loadURDF("duck_vhacd.urdf", [-.5,-.5,.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+        p.loadURDF("cube_no_rotation.urdf", [-.5,-2.5,.5], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+        p.loadURDF("sphere2.urdf", [0,2,.5], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Return the state vector of the nth drone ######################################################
@@ -506,5 +513,12 @@ class Aviary(gym.Env): # class Aviary(gym.Env, MultiAgentEnv):
         pass # TODO
 
 
+######################################################################################################################################################
+#### Multi-drone environment class ###################################################################################################################
+######################################################################################################################################################
+class RLlibMAAviary(Aviary, MultiAgentEnv):
 
+    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, visibility_radius: float=np.inf, initial_xyzs=None, \
+                    initial_rpys=None, physics: Physics=Physics.PYB, freq: int=240, gui=False, record=False, problem: Problem=None, obstacles=False):
+        super().__init__(drone_model, num_drones, visibility_radius, initial_xyzs, initial_rpys, physics, freq, gui, record, problem, obstacles) 
 

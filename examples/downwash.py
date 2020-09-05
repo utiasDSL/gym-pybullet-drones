@@ -26,8 +26,8 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #####################################################################
     INIT_XYZS = np.array([[.5,0,1],[-.5,0,.5]])
-    env = Aviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
-                    normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO); env.reset()
+    env = Aviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
+                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, gui=GUI, record=RECORD_VIDEO, obstacles=True)
 
     #### Initialize the trajectories ###################################################################
     PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,2))
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     wp_counters = np.array([ 0, int(NUM_WP/2) ])
     
     #### Initialize the logger #########################################################################
-    logger = Logger(duration_sec=DURATION_SEC, simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
+    logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
 
     #### Initialize the controllers ####################################################################    
     ctrl = [Control(env, control_type=ControlType.PID) for i in range(NUM_DRONES)]
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],:], INIT_XYZS[j,2], np.zeros(9) ]))   
         
         #### Printout ######################################################################################
-        env.render()
+        if i%env.SIM_FREQ==0: env.render()
 
         #### Sync the simulation ###########################################################################
         if GUI: sync(i, START, env.TIMESTEP)

@@ -26,8 +26,8 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #####################################################################
     H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
-    env = Aviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
-                    normalized_spaces=False, freq=SIMULATION_FREQ_HZ, gui=GUI, obstacles=True, record=RECORD_VIDEO); env.reset()
+    env = Aviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
+                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, gui=GUI, record=RECORD_VIDEO, obstacles=True)
 
     #### Initialize a circular trajectory ##############################################################
     PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(NUM_DRONES) ])
     
     #### Initialize the logger #########################################################################
-    logger = Logger(duration_sec=DURATION_SEC, simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
+    logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
 
     #### Initialize the controllers ####################################################################    
     ctrl = [Control(env, control_type=ControlType.PID) for i in range(NUM_DRONES)]
@@ -71,7 +71,7 @@ if __name__ == "__main__":
         for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],0:2], H+j*H_STEP, np.zeros(9) ]))   
         
         #### Printout ######################################################################################
-        env.render()
+        if i%env.SIM_FREQ==0: env.render()
 
         #### Sync the simulation ###########################################################################
         if GUI: sync(i, START, env.TIMESTEP)
