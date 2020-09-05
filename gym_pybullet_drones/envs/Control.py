@@ -30,7 +30,7 @@ class Control(object):
     ####################################################################################################
     def __init__(self, env: Aviary, control_type: ControlType=ControlType.PID):
         #### Set general use constants #####################################################################
-        self.DRONE_MODEL = env.DRONE_MODEL; self.GRAVITY = env.GRAVITY; self.KF = env.KF; self.KT = env.KM
+        self.DRONE_MODEL = env.DRONE_MODEL; self.GRAVITY = env.GRAVITY; self.KF = env.KF; self.KM = env.KM
         self.MAX_THRUST = env.MAX_THRUST; self.MAX_XY_TORQUE = env.MAX_XY_TORQUE; self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
         self.CONTROLTYPE = control_type
         #### Set PID, model-specific constants #############################################################
@@ -194,6 +194,21 @@ class Control(object):
         return self.PWM2RPM_SCALE * pwm + self.PWM2RPM_CONST
 
     ####################################################################################################
+    #### Utility function interfacing 1, 2, or 3D use cases ############################################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - thrust ((?,1) array)             a desired thrust input with 1, 2, or 4 components ##########
+    ####################################################################################################
+    #### Returns #######################################################################################
+    #### - pwm ((4,1) array)                PWM values to apply to the 4 motors ########################
+    ####################################################################################################
+    def _one23DInterface(thrust):
+        DIM = len(np.array(thrust)); pwm = np.clip((np.sqrt(np.array(thrust)/(self.KF*(4/DIM)))-self.PWM2RPM_CONST)/self.PWM2RPM_SCALE, self.MIN_PWM, self.MAX_PWM)
+        if DIM in [1, 4]: return np.repeat(pwm, 4/DIM)
+        elif DIM==2: return np.hstack([pwm, np.flip(pwm)])
+        else: print("[ERROR] in one23DInterface()"); exit()
+
+    ####################################################################################################
     #### Generic PID position control (with yaw locked to 0.) ##########################################
     ####################################################################################################
     #### Arguments #####################################################################################
@@ -292,13 +307,4 @@ class Control(object):
                     "\t\tResidual: {:.2f}".format(res) )
             sq_rpm = sol
         return np.sqrt(sq_rpm)
-
-    ####################################################################################################
-    #### Work in progress ##############################################################################
-    ####################################################################################################
-    def one23DInterface(thrust, SCALE: float=0.2685, CONST: float=4070.3, CT: float=3.1582e-10, MI: float=20000.0, MA: float=65535.0):
-        DIM = len(np.array(thrust)); pwm = np.clip((np.sqrt(np.array(thrust)/(CT*(4/DIM)))-CONST)/SCALE, MI, MA)
-        if DIM in [1, 4]: return np.repeat(pwm, 4/DIM)
-        elif DIM==2: return np.hstack([pwm, np.flip(pwm)])
-        else: print("[ERROR] in one23DInterface()"); exit()
 
