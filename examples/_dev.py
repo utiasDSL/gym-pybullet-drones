@@ -25,7 +25,7 @@ from gym_pybullet_drones.envs.Control import ControlType, Control
 from gym_pybullet_drones.envs.RLFunctions import Problem, RLFunctions 
 
 DRONE = DroneModel.CF2X
-NUM_DRONES = 3
+NUM_DRONES = 1
 PHYSICS = Physics.PYB
 SIMULATION_FREQ_HZ = 240
 
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     ####################################################################################################
     #### Flight with control example ###################################################################
     ####################################################################################################
-    if False:
+    if True:
 
         CONTROL_FREQ_HZ = 48
         DURATION_SEC = 10
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         #### Initialize the simulation #####################################################################
         H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
         env = RLlibMAAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
-                        freq=SIMULATION_FREQ_HZ, gui=True, record=False, obstacles=True)
+                        freq=SIMULATION_FREQ_HZ, gui=False, record=True, obstacles=False)
 
         #### Initialize a circular trajectory ##############################################################
         PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
@@ -50,13 +50,13 @@ if __name__ == "__main__":
         wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(NUM_DRONES) ])
         
         #### Initialize the logger #########################################################################
-        logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
+        logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
 
         #### Initialize the controllers ####################################################################    
         ctrl = [Control(env, control_type=ControlType.PID) for i in range(NUM_DRONES)]
 
         #### Initialize RL functions ####################################################################### 
-        RL_FUNCTIONS = RLFunctions(env.getPyBulletClient(), num_drones=NUM_DRONES, gui=True, problem=Problem.MA_FLOCK)
+        #RL_FUNCTIONS = RLFunctions(env.getPyBulletClient(), num_drones=NUM_DRONES, gui=True, problem=Problem.MA_FLOCK)
 
         #### Run the simulation ############################################################################
         CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
@@ -70,12 +70,12 @@ if __name__ == "__main__":
     ##############################
     ##############################
     ##############################
-            print("Obs", obs)
-            print("Norm Obs", {str(j): RL_FUNCTIONS.clipAndNormalizeState(obs[str(j)]["state"], env.step_counter) for j in range(NUM_DRONES)})
-            print("Reward", {str(j): RL_FUNCTIONS.rewardFunction(obs) for j in range(NUM_DRONES) })
-            print("Done", RL_FUNCTIONS.doneFunction(obs, env.step_counter/env.SIM_FREQ))
-            print("Info", {str(j): {} for j in range(NUM_DRONES) })
-            print()
+            # print("Obs", obs)
+            # print("Norm Obs", {str(j): RL_FUNCTIONS.clipAndNormalizeState(obs[str(j)]["state"], env.step_counter) for j in range(NUM_DRONES)})
+            # print("Reward", {str(j): RL_FUNCTIONS.rewardFunction(obs) for j in range(NUM_DRONES) })
+            # print("Done", RL_FUNCTIONS.doneFunction(obs, env.step_counter/env.SIM_FREQ))
+            # print("Info", {str(j): {} for j in range(NUM_DRONES) })
+            # print()
     ##############################
     ##############################
     ##############################
@@ -102,10 +102,10 @@ if __name__ == "__main__":
             for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],0:2], H+j*H_STEP, np.zeros(9) ]))   
             
             #### Printout ######################################################################################
-            env.render()
+            if i%int(env.SIM_FREQ/5)==0: env.render()
             
             #### Sync the simulation ###########################################################################
-            sync(i, START, env.TIMESTEP)   
+            # sync(i, START, env.TIMESTEP)   
         
         #### Close the environment #########################################################################
         env.close()

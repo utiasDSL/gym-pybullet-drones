@@ -1,6 +1,5 @@
 import os
 import time
-import curses
 import pdb
 import math
 import numpy as np
@@ -12,6 +11,7 @@ from gym import error, spaces, utils
 from gym.utils import seeding
 from enum import Enum
 from datetime import datetime
+from PIL import Image
 from ray.rllib.env.multi_agent_env import MultiAgentEnv, ENV_STATE
 
 from gym_pybullet_drones.envs.RLFunctions import Problem, RLFunctions 
@@ -58,7 +58,7 @@ class Aviary(gym.Env):
     #### - physics (Physics)                desired implementation of physics/dynamics #################
     #### - freq (int)                       the frequency (Hz) at which the simulation steps ###########
     #### - gui (bool)                       whether to use PyBullet's GUI ##############################
-    #### - record (bool)                    whether to save the simulation as an .mp4 video ############
+    #### - record (bool)                    whether to save a video of the simulation ##################
     #### - problem (Problem)                used to select reward, done, and normalization functions ###
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     ####################################################################################################
@@ -90,12 +90,19 @@ class Aviary(gym.Env):
         if self.GUI: 
             self.CLIENT = p.connect(p.GUI)
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]: p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-            p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=-30, cameraPitch=-30, cameraTargetPosition=[0,0,0], physicsClientId=self.CLIENT)
+            p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=-30, cameraPitch=-30, cameraTargetPosition=[0,0,0], physicsClientId=self.CLIENT) 
+            ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT); print("viewMatrix", ret[2]); print("projectionMatrix", ret[3])
             #### Add input sliders to the GUI ##################################################################
             self.SLIDERS = -1*np.ones(4)
             for i in range(4): self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
             self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
-        else: self.CLIENT = p.connect(p.DIRECT)
+        else: 
+            self.CLIENT = p.connect(p.DIRECT) 
+            #### Set the camera parameters to save frames in DIRECT mode ########################################
+            if self.RECORD: 
+                self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(distance=2, yaw=-30, pitch=-30, roll=0, cameraTargetPosition=[0,0,0], upAxisIndex=2, physicsClientId=self.CLIENT) 
+                self.CAM_PRO = (0.7499999403953552, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0000200271606445, -1.0, 0.0, 0.0, -0.02000020071864128, 0.0)
+                self.VID_WIDTH=int(640); self.VID_HEIGHT=int(480); self.FRAME_PER_SEC = 24; self.CAPTURE_FREQ = int(self.SIM_FREQ/self.FRAME_PER_SEC)
         #### Set initial poses #############################################################################
         if initial_xyzs is None: self.INIT_XYZS = np.hstack([ np.array([x*4*self.L for x in range(self.NUM_DRONES)]), np.array([y*4*self.L for y in range(self.NUM_DRONES)]), np.ones(self.NUM_DRONES) * (self.COLLISION_H/2-self.COLLISION_Z_OFFSET+.1) ]).reshape(self.NUM_DRONES,3)
         elif np.array(initial_xyzs).shape==(self.NUM_DRONES,3): self.INIT_XYZS = initial_xyzs 
@@ -148,7 +155,8 @@ class Aviary(gym.Env):
         #### Housekeeping ##################################################################################
         self._housekeeping()
         #### Start video recording #########################################################################
-        if self.RECORD: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
+        if self.RECORD and self.GUI: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
+        if self.RECORD and not self.GUI: self.FRAME_NUM = 0; self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"; os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
         #### Return the initial observation ################################################################
         if self.NUM_DRONES==1: return self._getDroneState(0)
         else:
@@ -169,6 +177,11 @@ class Aviary(gym.Env):
     ####################################################################################################
     def step(self, action):
         self.step_counter += 1
+        #### Save a video frame in PNG format if RECORD=True and GUI=False #################################
+        if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ==0: 
+            [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH, height=self.VID_HEIGHT, shadow=1, viewMatrix=self.CAM_VIEW, \
+                projectionMatrix=self.CAM_PRO, renderer=p.ER_TINY_RENDERER, flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX, physicsClientId=self.CLIENT)
+            img = (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png"); self.FRAME_NUM += 1
         #### Read the GUI's input parameters ###############################################################
         if self.GUI: 
             current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
@@ -251,7 +264,7 @@ class Aviary(gym.Env):
     #### Close the environment #########################################################################
     ####################################################################################################
     def close(self):
-        if self.RECORD: p.stopStateLogging(self.VIDEO_ID, physicsClientId=self.CLIENT)
+        if self.RECORD and self.GUI: p.stopStateLogging(self.VIDEO_ID, physicsClientId=self.CLIENT)
         p.disconnect(physicsClientId=self.CLIENT)
 
     ####################################################################################################
@@ -327,7 +340,7 @@ class Aviary(gym.Env):
     ####################################################################################################
     def _housekeeping(self):
         #### Initialize/reset counters and zero-valued variables ###########################################
-        self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
+        self.RESET_TIME = time.time(); self.step_counter = -1; self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES); self.Y_AX = -1*np.ones(self.NUM_DRONES); self.Z_AX = -1*np.ones(self.NUM_DRONES);
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES); self.USE_GUI_RPM=False; self.last_input_switch = 0
         if self.PROBLEM is not None: self.RL_FUNCTIONS = RLFunctions(self.CLIENT, self.NUM_DRONES, self.GUI, self.PROBLEM)

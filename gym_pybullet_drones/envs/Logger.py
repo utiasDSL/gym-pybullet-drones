@@ -17,21 +17,23 @@ class Logger(object):
     #### Arguments #####################################################################################
     #### - simulation_freq_hz (int)         simulation frequency in Hz #################################
     #### - num_drones (int)                 number of drones ###########################################
+    #### - duration_sec (int)               (opt) to preallocate the log arrays, improves performance ##
     ####################################################################################################
-    def __init__(self, simulation_freq_hz: int, num_drones: int=1):
-        self.SIMULATION_FREQ_HZ = simulation_freq_hz; self.NUM_DRONES = num_drones 
+    def __init__(self, simulation_freq_hz: int, num_drones: int=1, duration_sec: int=0):
+        self.SIMULATION_FREQ_HZ = simulation_freq_hz; self.NUM_DRONES = num_drones
+        self.PREALLOCATED_ARRAYS = False if duration_sec==0 else True
         self.counters = np.zeros(num_drones)
-        self.timestamps = np.zeros((num_drones, 0))
-        self.states = np.zeros((num_drones, 16, 0)) #### 16 states: pos_x, pos_y, pos_z, 
-                                                                    # vel_x, vel_y, vel_z, 
-                                                                    # roll, pitch, yaw, 
-                                                                    # ang_vel_x, ang_vel_y, ang_vel_z, 
-                                                                    # rpm0, rpm1, rpm2, rpm3
+        self.timestamps = np.zeros((num_drones, duration_sec*self.SIMULATION_FREQ_HZ))
+        self.states = np.zeros((num_drones, 16, duration_sec*self.SIMULATION_FREQ_HZ)) #### 16 states: pos_x, pos_y, pos_z, 
+                                                                                                        # vel_x, vel_y, vel_z, 
+                                                                                                        # roll, pitch, yaw, 
+                                                                                                        # ang_vel_x, ang_vel_y, ang_vel_z, 
+                                                                                                        # rpm0, rpm1, rpm2, rpm3
         #### Note: this is not the same order nor length returned in obs["i"]["state"] by Aviary.step() ####
-        self.controls = np.zeros((num_drones, 12, 0)) #### 12 control targets: pos_x, pos_y, pos_z,
-                                                                                # vel_x, vel_y, vel_z, 
-                                                                                # roll, pitch, yaw, 
-                                                                                # ang_vel_x, ang_vel_y, ang_vel_z
+        self.controls = np.zeros((num_drones, 12, duration_sec*self.SIMULATION_FREQ_HZ)) #### 12 control targets: pos_x, pos_y, pos_z,
+                                                                                                                    # vel_x, vel_y, vel_z, 
+                                                                                                                    # roll, pitch, yaw, 
+                                                                                                                    # ang_vel_x, ang_vel_y, ang_vel_z
 
     ####################################################################################################
     #### Log entries for a single simulation step, of a single drone ###################################
@@ -51,7 +53,7 @@ class Logger(object):
             self.states = np.concatenate((self.states, np.zeros((self.NUM_DRONES, 16, 1))), axis=2)
             self.controls = np.concatenate((self.controls, np.zeros((self.NUM_DRONES, 12, 1))), axis=2)
         #### Advance a counter is the logging matrices have grown faster than it has #######################
-        elif self.timestamps.shape[1]>current_counter: current_counter = self.timestamps.shape[1]-1
+        elif not self.PREALLOCATED_ARRAYS and self.timestamps.shape[1]>current_counter: current_counter = self.timestamps.shape[1]-1
         #### Log the information and increase the counter ##################################################
         self.timestamps[drone,current_counter] = timestamp
         self.states[drone,:,current_counter] = np.hstack([ state[0:3], state[10:13], state[7:10], state[13:20] ])
