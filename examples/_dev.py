@@ -126,8 +126,8 @@ if __name__ == "__main__":
         ray.init(ignore_reinit_error=True)
         print("Dashboard URL: http://{}".format(ray.get_webui_url()))
 
-        # register_env("sa-aviary", lambda _: Aviary(drone_model=DRONE, num_drones=1, initial_xyzs=None, \
-        #                                             physics=PHYSICS, freq=SIMULATION_FREQ_HZ, problem=Problem.SA_TAKEOFF))
+        
+        #### Set up the trainer's config ###################################################################
         register_env("ma-aviary", lambda _: RLlibMAAviary(drone_model=DRONE, num_drones=NUM_DRONES, physics=PHYSICS, \
                                                             freq=SIMULATION_FREQ_HZ, problem=Problem.MA_FLOCK))
 
@@ -153,6 +153,7 @@ if __name__ == "__main__":
             "timesteps_total": 8000,
         }
 
+        #### Train #########################################################################################
         results = tune.run(
             "PPO", 
             stop=stop, 
@@ -160,21 +161,20 @@ if __name__ == "__main__":
             verbose=True,
             checkpoint_at_end=True)
         # check_learning_achieved(results, 1.0)
-
         
-
+        #### Restore agent #################################################################################
         checkpoints = results.get_trial_checkpoints_paths(trial=results.get_best_trial('episode_reward_mean'), metric='episode_reward_mean')
-        checkpoint_path = checkpoints[0][0]
-        agent = ppo.PPOTrainer(config=config); agent.restore(checkpoint_path)
+        checkpoint_path = checkpoints[0][0]; agent = ppo.PPOTrainer(config=config); agent.restore(checkpoint_path)
 
+        #### Extract and print policies ####################################################################
         policy0 = agent.get_policy("pol0")
         policy1 = agent.get_policy("pol1")
         policy2 = agent.get_policy("pol2")
-
         print(policy0.model.base_model.summary())
         print(policy1.model.base_model.summary())
         print(policy2.model.base_model.summary())
 
+        #### Create test environment ########################################################################
         env = RLlibMAAviary(drone_model=DRONE, num_drones=NUM_DRONES, physics=PHYSICS, freq=SIMULATION_FREQ_HZ, \
                                 gui=True, record=False, problem=Problem.MA_FLOCK, obstacles=True)
         obs = env.reset()
@@ -182,14 +182,13 @@ if __name__ == "__main__":
         start = time.time()
         for i in range(10*env.SIM_FREQ):
 
+            #### Deploy the policies ###########################################################################
             print("Debug Obs", obs)
             temp = {}
             temp["0"] = policy0.compute_single_action(np.hstack([ obs["0"]["state"], obs["0"]["neighbors"] ]))
             temp["1"] = policy1.compute_single_action(np.hstack([ obs["1"]["state"], obs["1"]["neighbors"] ]))
             temp["2"] = policy2.compute_single_action(np.hstack([ obs["2"]["state"], obs["2"]["neighbors"] ]))
             print("Debug Act", temp)
-
-            # action = agent.compute_action(obs)
             action = {"0": temp["0"][0], "1": temp["1"][0], "2": temp["2"][0]}
             
             obs, reward, done, info = env.step(action)
