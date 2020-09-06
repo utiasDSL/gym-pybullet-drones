@@ -25,7 +25,7 @@ from gym_pybullet_drones.envs.Control import ControlType, Control
 from gym_pybullet_drones.envs.RLFunctions import Problem, RLFunctions 
 
 DRONE = DroneModel.CF2X
-NUM_DRONES = 1
+NUM_DRONES = 3
 PHYSICS = Physics.PYB
 SIMULATION_FREQ_HZ = 240
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
         #### Initialize the simulation #####################################################################
         H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
         env = RLlibMAAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
-                        freq=SIMULATION_FREQ_HZ, gui=False, record=True, obstacles=False)
+                        freq=SIMULATION_FREQ_HZ, gui=False, record=False, obstacles=True)
 
         #### Initialize a circular trajectory ##############################################################
         PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))

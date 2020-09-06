@@ -160,7 +160,7 @@ class Aviary(gym.Env):
         #### Return the initial observation ################################################################
         if self.NUM_DRONES==1: return self._getDroneState(0)
         else:
-            adjacency_mat = self.getAdjacencyMatrix()
+            adjacency_mat = self._getAdjacencyMatrix()
             return {str(i): {"state": self._getDroneState(i), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
 
     ####################################################################################################
@@ -181,7 +181,11 @@ class Aviary(gym.Env):
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ==0: 
             [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH, height=self.VID_HEIGHT, shadow=1, viewMatrix=self.CAM_VIEW, \
                 projectionMatrix=self.CAM_PRO, renderer=p.ER_TINY_RENDERER, flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX, physicsClientId=self.CLIENT)
-            img = (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png"); self.FRAME_NUM += 1
+            img = (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png"); 
+            # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8'); img = (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")            
+            # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8'); img = (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            self.FRAME_NUM += 1
+
         #### Read the GUI's input parameters ###############################################################
         if self.GUI: 
             current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
@@ -233,7 +237,7 @@ class Aviary(gym.Env):
             done = False if self.PROBLEM is None else self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
             info = {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
         else:
-            adjacency_mat = self.getAdjacencyMatrix()
+            adjacency_mat = self._getAdjacencyMatrix()
             obs = {str(i): {"state": self._getDroneState(i), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
             reward = 0 if self.PROBLEM is None else {str(i): self.RL_FUNCTIONS.rewardFunction(obs) for i in range(self.NUM_DRONES) }
             done = False if self.PROBLEM is None else self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
@@ -285,7 +289,7 @@ class Aviary(gym.Env):
     #### Returns #######################################################################################
     #### - adj_mat ((NUM_DRONES,NUM_DRONES) array)    adj_mat[i,j]=1 if i,j are neighbors, 0 otherwise #
     ####################################################################################################
-    def getAdjacencyMatrix(self):
+    def _getAdjacencyMatrix(self):
         adjacency_mat = np.identity(self.NUM_DRONES)
         for i in range(self.NUM_DRONES-1):
             for j in range(self.NUM_DRONES-i-1):
@@ -381,6 +385,23 @@ class Aviary(gym.Env):
         vel, ang_v = p.getBaseVelocity(self.DRONE_IDS[nth_drone], physicsClientId=self.CLIENT)
         state = np.hstack([pos, quat, rpy, vel, ang_v, self.last_action[nth_drone,:]])
         if self.NORM_SPACES: state = self.RL_FUNCTIONS.clipAndNormalizeState(state, self.step_counter)
+
+
+
+
+        if self.step_counter%int(self.SIM_FREQ/24)==0:
+            rot_mat = np.array(p.getMatrixFromQuaternion(quat)).reshape(3,3)
+            target = np.dot(rot_mat,np.array([1000,0,0])) + np.array(pos)
+
+            DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=np.array(pos)+np.array([0,0,self.L]), cameraTargetPosition=target, cameraUpVector=[0,0,1], physicsClientId=self.CLIENT)
+            DRONE_CAM_PRO =  p.computeProjectionMatrixFOV(fov=60.0, aspect=1.0, nearVal=self.L, farVal=1000.0)
+            [w, h, rgb, dep, seg] = p.getCameraImage(width=64, height=48, shadow=1, viewMatrix=DRONE_CAM_VIEW, projectionMatrix=DRONE_CAM_PRO, \
+                    renderer=p.ER_TINY_RENDERER, flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX, physicsClientId=self.CLIENT)
+            rgb = np.reshape(rgb, (h, w, 4)); dep = np.reshape(dep, (h, w)); seg = np.reshape(seg, (h, w))
+
+
+
+
         return state.reshape(20,)
 
     ####################################################################################################
