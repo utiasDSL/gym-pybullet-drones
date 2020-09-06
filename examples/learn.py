@@ -17,15 +17,14 @@ from ray.tune import register_env
 from ray.rllib.agents import ppo
 
 from utils import *
-from gym_pybullet_drones.envs.Aviary import Aviary, DroneModel
-from gym_pybullet_drones.envs.RLFunctions import Problem 
+from gym_pybullet_drones.envs.RLTakeoffAviary import RLTakeoffAviary
 
-RLLIB = False
+RLLIB = True
 
 if __name__ == "__main__":
 
     #### Check the environment's spaces ################################################################
-    env = gym.make("the-aviary-v1", problem=Problem.SA_TAKEOFF)
+    env = gym.make("rl-takeoff-aviary-v0")
     print("[INFO] Action space:", env.action_space)
     print("[INFO] Observation space:", env.observation_space)
     check_env(env, warn=True, skip_render_check=True) 
@@ -33,15 +32,15 @@ if __name__ == "__main__":
     #### Train the model ###############################################################################
     if not RLLIB:
         model = A2C(MlpPolicy, env, verbose=1)
-        model.learn(total_timesteps=500000)
+        model.learn(total_timesteps=500000) # 500000
     else:
         ray.shutdown(); ray.init(ignore_reinit_error=True)
-        register_env("sa-aviary", lambda _: Aviary(problem=Problem.SA_TAKEOFF))
+        register_env("rl-takeoff-aviary-v0", lambda _: RLTakeoffAviary())
         config = ppo.DEFAULT_CONFIG.copy()
         config["num_workers"] = 2
-        config["env"] = "sa-aviary"
+        config["env"] = "rl-takeoff-aviary-v0"
         agent = ppo.PPOTrainer(config)
-        for i in range(100):
+        for i in range(100): # 100
             results = agent.train()
             print("[INFO] {:d}: episode_reward max {:f} min {:f} mean {:f}".format(i, \
                     results["episode_reward_max"], results["episode_reward_min"], results["episode_reward_mean"]))
@@ -50,7 +49,7 @@ if __name__ == "__main__":
         ray.shutdown()
 
     #### Show (and record a video of) the model's performance ##########################################
-    env = Aviary(gui=True, record=True, problem=Problem.SA_TAKEOFF)
+    env = RLTakeoffAviary(gui=True, record=True)
     obs = env.reset()
     start = time.time()
     for i in range(10*env.SIM_FREQ):
@@ -59,5 +58,8 @@ if __name__ == "__main__":
         obs, reward, done, info = env.step(action)
         env.render()
         sync(i, start, env.TIMESTEP)
+        print()
+        print(done)
+        print()
         if done: obs = env.reset()
     env.close()

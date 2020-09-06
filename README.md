@@ -1,5 +1,5 @@
 # gym-pybullet-drones
-Simple [OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) to simulate one or more quadrotors 
+[OpenAI Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning with quadrotors 
 
 <img src="files/readme_images/helix.gif" alt="alt text" width="360"> <img src="files/readme_images/helix.png" alt="alt text" width="450">
 

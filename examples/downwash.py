@@ -5,13 +5,13 @@ import pdb
 import math
 import numpy as np
 import pybullet as p
-import pickle
 import matplotlib.pyplot as plt
 
 from utils import *
-from gym_pybullet_drones.envs.Aviary import DroneModel, Physics, Aviary
-from gym_pybullet_drones.envs.Logger import Logger
-from gym_pybullet_drones.envs.Control import ControlType, Control
+from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
+from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
+from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
+from gym_pybullet_drones.utils.Logger import Logger
 
 DRONE = DroneModel.CF2X
 NUM_DRONES = 2
@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #####################################################################
     INIT_XYZS = np.array([[.5,0,1],[-.5,0,.5]])
-    env = Aviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
+    env = CtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
                     visibility_radius=10, freq=SIMULATION_FREQ_HZ, gui=GUI, record=RECORD_VIDEO, obstacles=True)
 
     #### Initialize the trajectories ###################################################################
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
 
     #### Initialize the controllers ####################################################################    
-    ctrl = [Control(env, control_type=ControlType.PID) for i in range(NUM_DRONES)]
+    ctrl = [DSLPIDControl(env) for i in range(NUM_DRONES)]
 
     #### Run the simulation ############################################################################
     CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
@@ -54,8 +54,7 @@ if __name__ == "__main__":
 
             #### Compute control for the current waypoint ######################################################
             for j in range(NUM_DRONES): 
-                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, \
-                                                                            state=obs[str(j)]["state"], \
+                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"], \
                                                                             target_pos=np.hstack([ TARGET_POS[wp_counters[j],:], INIT_XYZS[j,2] ]))
 
             #### Go to the next waypoint and loop ##############################################################
