@@ -36,13 +36,15 @@ if __name__ == "__main__":
     ####################################################################################################
     if True:
 
-        CONTROL_FREQ_HZ = 48
+        AGGR_PHY_STEPS = 3
+        CONTROL_FREQ_HZ = 48*AGGR_PHY_STEPS
         DURATION_SEC = 10
+        
 
         #### Initialize the simulation #####################################################################
         H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
         env = RLlibMAAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
-                        freq=SIMULATION_FREQ_HZ, gui=False, record=False, obstacles=True)
+                        freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=False, record=False, obstacles=True)
 
         #### Initialize a circular trajectory ##############################################################
         PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
@@ -50,7 +52,7 @@ if __name__ == "__main__":
         wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(NUM_DRONES) ])
         
         #### Initialize the logger #########################################################################
-        logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
+        logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
 
         #### Initialize the controllers ####################################################################    
         ctrl = [Control(env, control_type=ControlType.PID) for i in range(NUM_DRONES)]
@@ -62,7 +64,7 @@ if __name__ == "__main__":
         CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
         action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) } if NUM_DRONES>1 else np.array([0,0,0,0])
         START = time.time(); temp_action = {}
-        for i in range(DURATION_SEC*env.SIM_FREQ):
+        for i in range(int(DURATION_SEC*env.SIM_FREQ/AGGR_PHY_STEPS)):
 
             #### Step the simulation ###########################################################################
             obs, reward, done, info = env.step(action)

@@ -57,6 +57,9 @@ class Aviary(gym.Env):
     #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
     #### - physics (Physics)                desired implementation of physics/dynamics #################
     #### - freq (int)                       the frequency (Hz) at which the simulation steps ###########
+    
+    #### - aggregate_phy_steps (int)        ...
+
     #### - gui (bool)                       whether to use PyBullet's GUI ##############################
     #### - record (bool)                    whether to save a video of the simulation ##################
     #### - problem (Problem)                used to select reward, done, and normalization functions ###
@@ -64,14 +67,14 @@ class Aviary(gym.Env):
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, \
                         visibility_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
-                        physics: Physics=Physics.PYB, freq: int=240, \
+                        physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1, \
                         gui=False, record=False, problem: Problem=None, obstacles=False):
         #### Parameters ####################################################################################
         self.DRONE_MODEL = drone_model; self.NUM_DRONES = num_drones; self.VISIBILITY_RADIUS = visibility_radius
         self.PHYSICS = physics; self.PROBLEM = problem; self.NORM_SPACES = False if self.PROBLEM is None else True
         #### Constants #####################################################################################
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
-        self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ
+        self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; self.AGGR_PHY_STEPS = aggregate_phy_steps
         #### Options #######################################################################################
         self.GUI = gui; self.RECORD = record; self.OBSTACLES = obstacles
         if self.DRONE_MODEL==DroneModel.CF2X: self.URDF = "cf2x.urdf"
@@ -176,7 +179,6 @@ class Aviary(gym.Env):
     #### - info (Dict)                      currently unused ###########################################
     ####################################################################################################
     def step(self, action):
-        self.step_counter += 1
         #### Save a video frame in PNG format if RECORD=True and GUI=False #################################
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ==0: 
             [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH, height=self.VID_HEIGHT, shadow=1, viewMatrix=self.CAM_VIEW, \
@@ -215,21 +217,23 @@ class Aviary(gym.Env):
                 else:
                     rpm = self._normActionToRPM(v) if self.NORM_SPACES else np.array(v)
                     clipped_action[int(k),:] = np.clip(np.array(rpm), 0, self.MAX_RPM)
-        #### Step the simulation using the desired physics update ##########################################
-        for i in range (self.NUM_DRONES):
-            self._showDroneFrame(i)
-            if self.PHYSICS==Physics.PYB: self._physics(clipped_action[i,:], i)
-            elif self.PHYSICS==Physics.DYN: self._dynamics(clipped_action[i,:], i)
-            elif self.PHYSICS==Physics.PYB_GND: self._physics(clipped_action[i,:], i); self._groundEffect(clipped_action[i,:], i)
-            elif self.PHYSICS==Physics.PYB_DRAG: self._physics(clipped_action[i,:], i); self._drag(self.last_clipped_action[i,:], i)
-            elif self.PHYSICS==Physics.PYB_DW: self._physics(clipped_action[i,:], i); self._downwash(i)
-            elif self.PHYSICS==Physics.PYB_GND_DRAG_DW: self._physics(clipped_action[i,:], i); self._groundEffect(clipped_action[i,:], i); self._drag(self.last_clipped_action[i,:], i); self._downwash(i)
-            elif self.PHYSICS==Physics.PYB_PM: self._pointMass(clipped_action[i,:], i)
-            elif self.PHYSICS==Physics.PYB_KIN: self._kinematics(clipped_action[i,:], i)
-        #### Let PyBullet compute the new state, unless using Physics.DYN ##################################
-        if self.PHYSICS!=Physics.DYN: p.stepSimulation(physicsClientId=self.CLIENT)
-        #### Save the last applied action to compute drag in the next step #################################
-        if self.PHYSICS in [Physics.PYB_DRAG, Physics.PYB_GND_DRAG_DW]: self.last_clipped_action = clipped_action
+        #### For as many as the aggregate physics steps/dynamics updates ###################################
+        for _ in range(self.AGGR_PHY_STEPS):
+            #### Step the simulation using the desired physics update ##########################################
+            for i in range (self.NUM_DRONES):
+                self._showDroneFrame(i)
+                if self.PHYSICS==Physics.PYB: self._physics(clipped_action[i,:], i)
+                elif self.PHYSICS==Physics.DYN: self._dynamics(clipped_action[i,:], i)
+                elif self.PHYSICS==Physics.PYB_GND: self._physics(clipped_action[i,:], i); self._groundEffect(clipped_action[i,:], i)
+                elif self.PHYSICS==Physics.PYB_DRAG: self._physics(clipped_action[i,:], i); self._drag(self.last_clipped_action[i,:], i)
+                elif self.PHYSICS==Physics.PYB_DW: self._physics(clipped_action[i,:], i); self._downwash(i)
+                elif self.PHYSICS==Physics.PYB_GND_DRAG_DW: self._physics(clipped_action[i,:], i); self._groundEffect(clipped_action[i,:], i); self._drag(self.last_clipped_action[i,:], i); self._downwash(i)
+                elif self.PHYSICS==Physics.PYB_PM: self._pointMass(clipped_action[i,:], i)
+                elif self.PHYSICS==Physics.PYB_KIN: self._kinematics(clipped_action[i,:], i)
+            #### Let PyBullet compute the new state, unless using Physics.DYN ##################################
+            if self.PHYSICS!=Physics.DYN: p.stepSimulation(physicsClientId=self.CLIENT) 
+            #### Save the last applied action to compute drag in the next step #################################
+            if self.PHYSICS in [Physics.PYB_DRAG, Physics.PYB_GND_DRAG_DW]: self.last_clipped_action = clipped_action
         #### Prepare the return values #####################################################################
         if self.NUM_DRONES==1:
             obs = self._getDroneState(0)
@@ -242,6 +246,8 @@ class Aviary(gym.Env):
             reward = 0 if self.PROBLEM is None else {str(i): self.RL_FUNCTIONS.rewardFunction(obs) for i in range(self.NUM_DRONES) }
             done = False if self.PROBLEM is None else self.RL_FUNCTIONS.doneFunction(obs, self.step_counter/self.SIM_FREQ)
             info = {str(i): {} for i in range(self.NUM_DRONES) }
+        #### Advance the step counter ######################################################################
+        self.step_counter = self.step_counter + 1*self.AGGR_PHY_STEPS
         return obs, reward, done, info
 
     ####################################################################################################
@@ -344,7 +350,7 @@ class Aviary(gym.Env):
     ####################################################################################################
     def _housekeeping(self):
         #### Initialize/reset counters and zero-valued variables ###########################################
-        self.RESET_TIME = time.time(); self.step_counter = -1; self.first_render_call = True
+        self.RESET_TIME = time.time(); self.step_counter = 0; self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES); self.Y_AX = -1*np.ones(self.NUM_DRONES); self.Z_AX = -1*np.ones(self.NUM_DRONES);
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES); self.USE_GUI_RPM=False; self.last_input_switch = 0
         if self.PROBLEM is not None: self.RL_FUNCTIONS = RLFunctions(self.CLIENT, self.NUM_DRONES, self.GUI, self.PROBLEM)
@@ -548,11 +554,11 @@ class Aviary(gym.Env):
 
 
 ######################################################################################################################################################
-#### Multi-drone environment class ###################################################################################################################
+#### RLlib's MultiAgentEnv class inheritance #########################################################################################################
 ######################################################################################################################################################
 class RLlibMAAviary(Aviary, MultiAgentEnv):
 
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, visibility_radius: float=np.inf, initial_xyzs=None, \
-                    initial_rpys=None, physics: Physics=Physics.PYB, freq: int=240, gui=False, record=False, problem: Problem=None, obstacles=False):
-        super().__init__(drone_model, num_drones, visibility_radius, initial_xyzs, initial_rpys, physics, freq, gui, record, problem, obstacles) 
+                    initial_rpys=None, physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1, gui=False, record=False, problem: Problem=None, obstacles=False):
+        super().__init__(drone_model, num_drones, visibility_radius, initial_xyzs, initial_rpys, physics, freq, aggregate_phy_steps, gui, record, problem, obstacles) 
 
