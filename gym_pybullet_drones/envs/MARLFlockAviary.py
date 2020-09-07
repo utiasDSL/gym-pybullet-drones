@@ -93,17 +93,13 @@ class MARLFlockAviary(BaseAviary, MultiAgentEnv):
     #### Returns #######################################################################################
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
-    def _computeReward(self, obs):  # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
+    def _computeReward(self, obs):  
+        # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
         # parse velocity and position
-        vel = np.zeros((1, self.NUM_DRONES, 3))
-        pos = np.zeros((1, self.NUM_DRONES, 3))
+        vel = np.zeros((1, self.NUM_DRONES, 3)); pos = np.zeros((1, self.NUM_DRONES, 3))
         for i in range(self.NUM_DRONES):
-            pos[0][i][0] = obs[str(i)]["state"][0]
-            pos[0][i][1] = obs[str(i)]["state"][1]
-            pos[0][i][2] = obs[str(i)]["state"][2]
-            vel[0][i][0] = obs[str(i)]["state"][10]
-            vel[0][i][1] = obs[str(i)]["state"][11]
-            vel[0][i][2] = obs[str(i)]["state"][12]
+            pos[0,i,:] = obs[str(i)]["state"][0:3]
+            vel[0,i,:] = obs[str(i)]["state"][10:13]
         # compute metrics
         # velocity alignment
         ali = 0

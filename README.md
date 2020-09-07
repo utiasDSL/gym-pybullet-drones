@@ -34,21 +34,22 @@
 Simulation speed-up w.r.t the *wall-clock* when using
 - *Sim-clock 240Hz* PyBullet physics of **EACH** drone
 - **AND** *Sim-clock 48Hz* PID control of **EACH** drone
-- **AND** nearby *obstacles* **AND** a complex *background*
+- **AND** nearby *obstacles* **AND** a mildly complex *background*
 - **AND** *Sim-clock 24Hz*, *64by48 pixel* video capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
 
 |                                  | Lenovo P52 (i7-8850H/Quadro P2000) | MacBook Pro 2020 (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
-| Single drone, **no** vision      |                                    |                               |
-| Single drone **with** vision     |                                    |                               |
-| Multi-drone (10), **no** vision  |                                    |                               |
-| Multi-drone (10) **with** vision |                                    |                               |
+| Single drone, **no** vision      |                                    | 16.8x                         |
+| Single drone **with** vision     |                                    | 1.25x                         |
+| Multi-drone (10), **no** vision  |                                    | 2.28x                         |
+| Multi-drone (10) **with** vision |                                    | 0.1x                          |
 
 The, conscious or not, [cherry picking](https://en.wikipedia.org/wiki/Cherry_picking) of statistics is always a risk..
 
 [Shah et al. (2017)](https://arxiv.org/pdf/1705.05065.pdf), [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf)..
 
 [design principle](https://en.wikipedia.org/wiki/KISS_principle)..
+
 
 
 

@@ -35,7 +35,7 @@ if __name__ == "__main__":
     wp_counters = np.array([ 0, int(NUM_WP/2) ])
     
     #### Initialize the logger #########################################################################
-    logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
+    logger = Logger(logging_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
 
     #### Initialize the controllers ####################################################################    
     ctrl = [DSLPIDControl(env) for i in range(NUM_DRONES)]

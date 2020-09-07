@@ -37,7 +37,7 @@ if __name__ == "__main__":
     TRACE_CTRL_REFERENCE[:,2] = INITIAL_STATE["0"]["state"][2]
     
     #### Initialize the logger #########################################################################
-    logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=2, duration_sec=DURATION_SEC)
+    logger = Logger(logging_freq_hz=SIMULATION_FREQ_HZ, num_drones=2, duration_sec=DURATION_SEC)
 
     #### Initialize the controller #####################################################################
     ctrl = DSLPIDControl(env)

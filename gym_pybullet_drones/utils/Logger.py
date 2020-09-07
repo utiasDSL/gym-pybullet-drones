@@ -15,22 +15,22 @@ class Logger(object):
     #### Initialize the logger #########################################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - simulation_freq_hz (int)         simulation frequency in Hz #################################
+    #### - logging_freq_hz (int)            logging frequency in Hz ####################################
     #### - num_drones (int)                 number of drones ###########################################
     #### - duration_sec (int)               (opt) to preallocate the log arrays, improves performance ##
     ####################################################################################################
-    def __init__(self, simulation_freq_hz: int, num_drones: int=1, duration_sec: int=0):
-        self.SIMULATION_FREQ_HZ = simulation_freq_hz; self.NUM_DRONES = num_drones
+    def __init__(self, logging_freq_hz: int, num_drones: int=1, duration_sec: int=0):
+        self.LOGGING_FREQ_HZ = logging_freq_hz; self.NUM_DRONES = num_drones
         self.PREALLOCATED_ARRAYS = False if duration_sec==0 else True
         self.counters = np.zeros(num_drones)
-        self.timestamps = np.zeros((num_drones, duration_sec*self.SIMULATION_FREQ_HZ))
-        self.states = np.zeros((num_drones, 16, duration_sec*self.SIMULATION_FREQ_HZ)) #### 16 states: pos_x, pos_y, pos_z, 
+        self.timestamps = np.zeros((num_drones, duration_sec*self.LOGGING_FREQ_HZ))
+        self.states = np.zeros((num_drones, 16, duration_sec*self.LOGGING_FREQ_HZ)) #### 16 states: pos_x, pos_y, pos_z, 
                                                                                                         # vel_x, vel_y, vel_z, 
                                                                                                         # roll, pitch, yaw, 
                                                                                                         # ang_vel_x, ang_vel_y, ang_vel_z, 
                                                                                                         # rpm0, rpm1, rpm2, rpm3
         #### Note: this is not the same order nor length returned in obs["i"]["state"] by Aviary.step() ####
-        self.controls = np.zeros((num_drones, 12, duration_sec*self.SIMULATION_FREQ_HZ)) #### 12 control targets: pos_x, pos_y, pos_z,
+        self.controls = np.zeros((num_drones, 12, duration_sec*self.LOGGING_FREQ_HZ)) #### 12 control targets: pos_x, pos_y, pos_z,
                                                                                                                     # vel_x, vel_y, vel_z, 
                                                                                                                     # roll, pitch, yaw, 
                                                                                                                     # ang_vel_x, ang_vel_y, ang_vel_z
@@ -77,7 +77,7 @@ class Logger(object):
         #### Loop over colors and line styles ##############################################################
         plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) + cycler('linestyle', ['-', '--', ':', '-.'])))
         fig, axs = plt.subplots(8,2)
-        t = np.arange(0, self.timestamps.shape[1]/self.SIMULATION_FREQ_HZ, 1/self.SIMULATION_FREQ_HZ)
+        t = np.arange(0, self.timestamps.shape[1]/self.LOGGING_FREQ_HZ, 1/self.LOGGING_FREQ_HZ)
         labels = ['X', 'Y', 'Z', 'VX', 'VY', 'VZ', 'R', 'P', 'Yaw', 'WR', 'WP', 'WY', 'PWM0', 'PWM1', 'PWM2', 'PWM3'] if pwm else ['X', 'Y', 'Z', 'VX', 'VY', 'VZ', 'R', 'P', 'Yaw', 'WR', 'WP', 'WY', 'RPM0', 'RPM1', 'RPM2', 'RPM3']
         for i in range(16):
             for j in range(self.NUM_DRONES):

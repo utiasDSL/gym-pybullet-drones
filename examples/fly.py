@@ -15,11 +15,11 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
-DRONE = DroneModel.HB
-NUM_DRONES = 1
+DRONE = DroneModel.CF2X
+NUM_DRONES = 10
 GUI = True
 PHYSICS = Physics.PYB
-VISION = True
+VISION = False
 RECORD_VIDEO = False
 SIMULATION_FREQ_HZ = 240
 CONTROL_FREQ_HZ = 48
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(NUM_DRONES) ])
     
     #### Initialize the logger #########################################################################
-    logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
+    logger = Logger(logging_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
 
     #### Initialize the controllers ####################################################################    
     ctrl = [DSLPIDControl(env) for i in range(NUM_DRONES)]

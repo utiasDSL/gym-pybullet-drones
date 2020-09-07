@@ -27,58 +27,70 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
 DRONE = DroneModel.CF2X
-NUM_DRONES = 3
 PHYSICS = Physics.PYB
 SIMULATION_FREQ_HZ = 240
+GUI = False
+DEBUG_MARL = False
+PART = 1
+
+LOG = False
+NUM_DRONES = 1
+VISION = False
+AGGREGATE = True
 
 if __name__ == "__main__":
 
-    PART = 1
     ####################################################################################################
     #### Part 1 of 2 of _dev.py: control with CtrlAviary and printout of MARLFlockAviary's RL functions 
     ####################################################################################################
     if PART==1:
 
-        AGGR_PHY_STEPS = 3
-        CONTROL_FREQ_HZ = 48*AGGR_PHY_STEPS
-        DURATION_SEC = 10
+        DURATION_SEC = 1000
+        CONTROL_FREQ_HZ = 48
+        AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
 
         #### Initialize the simulation #####################################################################
         H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
-        env = CtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
-        #env = VisionCtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
-                        freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=False, record=False, obstacles=True)
+        
+        if VISION: 
+            env = VisionCtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
+                        freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=False, obstacles=True)
+        else:
+            env = CtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
+                        freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=False, obstacles=True)
 
         #### Initialize a circular trajectory ##############################################################
-        PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
+        PERIOD = 10; NUM_WP = int(CONTROL_FREQ_HZ)*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
         for i in range(NUM_WP): TARGET_POS[i,:] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0,0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0,1], INIT_XYZS[0,2]  
         wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(NUM_DRONES) ])
         
         #### Initialize the logger #########################################################################
-        logger = Logger(simulation_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES)
+        if LOG: logger = Logger(logging_freq_hz=int(SIMULATION_FREQ_HZ/AGGR_PHY_STEPS), num_drones=NUM_DRONES)
 
         #### Initialize the controllers ####################################################################    
         ctrl = [DSLPIDControl(env) for i in range(NUM_DRONES)]
 
         #### Debug environment used to print out the MARL's problem obs, reward and done ################### 
-        debug_env = MARLFlockAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
+        if NUM_DRONES>1 and DEBUG_MARL:
+            debug_env = MARLFlockAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
                                     freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=False, record=False, obstacles=True)
 
         #### Run the simulation ############################################################################
         CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
         action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) }
         START = time.time(); temp_action = {}
-        for i in range(int(DURATION_SEC*env.SIM_FREQ/AGGR_PHY_STEPS)):
+        for i in range(0, int(DURATION_SEC*env.SIM_FREQ), AGGR_PHY_STEPS):
 
             #### Step the simulation ###########################################################################
             obs, reward, done, info = env.step(action)
 
             #### Debugging MARLFlockAviary's obs, reward and done during a CtrlAviary controlled flight ########
-            print("CtrlAviary obs", obs)
-            marl_obs = {str(i): {"state": debug_env._clipAndNormalizeState(obs[str(i)]["state"]), "neighbors": obs[str(i)]["neighbors"] } for i in range(NUM_DRONES) }
-            print("MARLFlockAviary obs", marl_obs)
-            print("MARLFlockAviary reward", debug_env._computeReward(marl_obs))
-            print("MARLFlockAviary done", debug_env._computeDone(marl_obs))
+            if DEBUG_MARL: 
+                print("CtrlAviary obs", obs)
+                marl_obs = {str(i): {"state": debug_env._clipAndNormalizeState(obs[str(i)]["state"]), "neighbors": obs[str(i)]["neighbors"] } for i in range(NUM_DRONES) }
+                print("MARLFlockAviary obs", marl_obs)
+                print("MARLFlockAviary reward", debug_env._computeReward(marl_obs))
+                print("MARLFlockAviary done", debug_env._computeDone(marl_obs))
             
             #### Compute control at the desired frequency @@@@@#################################################       
             if i%CTRL_EVERY_N_STEPS==0:
@@ -93,13 +105,14 @@ if __name__ == "__main__":
                 for j in range(NUM_DRONES): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
 
             #### Log the simulation ############################################################################
-            for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],0:2], H+j*H_STEP, np.zeros(9) ]))   
+            if LOG: 
+                for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],0:2], H+j*H_STEP, np.zeros(9) ]))   
             
             #### Printout ######################################################################################
-            if i%int(env.SIM_FREQ/5)==0: env.render()
+            if i%int(env.SIM_FREQ)==0: env.render()
             
             #### Sync the simulation ###########################################################################
-            sync(i, START, env.TIMESTEP)   
+            if GUI: sync(i, START, env.TIMESTEP)   
         
         #### Close the environment #########################################################################
         env.close()
