@@ -18,7 +18,8 @@
 |---------------------------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
 |                         *Physics* | PyBullet/*ad hoc*     | FastPhysicsEngine/PhysX                       | *Ad hoc*/Gazebo                                     |
 |                       *Rendering* | PyBullet              | Unreal Engine 4                               | Unity                                               |
-|            *RGB/Depth/Seg. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
+|                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
+|           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |                   *ROS interface* | No                    | **Yes**                                       | **Yes**                                             |
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
