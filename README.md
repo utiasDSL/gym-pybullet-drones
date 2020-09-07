@@ -91,7 +91,7 @@ $ python physics.py
 
 - `_dev.py` is a script continuously updated with the latest features of `gym-pybullet-drones` like RGB, depth and segmentation views from each drone's POV or compatibility with RLlibs's [`MultiAgentEnv`](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical) class and multi-agent algorithms
 
-<img src="files/readme_images/rgb.gif" alt="alt text" width="270"> <img src="files/readme_images/dep.png" alt="alt text" width="270"> <img src="files/readme_images/seg.png" alt="alt text" width="270">
+<img src="files/readme_images/rgb.gif" alt="alt text" width="270"> <img src="files/readme_images/dep.gif" alt="alt text" width="270"> <img src="files/readme_images/seg.gif" alt="alt text" width="270">
 
 
 ## BaseAviary
