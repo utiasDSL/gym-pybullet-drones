@@ -18,12 +18,12 @@
 | ----------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
 | *Physics* | PyBullet/*ad hoc* | FastPhysicsEngine/PhysX | *Ad hoc*/Gazebo |
 | *Rendering* | PyBullet | Unreal Engine 4 | Unity |
-| *RGB/Depth/Seg. views* | Yes | Yes | Yes |
-| *Multi-agent control* | Yes | Yes | Yes |
-| *OpenAI `Gym` interface* | Yes | No | Yes |
-| *RLlib `MultiAgentEnv` interface* | Yes | No | No |
-| *Steppable physics* | Yes | No | Yes |
-| *Aerodynamic effects* | Yes | No | No |
+| *RGB/Depth/Seg. views* | **Yes** | **Yes** | **Yes** |
+| *Multi-agent control* | **Yes** | **Yes** | **Yes** |
+| *Steppable physics* | **Yes** | No | **Yes** |
+| *Aerodynamic effects* | **Yes** | No | No |
+| *OpenAI `Gym` interface* | **Yes** | No | **Yes** |
+| *RLlib `MultiAgentEnv` interface* | **Yes** | No | No |
 
 
 ## Requirements
