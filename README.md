@@ -20,7 +20,7 @@
 | *Rendering* | PyBullet | Unreal Engine 4 | Unity |
 | *RGB/Depth/Seg. views* | **Yes** | **Yes** | **Yes** |
 | *Multi-agent control* | **Yes** | **Yes** | **Yes** |
-| *ROS interface* | No/WIP | WIP | **Yes** |
+| *ROS interface* | No | WIP | **Yes** |
 | *Steppable physics* | **Yes** | No | **Yes** |
 | *Aerodynamic effects* | **Yes** | No | No |
 | *OpenAI `Gym` interface* | **Yes** | No | **Yes** |
