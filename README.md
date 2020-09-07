@@ -45,7 +45,7 @@ Simulation speed-up with respect to the *wall-clock* when using
 | Multi-drone (5) **with** vision  | 0.15x                              | 0.2x                          |
 
 While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics,
-these numbers reflect PyBullet's physics updates that happen at \~5000Hz (faster than [AirSim's 1000Hz](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than Flightmare [simple model's 30000Hz](https://arxiv.org/pdf/2009.00563.pdf))
+these numbers reflect PyBullet's physics updates happening at \~5000Hz (faster than [AirSim's 1000Hz](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than Flightmare [simple model's 30000Hz](https://arxiv.org/pdf/2009.00563.pdf))
 
 The vision information of \~750kB/s (`((64*48*4*8+64*48*32+64*48*16)*24*5*0.2)/8`) is also comparable to Flightmare's (`(32*32*3*240*8)/8`)—which, however, uses more sophisticated [Unity rendering](https://arxiv.org/pdf/2009.00563.pdf)
 
