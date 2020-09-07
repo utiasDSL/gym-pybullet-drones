@@ -40,9 +40,14 @@ Simulation speed-up with respect to the *wall-clock* when using
 |                                  | Lenovo P52 (i7-8850H/Quadro P2000) | MacBook Pro 2020 (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
 | Single drone, **no** vision      | 16.0x                              | 16.8x                         |
-| Single drone **with** vision     | 0.9x                               | 1.3x                          |
 | Multi-drone (10), **no** vision  | 2.1x                               | 2.3x                          |
+| Single drone **with** vision     | 0.9x                               | 1.3x                          |
 | Multi-drone (5) **with** vision  | 0.15x                              | 0.2x                          |
+
+While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics,
+these numbers reflect PyBullet's physics updates that happen at \~5000Hz (faster than AirSim's 1000Hz [Shah et al. (2017)](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than Flightmare simple model's 30000Hz [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf))
+
+The vision info of \~750kB/s `((64*48*4*8+64*48*32+64*48*16)*24*5*0.2)/8` is also comparable to Flightmare's `(32*32*3*240*8)/8` (which uses more sophisticated Unity rendering [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf))
 
 
 
