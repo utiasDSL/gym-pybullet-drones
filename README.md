@@ -31,11 +31,11 @@
 
 
 ## Performance
-Simulation speed-up w.r.t the wall-clock when using
-- *240Hz* PyBullet physics
-- **AND** *48Hz* PID control
+Simulation speed-up w.r.t the *wall-clock* when using
+- *Sim-clock 240Hz* PyBullet physics of **EACH** drone
+- **AND** *Sim-clock 48Hz* PID control of **EACH** drone
 - **AND** nearby *obstacles* **AND** a complex *background*
-- **AND** *24Hz*, *64by48 pixel* video capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
+- **AND** *Sim-clock 24Hz*, *64by48 pixel* video capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
 
 |                                  | Lenovo P52 (i7-8850H/Quadro P2000) | MacBook Pro 2020 (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
@@ -43,6 +43,8 @@ Simulation speed-up w.r.t the wall-clock when using
 | Single drone **with** vision     |                                    |                               |
 | Multi-drone (10), **no** vision  |                                    |                               |
 | Multi-drone (10) **with** vision |                                    |                               |
+
+Even though the, conscious or not, [cherry picking](https://en.wikipedia.org/wiki/Cherry_picking) of statsistics is always a risk
 
 [Shah et al. (2017)](https://arxiv.org/pdf/1705.05065.pdf), [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf), [design principle](https://en.wikipedia.org/wiki/KISS_principle)
 
@@ -158,8 +160,8 @@ A flight arena for one (ore more) quadrotor can be created as child class of `Ba
 >>>       physics: Physics=Physics.PYB, \   # Choice of (PyBullet) physics implementation (remove this comment)
 >>>       freq=240, \                       # Stepping frequency of the simulation (remove this comment)
 >>>       aggregate_phy_steps=1, \          # Number of physics updates within each call to BaseAviary.step() (remove this comment)
->>>       gui=True, \                       # Whether to display PyBullet's GUI (remove this comment)
->>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/files/ (remove this comment)
+>>>       gui=True, \                       # Whether to display PyBullet's GUI, only use this for debbuging (remove this comment)
+>>>       record=False, \                   # Whether to save a .mp4 video (if gui=True) or .png frames (if gui=False) in gym-pybullet-drones/files/, see script /files/ffmpeg_png2mp4.sh for encoding (remove this comment)
 >>>       obstacles=False)                  # Whether to add obstacles to the environment (remove this comment)
 ````
 And instantiated with `gym.make()`—see [`learn.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/learn.py) for an example
