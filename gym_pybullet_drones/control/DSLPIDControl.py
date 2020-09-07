@@ -9,6 +9,12 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
 
 class DSLPIDControl(BaseControl):
 
+    ####################################################################################################
+    #### Initialize the controller #####################################################################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - env (BaseAviary)                 simulation environment #####################################
+    ####################################################################################################
     def __init__(self, env: BaseAviary):
         super().__init__(env=env)
         if self.DRONE_MODEL!=DroneModel.CF2X and self.DRONE_MODEL!=DroneModel.CF2P: print("[ERROR] in DSLPIDControl.__init__(), DSLPIDControl requires DroneModel.CF2X or DroneModel.CF2P"); exit()
@@ -19,12 +25,33 @@ class DSLPIDControl(BaseControl):
         elif self.DRONE_MODEL==DroneModel.CF2P: self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
         self.reset()
 
+    ####################################################################################################
+    #### Reset the controller ##########################################################################
+    ####################################################################################################
     def reset(self):
         super().reset()
         #### Initialized PID control variables #############################################################
         self.last_pos_e = np.zeros(3); self.integral_pos_e = np.zeros(3); self.last_rpy_e = np.zeros(3); self.integral_rpy_e = np.zeros(3)
 
-
+    ####################################################################################################
+    #### Compute the control action for a single drone #################################################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - control_timestep (float)         timestep at which control is computed ######################
+    #### - cur_pos ((3,1) array)            current position ###########################################
+    #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
+    #### - cur_vel ((3,1) array)            current velocity ###########################################
+    #### - cur_ang_vel ((3,1) array)        current angular velocity ###################################
+    #### - target_pos ((3,1) array)         desired position ###########################################
+    #### - target_rpy ((3,1) array)         desired orientation as roll, pitch, yaw ####################
+    #### - target_vel ((3,1) array)         desired velocity ###########################################
+    #### - target_ang_vel ((3,1) array)     desired angular velocity ###################################
+    ####################################################################################################
+    #### Returns #######################################################################################
+    #### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
+    #### - pos_e ((3,1) array)              current XYZ position error #################################
+    #### - yaw_e (float)                    current yaw error ##########################################
+    ####################################################################################################
     def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel, \
                         target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
         self.control_counter += 1

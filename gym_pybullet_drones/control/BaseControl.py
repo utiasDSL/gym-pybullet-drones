@@ -32,7 +32,7 @@ class BaseControl(object):
         self.control_counter = 0
 
     ####################################################################################################
-    #### Wrapper function to compute the control action from obs as returned by Aviary.step() ##########
+    #### Wrapper function to compute the control action from obs as returned by BaseAviary.step() ######
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (float)         timestep at which control is computed ######################
@@ -53,7 +53,7 @@ class BaseControl(object):
                                     target_pos=target_pos, target_vel=target_vel, target_ang_vel=target_ang_vel)
 
     ####################################################################################################
-    #### Compute the control action for a single drone #################################################
+    #### Compute the control action for a single drone, to be implemented in a child class #############
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - control_timestep (float)         timestep at which control is computed ######################
@@ -65,11 +65,6 @@ class BaseControl(object):
     #### - target_rpy ((3,1) array)         desired orientation as roll, pitch, yaw ####################
     #### - target_vel ((3,1) array)         desired velocity ###########################################
     #### - target_ang_vel ((3,1) array)     desired angular velocity ###################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
-    #### - pos_e ((3,1) array)              current XYZ position error #################################
-    #### - yaw_e (float)                    current yaw error ##########################################
     ####################################################################################################
     def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel, \
                         target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
