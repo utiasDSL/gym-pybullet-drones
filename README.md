@@ -36,12 +36,12 @@ Simulation speed-up w.r.t the wall-clock when using
 - **AND** 48Hz PID control
 - **AND** 24Hz, 64by48pixel video capture of 6 channels (RGBA, depth, segm.) on **EACH** drone
 
-|                                   | Lenovo P52 (i7-8850H/Quadro P2000) | MacBook Pro 2020 (i7-1068NG7) |
-| --------------------------------: | :--------------------------------: | :---------------------------: |
-| Single drone, **no** vision       |                                    |                               |
-| Single drone, **with** vision     |                                    |                               |
-| Multi-drone (10), **no** vision   |                                    |                               |
-| Multi-drone (10), **with** vision |                                    |                               |
+|                                  | Lenovo P52 (i7-8850H/Quadro P2000) | MacBook Pro 2020 (i7-1068NG7) |
+| -------------------------------: | :--------------------------------: | :---------------------------: |
+| Single drone, **no** vision      |                                    |                               |
+| Single drone **with** vision     |                                    |                               |
+| Multi-drone (10), **no** vision  |                                    |                               |
+| Multi-drone (10) **with** vision |                                    |                               |
 
 
 
