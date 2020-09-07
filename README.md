@@ -78,6 +78,11 @@ $ python compare.py
 <img src="files/readme_images/trace_comparison.gif" alt="alt text" width="360"> <img src="files/readme_images/trace_comparison.png" alt="alt text" width="450">
 
 - `downwash.py` is a flight script with only 2 drones, to test the downwash model
+```
+$ conda activate myenv                      # If using a conda environment
+$ cd gym-pybullet-drones/examples/
+$ python downwash.py
+```
 
 <img src="files/readme_images/downwash.gif" alt="alt text" width="360"> <img src="files/readme_images/downwash.png" alt="alt text" width="450">
 
@@ -89,13 +94,19 @@ $ python physics.py
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
 
-- `_dev.py` is a script continuously updated with the latest features of `gym-pybullet-drones` like RGB, depth and segmentation views from each drone's POV or compatibility with RLlibs's [`MultiAgentEnv`](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical) class and multi-agent algorithms
+- `_dev.py` is a script continuously updated with the latest features of `gym-pybullet-drones` like RGB, depth and segmentation views from each drone's POV or compatibility with RLlibs's [`MultiAgentEnv`](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical) class
+```
+$ conda activate myenv                      # If using a conda environment
+$ cd gym-pybullet-drones/examples/
+$ python _dev.py
+```
 
 <img src="files/readme_images/rgb.gif" alt="alt text" width="270"> <img src="files/readme_images/dep.gif" alt="alt text" width="270"> <img src="files/readme_images/seg.gif" alt="alt text" width="270">
 
 
 ## BaseAviary
-A `gym.Env` flight arena for one (ore more) quadrotor can be created with `AChildClassOfBaseAviary()`—see [`fly.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/fly.py) for an example
+
+A flight arena for one (ore more) quadrotor can be created as child class of `BaseAviary()`
 ```
 >>> env = BaseAviary( \
 >>>       drone_model=DroneModel.CF2X, \    # See DroneModel Enum class for other quadcopter models (remove this comment)
@@ -105,14 +116,14 @@ A `gym.Env` flight arena for one (ore more) quadrotor can be created with `AChil
 >>>       initial_rpys=None, \              # Initial roll, pitch, and yaw of the drones in radians (remove this comment)
 >>>       physics: Physics=Physics.PYB, \   # Choice of (PyBullet) physics implementation (remove this comment)
 >>>       freq=240, \                       # Stepping frequency of the simulation (remove this comment)
+>>>       aggregate_phy_steps=1, \          # Number of physics updates within each call to BaseAviary.step() (remove this comment)
 >>>       gui=True, \                       # Whether to display PyBullet's GUI (remove this comment)
 >>>       record=False, \                   # Whether to save a .mp4 video in gym-pybullet-drones/files/ (remove this comment)
->>>       problem: Problem=None \           # Choice of reward and done functions in class RLFunctions (remove this comment)
 >>>       obstacles=False)                  # Whether to add obstacles to the environment (remove this comment)
 ````
-Or using `gym.make()`—see [`learn.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/learn.py) for an example
+And instantiated with `gym.make()`—see [`learn.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/learn.py) for an example
 ```
->>> env = gym.make('the-aviary-v1', problem=..)       # See learn.py
+>>> env = gym.make('rl-takeoff-aviary-v0')  # See learn.py
 ```
 Then, the environment can be stepped with
 ```
@@ -128,19 +139,39 @@ Then, the environment can be stepped with
 
 
 ### Action Spaces
-The action space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py)'s containing the desired control inputs
+
+The action space's definition of an environment has to be implemented in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) with function
+```
+>>> def _actionSpace(self):
+>>>     ...
+```
+
+In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) and [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py) the action space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py)'s containing the desired RPMs of each drone
 
 Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
-For all `Physics` implementations—except `PYB_PM` and `PYB_KIN`—these are the rotation speeds of all motors ranging from `0` to `SingleDroneEnv.MAX_RPM`if argument `problem` was not specified in the instantiation of `Aviary()`, or from `-1` to `1` otherwise
+The action space of [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py) has the same structure but the values are expected to be normalized in the `-1` to `1` range
 
+The action space of [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) is a single [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized in the `-1` to `1` range
+
+Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) also needs to implement
+```
+>>> def _preprocessAction(self, action):
+>>>     ...
+```
+[`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py), and [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) all simply clip the inputs to `MAX_RPM`
 
 
 
 ### Observation Spaces
-The observation space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of pairs `{"state": Box(20,), "neighbors": MultiBinary(num_drones)}`
 
-Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
+The observation space's definition of an environment has to be implemented in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) with function
+```
+>>> def _observationSpace(self):
+>>>     ...
+```
+
+In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) the observation space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of pairs `{"state": Box(20,), "neighbors": MultiBinary(num_drones)}`
 
 Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) contains the drone's
 - X, Y, Z position in `WORLD_FRAME` (3 value, meters unless normalized)
@@ -150,65 +181,52 @@ Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) c
 - Angular velocities in `WORLD_FRAME` (3 values, rad/s unless normalized)
 - Motors' speeds (4 values, RPM)
 
-Check [`RLFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) for the mapping from raw simulation data to normalized observations in the `[-1,1]` range (i.e., when `problem is not None`)
-
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
 
-> **Note**: when `num_drones==1`, action and obs spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
+Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
+The observation space of [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py) has the same structure but the values are expected to be normalized in the `-1` to `1` range
 
+The observation space of [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) is a single [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized in the `-1` to `1` range
 
+The observation space of [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py) the observation space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) is the same as[`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) but it also includes additional keys `rgb`, `dep`, and `seg` in each drone's dictionary with `numpy` matrices representing the drones RGB, depth, and segmentation views.
 
-### Reward
-Reward functions can/should be modified in class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py), for example
+To fill the content of these `obs`, each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) needs to implement
 ```
->>> def rewardFunction(self, obs):
->>>     if self.PROBLEM==Problem.DEFAULT:
+>>> def _computeObs(self, action):
 >>>     ...
->>>     elif self.PROBLEM==Problem.CUSTOM:  # Use with: >>> env = Aviary(problem=Problem.CUSTOM)
->>>         height = obs[2]
->>>         if height > 0.5: return 1000
->>>         elif height > 0.1: return 100
->>>         else: return -1
->>>     else: print("[ERROR] unknown user")
 ```
 
 
 
 
-### Done
-Stopping conditions can/should be modified in class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py), for example
+### Reward, done, and info
+`Reward`, `done` and `info` are computed implementing these 3 functions in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
 ```
->>> def doneFunction(self, obs, sim_time):
->>>     if self.PROBLEM==Problem.DEFAULT:
->>>     ...
->>>     elif self.PROBLEM==Problem.CUSTOM:  # Use with: >>> env = Aviary(problem=Problem.CUSTOM)
->>>         x = obs[0]; y = obs[1]; z = obs[2] 
->>>         roll = obs[7]; pitch = obs[8]
->>>         if np.abs(x)>.5 or np.abs(y)>.5 or z>=1 \
->>>                 or np.abs(roll)>np.pi/2 or np.abs(pitch)>np.pi/2 \
->>>                 or sim_time > 5: 
->>>             return True
->>>         else: 
->>>             return False
->>>     else: print("[ERROR] unknown user")
+>>> def _computeReward(self, obs):
+>>>     ...                                 # float or dict of floats
+>>> def _computeDone(self, obs):
+>>>     ...                                 # bool or dict of bools
+>>> def _computeInfo(self, obs):
+>>>     ...                                 # dict or dict of dicts
 ```
+See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py), and [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py) for examples
 
 
 
 
 ### Drag, Ground Effect, and Downwash Models
-Simple drag, ground effect, and downwash models can be included in the simulation initializing `Aviary()` with `physics=Physics.PYB_GND_DRAG_DW`, these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (Eq. 4.2), the analytical model used as a baseline for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (Eq. 15), and [DSL](https://www.dynsyslab.org/vision-news/)'s experimental work
+Simple drag, ground effect, and downwash models can be included in the simulation initializing `AChildOfAviary()` with `physics=Physics.PYB_GND_DRAG_DW`, these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (Eq. 4.2), the analytical model used as a baseline for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (Eq. 15), and [DSL](https://www.dynsyslab.org/vision-news/)'s experimental work
 
-Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in class [`Aviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Aviary.py) for more detail
+Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in class [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) for more detail
 
 
 
 
 ## Control
-Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Control.py) contains implementations of 2 PID controllers to command the quadcopters, for example
+Folder [`control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/) contains implementations of 2 PID controllers: [`DSLPIDControl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/DSLPIDControl.py) and [`SimplePIDControl`]((https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/SimplePIDControl.py))
 ```   
->>> ctrl = [Control(env, control_type=ControlType.PID) for i in range(num_drones)]  # Initialize "num_drones" controllers
+>>> ctrl = [DSLPIDControl(env) for i in range(num_drones)]                          # Initialize "num_drones" controllers
 >>> ...
 >>> for i in range(num_drones):                                                     # Compute control for each drone
 >>>     action[str(i)], _, _ = ctrl[i].computeControlFromState( \                   # Write the action in a dictionary
@@ -221,7 +239,7 @@ Class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/g
 
 
 ## Logger
-Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/Logger.py) contains helper functions to save and plot simulation data, for example
+Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/utils/Logger.py) contains helper functions to save and plot simulation data, for example
 ```
 >>> logger = Logger(simulation_freq_hz=freq, num_drones=num_drones)                 # Initialize the logger
 >>> ...
