@@ -140,19 +140,19 @@ Then, the environment can be stepped with
 
 ### Action Spaces
 
-The action space's definition of an environment has to be implemented in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) with function
+The action space's definition of an environment has to be implemented in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) by function
 ```
 >>> def _actionSpace(self):
 >>>     ...
 ```
 
-In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) and [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), the action space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing the drones' desired RPM
+In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) and [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), it is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing the drones' commanded RPM
 
-Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
+The dictionary's keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
-The action space of [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py) has the same structure but the values are normalized to the `[-1, 1]` range
+The action space of [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py) has the same structure but values are normalized in range `[-1, 1]`
 
-The action space of [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) is a single [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized in the `-1` to `1` range
+The action space of [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) is a single [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized to the `[-1, 1]` range
 
 Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) also needs to implement a preprocessing step
 ```
@@ -165,15 +165,15 @@ Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/bl
 
 ### Observation Spaces
 
-The observation space's definition of an environment has to be implemented in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
+The observation space's definition of an environment must be implemented by every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
 ```
 >>> def _observationSpace(self):
 >>>     ...
 ```
 
-In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), the observation space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of pairs `{"state": Box(20,), "neighbors": MultiBinary(num_drones)}`
+In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), it is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of pairs `{"state": Box(20,), "neighbors": MultiBinary(num_drones)}`
 
-Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
+The dictionary's keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
 Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) contains the drone's
 - X, Y, Z position in `WORLD_FRAME` (3 value, meters unless normalized)
@@ -187,9 +187,9 @@ Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/s
 
 The observation space of [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py) has the same structure but normalized to the `[-1, 1]` range
 
-The observation space of [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) is a single [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized in the `[-1, 1]` range
+The observation space of [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) is a single [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized to the `[-1, 1]` range
 
-The observation space of [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py) is the same as[`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) but it also includes additional keys `rgb`, `dep`, and `seg` (in each drone's dictionary) for the matrices containing the drone's RGB, depth, and segmentation views
+The observation space of [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py) is the same as[`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) but also includes keys `rgb`, `dep`, and `seg` (in each drone's dictionary) for the matrices containing the drone's RGB, depth, and segmentation views
 
 To fill/customize the content of each `obs`, every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) needs to implement
 ```
@@ -201,7 +201,7 @@ To fill/customize the content of each `obs`, every child of [`BaseAviary`](https
 
 
 ### Reward, done, and info
-`Reward`, `done` and `info` are computed implementing these 3 functions in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
+`Reward`, `done` and `info` are computed by the implementation of 3 functions in every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
 ```
 >>> def _computeReward(self, obs):
 >>>     ...                                 # float or dict of floats
