@@ -34,8 +34,8 @@ DEBUG_MARL = False
 PART = 1
 
 LOG = False
-NUM_DRONES = 1
-VISION = False
+NUM_DRONES = 5
+VISION = True
 AGGREGATE = True
 
 if __name__ == "__main__":
