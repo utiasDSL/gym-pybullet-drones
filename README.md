@@ -23,8 +23,8 @@
 |                   *ROS interface* | No                    | WIP                                           | **Yes**                                             |
 |               *Steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | **Yes**               | No                                            | No                                                  |
-|          *OpenAI `Gym` interface* | **Yes**               | No                                            | **Yes**                                             |
-| *RLlib `MultiAgentEnv` interface* | **Yes**               | No                                            | No                                                  |
+|          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) interface* | **Yes** | No | **Yes**                                             |
+| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) interface* | **Yes**  | No | No                           |
 
 
 
