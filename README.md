@@ -37,7 +37,7 @@ Simulation speed-up with respect to the *wall-clock* when using
 - **AND** nearby *obstacles* **AND** a mildly complex *background*
 - **AND** *Sim. clock 24Hz*, *64by48 pixel* video capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
 
-|                                  | Lenovo P52 (i7-8850H/Quadro P2000) | MacBook Pro 2020 (i7-1068NG7) |
+|                                  | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
 | Single drone, **no** vision      | 16.0x                              | 16.8x                         |
 | Multi-drone (10), **no** vision  | 2.1x                               | 2.3x                          |
