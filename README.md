@@ -22,6 +22,7 @@
 | *Multi-agent control* | **Yes** | **Yes** | **Yes** |
 | *Steppable physics* | **Yes** | No | **Yes** |
 | *Aerodynamic effects* | **Yes** | No | No |
+| *ROS interface* | No | WIP | **Yes** |
 | *OpenAI `Gym` interface* | **Yes** | No | **Yes** |
 | *RLlib `MultiAgentEnv` interface* | **Yes** | No | No |
 
