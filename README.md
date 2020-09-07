@@ -12,7 +12,7 @@
 
 
 
-## Features
+## Features Overview
 
 |                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
 | ----------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
