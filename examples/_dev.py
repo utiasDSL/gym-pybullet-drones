@@ -33,9 +33,9 @@ GUI = False
 DEBUG_MARL = False
 PART = 1
 
-LOG = False
-NUM_DRONES = 5
-VISION = True
+LOG = True
+NUM_DRONES = 1
+VISION = False
 AGGREGATE = True
 
 if __name__ == "__main__":
@@ -45,7 +45,7 @@ if __name__ == "__main__":
     ####################################################################################################
     if PART==1:
 
-        DURATION_SEC = 1000
+        DURATION_SEC = 60
         CONTROL_FREQ_HZ = 48
         AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
 
