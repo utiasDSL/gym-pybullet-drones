@@ -14,21 +14,29 @@
 
 ## Overview
 
-|                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
-| ----------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
-| *Physics* | PyBullet/*ad hoc* | FastPhysicsEngine/PhysX | *Ad hoc*/Gazebo |
-| *Rendering* | PyBullet | Unreal Engine 4 | Unity |
-| *RGB/Depth/Seg. views* | **Yes** | **Yes** | **Yes** |
-| *Multi-agent control* | **Yes** | **Yes** | **Yes** |
-| *ROS interface* | No | WIP | **Yes** |
-| *Steppable physics* | **Yes** | No | **Yes** |
-| *Aerodynamic effects* | **Yes** | No | No |
-| *OpenAI `Gym` interface* | **Yes** | No | **Yes** |
-| *RLlib `MultiAgentEnv` interface* | **Yes** | No | No |
+|                                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
+|---------------------------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
+|                         *Physics* | PyBullet/*ad hoc*     | FastPhysicsEngine/PhysX                       | *Ad hoc*/Gazebo                                     |
+|                       *Rendering* | PyBullet              | Unreal Engine 4                               | Unity                                               |
+|            *RGB/Depth/Seg. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
+|             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
+|                   *ROS interface* | No                    | WIP                                           | **Yes**                                             |
+|               *Steppable physics* | **Yes**               | No                                            | **Yes**                                             |
+|             *Aerodynamic effects* | **Yes**               | No                                            | No                                                  |
+|          *OpenAI `Gym` interface* | **Yes**               | No                                            | **Yes**                                             |
+| *RLlib `MultiAgentEnv` interface* | **Yes**               | No                                            | No                                                  |
+
+
+
+
+## Performance
+..
+
+
 
 
 ## Requirements
-The repo was written using Python 3.7.6 on macOS 10.15 and tested on Ubuntu 18.04
+The repo was written using *Python 3.7.6* on *macOS 10.15* and tested on *Ubuntu 18.04.05*
 
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [`rllib`](https://docs.ray.io/en/master/rllib.html) and [`ffmpeg`](https://ffmpeg.org) (for video recording only)
@@ -123,8 +131,9 @@ $ python _dev.py
 <img src="files/readme_images/rgb.gif" alt="alt text" width="270"> <img src="files/readme_images/dep.gif" alt="alt text" width="270"> <img src="files/readme_images/seg.gif" alt="alt text" width="270">
 
 
-## BaseAviary
 
+
+## BaseAviary
 A flight arena for one (ore more) quadrotor can be created as child class of `BaseAviary()`
 ```
 >>> env = BaseAviary( \
@@ -158,13 +167,11 @@ Then, the environment can be stepped with
 
 
 ### Action Spaces
-
 The action space's definition of an environment has to be implemented in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) by function
 ```
 >>> def _actionSpace(self):
 >>>     ...
 ```
-
 In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) and [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), it is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing the drones' commanded RPM
 
 The dictionary's keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
@@ -173,7 +180,7 @@ The action space of [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybulle
 
 The action space of [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) is a single [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized to the `[-1, 1]` range
 
-Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) also needs to implement a preprocessing step
+Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) also needs to implement a preprocessing step translating actions into RPMs
 ```
 >>> def _preprocessAction(self, action):
 >>>     ...
@@ -183,13 +190,11 @@ Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/bl
 
 
 ### Observation Spaces
-
 The observation space's definition of an environment must be implemented by every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
 ```
 >>> def _observationSpace(self):
 >>>     ...
 ```
-
 In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), it is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of pairs `{"state": Box(20,), "neighbors": MultiBinary(num_drones)}`
 
 The dictionary's keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
