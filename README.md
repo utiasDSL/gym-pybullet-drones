@@ -44,9 +44,11 @@ Simulation speed-up w.r.t the *wall-clock* when using
 | Multi-drone (10), **no** vision  |                                    |                               |
 | Multi-drone (10) **with** vision |                                    |                               |
 
-Even though the, conscious or not, [cherry picking](https://en.wikipedia.org/wiki/Cherry_picking) of statistics is always a risk
+The, conscious or not, [cherry picking](https://en.wikipedia.org/wiki/Cherry_picking) of statistics is always a risk..
 
-[Shah et al. (2017)](https://arxiv.org/pdf/1705.05065.pdf), [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf), [design principle](https://en.wikipedia.org/wiki/KISS_principle)
+[Shah et al. (2017)](https://arxiv.org/pdf/1705.05065.pdf), [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf)..
+
+[design principle](https://en.wikipedia.org/wiki/KISS_principle)..
 
 
 
