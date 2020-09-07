@@ -21,7 +21,7 @@
 |            *RGB/Depth/Seg. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |                   *ROS interface* | No                    | **Yes**                                       | **Yes**                                             |
-|               *Steppable physics* | **Yes**               | No                                            | **Yes**                                             |
+|         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
 |          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) interface* | **Yes** | No | **Yes**                                             |
 | *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) interface* | **Yes**  | No | No                           |
