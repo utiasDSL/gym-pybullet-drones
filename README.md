@@ -10,6 +10,22 @@
 - Suggestions and corrections are very welcome in the form of [issues](https://github.com/JacopoPan/gym-pybullet-drones/issues) and [pull requests](https://github.com/JacopoPan/gym-pybullet-drones/pulls), respectively
 
 
+
+
+## Features
+
+|                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
+| ----------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
+| *Physics* | PyBullet/*ad hoc* | FastPhysicsEngine/PhysX | *Ad hoc*/Gazebo |
+| *Rendering* | PyBullet | Unreal Engine 4 | Unity |
+| *RGB/Depth/Seg. views* | Yes | Yes | Yes |
+| *Multi-agent control* | Yes | Yes | Yes |
+| *OpenAI `Gym` interface* | Yes | No | Yes |
+| *RLlib `MultiAgentEnv` interface* | Yes | No | No |
+| *Steppable physics* | Yes | No | Yes |
+| *Aerodynamic effects* | Yes | No | No |
+
+
 ## Requirements
 The repo was written using Python 3.7.6 on macOS 10.15: major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [`rllib`](https://docs.ray.io/en/master/rllib.html) and [`ffmpeg`](https://ffmpeg.org) (only used for video recording)
