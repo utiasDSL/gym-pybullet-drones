@@ -44,17 +44,9 @@ $ pip install -e .
 
 
 ## Use
-There are 4 main scripts in `examples/`: `compare.py`, `fly.py`, `learn.py`, and `physics.py`
+There are 2 basic scripts in `examples/`: `fly.py` and `learn.py`
 
-- `compare.py` replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/example_trace.pkl)
-```
-$ conda activate myenv                      # If using a conda environment
-$ cd gym-pybullet-drones/examples/
-$ python compare.py
-```
-<img src="files/readme_images/trace_comparison.gif" alt="alt text" width="360"> <img src="files/readme_images/trace_comparison.png" alt="alt text" width="450">
-
-- `fly.py` runs an independent flight **using PID control** implemented in class [`Control`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/envs/Control.py)
+- `fly.py` runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
@@ -66,10 +58,6 @@ $ python fly.py
 
 <img src="files/readme_images/crash.gif" alt="alt text" width="360"> <img src="files/readme_images/crash.png" alt="alt text" width="450">
 
-> **Note**: `downwash.py` is a flight script with only 2 drones, to test the downwash model
-
-<img src="files/readme_images/downwash.gif" alt="alt text" width="360"> <img src="files/readme_images/downwash.png" alt="alt text" width="450">
-
 - `learn.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
 $ conda activate myenv                      # If using a conda environment
@@ -79,6 +67,20 @@ $ python learn.py
 <img src="files/readme_images/learn1.gif" alt="alt text" width="400"> <img src="files/readme_images/learn2.gif" alt="alt text" width="400">
 <img src="files/readme_images/learn3.gif" alt="alt text" width="400"> <img src="files/readme_images/learn4.gif" alt="alt text" width="400">
 
+Other scripts in folder `examples/` are:
+
+- `compare.py` which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/example_trace.pkl)
+```
+$ conda activate myenv                      # If using a conda environment
+$ cd gym-pybullet-drones/examples/
+$ python compare.py
+```
+<img src="files/readme_images/trace_comparison.gif" alt="alt text" width="360"> <img src="files/readme_images/trace_comparison.png" alt="alt text" width="450">
+
+- `downwash.py` is a flight script with only 2 drones, to test the downwash model
+
+<img src="files/readme_images/downwash.gif" alt="alt text" width="360"> <img src="files/readme_images/downwash.png" alt="alt text" width="450">
+
 - `physics.py` is an accessory script that can be used to understand PyBullet's force and torque APIs for different [URDF links](http://wiki.ros.org/urdf/XML/link) in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
 $ conda activate myenv                      # If using a conda environment
@@ -87,11 +89,15 @@ $ python physics.py
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
 
+- `_dev.py` is a script continuously updated with the latest features of `gym-pybullet-drones` like RGB, depth and segmentation views from each drone's POV or compatibility with RLlibs's [`MultiAgentEnv`](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical) class and multi-agent algorithms
 
-## Aviary
-A `gym.Env` flight arena for one (ore more) quadrotor can be created with `Aviary()`—see [`fly.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/fly.py) for an example
+<img src="files/readme_images/rgb.gif" alt="alt text" width="270"> <img src="files/readme_images/dep.png" alt="alt text" width="270"> <img src="files/readme_images/seg.png" alt="alt text" width="270">
+
+
+## BaseAviary
+A `gym.Env` flight arena for one (ore more) quadrotor can be created with `AChildClassOfBaseAviary()`—see [`fly.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/fly.py) for an example
 ```
->>> env = Aviary( \
+>>> env = BaseAviary( \
 >>>       drone_model=DroneModel.CF2X, \    # See DroneModel Enum class for other quadcopter models (remove this comment)
 >>>       num_drones=1, \                   # Number of drones (remove this comment)
 >>>       visibility_radius=np.inf, \       # Distance at which drones are considered neighbors, only used for multiple drones (remove this comment)
@@ -121,7 +127,7 @@ Then, the environment can be stepped with
 
 
 
-### Action Space
+### Action Spaces
 The action space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py)'s containing the desired control inputs
 
 Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
@@ -131,7 +137,7 @@ For all `Physics` implementations—except `PYB_PM` and `PYB_KIN`—these are th
 
 
 
-### Observation Space
+### Observation Spaces
 The observation space is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of pairs `{"state": Box(20,), "neighbors": MultiBinary(num_drones)}`
 
 Keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
@@ -149,12 +155,6 @@ Check [`RLFunctions.clipAndNormalizeState()`](https://github.com/JacopoPan/gym-p
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system adjacency matrix
 
 > **Note**: when `num_drones==1`, action and obs spaces are simplified to [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) and [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), respectively 
-
-
-
-
-## RLFunctions
-Class [`RLFunctions`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLFunctions.py) contains implementations of *reward*, *done*, and *normalization* functions that can be selected when create an environment with `problem=Problem.YOURCHOICE`
 
 
 
