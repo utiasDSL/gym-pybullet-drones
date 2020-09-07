@@ -16,7 +16,7 @@
 
 |                                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
 |---------------------------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
-|                         *Physics* | PyBullet/*ad hoc*     | FastPhysicsEngine/PhysX                       | *Ad hoc*/Gazebo                                     |
+|                         *Physics* | PyBullet              | FastPhysicsEngine/PhysX                       | *Ad hoc*/Gazebo                                     |
 |                       *Rendering* | PyBullet              | Unreal Engine 4                               | Unity                                               |
 |                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
 |           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
