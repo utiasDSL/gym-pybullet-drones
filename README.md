@@ -43,7 +43,7 @@ Simulation speed-up w.r.t the wall-clock when using
 | Multi-drone (10), **no** vision  |                                    |                               |
 | Multi-drone (10) **with** vision |                                    |                               |
 
-[Shah et al. (2017)](https://arxiv.org/pdf/1705.05065.pdf), [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf)
+[Shah et al. (2017)](https://arxiv.org/pdf/1705.05065.pdf), [Song et al. (2020)](https://arxiv.org/pdf/2009.00563.pdf), [design principle](https://en.wikipedia.org/wiki/KISS_principle)
 
 
 
