@@ -116,7 +116,7 @@ class MARLFlockAviary(BaseAviary, MultiAgentEnv):
                     ali += (d / (linear_vel_norm[:, i] + EPSILON) / (linear_vel_norm[:, j] + EPSILON))
         ali /= (self.NUM_DRONES * (self.NUM_DRONES - 1))
         # flocking speed
-        cof_v = np.mean(vel, axis=1)  # centre of flock speed
+        cof_v = np.mean(vel, axis=1)  # center of flock speed
         avg_flock_linear_speed = np.linalg.norm(cof_v, axis=-1)
         # spacing
         whole_flock_spacing = []

@@ -35,7 +35,7 @@ class BaseControl(object):
     #### Wrapper function to compute the control action from obs as returned by BaseAviary.step() ######
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - control_timestep (float)         timestep at which control is computed ######################
+    #### - control_timestep (float)         time step at which control is computed #####################
     #### - state ((20,1) array)             current state of the drone #################################
     #### - target_pos ((3,1) array)         desired position ###########################################
     #### - target_rpy ((3,1) array)         desired orientation as roll, pitch, yaw ####################
@@ -56,7 +56,7 @@ class BaseControl(object):
     #### Compute the control action for a single drone, to be implemented in a child class #############
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - control_timestep (float)         timestep at which control is computed ######################
+    #### - control_timestep (float)         time step at which control is computed #####################
     #### - cur_pos ((3,1) array)            current position ###########################################
     #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
     #### - cur_vel ((3,1) array)            current velocity ###########################################

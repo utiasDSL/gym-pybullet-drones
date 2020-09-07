@@ -52,12 +52,12 @@ if __name__ == "__main__":
         #### Compute control at the desired frequency @@@@@#################################################       
         if i%CTRL_EVERY_N_STEPS==0:
 
-            #### Compute control for the current waypoint ######################################################
+            #### Compute control for the current way point #####################################################
             for j in range(NUM_DRONES): 
                 action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"], \
                                                                             target_pos=np.hstack([ TARGET_POS[wp_counters[j],:], INIT_XYZS[j,2] ]))
 
-            #### Go to the next waypoint and loop ##############################################################
+            #### Go to the next way point and loop #############################################################
             for j in range(NUM_DRONES): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
 
         #### Log the simulation ############################################################################

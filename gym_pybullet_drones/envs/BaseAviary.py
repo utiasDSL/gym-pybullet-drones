@@ -284,7 +284,7 @@ class BaseAviary(gym.Env):
         return rgb, dep, seg
 
     ####################################################################################################
-    #### Compute the adjacency matrix of a multidrone system using VISIBILITY_RADIUS ###################
+    #### Compute the adjacency matrix of a multi-drone system using VISIBILITY_RADIUS ##################
     ####################################################################################################
     #### Returns #######################################################################################
     #### - adj_mat ((NUM_DRONES,NUM_DRONES) array)    adj_mat[i,j]=1 if i,j are neighbors, 0 otherwise #

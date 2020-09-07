@@ -37,7 +37,7 @@ class SimplePIDControl(BaseControl):
     #### Compute the control action for a single drone #################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - control_timestep (float)         timestep at which control is computed ######################
+    #### - control_timestep (float)         time step at which control is computed #####################
     #### - cur_pos ((3,1) array)            current position ###########################################
     #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
     #### - cur_vel ((3,1) array)            current velocity ###########################################
@@ -65,7 +65,7 @@ class SimplePIDControl(BaseControl):
     #### Generic PID position control (with yaw locked to 0.) ##########################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - control_timestep (float)         timestep at which control is computed ######################
+    #### - control_timestep (float)         time step at which control is computed #####################
     #### - cur_pos ((3,1) array)            current position ###########################################
     #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
     #### - target_pos ((3,1) array)         desired position ###########################################
@@ -99,7 +99,7 @@ class SimplePIDControl(BaseControl):
     #### Generic PID attitude control (with yaw locked to 0.) ##########################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - control_timestep (float)         timestep at which control is computed ######################
+    #### - control_timestep (float)         time step at which control is computed #####################
     #### - thrust (float)                   desired thrust along the drone z-axis ######################
     #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
     #### - target_rpy ((3,1) array)         computed target roll, pitch, and yaw #######################
