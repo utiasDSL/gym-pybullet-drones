@@ -81,6 +81,7 @@ class BaseAviary(gym.Env):
         # self.MAX_A = self.MAX_THRUST/self.M; self.MAX_V = self.MAX_SPEED_KMH*(1000/60**2)
         #### Connect to PyBullet ###########################################################################
         if self.GUI: 
+            #### With debug GUI ################################################################################
             self.CLIENT = p.connect(p.GUI)
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]: p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
             p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=-30, cameraPitch=-30, cameraTargetPosition=[0,0,0], physicsClientId=self.CLIENT) 
@@ -90,9 +91,10 @@ class BaseAviary(gym.Env):
             for i in range(4): self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
             self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
         else: 
+            #### Without debug GUI #############################################################################
             self.CLIENT = p.connect(p.DIRECT) 
-            #### Set the camera parameters to save frames in DIRECT mode ########################################
             if self.RECORD: 
+                #### Set the camera parameters to save frames in DIRECT mode #######################################
                 self.VID_WIDTH=int(640); self.VID_HEIGHT=int(480); self.FRAME_PER_SEC = 24; self.CAPTURE_FREQ = int(self.SIM_FREQ/self.FRAME_PER_SEC)
                 self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(distance=3, yaw=-30, pitch=-30, roll=0, cameraTargetPosition=[0,0,0], upAxisIndex=2, physicsClientId=self.CLIENT) 
                 self.CAM_PRO = p.computeProjectionMatrixFOV(fov=60.0, aspect=self.VID_WIDTH/self.VID_HEIGHT, nearVal=0.1, farVal=1000.0)
@@ -113,7 +115,7 @@ class BaseAviary(gym.Env):
     #### Reset the environment #########################################################################
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - obs (..)                         initial observation, Dict() for multidrones, Box() for 1 ###
+    #### - obs (..)                         initial observation, see _computeObs() in the child class ##
     ####################################################################################################
     def reset(self):
         p.resetSimulation(physicsClientId=self.CLIENT)
@@ -129,13 +131,13 @@ class BaseAviary(gym.Env):
     #### Advance the environment by one simulation step ################################################
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - action (..)                      motors' speed (or commanded a, v), as Dict() or Box() ######
+    #### - action (..)                      to motors' speed, see _preprocessAction() in the child class
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - obs (..)                         initial observation, Dict() for multidrones, Box() for 1 ###
-    #### - reward (..)                      reward value, Dict() for multidrones, float for 1 ##########
-    #### - done (..)                        whether the current episode is over, Dict() or bool ########
-    #### - info (Dict)                      currently unused ###########################################
+    #### - obs (..)                         observation, see _computeObs() in the child class ##########
+    #### - reward (..)                      reward value, see _computeReward() in the child class ######
+    #### - done (..)                        whether the current episode is over, see computeDone() #####
+    #### - info (Dict)                      currently unused, see _computeInfo() in the child class ####
     ####################################################################################################
     def step(self, action):
         #### Save a video frame in PNG format if RECORD=True and GUI=False #################################
@@ -156,9 +158,9 @@ class BaseAviary(gym.Env):
             for i in range(4): self.gui_input[i] = p.readUserDebugParameter(int(self.SLIDERS[i]), physicsClientId=self.CLIENT)
             clipped_action = np.tile(self.gui_input,(self.NUM_DRONES,1))
             if self.step_counter%(self.SIM_FREQ/2)==0: self.GUI_INPUT_TEXT = [ p.addUserDebugText("Using GUI RPM", textPosition=[0,0,0], textColorRGB=[1,0,0], lifeTime=1, textSize=2, parentObjectUniqueId=self.DRONE_IDS[i], parentLinkIndex=-1, replaceItemUniqueId=int(self.GUI_INPUT_TEXT[i]), physicsClientId=self.CLIENT) for i in range(self.NUM_DRONES) ]
-        #### Denormalize (if necessary) and clip the action to the maximum RPM #############################
+        #### Save, preprocess, and clip the action to the maximum RPM ######################################
         else: self._saveLastAction(action); clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES,4))
-        #### For as many as the aggregate physics steps/dynamics updates ###################################
+        #### Repeata for as many as the aggregate physics steps/dynamics updates ###########################
         for _ in range(self.AGGR_PHY_STEPS):
             #### Step the simulation using the desired physics update ##########################################
             for i in range (self.NUM_DRONES):
@@ -222,7 +224,7 @@ class BaseAviary(gym.Env):
         return self.DRONE_IDS
 
     ####################################################################################################
-    #### Housekeeping shared by the __init__() and reset() functions ###################################
+    #### Housekeeping of variables and PyBullet's parameters/objects in the reset() function ###########
     ####################################################################################################
     def _housekeeping(self):
         #### Initialize/reset counters and zero-valued variables ###########################################
@@ -249,7 +251,7 @@ class BaseAviary(gym.Env):
     #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - state (Box (20,))                the state vector of the nth drone ##########################
+    #### - state ((20,) array)              the state vector of the nth drone ##########################
     ####################################################################################################
     def _getDroneState(self, nth_drone):
         pos, quat = p.getBasePositionAndOrientation(self.DRONE_IDS[nth_drone], physicsClientId=self.CLIENT)
@@ -265,9 +267,9 @@ class BaseAviary(gym.Env):
     #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
     ####################################################################################################
     #### Returns #######################################################################################
-    #### - 
-    #### - 
-    #### - 
+    #### - rgb ((h,w,4) array)              RBG(A) image captured from the nth_drone's POV #############
+    #### - dep ((h,w) array)                depth image captured from the nth_drone's POV ##############
+    #### - seg ((h,w) array)                segmentation image captured from the nth_drone's POV #######
     ####################################################################################################
     def _getDroneImages(self, nth_drone):
         if self.IMG_RES is None: print("[ERROR] in BaseAviary._getDroneImages(), remember to set self.IMG_RES to np.array([width, height])"); exit()
@@ -416,10 +418,10 @@ class BaseAviary(gym.Env):
         return np.where(action <= 0, (action+1)*self.HOVER_RPM, action*self.MAX_RPM) # Non-linear mapping: -1 -> 0, 0 -> HOVER_RPM, 1 -> MAX_RPM
 
     ####################################################################################################
-    #### 
+    #### Save an action into self.last_action disambiguating between array and dict inputs #############
     ####################################################################################################
     #### Arguments #####################################################################################
-    #### - action ((4,1) array)             ..
+    #### - action ((4,1) array or dict)     an array or a dict of arrays to be stored in last_action ###
     ####################################################################################################
     def _saveLastAction(self, action):
         if isinstance(action, collections.Mapping):
@@ -463,26 +465,56 @@ class BaseAviary(gym.Env):
         return M, L, THRUST2WEIGHT_RATIO, J, J_INV, KF, KM, COLLISION_H, COLLISION_R, COLLISION_Z_OFFSET, MAX_SPEED_KMH, GND_EFF_COEFF, PROP_RADIUS, DRAG_COEFF, DW_COEFF_1, DW_COEFF_2, DW_COEFF_3
 
     ####################################################################################################
-    #### 
+    #### Return the action space of the environment, to be implemented in a child class ################
     ####################################################################################################
     def _actionSpace(self):
         raise NotImplementedError
 
+    ####################################################################################################
+    #### Return the observation space of the environment, to be implemented in a child class ###########
+    ####################################################################################################
     def _observationSpace(self):
         raise NotImplementedError
 
+    ####################################################################################################
+    #### Return the current observation of the environment, to be implemented in a child class #########
+    ####################################################################################################
     def _computeObs(self):
         raise NotImplementedError
 
+    ####################################################################################################
+    #### Preprocess the action passed to .step() into motors' RPMs, to be implemented in a child class #
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - action (..)                      input to the environment's .step() function ################
+    ####################################################################################################
     def _preprocessAction(self, action):
         raise NotImplementedError
 
+    ####################################################################################################
+    #### Compute the current reward value(s), to be implemented in a child class #######################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - obs (..)                         the return of _computeObs() ################################
+    ####################################################################################################
     def _computeReward(self, obs):
         raise NotImplementedError
 
+    ####################################################################################################
+    #### Compute the current done value(s), to be implemented in a child class #########################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - obs (..)                         the return of _computeObs() ################################
+    ####################################################################################################
     def _computeDone(self, obs):
         raise NotImplementedError
 
+    ####################################################################################################
+    #### Compute the current info dict(s), to be implemented in a child class ##########################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - obs (..)                         the return of _computeObs() ################################
+    ####################################################################################################
     def _computeInfo(self, obs):
         raise NotImplementedError
 
