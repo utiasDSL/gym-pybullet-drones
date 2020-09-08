@@ -22,6 +22,7 @@
 |           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |                   *ROS interface* | No                    | **Yes**                                       | **Yes**                                             |
+|            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
 |          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) interface* | **Yes** | No | **Yes**                                             |
@@ -31,7 +32,7 @@
 
 
 ## Performance
-Simulation speed-up with respect to the *wall-clock* when using
+Simulation **speed-up with respect to the wall-clock** when using
 - *240Hz* (in simulation clock) PyBullet physics for **EACH** drone
 - **AND** *48Hz* (in simulation clock) PID control of **EACH** drone
 - **AND** nearby *obstacles* **AND** a mildly complex *background* (see .GIFs)
