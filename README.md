@@ -50,7 +50,7 @@ Simulation speed-up with respect to the *wall-clock* when using
 While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics,
 these numbers reflect PyBullet's physics updates happening at \~5000Hz (faster than [AirSim's 1000Hz](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than Flightmare [simple model's 30000Hz](https://arxiv.org/pdf/2009.00563.pdf))
 
-Multi-agent video capture at \~750kB/s with CPU rendering (`((64*48*4*8+64*48*32+64*48*16)*24*5*0.2)/8`) is comparable to Flightmare's (`(32*32*3*240*8)/8`) performance—yet, on more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and, on Ubuntu, up to an order of magnitude faster with GPU accelration
+Multi-agent video capture at \~750kB/s with CPU rendering (`((64*48*4*8+64*48*32+64*48*16)*24*5*0.2)/8`) is comparable to Flightmare's 240 frames/sec (`(32*32*3*240*8)/8`)—although on more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and, on Ubuntu, up to an order of magnitude faster with OpenGL rendering and GPU acceleration
 
 
 
