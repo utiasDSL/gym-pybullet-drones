@@ -48,7 +48,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 > \*\*\* **on Ubuntu only, uncomment the line after `self.CLIENT = p.connect(p.DIRECT)` in `BaseAviary.py`**
 
-> While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, this entails CPU-only PyBullet's physics updates at \~5000Hz (faster than [AirSim's 1000Hz](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than the [30000Hz Flightmare's simple model](https://arxiv.org/pdf/2009.00563.pdf))
+> While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, this entails CPU-only PyBullet's physics updates at \~5000Hz (faster than [AirSim's 1000Hz](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than the [30000Hz of Flightmare's simple model](https://arxiv.org/pdf/2009.00563.pdf))
 
 > Multi-agent 6-ch. video capture at \~750kB/s with CPU rendering (`(64*48)*(4+4+2)*24*5*0.2`) is comparable to [Flightmare's 240 RGB frames/s](https://arxiv.org/pdf/2009.00563.pdf) (`(32*32)*3*240`)—although on more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and up to an order of magnitude faster on Ubuntu, with OpenGL rendering
 
