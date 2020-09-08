@@ -45,7 +45,7 @@ if __name__ == "__main__":
     ####################################################################################################
     if PART==1:
 
-        DURATION_SEC = 60
+        DURATION_SEC = 15
         CONTROL_FREQ_HZ = 48
         AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
 
