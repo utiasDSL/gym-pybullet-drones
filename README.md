@@ -157,18 +157,18 @@ $ python _dev.py
 ## BaseAviary
 A flight arena for one (ore more) quadrotor can be created as child class of `BaseAviary()`
 ```
->>> env = BaseAviary( \
->>>       drone_model=DroneModel.CF2X, \    # See DroneModel Enum class for other quadcopter models (remove this comment)
->>>       num_drones=1, \                   # Number of drones (remove this comment)
->>>       visibility_radius=np.inf, \       # Distance at which drones are considered neighbors, only used for multiple drones (remove this comment)
->>>       initial_xyzs=None, \              # Initial XYZ positions of the drones (remove this comment)
->>>       initial_rpys=None, \              # Initial roll, pitch, and yaw of the drones in radians (remove this comment)
->>>       physics: Physics=Physics.PYB, \   # Choice of (PyBullet) physics implementation (remove this comment)
->>>       freq=240, \                       # Stepping frequency of the simulation (remove this comment)
->>>       aggregate_phy_steps=1, \          # Number of physics updates within each call to BaseAviary.step() (remove this comment)
->>>       gui=True, \                       # Whether to display PyBullet's GUI, only use this for debbuging (remove this comment)
->>>       record=False, \                   # Whether to save a .mp4 video (if gui=True) or .png frames (if gui=False) in gym-pybullet-drones/files/, see script /files/ffmpeg_png2mp4.sh for encoding (remove this comment)
->>>       obstacles=False)                  # Whether to add obstacles to the environment (remove this comment)
+>>> env = BaseAviary( 
+>>>       drone_model=DroneModel.CF2X,      # See DroneModel Enum class for other quadcopter models 
+>>>       num_drones=1,                     # Number of drones 
+>>>       visibility_radius=np.inf,         # Distance at which drones are considered neighbors, only used for multiple drones 
+>>>       initial_xyzs=None,                # Initial XYZ positions of the drones
+>>>       initial_rpys=None,                # Initial roll, pitch, and yaw of the drones in radians 
+>>>       physics: Physics=Physics.PYB,     # Choice of (PyBullet) physics implementation 
+>>>       freq=240,                         # Stepping frequency of the simulation
+>>>       aggregate_phy_steps=1,            # Number of physics updates within each call to BaseAviary.step()
+>>>       gui=True,                         # Whether to display PyBullet's GUI, only use this for debbuging
+>>>       record=False,                     # Whether to save a .mp4 video (if gui=True) or .png frames (if gui=False) in gym-pybullet-drones/files/, see script /files/ffmpeg_png2mp4.sh for encoding
+>>>       obstacles=False)                  # Whether to add obstacles to the environment
 ````
 And instantiated with `gym.make()`—see [`learn.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/learn.py) for an example
 ```
@@ -276,9 +276,9 @@ Folder [`control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/
 >>> ctrl = [DSLPIDControl(env) for i in range(num_drones)]                          # Initialize "num_drones" controllers
 >>> ...
 >>> for i in range(num_drones):                                                     # Compute control for each drone
->>>     action[str(i)], _, _ = ctrl[i].computeControlFromState( \                   # Write the action in a dictionary
->>>                                    control_timestep=env.TIMESTEP, \
->>>                                    state=obs[str(i)]["state"], \
+>>>     action[str(i)], _, _ = ctrl[i].computeControlFromState(.                    # Write the action in a dictionary
+>>>                                    control_timestep=env.TIMESTEP,
+>>>                                    state=obs[str(i)]["state"],
 >>>                                    target_pos=TARGET_POS)
 ```
 
@@ -291,9 +291,9 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 >>> logger = Logger(logging_freq_hz=freq, num_drones=num_drones)                    # Initialize the logger
 >>> ...
 >>> for i in range(NUM_DRONES):             # Log information for each drone
->>>     logger.log(drone=i, \
->>>                timestamp=K/env.SIM_FREQ, \
->>>                state= obs[str(i)]["state"], \
+>>>     logger.log(drone=i,
+>>>                timestamp=K/env.SIM_FREQ,
+>>>                state= obs[str(i)]["state"],
 >>>                control=np.hstack([ TARGET_POS, np.zeros(9) ]))   
 >>> ...
 >>> logger.save()                           # Save data to file
