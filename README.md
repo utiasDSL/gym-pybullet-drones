@@ -39,13 +39,13 @@ Simulation speed-up with respect to the *wall-clock* when using
 
 |                                  | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
-| Rendering                        | OpenGL\*                           | CPU-based TinyRenderer        | 
+| Rendering                        | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
 | Single drone, **no** vision      | 15.5x                              | 16.8x                         |
 | Single drone **with** vision     | 10.8x                              | 1.3x                          |
 | Multi-drone (10), **no** vision  | 2.1x                               | 2.3x                          |
 | Multi-drone (5) **with** vision  | 2.5x                               | 0.2x                          |
 
-> \* **on Ubuntu only, uncomment the line after `self.CLIENT = p.connect(p.DIRECT)` in `BaseAviary.py`**
+> \*\*\* **on Ubuntu only, uncomment the line after `self.CLIENT = p.connect(p.DIRECT)` in `BaseAviary.py`**
 
 While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics,
 these numbers reflect PyBullet's physics updates happening at \~5000Hz (faster than [AirSim's 1000Hz](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than Flightmare [simple model's 30000Hz](https://arxiv.org/pdf/2009.00563.pdf))
