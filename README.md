@@ -39,18 +39,18 @@ Simulation speed-up with respect to the *wall-clock* when using
 
 |                                  | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
-|                                  | OpenGL rendering\*                 | CPU TinyRenderer              | 
+| Rendering                        | OpenGL\*                           | CPU-based TinyRenderer        | 
 | Single drone, **no** vision      | 15.5x                              | 16.8x                         |
 | Single drone **with** vision     | 10.8x                              | 1.3x                          |
 | Multi-drone (10), **no** vision  | 2.1x                               | 2.3x                          |
 | Multi-drone (5) **with** vision  | 2.5x                               | 0.2x                          |
 
-\* on Ubuntu only, uncomment the line after `self.CLIENT = p.connect(p.DIRECT)` in `BaseAviary.py`
+> \* **on Ubuntu only, uncomment the line after `self.CLIENT = p.connect(p.DIRECT)` in `BaseAviary.py`**
 
 While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics,
 these numbers reflect PyBullet's physics updates happening at \~5000Hz (faster than [AirSim's 1000Hz](https://arxiv.org/pdf/1705.05065.pdf) and more realistic than Flightmare [simple model's 30000Hz](https://arxiv.org/pdf/2009.00563.pdf))
 
-Camera captures at \~750kB/s with CPU rendering (`((64*48*4*8+64*48*32+64*48*16)*24*5*0.2)/8`) are comparable to Flightmare's (`(32*32*3*240*8)/8`)—which, however, uses more sophisticated [Unity rendering](https://arxiv.org/pdf/2009.00563.pdf)—and an order of magnitude faster with GPU accelration
+Multi-agent video capture at \~750kB/s with CPU rendering (`((64*48*4*8+64*48*32+64*48*16)*24*5*0.2)/8`) is comparable to Flightmare's (`(32*32*3*240*8)/8`) performance—yet, on more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and, on Ubuntu, up to an order of magnitude faster with GPU accelration
 
 
 
