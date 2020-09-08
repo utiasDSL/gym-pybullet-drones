@@ -35,7 +35,7 @@ Simulation speed-up with respect to the *wall-clock* when using
 - *240Hz* (in simulation clock) PyBullet physics for **EACH** drone
 - **AND** *48Hz* (in simulation clock) PID control of **EACH** drone
 - **AND** nearby *obstacles* **AND** a mildly complex *background* (see .GIFs)
-- **AND** *24FPS* (sim. clock), *64x48pix* video capture of *6 ch.* (RGBA, depth, segm.) on **EACH** drone
+- **AND** *24FPS* (in sim. clock), *64x48 pixel* capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
 
 |                                  | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
