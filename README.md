@@ -284,7 +284,7 @@ Folder [`control`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/
 ## Logger
 Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/utils/Logger.py) contains helper functions to save and plot simulation data, as in this example
 ```
->>> logger = Logger(logging_freq_hz=freq, num_drones=num_drones)                 # Initialize the logger
+>>> logger = Logger(logging_freq_hz=freq, num_drones=num_drones)                    # Initialize the logger
 >>> ...
 >>> for i in range(NUM_DRONES):             # Log information for each drone
 >>>     logger.log(drone=i, \
