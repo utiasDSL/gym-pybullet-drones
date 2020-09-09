@@ -328,4 +328,5 @@ If you wish, please refer to this work as
 
 -----
 
-University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) — [Vector Institute](https://github.com/VectorInstitute) — University of Cambridge's [Prorok Lab](https://github.com/proroklab) — [Mitacs](https://www.mitacs.ca/en/projects/multi-agent-reinforcement-learning-decentralized-uavugv-cooperative-exploration)
+> Work carried out @ University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab) / [Mitacs Elevate](https://www.mitacs.ca/en/projects/multi-agent-reinforcement-learning-decentralized-uavugv-cooperative-exploration)
+
