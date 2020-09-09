@@ -244,7 +244,7 @@ To fill/customize the content of each `obs`, every child of [`BaseAviary`](https
 
 
 
-### Reward, done, and info
+### Reward, Done, and Info
 `Reward`, `done` and `info` are computed by the implementation of 3 functions in every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
 ```
 >>> def _computeReward(self, obs):
@@ -325,6 +325,19 @@ If you wish, please refer to this work as
 - Guanya Shi, Xichen Shi, Michael O’Connell, Rose Yu, Kamyar Azizzadenesheli, Animashree Anandkumar, Yisong Yue, and Soon-Jo Chung (2019)
 [*Neural Lander: Stable Drone Landing Control Using Learned Dynamics*](https://arxiv.org/pdf/1811.08027.pdf)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
+
+
+
+
+## Ongoing Developments
+- Downwash force field implementation
+- ROS wrapper node
+- Drone's POV video capture with the specs of the Himax HM01B0 camera on [Bitcraze's AI deck](https://www.bitcraze.io/2019/10/sneak-peak-of-the-ai-deck/)
+- Template implementation of `_preprocessAction()` to accept control by angular rates
+- GitHub Pages website
+
+
+
 
 -----
 
