@@ -330,11 +330,11 @@ If you wish, please refer to this work as
 
 
 ## Ongoing Developments
-- Downwash force field implementation
-- ROS wrapper node
-- Drone's POV video capture with the specs of the Himax HM01B0 camera on [Bitcraze's AI deck](https://www.bitcraze.io/2019/10/sneak-peak-of-the-ai-deck/)
-- Template implementation of `_preprocessAction()` to accept control by angular rates
-- GitHub Pages website
+- Downwash force field re-implementation of `BaseAviary._downwash()`
+- ROS wrapper node of the `BaseAviary` class
+- [Bitcraze's AI deck/Himax HM01B0 camera](https://www.bitcraze.io/2019/10/sneak-peak-of-the-ai-deck/) specs in `BaseAviary._getDroneImages()`
+- `BaseAviary._preprocessAction()` alternative implementation for control by angular rates
+- GitHub Pages
 
 
 
