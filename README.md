@@ -220,12 +220,12 @@ In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/g
 The dictionary's keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
 Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) contains the drone's
-- X, Y, Z position in `WORLD_FRAME` (3 value, meters unless normalized)
+- X, Y, Z position in `WORLD_FRAME` (in meters, 3 values)
 - Quaternion orientation in `WORLD_FRAME` (4 values)
-- Roll, pitch and yaw angles in `WORLD_FRAME` (3 values, radians unless normalized)
-- The velocity vector in `WORLD_FRAME` (3 values, m/s unless normalized)
-- Angular velocities in `WORLD_FRAME` (3 values, rad/s unless normalized)
-- Motors' speeds (4 values, RPM)
+- Roll, pitch and yaw angles in `WORLD_FRAME` (in radians, 3 values)
+- The velocity vector in `WORLD_FRAME` (in m/s, 3 values)
+- Angular velocities in `WORLD_FRAME` (in rad/s, 3 values)
+- Motors' speeds (in RPMs, 4 values)
 
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix)
 

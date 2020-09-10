@@ -125,8 +125,36 @@ if __name__ == "__main__":
     ####################################################################################################
     elif PART==2:
 
+        #### Check this reference as the most accesible/up-to-date introduction 
+        # github.com/ray-project/ray/blob/master/doc/source/rllib-training.rst
+
         #### WIP notes #####################################################################################
+        #### basic multi agent and variable sharing with AUTO_REUSE github.com/ray-project/ray/blob/master/rllib/examples/multi_agent_cartpole.py
         #### use ENV_STATE: github.com/ray-project/ray/blob/master/rllib/examples/env/two_step_game.py #####
+        #### 2 trainer example github.com/ray-project/ray/blob/master/rllib/examples/multi_agent_two_trainers.py
+        #### competing policeis github.com/ray-project/ray/blob/master/rllib/examples/rock_paper_scissors_multiagent.py
+        #### use the `MultiAgentEnv.with_agent_groups()` method to define groups
+
+        # Some environments may be very resource-intensive to create. RLlib will create ``num_workers + 1`` copies of the environment 
+        # since one copy is needed for the driver process. To avoid paying the extra overhead of the driver copy, which is needed to access 
+        # the env's action and observation spaces, you can defer environment initialization until ``reset()`` is called.
+
+        # RLlib tries to pick one of its built-in preprocessor based on the environment's observation space
+        # Discrete observations are one-hot encoded, Atari observations downscaled, and Tuple and Dict observations flattened 
+
+        # RLlib supports complex and variable-length observation spaces, including ``gym.spaces.Tuple``, ``gym.spaces.Dict``, and 
+        # ``rllib.utils.spaces.Repeated``. The handling of these spaces is transparent to the user. RLlib internally will insert preprocessors 
+        # to insert padding for repeated elements, flatten complex observations into a fixed-size vector during transit, and unpack the vector 
+        # into the structured tensor before sending it to the model. The flattened observation is available to the model as 
+        # ``input_dict["obs_flat"]``, and the unpacked observation as ``input_dict["obs"]``.
+
+        # RLlib picks default models based on a simple heuristic: 
+        # A vision network for observations that have a shape of length larger than 2 (for example, (84 x 84 x 3)),
+        # and a fully connected network otherwise
+        # if you set ``"model": {"use_lstm": true}``, the model output will be further processed by an LSTM cell
+
+        # Custom preprocessors are deprecated, since they sometimes conflict with the built-in preprocessors for handling complex observation spaces.
+        # Please use `wrapper classes around your environment instead of preprocessors.
 
         #### Initialize Ray Tune ###########################################################################
         ray.shutdown()
@@ -135,6 +163,8 @@ if __name__ == "__main__":
 
         #### Register the environment ######################################################################
         register_env("marl-flock-aviary-v0", lambda _: MARLFlockAviary(drone_model=DRONE, num_drones=NUM_DRONES, physics=PHYSICS, freq=SIMULATION_FREQ_HZ))
+
+        #### for the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
 
         #### Set up the trainer's config ###################################################################
         config = ppo.DEFAULT_CONFIG.copy()
@@ -153,6 +183,9 @@ if __name__ == "__main__":
                                 "policy_mapping_fn": lambda agent_id: "pol"+str(agent_id),
                                 # An additional observation function, see rllib/evaluation/observation_function.py for more info.
                                 # "observation_fn": None,
+                                # see github.com/ray-project/ray/blob/master/rllib/examples/centralized_critic_2.py
+                                # more principled but complex way to share observations is using `postprocess_trajectory`
+                                # see github.com/ray-project/ray/blob/master/rllib/examples/centralized_critic.py
                                 }
 
         #### Ray Tune stopping conditions ##################################################################
