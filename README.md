@@ -21,7 +21,7 @@
 |                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
 |           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|                   *ROS interface* | No                    | **Yes**                                       | **Yes**                                             |
+|                   *ROS interface* | WIP                   | **Yes**                                       | **Yes**                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
