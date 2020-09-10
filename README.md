@@ -302,6 +302,16 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 
+## Ongoing Development (September 2020)
+- Downwash force field re-implementation of `BaseAviary._downwash()`
+- ROS wrapper node of the `BaseAviary` class
+- [Bitcraze's AI deck/Himax HM01B0 camera](https://www.bitcraze.io/2019/10/sneak-peak-of-the-ai-deck/) specs in `BaseAviary._getDroneImages()`
+- `BaseAviary._preprocessAction()` alternative implementation for control by angular rates
+- GitHub Pages, arXiv paper
+
+
+
+
 ## Citation
 If you wish, please refer to this work as
 ```
@@ -325,16 +335,6 @@ If you wish, please refer to this work as
 - Guanya Shi, Xichen Shi, Michael O’Connell, Rose Yu, Kamyar Azizzadenesheli, Animashree Anandkumar, Yisong Yue, and Soon-Jo Chung (2019)
 [*Neural Lander: Stable Drone Landing Control Using Learned Dynamics*](https://arxiv.org/pdf/1811.08027.pdf)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
-
-
-
-
-## Ongoing Developments
-- Downwash force field re-implementation of `BaseAviary._downwash()`
-- ROS wrapper node of the `BaseAviary` class
-- [Bitcraze's AI deck/Himax HM01B0 camera](https://www.bitcraze.io/2019/10/sneak-peak-of-the-ai-deck/) specs in `BaseAviary._getDroneImages()`
-- `BaseAviary._preprocessAction()` alternative implementation for control by angular rates
-- GitHub Pages
 
 
 
