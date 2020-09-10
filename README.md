@@ -35,7 +35,7 @@
 Simulation **speed-up with respect to the wall-clock** when using
 - *240Hz* (in simulation clock) PyBullet physics for **EACH** drone
 - **AND** *48Hz* (in simulation clock) PID control of **EACH** drone
-- **AND** nearby *obstacles* **AND** a mildly complex *background* (see .GIFs)
+- **AND** nearby *obstacles* **AND** a mildly complex *background* (see GIFs)
 - **AND** *24FPS* (in sim. clock), *64x48 pixel* capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
 
 |                                  | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
@@ -303,6 +303,7 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 ## Ongoing Development (September 2020)
+- Utility function to save the frames captured by `BaseAviary._getDroneImages()` as PNGs
 - Downwash force field re-implementation of `BaseAviary._downwash()`
 - ROS wrapper node of the `BaseAviary` class
 - [Bitcraze's AI deck/Himax HM01B0 camera](https://www.bitcraze.io/2019/10/sneak-peak-of-the-ai-deck/) specs in `BaseAviary._getDroneImages()`
