@@ -303,11 +303,9 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 ## Ongoing Development (September 2020)
-- Utility function to save the frames captured by `BaseAviary._getDroneImages()` as PNGs
-- Downwash force field re-implementation of `BaseAviary._downwash()`
+- Implementation of downwash as a force field in `BaseAviary._downwash()`
+- Implementation of `BaseAviary._preprocessAction()` to accept control by thrust and angular rates
 - ROS wrapper node of the `BaseAviary` class
-- [Bitcraze's AI deck/Himax HM01B0 camera](https://www.bitcraze.io/2019/10/sneak-peak-of-the-ai-deck/) specs in `BaseAviary._getDroneImages()`
-- `BaseAviary._preprocessAction()` alternative implementation for control by angular rates
 - GitHub Pages, arXiv paper
 
 

@@ -281,23 +281,33 @@ class BaseAviary(gym.Env):
     ####################################################################################################
     #### Arguments #####################################################################################
     #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
+    #### - segmentation (bool)              whehter to compute the compute the segmentation mask #######
     ####################################################################################################
     #### Returns #######################################################################################
     #### - rgb ((h,w,4) array)              RBG(A) image captured from the nth_drone's POV #############
     #### - dep ((h,w) array)                depth image captured from the nth_drone's POV ##############
     #### - seg ((h,w) array)                segmentation image captured from the nth_drone's POV #######
     ####################################################################################################
-    def _getDroneImages(self, nth_drone):
+    def _getDroneImages(self, nth_drone, segmentation: bool=True):
         if self.IMG_RES is None: print("[ERROR] in BaseAviary._getDroneImages(), remember to set self.IMG_RES to np.array([width, height])"); exit()
         rot_mat = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone,:])).reshape(3,3)
         #### Set target point and camera view and projection matrices ######################################
         target = np.dot(rot_mat,np.array([1000,0,0])) + np.array(self.pos[nth_drone,:])
         DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=self.pos[nth_drone,:]+np.array([0,0,self.L]), cameraTargetPosition=target, cameraUpVector=[0,0,1], physicsClientId=self.CLIENT)
         DRONE_CAM_PRO =  p.computeProjectionMatrixFOV(fov=60.0, aspect=1.0, nearVal=self.L, farVal=1000.0)
+        SEG_FLAG = p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX if segmentation else p.ER_NO_SEGMENTATION_MASK
         [w, h, rgb, dep, seg] = p.getCameraImage(width=self.IMG_RES[0], height=self.IMG_RES[1], shadow=1, viewMatrix=DRONE_CAM_VIEW, projectionMatrix=DRONE_CAM_PRO, \
-                flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX, physicsClientId=self.CLIENT)
+                flags=SEG_FLAG, physicsClientId=self.CLIENT)
         rgb = np.reshape(rgb, (h, w, 4)); dep = np.reshape(dep, (h, w)); seg = np.reshape(seg, (h, w))
         return rgb, dep, seg
+
+
+        # freme counters
+        # folder paths
+            # img = (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png"); 
+            # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8'); img = (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")            
+            # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8'); img = (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            
 
     ####################################################################################################
     #### Compute the adjacency matrix of a multi-drone system using VISIBILITY_RADIUS ##################

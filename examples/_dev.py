@@ -78,7 +78,7 @@ if __name__ == "__main__":
         #### Run the simulation ############################################################################
         CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
         action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) }
-        START = time.time(); temp_action = {}
+        START = time.time()
         for i in range(0, int(DURATION_SEC*env.SIM_FREQ), AGGR_PHY_STEPS):
 
             #### Step the simulation ###########################################################################
