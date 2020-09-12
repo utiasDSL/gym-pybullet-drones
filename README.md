@@ -306,7 +306,7 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 - Implementation of downwash as a force field in `BaseAviary._downwash()`
 - Implementation of `BaseAviary._preprocessAction()` to accept control by thrust and angular rates
 - ROS wrapper node of the `BaseAviary` class
-- GitHub Pages, arXiv paper
+- arXiv paper
 
 
 
