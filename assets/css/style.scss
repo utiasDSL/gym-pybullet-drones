@@ -3,6 +3,10 @@
 
 @import 'jekyll-theme-cayman';
 .page-header {
+  color: blue;
   text-align: right;
   background-image: url("https://scx2.b-cdn.net/gfx/news/hires/2018/couldstudyin.jpg");
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-position: center;
 }
