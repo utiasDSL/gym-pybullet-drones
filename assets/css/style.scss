@@ -3,16 +3,26 @@
 
 @import 'jekyll-theme-cayman';
 .page-header {
-  color: midnightblue;
   text-align: right;
   background-image: url("https://github.com/JacopoPan/gym-pybullet-drones/blob/gh-pages/assets/css/banner.png?raw=true");
   background-repeat: no-repeat;
   background-attachment: fixed;
   background-position: center;
 }
+.project-name {
+  color: midnightblue;
+}
+
+.project-tagline {
+  color: midnightblue;
+}
 .btn {
   color: rgba(25, 25, 112, 0.7);
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
   &:hover {
     color: rgba(25, 25, 112, 0.8);
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.3);
   }
 }
