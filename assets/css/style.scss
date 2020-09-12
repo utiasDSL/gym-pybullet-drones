@@ -10,3 +10,9 @@
   background-attachment: fixed;
   background-position: center;
 }
+.btn {
+  color: rgba(25, 25, 112, 0.7);
+  &:hover {
+    color: rgba(25, 25, 112, 0.8);
+  }
+}
