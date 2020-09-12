@@ -16,9 +16,9 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 |                   *ROS interface* | _WIP_                 | **Yes**                                       | **Yes**                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
-|             *Aerodynamic effects* | Drag, downwash, ground effect | Drag                                  | Drag                                                |
+|             *Aerodynamic effects* | Drag, downwash, ground | Drag                                  | Drag                                                       |
 |          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) API* | **Yes** | No | **Yes**                                                   |
-| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) API* | **Yes**  | No | No                                 |
+| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py)* | **Yes**  | No | No                                     |
 
 
 
@@ -84,7 +84,7 @@ $ pip install -e .
 
 ## Use and Documentation
 
-Check out file [`README.md`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/JacopoPan/gym-pybullet-drones) for further details
+**Check out file [`README.md`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/JacopoPan/gym-pybullet-drones) for further details**
 
 ### Way Point Navigation
 <img src="files/readme_images/wp.gif" alt="sparse way points flight" width="360"> <img src="files/readme_images/wp.png" alt="control info" width="450">
