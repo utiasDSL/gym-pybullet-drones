@@ -8,7 +8,7 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 
 |                                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
 |---------------------------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
-|                         *Physics* | PyBullet              | FastPhysicsEngine/PhysX                       | *Ad hoc*/Gazebo                                     |
+|                         *Physics* | PyBullet              | FastPhysicsEngine / PhysX                     | *Ad hoc* / Gazebo                                   |
 |                       *Rendering* | PyBullet              | Unreal Engine 4                               | Unity                                               |
 |                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
 |           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
@@ -16,9 +16,9 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 |                   *ROS interface* | _WIP_                 | **Yes**                                       | **Yes**                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
-|             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
-|          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) interface* | **Yes** | No | **Yes**                                             |
-| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) interface* | **Yes**  | No | No                           |
+|             *Aerodynamic effects* | Drag, downwash, ground effect | Drag                                  | Drag                                                |
+|          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) API* | **Yes** | No | **Yes**                                                   |
+| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) API* | **Yes**  | No | No                                 |
 
 
 
@@ -30,13 +30,13 @@ Simulation **speed-up with respect to the wall-clock** when using
 - **AND** nearby *obstacles* **AND** a mildly complex *background* (see GIFs)
 - **AND** *24FPS* (in sim. clock), *64x48 pixel* capture of *6 ch.* (RGBA, depth, segm.) on **EACH** drone
 
-|                                  | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
+|                                  | Lenovo P52 (i7-8850H/Quadro-P2000) | 2020 MacBook Pro (i7-1068NG7) |
 | -------------------------------: | :--------------------------------: | :---------------------------: |
 | Rendering                        | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
 | Single drone, **no** vision      | 15.5x                              | 16.8x                         |
-| Single drone **with** vision     | 10.8x                              | 1.3x                          |
-| Multi-drone (10), **no** vision  | 2.1x                               | 2.3x                          |
-| Multi-drone (5) **with** vision  | 2.5x                               | 0.2x                          |
+| Single drone **w/** vision       | 10.8x                              | 1.3x                          |
+| 10 drones, **no** vision         | 2.1x                               | 2.3x                          |
+| 5 drones **w/** vision           | 2.5x                               | 0.2x                          |
 
 > \*\*\* **on Ubuntu only, uncomment the line after `p.connect(p.DIRECT)` in `BaseAviary.py`**
 
