@@ -84,25 +84,25 @@ $ pip install -e .
 
 ## Use and Documentation
 
-See [`README.md`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/README.md) in the `master` branch for further details
+Check out file [`README.md`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/JacopoPan/gym-pybullet-drones) for further details
 
-## Way Point Navigation
+### Way Point Navigation
 <img src="files/readme_images/wp.gif" alt="sparse way points flight" width="360"> <img src="files/readme_images/wp.png" alt="control info" width="450">
 
-## RGB, Depth, and Segmentation Views
+### RGB, Depth, and Segmentation Views
 <img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
 
-## Downwash Effect
+### Downwash Effect
 <img src="files/readme_images/downwash.gif" alt="downwash example" width="360"> <img src="files/readme_images/downwash.png" alt="control info" width="450">
 
-## Learning
+### Learning
 <img src="files/readme_images/learn1.gif" alt="learning 1" width="400"><img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
 <img src="files/readme_images/learn3.gif" alt="learning 3" width="400"><img src="files/readme_images/learn4.gif" alt="learning 4" width="400">
 
-## Control Failure
+### Control Failure
 <img src="files/readme_images/crash.gif" alt="yaw saturation" width="360"> <img src="files/readme_images/crash.png" alt="control info" width="450">
 
-## Trace Comparison
+### Trace Comparison
 <img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="360"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
 
 
@@ -137,5 +137,5 @@ If you wish, please refer to this work as
 
 -----
 
-> UofT's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab) / [Mitacs](https://www.mitacs.ca/en/projects/multi-agent-reinforcement-learning-decentralized-uavugv-cooperative-exploration)
+> UofT's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / Cambridge's [Prorok Lab](https://github.com/proroklab) / [Mitacs](https://www.mitacs.ca/en/projects/multi-agent-reinforcement-learning-decentralized-uavugv-cooperative-exploration)
 
