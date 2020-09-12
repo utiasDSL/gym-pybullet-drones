@@ -15,8 +15,8 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |                   *ROS interface* | _WIP_                 | **Yes**                                       | **Yes**                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
-|         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
-|             *Aerodynamic effects* | Drag, downwash, ground | Drag                                  | Drag                                                       |
+|               *Steppable physics* | **Yes**               | No                                            | **Yes**                                             |
+|             *Aerodynamic effects* | Drag, downw., gnd. eff. | Drag                                        | Drag                                                |
 |          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) API* | **Yes** | No | **Yes**                                                   |
 | *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py)* | **Yes**  | No | No                                     |
 
