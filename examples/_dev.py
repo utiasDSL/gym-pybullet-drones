@@ -35,7 +35,7 @@ PART = 1
 
 LOG = True
 NUM_DRONES = 1
-VISION = True
+VISION = False
 AGGREGATE = True
 
 if __name__ == "__main__":

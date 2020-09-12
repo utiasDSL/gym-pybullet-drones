@@ -1,7 +1,8 @@
+import os
 import numpy as np
 from gym import error, spaces, utils
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, ImageType, BaseAviary
 
 
 ######################################################################################################################################################
@@ -80,6 +81,12 @@ class VisionCtrlAviary(BaseAviary):
             if self.step_counter%self.IMG_CAPTURE_FREQ==0: self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i)
             obs[str(i)] = {"state": self._getDroneState(i), "neighbors": adjacency_mat[i,:], \
                             "rgb": self.rgb[i], "dep": self.dep[i], "seg": self.seg[i] }
+            #### Printing observation to PNG frames example ####################################################
+            # path = os.path.dirname(os.path.abspath(__file__))+"/../../files/test/"; os.makedirs(os.path.dirname(path), exist_ok=True)
+            # self._exportFrame(img_type=ImageType.RGB, img_input=self.rgb[i], path=path, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
+            ## self._exportFrame(img_type=ImageType.BW, img_input=self.rgb[i], path=path, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
+            ## self._exportFrame(img_type=ImageType.DEP, img_input=self.dep[i], path=path, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
+            ## self._exportFrame(img_type=ImageType.SEG, img_input=self.seg[i], path=path, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
         return obs
 
     ####################################################################################################

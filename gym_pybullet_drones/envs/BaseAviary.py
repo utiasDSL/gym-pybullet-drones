@@ -37,6 +37,16 @@ class Physics(Enum):
 
 
 ######################################################################################################################################################
+#### Camera capture image type enumeration ###########################################################################################################
+######################################################################################################################################################
+class ImageType(Enum):
+    RGB = 0                  # Red, green, blue (and alpha)
+    DEP = 1                  # Depth
+    SEG = 2                  # Segmentation by object id
+    BW = 3                   # Black and white
+
+
+######################################################################################################################################################
 #### Base multi-drone environment class ##############################################################################################################
 ######################################################################################################################################################
 class BaseAviary(gym.Env):
@@ -111,8 +121,13 @@ class BaseAviary(gym.Env):
         #### Create action and observation spaces ##########################################################
         self.action_space = self._actionSpace()
         self.observation_space = self._observationSpace()
-        #### Initial reset #################################################################################
-        self.reset()
+        #### Housekeeping ##################################################################################
+        self._housekeeping()
+        #### Update and store the drones kinematic information #############################################
+        self._updateAndStoreKinematicInfo()
+        #### Start video recording #########################################################################
+        if self.RECORD and self.GUI: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
+        if self.RECORD and not self.GUI: self.FRAME_NUM = 0; self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"; os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
 
     ####################################################################################################
     #### Reset the environment #########################################################################
@@ -149,9 +164,9 @@ class BaseAviary(gym.Env):
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ==0: 
             [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH, height=self.VID_HEIGHT, shadow=1, viewMatrix=self.CAM_VIEW, \
                 projectionMatrix=self.CAM_PRO, renderer=p.ER_TINY_RENDERER, flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX, physicsClientId=self.CLIENT)
-            img = (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png"); 
-            # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8'); img = (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")            
-            # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8'); img = (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8'); (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")            
+            # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8'); (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
             self.FRAME_NUM += 1
         #### Read the GUI's input parameters ###############################################################
         if self.GUI: 
@@ -301,13 +316,22 @@ class BaseAviary(gym.Env):
         rgb = np.reshape(rgb, (h, w, 4)); dep = np.reshape(dep, (h, w)); seg = np.reshape(seg, (h, w))
         return rgb, dep, seg
 
-
-        # freme counters
-        # folder paths
-            # img = (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png"); 
-            # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8'); img = (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")            
-            # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8'); img = (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
-            
+    ####################################################################################################
+    #### Save an image returned by _getDroneImages() as a PNG file #####################################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - img_type (ImageType)             image type: RGBA, depth, segmentation, b&w (from RGB) ######
+    #### - img_input ((h,w,?) array)        matrix with 1 (depth/seg) or 4 (RGBA) channels #############
+    #### - path (str)                       where to save the images as PNGs ###########################  
+    #### - frame_num (int)                  number to append to the frame's filename ###################
+    ####################################################################################################
+    def _exportFrame(self, img_type: ImageType, img_input, path: str, frame_num: int=0):
+        if img_type==ImageType.RGB: (Image.fromarray(img_input.astype('uint8'), 'RGBA')).save(path+"frame_"+str(frame_num)+".png") 
+        elif img_type==ImageType.DEP: temp = ((img_input-np.min(img_input)) * 255 / (np.max(img_input)-np.min(img_input))).astype('uint8')
+        elif img_type==ImageType.SEG: temp = ((img_input-np.min(img_input)) * 255 / (np.max(img_input)-np.min(img_input))).astype('uint8')
+        elif img_type==ImageType.BW: temp = (np.sum(img_input[:,:,0:2], axis=2) / 3).astype('uint8')
+        else: print("[ERROR] in BaseAviary._exportFrame(), unknown ImageType"); exit()
+        if img_type!=ImageType.RGB: (Image.fromarray(temp)).save(path+"frame_"+str(frame_num)+".png")
 
     ####################################################################################################
     #### Compute the adjacency matrix of a multi-drone system using VISIBILITY_RADIUS ##################
