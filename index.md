@@ -11,7 +11,7 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 |                         *Physics* | PyBullet              | FastPhysicsEngine / PhysX                     | *Ad hoc* / Gazebo                                   |
 |                       *Rendering* | PyBullet              | Unreal Engine 4                               | Unity                                               |
 |                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
-|           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
+|                 *RGB/Depth/Segm.* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |                   *ROS interface* | _WIP_                 | **Yes**                                       | **Yes**                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
