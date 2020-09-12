@@ -2,3 +2,4 @@ theme: jekyll-theme-cayman
 
 title: gym-pybullet-drones
 description: PyBullet-based Gym for single and multi-agent reinforcement learning with nano-quadcopters
+show_downloads: true
