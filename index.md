@@ -30,13 +30,13 @@ Simulation **speed-up with respect to the wall-clock** when using
 - **AND** nearby *obstacles* **AND** a mildly complex *background* (see GIFs)
 - **AND** *24FPS* (in sim. clock), *64x48 pixel* capture of *6 ch.* (RGBA, depth, segm.) on **EACH** drone
 
-|                                  | Lenovo P52 (i7-8850H/Quadro-P2000) | 2020 MacBook Pro (i7-1068NG7) |
-| -------------------------------: | :--------------------------------: | :---------------------------: |
-| Rendering                        | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
-| 1 drone **w/o** vision           | 15.5x                              | 16.8x                         |
-| 1 drone **w/** vision            | 10.8x                              | 1.3x                          |
-| 10 drones **w/o** vision         | 2.1x                               | 2.3x                          |
-| 5 drones **w/** vision           | 2.5x                               | 0.2x                          |
+|                                | Lenovo P52 (i7-8850H/Quadro-P2000) | 2020 MacBook Pro (i7-1068NG7) |
+| -----------------------------: | :--------------------------------: | :---------------------------: |
+| Rendering                      | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
+| 1 drone **w/o** viz.           | 15.5x                              | 16.8x                         |
+| 1 drone **w/** viz.            | 10.8x                              | 1.3x                          |
+| 10 drones **w/o** viz.         | 2.1x                               | 2.3x                          |
+| 5 drones **w/** viz.           | 2.5x                               | 0.2x                          |
 
 > \*\*\* **on Ubuntu only, uncomment the line after `p.connect(p.DIRECT)` in `BaseAviary.py`**
 
