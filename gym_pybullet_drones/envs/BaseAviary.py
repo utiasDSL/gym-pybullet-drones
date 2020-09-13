@@ -126,9 +126,8 @@ class BaseAviary(gym.Env):
         #### Update and store the drones kinematic information #############################################
         self._updateAndStoreKinematicInfo()
         #### Start video recording #########################################################################
-        if self.RECORD and self.GUI: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
-        if self.RECORD and not self.GUI: self.FRAME_NUM = 0; self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"; os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
-
+        self._startVideoRec()
+    
     ####################################################################################################
     #### Reset the environment #########################################################################
     ####################################################################################################
@@ -142,8 +141,7 @@ class BaseAviary(gym.Env):
         #### Update and store the drones kinematic information #############################################
         self._updateAndStoreKinematicInfo()
         #### Start video recording #########################################################################
-        if self.RECORD and self.GUI: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
-        if self.RECORD and not self.GUI: self.FRAME_NUM = 0; self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"; os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
+        self._startVideoRec()
         #### Return the initial observation ################################################################
         return self._computeObs()
 
@@ -277,6 +275,13 @@ class BaseAviary(gym.Env):
             self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
             self.rpy[i] = p.getEulerFromQuaternion(self.quat[i])
             self.vel[i], self.ang_v[i] = p.getBaseVelocity(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+    
+    ####################################################################################################
+    #### Start saving the video output as .mp4, if GUI is True,  or .png, otherwise ####################
+    ####################################################################################################
+    def _startVideoRec(self):
+        if self.RECORD and self.GUI: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
+        if self.RECORD and not self.GUI: self.FRAME_NUM = 0; self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"; os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
 
     ####################################################################################################
     #### Return the state vector of the nth drone ######################################################
