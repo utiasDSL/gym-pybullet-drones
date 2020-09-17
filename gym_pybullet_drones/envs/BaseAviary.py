@@ -83,7 +83,7 @@ class BaseAviary(gym.Env):
         elif self.DRONE_MODEL==DroneModel.CF2P: self.URDF = "cf2p.urdf"
         elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"  
         #### Load the drone properties from the .urdf file #################################################
-        self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF, self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3 = self._loadURDF()
+        self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF, self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3 = self._parseURDFParameters()
         print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(\
                                                                         self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3) )
         #### Compute constants #############################################################################
@@ -186,7 +186,6 @@ class BaseAviary(gym.Env):
                 self._updateAndStoreKinematicInfo()
             #### Step the simulation using the desired physics update ##########################################
             for i in range (self.NUM_DRONES):
-                self._showDroneFrame(i)
                 if self.PHYSICS==Physics.PYB: self._physics(clipped_action[i,:], i)
                 elif self.PHYSICS==Physics.DYN: self._dynamics(clipped_action[i,:], i)
                 elif self.PHYSICS==Physics.PYB_GND: self._physics(clipped_action[i,:], i); self._groundEffect(clipped_action[i,:], i)
@@ -266,8 +265,11 @@ class BaseAviary(gym.Env):
         #### Load ground plane, drone and obstacles models #################################################
         self.PLANE_ID = p.loadURDF("plane.urdf", physicsClientId=self.CLIENT)        
         self.DRONE_IDS = np.array([p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF, self.INIT_XYZS[i,:], p.getQuaternionFromEuler(self.INIT_RPYS[i,:]), physicsClientId=self.CLIENT) for i in range(self.NUM_DRONES)])
-        #### Deactivate collisions between the ground plane and the drones' collision volumes ##############
-        # for i in range(self.NUM_DRONES): p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
+        for i in range(self.NUM_DRONES): 
+            #### Show the frame of reference of the drone, note thet it can severly slow down the GUI ##########
+            self._showDroneLocalAxes(i)
+            #### Deactivate collisions between the ground plane and the drones' collision volumes ##############
+            #p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES: self._addObstacles()
 
     ####################################################################################################
@@ -483,7 +485,7 @@ class BaseAviary(gym.Env):
     #### Arguments #####################################################################################
     #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
     ####################################################################################################
-    def _showDroneFrame(self, nth_drone):
+    def _showDroneLocalAxes(self, nth_drone):
         if self.GUI:
             AXIS_LENGTH = 2*self.L
             self.X_AX[nth_drone] = p.addUserDebugLine(lineFromXYZ=[0,0,0], lineToXYZ=[AXIS_LENGTH,0,0], lineColorRGB=[1,0,0], parentObjectUniqueId=self.DRONE_IDS[nth_drone], parentLinkIndex=-1, replaceItemUniqueId=int(self.X_AX[nth_drone]), physicsClientId=self.CLIENT)
@@ -502,7 +504,7 @@ class BaseAviary(gym.Env):
     ####################################################################################################
     #### Load parameters from the .urdf file ###########################################################
     ####################################################################################################
-    def _loadURDF(self):
+    def _parseURDFParameters(self):
         URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF).getroot()
         M = float(URDF_TREE[1][0][1].attrib['value']); L = float(URDF_TREE[0].attrib['arm']); THRUST2WEIGHT_RATIO = float(URDF_TREE[0].attrib['thrust2weight'])
         IXX = float(URDF_TREE[1][0][2].attrib['ixx']); IYY = float(URDF_TREE[1][0][2].attrib['iyy']); IZZ = float(URDF_TREE[1][0][2].attrib['izz'])
