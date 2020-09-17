@@ -6,6 +6,11 @@ register(
 )
 
 register(
+    id='dyn-ctrl-aviary-v0',
+    entry_point='gym_pybullet_drones.envs:DynCtrlAviary',
+)
+
+register(
     id='vision-ctrl-aviary-v0',
     entry_point='gym_pybullet_drones.envs:VisionCtrlAviary',
 )

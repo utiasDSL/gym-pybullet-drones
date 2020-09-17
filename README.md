@@ -209,6 +209,14 @@ Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/bl
 ```
 [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py), and [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py) all simply clip the inputs to `MAX_RPM`
 
+#### Control by Thrust and Torques
+[`DynCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py)'s `action` input to `DynCtrlAviary.step(action)` is still a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) but the 4 values are:
+- The desired thrust along the drone's z-axis
+- The desired torque around the drone's x-axis
+- The desired torque around the drone's y-axis
+- The desired torque around the drone's z-axis
+
+
 
 
 ### Observation Spaces
@@ -304,9 +312,8 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 
-## Ongoing Development (September 2020)
+## Ongoing Development (Late September 2020)
 - Downwash force field in `BaseAviary._downwash()`
-- Child class of `BaseAviary` with `._preprocessAction()` taking thrust and angular rates as input
 - ROS wrapper node(s)
 
 

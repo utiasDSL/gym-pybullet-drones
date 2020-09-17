@@ -21,6 +21,7 @@ from ray.rllib.utils.test_utils import check_learning_achieved
 from utils import *
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
+from gym_pybullet_drones.envs.DynCtrlAviary import DynCtrlAviary
 from gym_pybullet_drones.envs.VisionCtrlAviary import VisionCtrlAviary
 from gym_pybullet_drones.envs.MARLFlockAviary import MARLFlockAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
@@ -29,8 +30,9 @@ from gym_pybullet_drones.utils.Logger import Logger
 DRONE = DroneModel.CF2X
 PHYSICS = Physics.PYB
 SIMULATION_FREQ_HZ = 240
-GUI = False
+GUI = True
 DEBUG_MARL = False
+DYN_CTRL = True
 PART = 1
 
 LOG = True
@@ -55,6 +57,9 @@ if __name__ == "__main__":
         if VISION: 
             env = VisionCtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
                         freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=False, obstacles=True)
+        elif DYN_CTRL:
+            env = DynCtrlAviary(drone_model=DroneModel.CF2X, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
+                        freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=False, obstacles=True)
         else:
             env = CtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, visibility_radius=10, \
                         freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=False, obstacles=True)
@@ -77,7 +82,7 @@ if __name__ == "__main__":
 
         #### Run the simulation ############################################################################
         CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
-        action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) }
+        action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) } if not DYN_CTRL else {"0": np.array([env.M*env.G,0,0,0])}
         START = time.time()
         for i in range(0, int(DURATION_SEC*env.SIM_FREQ), AGGR_PHY_STEPS):
 
@@ -95,14 +100,16 @@ if __name__ == "__main__":
             #### Compute control at the desired frequency @@@@@#################################################       
             if i%CTRL_EVERY_N_STEPS==0:
 
-                #### Compute control for the current way point #####################################################
-                for j in range(NUM_DRONES): 
-                    action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, \
-                                                                                    state=obs[str(j)]["state"], \
-                                                                                    target_pos=np.hstack([TARGET_POS[wp_counters[j],0:2], H+j*H_STEP]))
+                if DYN_CTRL: action = {"0": np.array([env.M*env.G,0.000,0.000,0.00005])} # {"0": np.array([env.M*env.G,0.001,0.001,0.00005])}
+                else:
+                    #### Compute control for the current way point #####################################################
+                    for j in range(NUM_DRONES): 
+                        action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, \
+                                                                                        state=obs[str(j)]["state"], \
+                                                                                        target_pos=np.hstack([TARGET_POS[wp_counters[j],0:2], H+j*H_STEP]))
 
-                #### Go to the next way point and loop #############################################################
-                for j in range(NUM_DRONES): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
+                    #### Go to the next way point and loop #############################################################
+                    for j in range(NUM_DRONES): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
 
             #### Log the simulation ############################################################################
             if LOG: 

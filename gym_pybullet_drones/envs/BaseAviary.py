@@ -90,7 +90,6 @@ class BaseAviary(gym.Env):
         self.GRAVITY = self.G*self.M; self.HOVER_RPM = np.sqrt(self.GRAVITY/(4*self.KF))
         self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY)/(4*self.KF)); self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
         self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2); self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
-        # self.MAX_A = self.MAX_THRUST/self.M; self.MAX_V = self.MAX_SPEED_KMH*(1000/60**2)
         self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt( (15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST )
         #### Connect to PyBullet ###########################################################################
         if self.GUI: 
@@ -269,7 +268,7 @@ class BaseAviary(gym.Env):
             #### Show the frame of reference of the drone, note thet it can severly slow down the GUI ##########
             self._showDroneLocalAxes(i)
             #### Deactivate collisions between the ground plane and the drones' collision volumes ##############
-            #p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
+            # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES: self._addObstacles()
 
     ####################################################################################################
