@@ -91,6 +91,7 @@ class BaseAviary(gym.Env):
         self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY)/(4*self.KF)); self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
         self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2); self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
         # self.MAX_A = self.MAX_THRUST/self.M; self.MAX_V = self.MAX_SPEED_KMH*(1000/60**2)
+        self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt( (15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST )
         #### Connect to PyBullet ###########################################################################
         if self.GUI: 
             #### With debug GUI ################################################################################
@@ -377,8 +378,8 @@ class BaseAviary(gym.Env):
         link_states = np.array(p.getLinkStates(self.DRONE_IDS[nth_drone], linkIndices=[0,1,2,3,4], computeLinkVelocity=1, computeForwardKinematics=1, physicsClientId=self.CLIENT))
         #### Simple, per-propeller ground effects ##########################################################
         prop_heights = np.array([link_states[0,0][2], link_states[1,0][2], link_states[2,0][2], link_states[3,0][2]])
+        prop_heights = np.clip(prop_heights, self.GND_EFF_H_CLIP, np.inf)
         gnd_effects = np.array(rpm**2) * self.KF * self.GND_EFF_COEFF * (self.PROP_RADIUS/(4 * prop_heights))**2
-        gnd_effects = np.clip(gnd_effects, 0, self.MAX_THRUST/10)
         if np.abs(self.rpy[nth_drone,0])<np.pi/2 and np.abs(self.rpy[nth_drone,1])<np.pi/2:
             for i in range(4): p.applyExternalForce(self.DRONE_IDS[nth_drone], i, forceObj=[0,0,gnd_effects[i]], posObj=[0,0,0], flags=p.LINK_FRAME, physicsClientId=self.CLIENT)
         #### TODO: a more realistic model would account for the drone's attitude and its z-axis velocity in the world frame 

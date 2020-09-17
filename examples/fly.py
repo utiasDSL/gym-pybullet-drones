@@ -16,8 +16,8 @@ from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
 DRONE = DroneModel.CF2X
-NUM_DRONES = 10
-GUI = True
+NUM_DRONES = 6
+GUI = False
 PHYSICS = Physics.PYB
 VISION = False
 RECORD_VIDEO = False
