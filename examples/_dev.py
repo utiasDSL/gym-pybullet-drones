@@ -32,7 +32,7 @@ PHYSICS = Physics.PYB
 SIMULATION_FREQ_HZ = 240
 GUI = True
 DEBUG_MARL = False
-DYN_CTRL = True
+DYN_CTRL = False
 PART = 1
 
 LOG = True
