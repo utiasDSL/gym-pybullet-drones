@@ -24,15 +24,16 @@ class RLTakeoffAviary(BaseAviary):
     #### - gui (bool)                       whether to use PyBullet's GUI ##############################
     #### - record (bool)                    whether to save a video of the simulation ##################
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
+    #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, \
                         visibility_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
                         physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1, \
-                        gui=False, record=False, obstacles=False):
+                        gui=False, record=False, obstacles=False, user_debug_gui=True):
         if num_drones!=1: print("[ERROR] in RLTakeoffAviary.__init__(), RLTakeoffAviary only accepts num_drones=1" ); exit()
         super().__init__(drone_model=drone_model, visibility_radius=visibility_radius, \
             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq, aggregate_phy_steps=aggregate_phy_steps, \
-            gui=gui, record=record, obstacles=obstacles) 
+            gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui) 
 
     ####################################################################################################
     #### Return the action space of the environment, a Box(4,) #########################################

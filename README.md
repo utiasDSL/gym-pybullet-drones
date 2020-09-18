@@ -169,7 +169,8 @@ A flight arena for one (ore more) quadrotor can be created as a child class of `
 >>>       aggregate_phy_steps=1,            # Number of physics updates within each call to BaseAviary.step()
 >>>       gui=True,                         # Whether to display PyBullet's GUI, only use this for debbuging
 >>>       record=False,                     # Whether to save a .mp4 video (if gui=True) or .png frames (if gui=False) in gym-pybullet-drones/files/, see script /files/ffmpeg_png2mp4.sh for encoding
->>>       obstacles=False)                  # Whether to add obstacles to the environment
+>>>       obstacles=False,                  # Whether to add obstacles to the environment
+>>>       user_debug_gui=True)              # Whether to use addUserDebugLine and addUserDebugParameter calls (it can slow down the GUI)
 ````
 And instantiated with `gym.make()`—see [`learn.py`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/learn.py) for an example
 ```

@@ -25,14 +25,15 @@ class DynCtrlAviary(BaseAviary):
     #### - gui (bool)                       whether to use PyBullet's GUI ##############################
     #### - record (bool)                    whether to save a video of the simulation ##################
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
+    #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, \
                         visibility_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
                         physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1, \
-                        gui=False, record=False, obstacles=False):
+                        gui=False, record=False, obstacles=False, user_debug_gui=True):
         super().__init__(drone_model=drone_model, num_drones=num_drones, visibility_radius=visibility_radius, \
             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq, aggregate_phy_steps=aggregate_phy_steps, \
-            gui=gui, record=record, obstacles=obstacles) 
+            gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui) 
         if self.DRONE_MODEL==DroneModel.CF2X: self.A = np.array([ [1, 1, 1, 1], [.5, .5, -.5, -.5], [-.5, .5, .5, -.5], [-1, 1, -1, 1] ])
         elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]: self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
         self.INV_A = np.linalg.inv(self.A); self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
