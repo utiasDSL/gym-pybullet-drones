@@ -69,7 +69,7 @@ class DynCtrlAviary(BaseAviary):
     ####################################################################################################
     def _computeObs(self):
         adjacency_mat = self._getAdjacencyMatrix()
-        return {str(i): {"state": self._getDroneState(i), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
+        return {str(i): {"state": self._getDroneStateVector(i), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################

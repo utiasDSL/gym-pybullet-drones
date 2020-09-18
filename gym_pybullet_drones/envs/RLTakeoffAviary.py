@@ -60,7 +60,7 @@ class RLTakeoffAviary(BaseAviary):
     #### - obs (20,) array                  for its content see _observationSpace() ####################
     ####################################################################################################
     def _computeObs(self):
-        return self._clipAndNormalizeState(self._getDroneState(0))
+        return self._clipAndNormalizeState(self._getDroneStateVector(0))
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################
@@ -72,7 +72,7 @@ class RLTakeoffAviary(BaseAviary):
     #### - clipped_action ((4,1) array)     clipped RPMs commanded to the 4 motors of the drone ########
     ####################################################################################################
     def _preprocessAction(self, action):
-        rpm = self._normActionToRPM(action)
+        rpm = self._normalizedActionToRPM(action)
         return np.clip(np.array(rpm), 0, self.MAX_RPM)
 
     ####################################################################################################

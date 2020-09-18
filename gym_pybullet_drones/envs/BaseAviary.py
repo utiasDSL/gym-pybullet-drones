@@ -127,9 +127,9 @@ class BaseAviary(gym.Env):
         #### Housekeeping ##################################################################################
         self._housekeeping()
         #### Update and store the drones kinematic information #############################################
-        self._updateAndStoreKinematicInfo()
+        self._updateAndStoreKinematicInformation()
         #### Start video recording #########################################################################
-        self._startVideoRec()
+        self._startVideoRecording()
     
     ####################################################################################################
     #### Reset the environment #########################################################################
@@ -142,9 +142,9 @@ class BaseAviary(gym.Env):
         #### Housekeeping ##################################################################################
         self._housekeeping()
         #### Update and store the drones kinematic information #############################################
-        self._updateAndStoreKinematicInfo()
+        self._updateAndStoreKinematicInformation()
         #### Start video recording #########################################################################
-        self._startVideoRec()
+        self._startVideoRecording()
         #### Return the initial observation ################################################################
         return self._computeObs()
 
@@ -186,7 +186,7 @@ class BaseAviary(gym.Env):
         for _ in range(self.AGGR_PHY_STEPS):
             #### Re-update and store the drones kinematic info to use DYN or compute the aerodynamics effects ##
             if self.AGGR_PHY_STEPS>1 and self.PHYSICS in [Physics.DYN, Physics.PYB_GND, Physics.PYB_DRAG, Physics.PYB_DW, Physics.PYB_GND_DRAG_DW]: 
-                self._updateAndStoreKinematicInfo()
+                self._updateAndStoreKinematicInformation()
             #### Step the simulation using the desired physics update ##########################################
             for i in range (self.NUM_DRONES):
                 if self.PHYSICS==Physics.PYB: self._physics(clipped_action[i,:], i)
@@ -200,7 +200,7 @@ class BaseAviary(gym.Env):
             #### Save the last applied action to compute drag in the next step #################################
             if self.PHYSICS in [Physics.PYB_DRAG, Physics.PYB_GND_DRAG_DW]: self.last_clipped_action = clipped_action
         #### Update and store the drones kinematic information #############################################
-        self._updateAndStoreKinematicInfo()
+        self._updateAndStoreKinematicInformation()
         #### Prepare the return values #####################################################################
         obs = self._computeObs()
         reward = self._computeReward(obs)
@@ -271,14 +271,14 @@ class BaseAviary(gym.Env):
         for i in range(self.NUM_DRONES): 
             #### Show the frame of reference of the drone, note thet it can severly slow down the GUI ##########
             if self.GUI and self.USER_DEBUG: self._showDroneLocalAxes(i)
-            #### Deactivate collisions between the ground plane and the drones' collision volumes ##############
+            #### Disable collisions between drones' and the ground plane, e.g., to start a drone at [0,0,0] ####
             # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES: self._addObstacles()
 
     ####################################################################################################
     #### Update and store the drones kinemaatic information ############################################
     ####################################################################################################
-    def _updateAndStoreKinematicInfo(self):
+    def _updateAndStoreKinematicInformation(self):
         for i in range (self.NUM_DRONES):
             self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
             self.rpy[i] = p.getEulerFromQuaternion(self.quat[i])
@@ -287,7 +287,7 @@ class BaseAviary(gym.Env):
     ####################################################################################################
     #### Start saving the video output as .mp4, if GUI is True,  or .png, otherwise ####################
     ####################################################################################################
-    def _startVideoRec(self):
+    def _startVideoRecording(self):
         if self.RECORD and self.GUI: self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4, fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4", physicsClientId=self.CLIENT)
         if self.RECORD and not self.GUI: self.FRAME_NUM = 0; self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"; os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
 
@@ -300,7 +300,7 @@ class BaseAviary(gym.Env):
     #### Returns #######################################################################################
     #### - state ((20,) array)              the state vector of the nth drone ##########################
     ####################################################################################################
-    def _getDroneState(self, nth_drone):
+    def _getDroneStateVector(self, nth_drone):
         state = np.hstack([self.pos[nth_drone,:], self.quat[nth_drone,:], self.rpy[nth_drone,:], self.vel[nth_drone,:], self.ang_v[nth_drone,:], self.last_action[nth_drone,:]])
         return state.reshape(20,)
 
@@ -338,12 +338,12 @@ class BaseAviary(gym.Env):
     #### - path (str)                       where to save the images as PNGs ###########################  
     #### - frame_num (int)                  number to append to the frame's filename ###################
     ####################################################################################################
-    def _exportFrame(self, img_type: ImageType, img_input, path: str, frame_num: int=0):
+    def _exportImage(self, img_type: ImageType, img_input, path: str, frame_num: int=0):
         if img_type==ImageType.RGB: (Image.fromarray(img_input.astype('uint8'), 'RGBA')).save(path+"frame_"+str(frame_num)+".png") 
         elif img_type==ImageType.DEP: temp = ((img_input-np.min(img_input)) * 255 / (np.max(img_input)-np.min(img_input))).astype('uint8')
         elif img_type==ImageType.SEG: temp = ((img_input-np.min(img_input)) * 255 / (np.max(img_input)-np.min(img_input))).astype('uint8')
         elif img_type==ImageType.BW: temp = (np.sum(img_input[:,:,0:2], axis=2) / 3).astype('uint8')
-        else: print("[ERROR] in BaseAviary._exportFrame(), unknown ImageType"); exit()
+        else: print("[ERROR] in BaseAviary._exportImage(), unknown ImageType"); exit()
         if img_type!=ImageType.RGB: (Image.fromarray(temp)).save(path+"frame_"+str(frame_num)+".png")
 
     ####################################################################################################
@@ -467,8 +467,8 @@ class BaseAviary(gym.Env):
     #### Returns #######################################################################################
     #### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
     ####################################################################################################
-    def _normActionToRPM(self, action): 
-        if np.any(np.abs(action))>1: print("\n[ERROR] it", self.step_counter, "in BaseAviary._normActionToRPM(), out-of-bound action")
+    def _normalizedActionToRPM(self, action): 
+        if np.any(np.abs(action))>1: print("\n[ERROR] it", self.step_counter, "in BaseAviary._normalizedActionToRPM(), out-of-bound action")
         return np.where(action <= 0, (action+1)*self.HOVER_RPM, action*self.MAX_RPM) # Non-linear mapping: -1 -> 0, 0 -> HOVER_RPM, 1 -> MAX_RPM
 
     ####################################################################################################

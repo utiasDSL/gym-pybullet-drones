@@ -253,7 +253,7 @@ To fill/customize the content of each `obs`, every child of [`BaseAviary`](https
 >>> def _computeObs(self, action):
 >>>     ...
 ```
-See [`BaseAviary._exportFrame()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)) and its use in [`VisionCtrlAviary._computeObs()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py) to save frames as PNGs
+See [`BaseAviary._exportImage()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)) and its use in [`VisionCtrlAviary._computeObs()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py) to save frames as PNGs
 
 
 

@@ -68,7 +68,7 @@ class MARLFlockAviary(BaseAviary, MultiAgentEnv):
     ####################################################################################################
     def _computeObs(self):
         adjacency_mat = self._getAdjacencyMatrix()
-        return {str(i): {"state": self._clipAndNormalizeState(self._getDroneState(i)), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
+        return {str(i): {"state": self._clipAndNormalizeState(self._getDroneStateVector(i)), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################
@@ -82,7 +82,7 @@ class MARLFlockAviary(BaseAviary, MultiAgentEnv):
     def _preprocessAction(self, action):
         clipped_action = np.zeros((self.NUM_DRONES,4))
         for k, v in action.items(): 
-            clipped_action[int(k),:] = np.clip(np.array(self._normActionToRPM(v)), 0, self.MAX_RPM)
+            clipped_action[int(k),:] = np.clip(np.array(self._normalizedActionToRPM(v)), 0, self.MAX_RPM)
         return clipped_action
 
     ####################################################################################################
