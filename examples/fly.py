@@ -23,7 +23,7 @@ VISION = False
 RECORD_VIDEO = False
 SIMULATION_FREQ_HZ = 240
 CONTROL_FREQ_HZ = 48
-DURATION_SEC = 10
+DURATION_SEC = 5
 
 if __name__ == "__main__":
 

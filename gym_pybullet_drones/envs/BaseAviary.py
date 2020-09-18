@@ -81,7 +81,9 @@ class BaseAviary(gym.Env):
         self.DRONE_MODEL = drone_model; self.GUI = gui; self.RECORD = record; self.PHYSICS = physics; self.OBSTACLES = obstacles
         if self.DRONE_MODEL==DroneModel.CF2X: self.URDF = "cf2x.urdf"
         elif self.DRONE_MODEL==DroneModel.CF2P: self.URDF = "cf2p.urdf"
-        elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"  
+        elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"
+        #### Do not draw of the drones' axes and the GUI sliders to improve perf. when GUI is True #########
+        self.GUI_PERF = False
         #### Load the drone properties from the .urdf file #################################################
         self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF, self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3 = self._parseURDFParameters()
         print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(\
@@ -98,10 +100,11 @@ class BaseAviary(gym.Env):
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW, p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]: p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
             p.resetDebugVisualizerCamera(cameraDistance=3, cameraYaw=-30, cameraPitch=-30, cameraTargetPosition=[0,0,0], physicsClientId=self.CLIENT) 
             ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT); print("viewMatrix", ret[2]); print("projectionMatrix", ret[3])
-            #### Add input sliders to the GUI ##################################################################
-            self.SLIDERS = -1*np.ones(4)
-            for i in range(4): self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
-            self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
+            if not self.GUI_PERF:
+                #### Add input sliders to the GUI ##################################################################
+                self.SLIDERS = -1*np.ones(4)
+                for i in range(4): self.SLIDERS[i] = p.addUserDebugParameter("Propeller "+str(i)+" RPM", 0, self.MAX_RPM, self.HOVER_RPM, physicsClientId=self.CLIENT)
+                self.INPUT_SWITCH = p.addUserDebugParameter("Use GUI RPM", 9999, -1, 0, physicsClientId=self.CLIENT)
         else: 
             #### Without debug GUI #############################################################################
             self.CLIENT = p.connect(p.DIRECT) 
@@ -163,11 +166,12 @@ class BaseAviary(gym.Env):
             [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH, height=self.VID_HEIGHT, shadow=1, viewMatrix=self.CAM_VIEW, \
                 projectionMatrix=self.CAM_PRO, renderer=p.ER_TINY_RENDERER, flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX, physicsClientId=self.CLIENT)
             (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            #### Save the depth or segmentation view instead ###################################################
             # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8'); (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")            
             # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8'); (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
             self.FRAME_NUM += 1
         #### Read the GUI's input parameters ###############################################################
-        if self.GUI: 
+        if self.GUI and not self.GUI_PERF: 
             current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
             if current_input_switch>self.last_input_switch:
                 self.last_input_switch = current_input_switch
@@ -266,7 +270,7 @@ class BaseAviary(gym.Env):
         self.DRONE_IDS = np.array([p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF, self.INIT_XYZS[i,:], p.getQuaternionFromEuler(self.INIT_RPYS[i,:]), physicsClientId=self.CLIENT) for i in range(self.NUM_DRONES)])
         for i in range(self.NUM_DRONES): 
             #### Show the frame of reference of the drone, note thet it can severly slow down the GUI ##########
-            self._showDroneLocalAxes(i)
+            if self.GUI and not self.GUI_PERF: self._showDroneLocalAxes(i)
             #### Deactivate collisions between the ground plane and the drones' collision volumes ##############
             # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES: self._addObstacles()
