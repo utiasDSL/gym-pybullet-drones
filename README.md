@@ -216,7 +216,8 @@ Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/bl
 - The desired torque around the drone's x-axis
 - The desired torque around the drone's y-axis
 - The desired torque around the drone's z-axis
-instead of desired RPMs
+
+instead of the propellers' desired RPMs
 
 
 
