@@ -52,7 +52,7 @@ class DSLPIDControl(BaseControl):
     #### - pos_e ((3,1) array)              current XYZ position error #################################
     #### - yaw_e (float)                    current yaw error ##########################################
     ####################################################################################################
-    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel, \
+    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel, 
                         target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
         self.control_counter += 1
         thrust, computed_target_rpy, pos_e = self._dslPIDPositionControl(control_timestep, cur_pos, cur_quat, cur_vel, target_pos, target_rpy, target_vel)

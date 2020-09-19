@@ -33,7 +33,7 @@ if __name__ == "__main__":
     DURATION_SEC = int(TRACE_TIMESTAMPS[-1]); SIMULATION_FREQ_HZ = int(len(TRACE_TIMESTAMPS)/TRACE_TIMESTAMPS[-1])
     
     #### Initialize the simulation #####################################################################
-    env = CtrlAviary(drone_model=DroneModel.CF2X, num_drones=1, initial_xyzs=np.array([0,0,.1]).reshape(1,3), \
+    env = CtrlAviary(drone_model=DroneModel.CF2X, num_drones=1, initial_xyzs=np.array([0,0,.1]).reshape(1,3), 
                     physics=ARGS.physics, freq=SIMULATION_FREQ_HZ, gui=ARGS.gui, record=ARGS.record_video, obstacles=False)
     INITIAL_STATE = env.reset(); action = {"0": np.zeros(4)}; pos_err = 9999.
 
@@ -54,7 +54,7 @@ if __name__ == "__main__":
         obs, reward, done, info = env.step(action)
 
         #### Compute the next action using the set points from the trace file ##############################
-        action["0"], pos_err, yaw_err = ctrl.computeControlFromState(control_timestep=env.TIMESTEP, state=obs["0"]["state"], \
+        action["0"], pos_err, yaw_err = ctrl.computeControlFromState(control_timestep=env.TIMESTEP, state=obs["0"]["state"], 
                                                                 target_pos=TRACE_CTRL_REFERENCE[i,0:3], target_vel=TRACE_CTRL_REFERENCE[i,3:6])
 
         #### Re-arrange the trace for consistency with the logger  #########################################

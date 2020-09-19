@@ -75,10 +75,10 @@ class BaseAviary(gym.Env):
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     ####################################################################################################
-    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, \
-                        neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
-                        physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1, \
-                        gui=False, record=False, obstacles=False, user_debug_gui=True):
+    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, 
+                    neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, 
+                    physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1, 
+                    gui=False, record=False, obstacles=False, user_debug_gui=True):
         #### Constants #####################################################################################
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
         self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; self.AGGR_PHY_STEPS = aggregate_phy_steps
@@ -92,7 +92,7 @@ class BaseAviary(gym.Env):
         elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"
         #### Load the drone properties from the .urdf file #################################################
         self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF, self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3 = self._parseURDFParameters()
-        print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(\
+        print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
                                                                         self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3) )
         #### Compute constants #############################################################################
         self.GRAVITY = self.G*self.M; self.HOVER_RPM = np.sqrt(self.GRAVITY/(4*self.KF))
@@ -169,7 +169,7 @@ class BaseAviary(gym.Env):
     def step(self, action):
         #### Save a video frame in PNG format if RECORD=True and GUI=False #################################
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ==0: 
-            [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH, height=self.VID_HEIGHT, shadow=1, viewMatrix=self.CAM_VIEW, \
+            [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH, height=self.VID_HEIGHT, shadow=1, viewMatrix=self.CAM_VIEW, 
                 projectionMatrix=self.CAM_PRO, renderer=p.ER_TINY_RENDERER, flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX, physicsClientId=self.CLIENT)
             (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
             #### Save the depth or segmentation view instead ###################################################
@@ -330,7 +330,7 @@ class BaseAviary(gym.Env):
         DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=self.pos[nth_drone,:]+np.array([0,0,self.L]), cameraTargetPosition=target, cameraUpVector=[0,0,1], physicsClientId=self.CLIENT)
         DRONE_CAM_PRO =  p.computeProjectionMatrixFOV(fov=60.0, aspect=1.0, nearVal=self.L, farVal=1000.0)
         SEG_FLAG = p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX if segmentation else p.ER_NO_SEGMENTATION_MASK
-        [w, h, rgb, dep, seg] = p.getCameraImage(width=self.IMG_RES[0], height=self.IMG_RES[1], shadow=1, viewMatrix=DRONE_CAM_VIEW, projectionMatrix=DRONE_CAM_PRO, \
+        [w, h, rgb, dep, seg] = p.getCameraImage(width=self.IMG_RES[0], height=self.IMG_RES[1], shadow=1, viewMatrix=DRONE_CAM_VIEW, projectionMatrix=DRONE_CAM_PRO,
                 flags=SEG_FLAG, physicsClientId=self.CLIENT)
         rgb = np.reshape(rgb, (h, w, 4)); dep = np.reshape(dep, (h, w)); seg = np.reshape(seg, (h, w))
         return rgb, dep, seg
@@ -446,8 +446,8 @@ class BaseAviary(gym.Env):
         z_torques = np.array(rpm**2)*self.KM
         z_torque = (-z_torques[0] + z_torques[1] - z_torques[2] + z_torques[3])
         if self.DRONE_MODEL==DroneModel.CF2X:
-            x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * self.L/np.sqrt(2)
-            y_torque = (- forces[0] + forces[1] + forces[2] - forces[3]) * self.L/np.sqrt(2)
+            x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * (self.L/np.sqrt(2))
+            y_torque = (- forces[0] + forces[1] + forces[2] - forces[3]) * (self.L/np.sqrt(2))
         elif self.DRONE_MODEL==DroneModel.CF2P or self.DRONE_MODEL==DroneModel.HB:
             x_torque = (forces[1] - forces[3]) * self.L
             y_torque = (-forces[0] + forces[2]) * self.L

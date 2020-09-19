@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #####################################################################
     INIT_XYZS = np.array([[.5,0,1],[-.5,0,.5]])
-    env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
+    env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, 
                     neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, gui=ARGS.gui, record=ARGS.record_video, obstacles=True)
 
     #### Initialize the trajectories ###################################################################
@@ -58,7 +58,7 @@ if __name__ == "__main__":
 
             #### Compute control for the current way point #####################################################
             for j in range(ARGS.num_drones): 
-                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"], \
+                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"], 
                                                                             target_pos=np.hstack([ TARGET_POS[wp_counters[j],:], INIT_XYZS[j,2] ]))
 
             #### Go to the next way point and loop #############################################################

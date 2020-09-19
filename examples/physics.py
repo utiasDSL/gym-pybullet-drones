@@ -19,7 +19,7 @@ if __name__ == "__main__":
     ARGS = parser.parse_args()
     
     #### Initialize the simulation #####################################################################
-    env = CtrlAviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([-.7, -.5, .3]).reshape(1,3), \
+    env = CtrlAviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([-.7, -.5, .3]).reshape(1,3), 
                     initial_rpys=np.array([0, -30*(np.pi/180), 0]).reshape(1,3), gui=True, obstacles=True)
 
     #### Get PyBullet's and drone's ids ################################################################

@@ -40,9 +40,9 @@ if __name__ == "__main__":
     AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
 
     #### Create the environment with or without video capture part of each drone's state ###############
-    if ARGS.vision: env = VisionCtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
+    if ARGS.vision: env = VisionCtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, 
                     neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles)
-    else: env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
+    else: env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, 
                     neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles, user_debug_gui=ARGS.user_debug_gui)
 
     #### Initialize a circular trajectory ##############################################################
@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
             #### Compute control for the current way point #####################################################
             for j in range(ARGS.num_drones): 
-                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"], \
+                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"], 
                                                                                 target_pos=np.hstack([TARGET_POS[wp_counters[j],0:2], H+j*H_STEP]))
 
             #### Go to the next way point and loop #############################################################
@@ -85,8 +85,8 @@ if __name__ == "__main__":
             env.render()
             #### Print the matrices with the images captured by each drone #####################################
             if ARGS.vision: 
-                for j in range(ARGS.num_drones): print(obs[str(j)]["rgb"].shape, np.average(obs[str(j)]["rgb"]),\
-                                                    obs[str(j)]["dep"].shape, np.average(obs[str(j)]["dep"]),\
+                for j in range(ARGS.num_drones): print(obs[str(j)]["rgb"].shape, np.average(obs[str(j)]["rgb"]),
+                                                    obs[str(j)]["dep"].shape, np.average(obs[str(j)]["dep"]),
                                                     obs[str(j)]["seg"].shape, np.average(obs[str(j)]["seg"]))
 
         #### Sync the simulation ###########################################################################
