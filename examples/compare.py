@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 from datetime import datetime
 import pdb
 import math
@@ -14,12 +15,18 @@ from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
-GUI = False
-RECORD_VIDEO = False
-TRACE_FILE = "example_trace.pkl"
-PHYSICS = Physics.PYB
-
 if __name__ == "__main__":
+
+    #### Define (optional) arguments for the script ####################################################
+    parser = argparse.ArgumentParser(description='Trace comparison script using CtrlAviary and DSLPIDControl')
+    parser.add_argument('--physics',            default=Physics.PYB,        type=lambda phy: Physics[phy],  help='Physics updates (default: PYB)', choices=list(Physics), metavar='')
+    parser.add_argument('--gui',                default=False,              type=str2bool,                  help='Whether to use PyBullet GUI (default: False)', metavar='')
+    parser.add_argument('--record_video',       default=False,              type=str2bool,                  help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--trace_file',         default="example_trace.pkl",type=str,                       help='Pickle file with the trace to compare to (default: "example_trace.pkl")', metavar='')
+    namespace = parser.parse_args()
+
+    #### Parse arguments and assign them to constants ##################################################
+    PHYSICS = namespace.physics; GUI = namespace.gui; RECORD_VIDEO = namespace.record_video; TRACE_FILE = namespace.trace_file
 
     #### Load a trace and control reference from a .pkl file ###########################################
     with open(os.path.dirname(os.path.abspath(__file__))+"/../files/"+TRACE_FILE, 'rb') as in_file:

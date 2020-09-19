@@ -99,7 +99,7 @@ There are 2 basic scripts in `examples/`: `fly.py` and `learn.py`
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python fly.py
+$ python fly.py                             # Try 'python fly.py -h' to show the script's customizable parameters
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
 
@@ -111,7 +111,7 @@ $ python fly.py
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python learn.py
+$ python learn.py                           # Try 'python learn.py -h' to show the script's customizable parameters
 ```
 <img src="files/readme_images/learn1.gif" alt="learning 1" width="400"> <img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
 <img src="files/readme_images/learn3.gif" alt="learning 3" width="400"> <img src="files/readme_images/learn4.gif" alt="learning 4" width="400">
@@ -122,7 +122,7 @@ Other scripts in folder `examples/` are:
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python compare.py
+$ python compare.py                         # Try 'python compare.py -h' to show the script's customizable parameters
 ```
 <img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="360"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
 
@@ -130,7 +130,7 @@ $ python compare.py
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python downwash.py
+$ python downwash.py                        # Try 'python downwash.py -h' to show the script's customizable parameters
 ```
 
 <img src="files/readme_images/downwash.gif" alt="downwash example" width="360"> <img src="files/readme_images/downwash.png" alt="control info" width="450">
@@ -139,7 +139,7 @@ $ python downwash.py
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python physics.py
+$ python physics.py                         # Try 'python physics.py -h' to show the script's customizable parameters
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
 
@@ -147,7 +147,7 @@ $ python physics.py
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
-$ python _dev.py
+$ python _dev.py                            # Try 'python _dev.py -h' to show the script's customizable parameters
 ```
 
 <img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">

@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 import pdb
 import math
 import numpy as np
@@ -19,9 +20,12 @@ from ray.rllib.agents import ppo
 from utils import *
 from gym_pybullet_drones.envs.RLTakeoffAviary import RLTakeoffAviary
 
-RLLIB = False
-
 if __name__ == "__main__":
+
+    #### Define, parse, and assign (optional) arguments for the script #################################
+    parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using RLTakeoffAviary')
+    parser.add_argument('--rllib',      default=False,        type=str2bool,       help='Whether to use RLlib PPO in place of stable-baselines A2C (default: False)', metavar='')
+    namespace = parser.parse_args(); RLLIB = namespace.rllib    
 
     #### Check the environment's spaces ################################################################
     env = gym.make("rl-takeoff-aviary-v0")

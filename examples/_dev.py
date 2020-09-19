@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 from datetime import datetime
 import pdb
 import math
@@ -27,28 +28,36 @@ from gym_pybullet_drones.envs.MARLFlockAviary import MARLFlockAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
-DRONE = DroneModel.CF2X
-PHYSICS = Physics.PYB
-SIMULATION_FREQ_HZ = 240
-GUI = True
-DEBUG_MARL = False
-DYN_CTRL = False
-PART = 1
-
-LOG = True
-NUM_DRONES = 1
-VISION = False
-AGGREGATE = True
-
 if __name__ == "__main__":
+
+    #### Define (optional) arguments for the script ####################################################
+    parser = argparse.ArgumentParser(description='Ongoing development script')
+    parser.add_argument('--drone',              default=DroneModel.CF2X,    type=lambda model: DroneModel[model],   help='Drone model (default: CF2X)', choices=list(DroneModel), metavar='')
+    parser.add_argument('--num_drones',         default=5,                  type=int,                               help='Number of drones (default: 5)', metavar='')
+    parser.add_argument('--physics',            default=Physics.PYB,        type=lambda phy: Physics[phy],          help='Physics updates (default: PYB)', choices=list(Physics), metavar='')
+    parser.add_argument('--vision',             default=False,              type=str2bool,                          help='Whether to use VisionCtrlAviary (default: False)', metavar='')
+    parser.add_argument('--gui',                default=True,               type=str2bool,                          help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--simulation_freq_hz', default=240,                type=int,                               help='Simulation frequency in Hz (default: 240)', metavar='')
+    parser.add_argument('--control_freq_hz',    default=48,                 type=int,                               help='Control frequency in Hz (default: 48)', metavar='')
+    parser.add_argument('--duration_sec',       default=15,                 type=int,                               help='Duration of the simulation in seconds (default: 15)', metavar='')
+    parser.add_argument('--debug_marl',         default=False,              type=str2bool,                          help='Whether to print obs, reward, done of MARLFlockAviary (default: False)', metavar='')
+    parser.add_argument('--dyn_ctrl',           default=False,              type=str2bool,                          help='Whether to use DynCtrlAviary (default: False)', metavar='')
+    parser.add_argument('--log',                default=True,               type=str2bool,                          help='Whether to log the simulation (default: True)', metavar='')
+    parser.add_argument('--aggregate',          default=True,               type=str2bool,                          help='Whether to aggregate physics steps (default: True)', metavar='')
+    parser.add_argument('--part',               default=1,                  type=int,                               help='Which of the 2 blocks in the _dev script to execute (default: 1)', metavar='')
+    namespace = parser.parse_args()
+
+    #### Parse arguments and assign them to constants ##################################################
+    DRONE = namespace.drone; NUM_DRONES = namespace.num_drones; PHYSICS = namespace.physics; VISION = namespace.vision; GUI = namespace.gui
+    SIMULATION_FREQ_HZ = namespace.simulation_freq_hz; CONTROL_FREQ_HZ = namespace.control_freq_hz; DURATION_SEC = namespace.duration_sec
+    DEBUG_MARL = namespace.debug_marl; DYN_CTRL = namespace.dyn_ctrl; LOG = namespace.log; AGGREGATE = namespace.aggregate; PART = namespace.part
 
     ####################################################################################################
     #### Part 1 of 2 of _dev.py: control with CtrlAviary and printout of MARLFlockAviary's RL functions 
     ####################################################################################################
     if PART==1:
 
-        DURATION_SEC = 15
-        CONTROL_FREQ_HZ = 48
+        
         AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
 
         #### Initialize the simulation #####################################################################

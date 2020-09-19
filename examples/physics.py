@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 import pdb
 import math
 import numpy as np
@@ -9,10 +10,13 @@ from utils import *
 from gym_pybullet_drones.envs.BaseAviary import DroneModel
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 
-DURATION_SEC = 30
-NUM_RESETS = 2
-
 if __name__ == "__main__":
+
+    #### Define, parse, and assign (optional) arguments for the script #################################
+    parser = argparse.ArgumentParser(description='Debugging script for PyBullet applyExternalForce() and applyExternalTorque() PyBullet')
+    parser.add_argument('--duration_sec',   default=30,     type=int,       help='Duration of the simulation in seconds (default: 30)', metavar='')
+    parser.add_argument('--num_resets',     default=1,      type=int,       help='Number of times the simulation is reset to its initial conditions (default: 2)', metavar='')
+    namespace = parser.parse_args(); DURATION_SEC = namespace.duration_sec; NUM_RESETS = namespace.num_resets
     
     #### Initialize the simulation #####################################################################
     env = CtrlAviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([-.7, -.5, .3]).reshape(1,3), \
@@ -23,6 +27,9 @@ if __name__ == "__main__":
 
     #### Make the drone weightless #####################################################################
     p.setGravity(0, 0, 0, physicsClientId=PYB_CLIENT)
+
+    #### Draw base frame ###############################################################################
+    env._showDroneLocalAxes(0)
     
     #### Run the simulation ############################################################################
     START = time.time()
@@ -63,9 +70,6 @@ if __name__ == "__main__":
         #### To the center of mass #########################################################################
         # p.applyExternalTorque(DRONE_IDS[0], linkIndex=4, torqueObj=[0.,0.,5e-6], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)
         p.applyExternalTorque(DRONE_IDS[0], linkIndex=4, torqueObj=[0.,0.,5e-6], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)
-
-        #### Draw base frame ###############################################################################
-        env._showDroneFrame(0)
 
         #### Step, sync the simulation, printout the state #################################################
         p.stepSimulation(physicsClientId=PYB_CLIENT); sync(i, START, env.TIMESTEP)

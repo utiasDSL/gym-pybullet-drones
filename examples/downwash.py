@@ -1,5 +1,6 @@
 import os
 import time
+import argparse
 from datetime import datetime
 import pdb
 import math
@@ -13,16 +14,24 @@ from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
-DRONE = DroneModel.CF2X
-NUM_DRONES = 2
-GUI = True
-PHYSICS = Physics.PYB_GND_DRAG_DW
-RECORD_VIDEO = False
-SIMULATION_FREQ_HZ = 240
-CONTROL_FREQ_HZ = 48
-DURATION_SEC = 10
-
 if __name__ == "__main__":
+
+    #### Define (optional) arguments for the script ####################################################
+    parser = argparse.ArgumentParser(description='Downwash example script using CtrlAviary and DSLPIDControl')
+    parser.add_argument('--drone',              default=DroneModel.CF2X,        type=lambda model: DroneModel[model],   help='Drone model (default: CF2X)', choices=list(DroneModel), metavar='')
+    parser.add_argument('--num_drones',         default=2,                      type=int,                               help='Number of drones (default: 2)', metavar='')
+    parser.add_argument('--physics',            default=Physics.PYB_GND_DRAG_DW,type=lambda phy: Physics[phy],          help='Physics updates (default: PYB_GND_DRAG_DW)', choices=list(Physics), metavar='')
+    parser.add_argument('--gui',                default=True,                   type=str2bool,                          help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=False,                  type=str2bool,                          help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--simulation_freq_hz', default=240,                    type=int,                               help='Simulation frequency in Hz (default: 240)', metavar='')
+    parser.add_argument('--control_freq_hz',    default=48,                     type=int,                               help='Control frequency in Hz (default: 48)', metavar='')
+    parser.add_argument('--duration_sec',       default=10,                     type=int,                               help='Duration of the simulation in seconds (default: 10)', metavar='')
+    namespace = parser.parse_args()
+
+    #### Parse arguments and assign them to constants ##################################################
+    DRONE = namespace.drone; NUM_DRONES = namespace.num_drones; PHYSICS = namespace.physics
+    GUI = namespace.gui; RECORD_VIDEO = namespace.record_video
+    SIMULATION_FREQ_HZ = namespace.simulation_freq_hz; CONTROL_FREQ_HZ = namespace.control_freq_hz; DURATION_SEC = namespace.duration_sec
 
     #### Initialize the simulation #####################################################################
     INIT_XYZS = np.array([[.5,0,1],[-.5,0,.5]])

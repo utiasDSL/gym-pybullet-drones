@@ -23,6 +23,9 @@ class DroneModel(Enum):
     CF2P = 1                 # Bitcraze Craziflie 2.0 in the + configuration
     HB = 2                   # Generic quadrotor (with AscTec Hummingbird inertial properties)
 
+    #### String representation of DroneModel ###########################################################
+    def __str__(self): return self.name
+
 
 ######################################################################################################################################################
 #### Physics implementations enumeration #############################################################################################################
@@ -34,6 +37,9 @@ class Physics(Enum):
     PYB_DRAG = 3             # PyBullet physics update with drag
     PYB_DW = 4               # PyBullet physics update with downwash
     PYB_GND_DRAG_DW = 5      # PyBullet physics update with ground effect, drag, and downwash
+
+    #### String representation of Physics ##############################################################
+    def __str__(self): return self.name
 
 
 ######################################################################################################################################################
