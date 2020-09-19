@@ -45,7 +45,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 > While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, \~5kHz PyBullet physics (CPU-only) is faster than [AirSim (1kHz)](https://arxiv.org/pdf/1705.05065.pdf) and more accurate than [Flightmare's 35kHz simple single quadcopter dynamics](https://arxiv.org/pdf/2009.00563.pdf)
 
-> Exploiting parallel computation—i.e., multiple (20) drones in multiple (4) environments, see script [`parallelism.sh`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/parallelism.sh)—achieves PyBullet physics updates at \~20kHz 
+> Exploiting parallel computation—i.e., multiple (80) drones in multiple (4) environments, see script [`parallelism.sh`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/parallelism.sh)—achieves PyBullet physics updates at \~20kHz 
 
 > Multi-agent 6-ch. video capture at \~750kB/s with CPU rendering (`(64*48)*(4+4+2)*24*5*0.2`) is comparable to [Flightmare's 240 RGB frames/s](https://arxiv.org/pdf/2009.00563.pdf) (`(32*32)*3*240`)—although in more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and up to an order of magnitude faster on Ubuntu, with OpenGL rendering
 
