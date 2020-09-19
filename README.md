@@ -318,12 +318,6 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 
-## Ongoing Development (Late September 2020)
-- Downwash force field in `BaseAviary._downwash()`
-- ROS wrapper node(s)
-
-
-
 
 ## Citation
 If you wish, please refer to this work as

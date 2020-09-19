@@ -35,38 +35,33 @@ if __name__ == "__main__":
     parser.add_argument('--duration_sec',       default=5,                  type=int,                               help='Duration of the simulation in seconds (default: 5)', metavar='')
     ARGS = parser.parse_args()
 
-    DRONE = ARGS.drone; NUM_DRONES = ARGS.num_drones; PHYSICS = ARGS.physics; 
-    VISION = ARGS.vision; GUI = ARGS.gui; RECORD_VIDEO = ARGS.record_video; PLOT = ARGS.plot
-    USER_DEBUG_GUI = ARGS.user_debug_gui; AGGREGATE = ARGS.aggregate; OBSTACLES = ARGS.obstacles
-    SIMULATION_FREQ_HZ = ARGS.simulation_freq_hz; CONTROL_FREQ_HZ = ARGS.control_freq_hz; DURATION_SEC = ARGS.duration_sec
-
     #### Initialize the simulation #####################################################################
-    H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
-    AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
+    H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(ARGS.num_drones) ])
+    AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
 
     #### Create the environment with or without video capture part of each drone's state ###############
-    if VISION: env = VisionCtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
-                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=RECORD_VIDEO, obstacles=OBSTACLES)
-    else: env = CtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
-                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=RECORD_VIDEO, obstacles=OBSTACLES, user_debug_gui=USER_DEBUG_GUI)
+    if ARGS.vision: env = VisionCtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
+                    visibility_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles)
+    else: env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
+                    visibility_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles, user_debug_gui=ARGS.user_debug_gui)
 
     #### Initialize a circular trajectory ##############################################################
-    PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
+    PERIOD = 10; NUM_WP = ARGS.control_freq_hz*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
     for i in range(NUM_WP): TARGET_POS[i,:] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0,0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0,1], INIT_XYZS[0,2]  
-    wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(NUM_DRONES) ])
+    wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(ARGS.num_drones) ])
     
     #### Initialize the logger #########################################################################
-    logger = Logger(logging_freq_hz=int(SIMULATION_FREQ_HZ/AGGR_PHY_STEPS), num_drones=NUM_DRONES)
+    logger = Logger(logging_freq_hz=int(ARGS.simulation_freq_hz/AGGR_PHY_STEPS), num_drones=ARGS.num_drones)
 
     #### Initialize the controllers ####################################################################    
-    ctrl = [DSLPIDControl(env) for i in range(NUM_DRONES)]
-    # ctrl = [SimplePIDControl(env) for i in range(NUM_DRONES)]
+    ctrl = [DSLPIDControl(env) for i in range(ARGS.num_drones)]
+    # ctrl = [SimplePIDControl(env) for i in range(ARGS.num_drones)]
 
     #### Run the simulation ############################################################################
-    CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
-    action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) }
+    CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
+    action = { str(i): np.array([0,0,0,0]) for i in range(ARGS.num_drones) }
     START = time.time()
-    for i in range(0, int(DURATION_SEC*env.SIM_FREQ), AGGR_PHY_STEPS):
+    for i in range(0, int(ARGS.duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
         #### Step the simulation ###########################################################################
         obs, reward, done, info = env.step(action)
@@ -75,27 +70,27 @@ if __name__ == "__main__":
         if i%CTRL_EVERY_N_STEPS==0:
 
             #### Compute control for the current way point #####################################################
-            for j in range(NUM_DRONES): 
+            for j in range(ARGS.num_drones): 
                 action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"], \
                                                                                 target_pos=np.hstack([TARGET_POS[wp_counters[j],0:2], H+j*H_STEP]))
 
             #### Go to the next way point and loop #############################################################
-            for j in range(NUM_DRONES): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
+            for j in range(ARGS.num_drones): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
 
         #### Log the simulation ############################################################################
-        for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],0:2], H+j*H_STEP, np.zeros(9) ]))   
+        for j in range(ARGS.num_drones): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],0:2], H+j*H_STEP, np.zeros(9) ]))   
         
         #### Printout ######################################################################################
         if i%env.SIM_FREQ==0: 
             env.render()
             #### Print the matrices with the images captured by each drone #####################################
-            if VISION: 
-                for j in range(NUM_DRONES): print(obs[str(j)]["rgb"].shape, np.average(obs[str(j)]["rgb"]),\
+            if ARGS.vision: 
+                for j in range(ARGS.num_drones): print(obs[str(j)]["rgb"].shape, np.average(obs[str(j)]["rgb"]),\
                                                     obs[str(j)]["dep"].shape, np.average(obs[str(j)]["dep"]),\
                                                     obs[str(j)]["seg"].shape, np.average(obs[str(j)]["seg"]))
 
         #### Sync the simulation ###########################################################################
-        if GUI: sync(i, START, env.TIMESTEP)
+        if ARGS.gui: sync(i, START, env.TIMESTEP)
    
     #### Close the environment #########################################################################
     env.close()
@@ -104,4 +99,4 @@ if __name__ == "__main__":
     logger.save()
 
     #### Plot the simulation results ###################################################################
-    if PLOT: logger.plot()
+    if ARGS.plot: logger.plot()
