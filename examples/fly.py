@@ -18,7 +18,7 @@ from gym_pybullet_drones.utils.Logger import Logger
 
 if __name__ == "__main__":
 
-    #### Define (optional) arguments for the script ####################################################
+    #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary or VisionCtrlAviary and DSLPIDControl')
     parser.add_argument('--drone',              default=DroneModel.CF2X,    type=lambda model: DroneModel[model],   help='Drone model (default: CF2X)', choices=list(DroneModel), metavar='')
     parser.add_argument('--num_drones',         default=3,                  type=int,                               help='Number of drones (default: 3)', metavar='')
@@ -33,18 +33,17 @@ if __name__ == "__main__":
     parser.add_argument('--simulation_freq_hz', default=240,                type=int,                               help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,                 type=int,                               help='Control frequency in Hz (default: 48)', metavar='')
     parser.add_argument('--duration_sec',       default=5,                  type=int,                               help='Duration of the simulation in seconds (default: 5)', metavar='')
-    namespace = parser.parse_args()
+    ARGS = parser.parse_args()
 
-    #### Parse arguments and assign them to constants ##################################################
-    DRONE = namespace.drone; NUM_DRONES = namespace.num_drones; PHYSICS = namespace.physics; 
-    VISION = namespace.vision; GUI = namespace.gui; RECORD_VIDEO = namespace.record_video; PLOT = namespace.plot
-    USER_DEBUG_GUI = namespace.user_debug_gui; AGGREGATE = namespace.aggregate; OBSTACLES = namespace.obstacles
-    SIMULATION_FREQ_HZ = namespace.simulation_freq_hz; CONTROL_FREQ_HZ = namespace.control_freq_hz; DURATION_SEC = namespace.duration_sec
-    AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
+    DRONE = ARGS.drone; NUM_DRONES = ARGS.num_drones; PHYSICS = ARGS.physics; 
+    VISION = ARGS.vision; GUI = ARGS.gui; RECORD_VIDEO = ARGS.record_video; PLOT = ARGS.plot
+    USER_DEBUG_GUI = ARGS.user_debug_gui; AGGREGATE = ARGS.aggregate; OBSTACLES = ARGS.obstacles
+    SIMULATION_FREQ_HZ = ARGS.simulation_freq_hz; CONTROL_FREQ_HZ = ARGS.control_freq_hz; DURATION_SEC = ARGS.duration_sec
 
     #### Initialize the simulation #####################################################################
     H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
-    
+    AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
+
     #### Create the environment with or without video capture part of each drone's state ###############
     if VISION: env = VisionCtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
                     visibility_radius=10, freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=RECORD_VIDEO, obstacles=OBSTACLES)

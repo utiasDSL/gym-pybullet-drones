@@ -12,11 +12,11 @@ from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 
 if __name__ == "__main__":
 
-    #### Define, parse, and assign (optional) arguments for the script #################################
+    #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Debugging script for PyBullet applyExternalForce() and applyExternalTorque() PyBullet')
     parser.add_argument('--duration_sec',   default=30,     type=int,       help='Duration of the simulation in seconds (default: 30)', metavar='')
     parser.add_argument('--num_resets',     default=1,      type=int,       help='Number of times the simulation is reset to its initial conditions (default: 2)', metavar='')
-    namespace = parser.parse_args(); DURATION_SEC = namespace.duration_sec; NUM_RESETS = namespace.num_resets
+    ARGS = parser.parse_args()
     
     #### Initialize the simulation #####################################################################
     env = CtrlAviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([-.7, -.5, .3]).reshape(1,3), \
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     
     #### Run the simulation ############################################################################
     START = time.time()
-    for i in range(DURATION_SEC*env.SIM_FREQ):
+    for i in range(ARGS.duration_sec*env.SIM_FREQ):
         
         #### Apply x-axis force to the base ################################################################
         # p.applyExternalForce(DRONE_IDS[0], linkIndex=-1, forceObj=[1e-4,0.,0,], posObj=[0.,0.,0.], flags=p.WORLD_FRAME, physicsClientId=PYB_CLIENT)
@@ -76,7 +76,7 @@ if __name__ == "__main__":
         if i%env.SIM_FREQ==0: env.render() 
 
         #### Reset #########################################################################################
-        if i>1 and i%((DURATION_SEC/(NUM_RESETS+1))*env.SIM_FREQ)==0: env.reset(); p.setGravity(0, 0, 0, physicsClientId=PYB_CLIENT)
+        if i>1 and i%((ARGS.duration_sec/(ARGS.num_resets+1))*env.SIM_FREQ)==0: env.reset(); p.setGravity(0, 0, 0, physicsClientId=PYB_CLIENT)
 
     #### Close the environment #########################################################################
     env.close()

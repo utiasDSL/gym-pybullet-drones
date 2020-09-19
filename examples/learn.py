@@ -22,10 +22,10 @@ from gym_pybullet_drones.envs.RLTakeoffAviary import RLTakeoffAviary
 
 if __name__ == "__main__":
 
-    #### Define, parse, and assign (optional) arguments for the script #################################
+    #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using RLTakeoffAviary')
     parser.add_argument('--rllib',      default=False,        type=str2bool,       help='Whether to use RLlib PPO in place of stable-baselines A2C (default: False)', metavar='')
-    namespace = parser.parse_args(); RLLIB = namespace.rllib    
+    ARGS = parser.parse_args()    
 
     #### Check the environment's spaces ################################################################
     env = gym.make("rl-takeoff-aviary-v0")
@@ -34,7 +34,7 @@ if __name__ == "__main__":
     check_env(env, warn=True, skip_render_check=True) 
 
     #### Train the model ###############################################################################
-    if not RLLIB:
+    if not ARGS.rllib:
         model = A2C(MlpPolicy, env, verbose=1)
         model.learn(total_timesteps=500000) # 500000
     else:
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     obs = env.reset()
     start = time.time()
     for i in range(10*env.SIM_FREQ):
-        if not RLLIB: action, _states = model.predict(obs, deterministic=True)
+        if not ARGS.rllib: action, _states = model.predict(obs, deterministic=True)
         else: action, _states, _dict = policy.compute_single_action(obs)
         obs, reward, done, info = env.step(action)
         env.render()

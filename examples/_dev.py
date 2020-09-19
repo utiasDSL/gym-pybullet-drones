@@ -30,7 +30,7 @@ from gym_pybullet_drones.utils.Logger import Logger
 
 if __name__ == "__main__":
 
-    #### Define (optional) arguments for the script ####################################################
+    #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Ongoing development script')
     parser.add_argument('--drone',              default=DroneModel.CF2X,    type=lambda model: DroneModel[model],   help='Drone model (default: CF2X)', choices=list(DroneModel), metavar='')
     parser.add_argument('--num_drones',         default=5,                  type=int,                               help='Number of drones (default: 5)', metavar='')
@@ -45,12 +45,11 @@ if __name__ == "__main__":
     parser.add_argument('--log',                default=True,               type=str2bool,                          help='Whether to log the simulation (default: True)', metavar='')
     parser.add_argument('--aggregate',          default=True,               type=str2bool,                          help='Whether to aggregate physics steps (default: True)', metavar='')
     parser.add_argument('--part',               default=1,                  type=int,                               help='Which of the 2 blocks in the _dev script to execute (default: 1)', metavar='')
-    namespace = parser.parse_args()
+    ARGS = parser.parse_args()
 
-    #### Parse arguments and assign them to constants ##################################################
-    DRONE = namespace.drone; NUM_DRONES = namespace.num_drones; PHYSICS = namespace.physics; VISION = namespace.vision; GUI = namespace.gui
-    SIMULATION_FREQ_HZ = namespace.simulation_freq_hz; CONTROL_FREQ_HZ = namespace.control_freq_hz; DURATION_SEC = namespace.duration_sec
-    DEBUG_MARL = namespace.debug_marl; DYN_CTRL = namespace.dyn_ctrl; LOG = namespace.log; AGGREGATE = namespace.aggregate; PART = namespace.part
+    DRONE = ARGS.drone; NUM_DRONES = ARGS.num_drones; PHYSICS = ARGS.physics; VISION = ARGS.vision; GUI = ARGS.gui
+    SIMULATION_FREQ_HZ = ARGS.simulation_freq_hz; CONTROL_FREQ_HZ = ARGS.control_freq_hz; DURATION_SEC = ARGS.duration_sec
+    DEBUG_MARL = ARGS.debug_marl; DYN_CTRL = ARGS.dyn_ctrl; LOG = ARGS.log; AGGREGATE = ARGS.aggregate; PART = ARGS.part
 
     ####################################################################################################
     #### Part 1 of 2 of _dev.py: control with CtrlAviary and printout of MARLFlockAviary's RL functions 

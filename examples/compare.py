@@ -17,19 +17,16 @@ from gym_pybullet_drones.utils.Logger import Logger
 
 if __name__ == "__main__":
 
-    #### Define (optional) arguments for the script ####################################################
+    #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Trace comparison script using CtrlAviary and DSLPIDControl')
     parser.add_argument('--physics',            default=Physics.PYB,        type=lambda phy: Physics[phy],  help='Physics updates (default: PYB)', choices=list(Physics), metavar='')
     parser.add_argument('--gui',                default=False,              type=str2bool,                  help='Whether to use PyBullet GUI (default: False)', metavar='')
     parser.add_argument('--record_video',       default=False,              type=str2bool,                  help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--trace_file',         default="example_trace.pkl",type=str,                       help='Pickle file with the trace to compare to (default: "example_trace.pkl")', metavar='')
-    namespace = parser.parse_args()
-
-    #### Parse arguments and assign them to constants ##################################################
-    PHYSICS = namespace.physics; GUI = namespace.gui; RECORD_VIDEO = namespace.record_video; TRACE_FILE = namespace.trace_file
+    ARGS = parser.parse_args()
 
     #### Load a trace and control reference from a .pkl file ###########################################
-    with open(os.path.dirname(os.path.abspath(__file__))+"/../files/"+TRACE_FILE, 'rb') as in_file:
+    with open(os.path.dirname(os.path.abspath(__file__))+"/../files/"+ARGS.trace_file, 'rb') as in_file:
         TRACE_TIMESTAMPS, TRACE_DATA, TRACE_CTRL_REFERENCE, _, _, _ = pickle.load(in_file)
     
     #### Compute trace's parameters ####################################################################
@@ -37,7 +34,7 @@ if __name__ == "__main__":
     
     #### Initialize the simulation #####################################################################
     env = CtrlAviary(drone_model=DroneModel.CF2X, num_drones=1, initial_xyzs=np.array([0,0,.1]).reshape(1,3), \
-                    physics=PHYSICS, freq=SIMULATION_FREQ_HZ, gui=GUI, record=RECORD_VIDEO, obstacles=False)
+                    physics=ARGS.physics, freq=SIMULATION_FREQ_HZ, gui=ARGS.gui, record=ARGS.record_video, obstacles=False)
     INITIAL_STATE = env.reset(); action = {"0": np.zeros(4)}; pos_err = 9999.
 
     #### Assuming TRACE_FILE starts at position [0,0,0] and the sim starts at [0,0,INITIAL_STATE[2]] ###
@@ -73,7 +70,7 @@ if __name__ == "__main__":
         if i%env.SIM_FREQ==0: env.render()
 
         #### Sync the simulation ###########################################################################
-        if GUI: sync(i, START, env.TIMESTEP)
+        if ARGS.gui: sync(i, START, env.TIMESTEP)
 
     #### Close the environment #########################################################################
     env.close()
