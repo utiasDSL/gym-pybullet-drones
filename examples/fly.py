@@ -28,6 +28,8 @@ if __name__ == "__main__":
     parser.add_argument('--record_video',       default=False,              type=str2bool,                          help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--plot',               default=True,               type=str2bool,                          help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--user_debug_gui',     default=False,              type=str2bool,                          help='Whether to add debug lines and parameters to the GUI (default: False)', metavar='')
+    parser.add_argument('--aggregate',          default=False,              type=str2bool,                          help='Whether to aggregate physics steps (default: False)', metavar='')
+    parser.add_argument('--obstacles',          default=True,               type=str2bool,                          help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,                type=int,                               help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,                 type=int,                               help='Control frequency in Hz (default: 48)', metavar='')
     parser.add_argument('--duration_sec',       default=5,                  type=int,                               help='Duration of the simulation in seconds (default: 5)', metavar='')
@@ -35,17 +37,19 @@ if __name__ == "__main__":
 
     #### Parse arguments and assign them to constants ##################################################
     DRONE = namespace.drone; NUM_DRONES = namespace.num_drones; PHYSICS = namespace.physics; 
-    VISION = namespace.vision; GUI = namespace.gui; RECORD_VIDEO = namespace.record_video; USER_DEBUG_GUI = namespace.user_debug_gui; PLOT = namespace.plot
+    VISION = namespace.vision; GUI = namespace.gui; RECORD_VIDEO = namespace.record_video; PLOT = namespace.plot
+    USER_DEBUG_GUI = namespace.user_debug_gui; AGGREGATE = namespace.aggregate; OBSTACLES = namespace.obstacles
     SIMULATION_FREQ_HZ = namespace.simulation_freq_hz; CONTROL_FREQ_HZ = namespace.control_freq_hz; DURATION_SEC = namespace.duration_sec
+    AGGR_PHY_STEPS = int(SIMULATION_FREQ_HZ/CONTROL_FREQ_HZ) if AGGREGATE else 1
 
     #### Initialize the simulation #####################################################################
     H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(NUM_DRONES) ])
     
     #### Create the environment with or without video capture part of each drone's state ###############
     if VISION: env = VisionCtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
-                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, gui=GUI, record=RECORD_VIDEO, obstacles=True)
+                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=RECORD_VIDEO, obstacles=OBSTACLES)
     else: env = CtrlAviary(drone_model=DRONE, num_drones=NUM_DRONES, initial_xyzs=INIT_XYZS, physics=PHYSICS, \
-                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, gui=GUI, record=RECORD_VIDEO, obstacles=True, user_debug_gui=USER_DEBUG_GUI)
+                    visibility_radius=10, freq=SIMULATION_FREQ_HZ, aggregate_phy_steps=AGGR_PHY_STEPS, gui=GUI, record=RECORD_VIDEO, obstacles=OBSTACLES, user_debug_gui=USER_DEBUG_GUI)
 
     #### Initialize a circular trajectory ##############################################################
     PERIOD = 10; NUM_WP = CONTROL_FREQ_HZ*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
@@ -53,7 +57,7 @@ if __name__ == "__main__":
     wp_counters = np.array([ int((i*NUM_WP/6)%NUM_WP) for i in range(NUM_DRONES) ])
     
     #### Initialize the logger #########################################################################
-    logger = Logger(logging_freq_hz=SIMULATION_FREQ_HZ, num_drones=NUM_DRONES, duration_sec=DURATION_SEC)
+    logger = Logger(logging_freq_hz=int(SIMULATION_FREQ_HZ/AGGR_PHY_STEPS), num_drones=NUM_DRONES)
 
     #### Initialize the controllers ####################################################################    
     ctrl = [DSLPIDControl(env) for i in range(NUM_DRONES)]
@@ -63,7 +67,7 @@ if __name__ == "__main__":
     CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/CONTROL_FREQ_HZ))
     action = { str(i): np.array([0,0,0,0]) for i in range(NUM_DRONES) }
     START = time.time()
-    for i in range(DURATION_SEC*env.SIM_FREQ):
+    for i in range(0, int(DURATION_SEC*env.SIM_FREQ), AGGR_PHY_STEPS):
 
         #### Step the simulation ###########################################################################
         obs, reward, done, info = env.step(action)
