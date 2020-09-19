@@ -38,13 +38,13 @@ Simulation **speed-up with respect to the wall-clock** when using
 - **AND** nearby *obstacles* **AND** a mildly complex *background* (see GIFs)
 - **AND** *24FPS* (in sim. clock), *64x48 pixel* capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
 
-|                                    | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
-| ---------------------------------: | :--------------------------------: | :---------------------------: |
-| Rendering                          | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
-| Single drone, **no** vision        | 15.5x                              | 16.8x                         |
-| Single drone **with** vision       | 10.8x                              | 1.3x                          |
-| Multi-drone (10), **no** vision    | 2.1x                               | 2.3x                          |
-| Multi-drone (5) **with** vision    | 2.5x                               | 0.2x                          |
+|                                   | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
+| --------------------------------: | :--------------------------------: | :---------------------------: |
+| Rendering                         | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
+| Single drone, **no** vision       | 15.5x                              | 16.8x                         |
+| Single drone **with** vision      | 10.8x                              | 1.3x                          |
+| Multi-drone (10), **no** vision   | 2.1x                               | 2.3x                          |
+| Multi-drone (5) **with** vision   | 2.5x                               | 0.2x                          |
 | 80 drones in 4 env, **no** vision | TBDx                               | 0.95x                          |
 
 > \*\*\* **on Ubuntu only, uncomment the line after `self.CLIENT = p.connect(p.DIRECT)` in `BaseAviary.py`**
@@ -53,7 +53,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 > While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, \~5kHz PyBullet physics (CPU-only) is faster than [AirSim (1kHz)](https://arxiv.org/pdf/1705.05065.pdf) and more accurate than [Flightmare's 35kHz simple single quadcopter dynamics](https://arxiv.org/pdf/2009.00563.pdf)
 
-> Exploiting parallel computation—multiple drones in multiple environments, see [`parallelism.sh`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/parallelism.sh)—achieves \~20kHz PyBullet physics updates
+> Exploiting parallel computation—i.e., multiple (20) drones in multiple (4) environments, see script [`parallelism.sh`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/parallelism.sh)—achieves PyBullet physics updates at \~20kHz 
 
 > Multi-agent 6-ch. video capture at \~750kB/s with CPU rendering (`(64*48)*(4+4+2)*24*5*0.2`) is comparable to [Flightmare's 240 RGB frames/s](https://arxiv.org/pdf/2009.00563.pdf) (`(32*32)*3*240`)—although in more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and up to an order of magnitude faster on Ubuntu, with OpenGL rendering
 
