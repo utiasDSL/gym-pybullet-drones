@@ -220,7 +220,7 @@ Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/bl
 - The desired torque around the drone's y-axis
 - The desired torque around the drone's z-axis
 
-From these, desired RPMS are computed by [`DynCtrlAviary._preprocessAction()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py)
+From these, desired RPMs are computed by [`DynCtrlAviary._preprocessAction()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py)
 
 
 
