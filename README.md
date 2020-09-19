@@ -164,7 +164,7 @@ A flight arena for one (ore more) quadrotor can be created as a child class of `
 >>> env = BaseAviary( 
 >>>       drone_model=DroneModel.CF2X,      # See DroneModel Enum class for other quadcopter models 
 >>>       num_drones=1,                     # Number of drones 
->>>       visibility_radius=np.inf,         # Distance at which drones are considered neighbors, only used for multiple drones 
+>>>       neighbourhood_radius=np.inf,      # Distance at which drones are considered neighbors, only used for multiple drones 
 >>>       initial_xyzs=None,                # Initial XYZ positions of the drones
 >>>       initial_rpys=None,                # Initial roll, pitch, and yaw of the drones in radians 
 >>>       physics: Physics=Physics.PYB,     # Choice of (PyBullet) physics implementation 
@@ -220,7 +220,7 @@ Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/bl
 - The desired torque around the drone's y-axis
 - The desired torque around the drone's z-axis
 
-instead of the propellers' desired RPMs
+From these, desired RPMS are computed by [`DynCtrlAviary._preprocessAction()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py)
 
 
 

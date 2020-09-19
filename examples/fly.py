@@ -41,9 +41,9 @@ if __name__ == "__main__":
 
     #### Create the environment with or without video capture part of each drone's state ###############
     if ARGS.vision: env = VisionCtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
-                    visibility_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles)
+                    neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles)
     else: env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
-                    visibility_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles, user_debug_gui=ARGS.user_debug_gui)
+                    neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles, user_debug_gui=ARGS.user_debug_gui)
 
     #### Initialize a circular trajectory ##############################################################
     PERIOD = 10; NUM_WP = ARGS.control_freq_hz*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))

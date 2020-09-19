@@ -31,7 +31,7 @@ if __name__ == "__main__":
     #### Initialize the simulation #####################################################################
     INIT_XYZS = np.array([[.5,0,1],[-.5,0,.5]])
     env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, \
-                    visibility_radius=10, freq=ARGS.simulation_freq_hz, gui=ARGS.gui, record=ARGS.record_video, obstacles=True)
+                    neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, gui=ARGS.gui, record=ARGS.record_video, obstacles=True)
 
     #### Initialize the trajectories ###################################################################
     PERIOD = 10; NUM_WP = ARGS.control_freq_hz*PERIOD; TARGET_POS = np.zeros((NUM_WP,2))

@@ -59,13 +59,13 @@ if __name__ == "__main__":
         H = .1; H_STEP = .05; R = .3; INIT_XYZS = np.array([ [R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(ARGS.num_drones) ])
         
         if ARGS.vision: 
-            env = VisionCtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, visibility_radius=10, \
+            env = VisionCtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, neighbourhood_radius=10, \
                         freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=False, obstacles=True)
         elif ARGS.dyn_ctrl:
-            env = DynCtrlAviary(drone_model=DroneModel.CF2X, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, visibility_radius=10, \
+            env = DynCtrlAviary(drone_model=DroneModel.CF2X, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, neighbourhood_radius=10, \
                         freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=False, obstacles=True)
         else:
-            env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, visibility_radius=10, \
+            env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, neighbourhood_radius=10, \
                         freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=False, obstacles=True)
 
         #### Initialize a circular trajectory ##############################################################
@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
         #### Debug environment used to print out the MARL's problem obs, reward and done ################### 
         if ARGS.num_drones>1 and ARGS.debug_marl:
-            debug_env = MARLFlockAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, visibility_radius=10, \
+            debug_env = MARLFlockAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics, neighbourhood_radius=10, \
                                     freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=False, record=False, obstacles=True)
 
         #### Run the simulation ############################################################################

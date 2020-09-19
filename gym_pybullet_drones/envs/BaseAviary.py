@@ -64,7 +64,7 @@ class BaseAviary(gym.Env):
     #### Arguments #####################################################################################
     #### - drone_model (DroneModel)         desired drone type (associated to an .urdf file) ###########
     #### - num_drones (int)                 desired number of drones in the aviary #####################
-    #### - visibility_radius (float)        used to compute the drones' adjacency matrix, in meters ####
+    #### - neighbourhood_radius (float)     used to compute the drones' adjacency matrix, in meters ####
     #### - initial_xyzs ((3,1) array)       initial XYZ position of the drones #########################
     #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
     #### - physics (Physics)                desired implementation of physics/dynamics #################
@@ -76,14 +76,14 @@ class BaseAviary(gym.Env):
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1, \
-                        visibility_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
+                        neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None, \
                         physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1, \
                         gui=False, record=False, obstacles=False, user_debug_gui=True):
         #### Constants #####################################################################################
         self.G = 9.8; self.RAD2DEG = 180/np.pi; self.DEG2RAD = np.pi/180
         self.SIM_FREQ = freq; self.TIMESTEP = 1./self.SIM_FREQ; self.AGGR_PHY_STEPS = aggregate_phy_steps
         #### Parameters ####################################################################################
-        self.NUM_DRONES = num_drones; self.VISIBILITY_RADIUS = visibility_radius
+        self.NUM_DRONES = num_drones; self.NEIGHBOURHOOD_RADIUS = neighbourhood_radius
         #### Options #######################################################################################
         self.DRONE_MODEL = drone_model; self.GUI = gui; self.RECORD = record; self.PHYSICS = physics
         self.OBSTACLES = obstacles; self.USER_DEBUG = user_debug_gui
@@ -353,7 +353,7 @@ class BaseAviary(gym.Env):
         if img_type!=ImageType.RGB: (Image.fromarray(temp)).save(path+"frame_"+str(frame_num)+".png")
 
     ####################################################################################################
-    #### Compute the adjacency matrix of a multi-drone system using VISIBILITY_RADIUS ##################
+    #### Compute the adjacency matrix of a multi-drone system using NEIGHBOURHOOD_RADIUS ##################
     ####################################################################################################
     #### Returns #######################################################################################
     #### - adj_mat ((NUM_DRONES,NUM_DRONES) array)    adj_mat[i,j]=1 if i,j are neighbors, 0 otherwise #
@@ -362,7 +362,7 @@ class BaseAviary(gym.Env):
         adjacency_mat = np.identity(self.NUM_DRONES)
         for i in range(self.NUM_DRONES-1):
             for j in range(self.NUM_DRONES-i-1):
-                if np.linalg.norm(self.pos[i,:]-self.pos[j+i+1,:])<self.VISIBILITY_RADIUS: adjacency_mat[i,j+i+1] = adjacency_mat[j+i+1,i] = 1
+                if np.linalg.norm(self.pos[i,:]-self.pos[j+i+1,:])<self.NEIGHBOURHOOD_RADIUS: adjacency_mat[i,j+i+1] = adjacency_mat[j+i+1,i] = 1
         return adjacency_mat
 
     ####################################################################################################
