@@ -24,15 +24,15 @@ class Logger(object):
         self.PREALLOCATED_ARRAYS = False if duration_sec==0 else True
         self.counters = np.zeros(num_drones)
         self.timestamps = np.zeros((num_drones, duration_sec*self.LOGGING_FREQ_HZ))
-        self.states = np.zeros((num_drones, 16, duration_sec*self.LOGGING_FREQ_HZ)) #### 16 states: pos_x, pos_y, pos_z, 
-                                                                                                        # vel_x, vel_y, vel_z, 
-                                                                                                        # roll, pitch, yaw, 
-                                                                                                        # ang_vel_x, ang_vel_y, ang_vel_z, 
+        self.states = np.zeros((num_drones, 16, duration_sec*self.LOGGING_FREQ_HZ)) #### 16 states: pos_x, pos_y, pos_z,
+                                                                                                        # vel_x, vel_y, vel_z,
+                                                                                                        # roll, pitch, yaw,
+                                                                                                        # ang_vel_x, ang_vel_y, ang_vel_z,
                                                                                                         # rpm0, rpm1, rpm2, rpm3
         #### Note: this is not the same order nor length returned in obs["i"]["state"] by Aviary.step() ####
         self.controls = np.zeros((num_drones, 12, duration_sec*self.LOGGING_FREQ_HZ)) #### 12 control targets: pos_x, pos_y, pos_z,
-                                                                                                                    # vel_x, vel_y, vel_z, 
-                                                                                                                    # roll, pitch, yaw, 
+                                                                                                                    # vel_x, vel_y, vel_z,
+                                                                                                                    # roll, pitch, yaw,
                                                                                                                     # ang_vel_x, ang_vel_y, ang_vel_z
 
     ####################################################################################################

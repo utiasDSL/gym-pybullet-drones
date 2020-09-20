@@ -20,10 +20,10 @@ def sync(i, start_time, timestep):
 #### - val (?)                              input value (possibly stirng) to interpret as boolean ##
 ####################################################################################################
 #### Returns #######################################################################################
-#### - _ (bool)                             the boolean interpretation of the input value ########## 
+#### - _ (bool)                             the boolean interpretation of the input value ##########
 ####################################################################################################
 def str2bool(val):
     if isinstance(val, bool): return val
-    if val.lower() in ('yes', 'true', 't', 'y', '1'): return True
+    elif val.lower() in ('yes', 'true', 't', 'y', '1'): return True
     elif val.lower() in ('no', 'false', 'f', 'n', '0'): return False
-    else: raise argparse.ArgumentTypeError("[ERROR] in str2bool(), a Boolean value is expected")
+    else: raise print("[ERROR] in str2bool(), a Boolean value is expected")

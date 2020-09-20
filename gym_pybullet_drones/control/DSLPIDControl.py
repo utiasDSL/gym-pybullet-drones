@@ -18,10 +18,10 @@ class DSLPIDControl(BaseControl):
     def __init__(self, env: BaseAviary):
         super().__init__(env=env)
         if self.DRONE_MODEL!=DroneModel.CF2X and self.DRONE_MODEL!=DroneModel.CF2P: print("[ERROR] in DSLPIDControl.__init__(), DSLPIDControl requires DroneModel.CF2X or DroneModel.CF2P"); exit()
-        self.P_COEFF_FOR = np.array([.4, .4, 1.25]); self.I_COEFF_FOR = np.array([.05, .05, .05]); self.D_COEFF_FOR = np.array([.2, .2, .5]) 
+        self.P_COEFF_FOR = np.array([.4, .4, 1.25]); self.I_COEFF_FOR = np.array([.05, .05, .05]); self.D_COEFF_FOR = np.array([.2, .2, .5])
         self.P_COEFF_TOR = np.array([70000., 70000., 60000.]); self.I_COEFF_TOR = np.array([.0, .0, 500.]); self.D_COEFF_TOR = np.array([20000., 20000., 12000.])
         self.PWM2RPM_SCALE = 0.2685; self.PWM2RPM_CONST = 4070.3; self.MIN_PWM = 20000; self.MAX_PWM = 65535
-        if self.DRONE_MODEL==DroneModel.CF2X: self.MIXER_MATRIX = np.array([ [.5, -.5,  -1], [.5, .5, 1], [-.5,  .5,  -1], [-.5, -.5, 1] ]) 
+        if self.DRONE_MODEL==DroneModel.CF2X: self.MIXER_MATRIX = np.array([ [.5, -.5,  -1], [.5, .5, 1], [-.5,  .5,  -1], [-.5, -.5, 1] ])
         elif self.DRONE_MODEL==DroneModel.CF2P: self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
         self.reset()
 
@@ -52,7 +52,7 @@ class DSLPIDControl(BaseControl):
     #### - pos_e ((3,1) array)              current XYZ position error #################################
     #### - yaw_e (float)                    current yaw error ##########################################
     ####################################################################################################
-    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel, 
+    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel,
                         target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
         self.control_counter += 1
         thrust, computed_target_rpy, pos_e = self._dslPIDPositionControl(control_timestep, cur_pos, cur_quat, cur_vel, target_pos, target_rpy, target_vel)
@@ -80,7 +80,7 @@ class DSLPIDControl(BaseControl):
     def _dslPIDPositionControl(self, control_timestep, cur_pos, cur_quat, cur_vel, target_pos, target_rpy, target_vel):
         cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat)).reshape(3,3)
         pos_e = target_pos - cur_pos
-        vel_e = target_vel - cur_vel 
+        vel_e = target_vel - cur_vel
         self.integral_pos_e = self.integral_pos_e + pos_e*control_timestep
         self.integral_pos_e = np.clip(self.integral_pos_e, -2., 2.); self.integral_pos_e[2] = np.clip(self.integral_pos_e[2], -0.15, .15)
         #### PID target thrust #############################################################################
@@ -116,7 +116,7 @@ class DSLPIDControl(BaseControl):
         target_quat = (Rotation.from_euler('XYZ', target_euler, degrees=False)).as_quat()
         w,x,y,z = target_quat
         target_rotation = (Rotation.from_quat([w,x,y,z])).as_matrix()
-        rot_matrix_e = np.dot((target_rotation.transpose()),cur_rotation) - np.dot(cur_rotation.transpose(),target_rotation)        
+        rot_matrix_e = np.dot((target_rotation.transpose()),cur_rotation) - np.dot(cur_rotation.transpose(),target_rotation)
         rot_e = np.array([rot_matrix_e[2,1], rot_matrix_e[0,2], rot_matrix_e[1,0]])
         ang_vel_e = target_ang_vel - cur_ang_vel
         self.integral_rpy_e = self.integral_rpy_e - rot_e*control_timestep

@@ -22,7 +22,7 @@ class SimplePIDControl(BaseControl):
         self.P_COEFF_TOR = np.array([.3, .3, .05]); self.I_COEFF_TOR = np.array([.0001, .0001, .0001]); self.D_COEFF_TOR = np.array([.3, .3, .5])
         self.MAX_ROLL_PITCH = np.pi/6
         self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ]); self.INV_A = np.linalg.inv(self.A)
-        self.B_COEFF = np.array([1/env.KF, 1/(env.KF*env.L), 1/(env.KF*env.L), 1/env.KM]) 
+        self.B_COEFF = np.array([1/env.KF, 1/(env.KF*env.L), 1/(env.KF*env.L), 1/env.KM])
         self.reset()
 
     ####################################################################################################
@@ -52,7 +52,7 @@ class SimplePIDControl(BaseControl):
     #### - pos_e ((3,1) array)              current XYZ position error #################################
     #### - yaw_e (float)                    current yaw error ##########################################
     ####################################################################################################
-    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel, 
+    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel,
                         target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
         self.control_counter += 1
         if target_rpy[2]!=0: print("\n[WARNING] ctrl it", self.control_counter, "in SimplePIDControl.computeControl(), desired yaw={:.0f}deg but locked to 0. for DroneModel.HB".format(target_rpy[2]*(180/np.pi)))
@@ -84,7 +84,7 @@ class SimplePIDControl(BaseControl):
         target_force = np.array([0,0,self.GRAVITY]) + np.multiply(self.P_COEFF_FOR,pos_e) + np.multiply(self.I_COEFF_FOR,self.integral_pos_e) + np.multiply(self.D_COEFF_FOR,d_pos_e)
         target_rpy = np.zeros(3)
         sign_z =  np.sign(target_force[2])
-        if sign_z==0: sign_z = 1 
+        if sign_z==0: sign_z = 1
         #### Target rotation ###############################################################################
         target_rpy[0] = np.arcsin(-sign_z*target_force[1] / np.linalg.norm(target_force))
         target_rpy[1] = np.arctan2(sign_z*target_force[0], sign_z*target_force[2])
@@ -109,7 +109,7 @@ class SimplePIDControl(BaseControl):
     ####################################################################################################
     def _simplePIDAttitudeControl(self, control_timestep, thrust, cur_quat, target_rpy):
         cur_rpy = p.getEulerFromQuaternion(cur_quat)
-        rpy_e = target_rpy - np.array(cur_rpy).reshape(3,) 
+        rpy_e = target_rpy - np.array(cur_rpy).reshape(3,)
         if rpy_e[2]>np.pi: rpy_e[2] = rpy_e[2] - 2*np.pi
         if rpy_e[2]<-np.pi: rpy_e[2] = rpy_e[2] + 2*np.pi
         d_rpy_e = (rpy_e - self.last_rpy_e) / control_timestep
