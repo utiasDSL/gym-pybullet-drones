@@ -25,4 +25,8 @@ register(
     entry_point='gym_pybullet_drones.envs:MARLFlockAviary',
 )
 
+register(
+    id='norm-dyn-ctrl-aviary-v0',
+    entry_point='gym_pybullet_drones.envs:NormDynCtrlAviary',
+)
 
