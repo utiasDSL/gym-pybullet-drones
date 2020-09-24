@@ -320,7 +320,7 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 ## Citation
-If you wish, please refer to this work as
+If you wish, please cite to this work as
 ```
 @MISC{gym-pybullet-drones2020,
     author = {Panerati, Jacopo and Zheng, Hehui and Zhou, SiQi and Xu, James and Prorok, Amanda and Sch\"{o}llig, Angela P.},
