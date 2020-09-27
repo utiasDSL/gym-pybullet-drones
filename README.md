@@ -193,7 +193,7 @@ Then, the environment can be stepped with
 
 
 ### Create New Aviaries
-A new environment can be created as a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (`class NewAviary(BaseAviary):`) and implementing the following 7 abstract methods
+A new environment can be created as a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (`class NewAviary(BaseAviary): ...`) and implementing the following 7 abstract methods
 ```
 >>> #### 1
 >>> def _actionSpace(self):
