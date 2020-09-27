@@ -95,8 +95,8 @@ $ pip install -e .
 
 
 
-## Use
-There are 2 basic scripts in `examples/`: `fly.py` and `learn.py`
+## Examples
+There are 2 basic template scripts in `examples/`: `fly.py` and `learn.py`
 
 - `fly.py` runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
@@ -146,7 +146,7 @@ $ python physics.py                         # Try 'python physics.py -h' to show
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
 
-- `_dev.py` is a script continuously updated with the latest features of `gym-pybullet-drones` like RGB, depth and segmentation views from each drone's POV or compatibility with RLlibs's [`MultiAgentEnv`](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical) class
+- `_dev.py` is an [*always in beta*](https://en.wikipedia.org/wiki/Perpetual_beta) script with the latest features of `gym-pybullet-drones` like RGB, depth and segmentation views from each drone's POV or compatibility with RLlibs's [`MultiAgentEnv`](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical) class
 ```
 $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
@@ -188,6 +188,36 @@ Then, the environment can be stepped with
 >>>     if done: obs = env.reset()
 >>> env.close()
 ```
+
+
+
+
+### Create Aviaries
+Creating new environments can be done by creating a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (`class NewAviary(BaseAviary): ..`) and implementing the following 7 abstract methods
+```
+>>> #### 1
+>>> def _actionSpace(self):
+>>>     return spaces.Box(low=np.zeros(4), high=np.ones(4), dtype=np.float32)
+>>> #### 2
+>>> def _observationSpace(self):
+>>>     return spaces.Box(low=np.zeros(20), high=np.ones(20), dtype=np.float32)
+>>> #### 3
+>>> def _computeObs(self):
+>>>     return self._getDroneStateVector(0)
+>>> #### 4
+>>> def _preprocessAction(self, action):
+>>>     return np.clip(action, 0, 1)
+>>> #### 5
+>>> def _computeReward(self, obs):
+>>>     return -1
+>>> #### 6
+>>> def _computeDone(self, obs):
+>>>     return False
+>>> #### 7
+>>> def _computeInfo(self, obs):
+>>>     return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+```
+See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py), [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py), and [`DynCtrlAviary._preprocessAction()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py) for examples
 
 
 
@@ -279,6 +309,17 @@ See [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/ma
 Simple drag, ground effect, and downwash models can be included in the simulation initializing `BaseAviary()` with `physics=Physics.PYB_GND_DRAG_DW`, these are based on the system identification of [Forster (2015)](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf) (Eq. 4.2), the analytical model used as a baseline for comparison by [Shi et al. (2019)](https://arxiv.org/pdf/1811.08027.pdf) (Eq. 15), and [DSL](https://www.dynsyslab.org/vision-news/)'s experimental work
 
 Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) for more detail
+
+
+
+
+### Obstacles
+Objects can be added to an environment using [`loadURDF` (or `loadSDF`, `loadMJCF`)](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.sbnykoneq1me) in method `_addObstacles()`
+```
+>>> def _addObstacles(self):
+>>>     ...
+>>>     p.loadURDF("sphere2.urdf", [0,0,0], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+```
 
 
 
