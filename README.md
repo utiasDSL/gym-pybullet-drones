@@ -193,7 +193,7 @@ Then, the environment can be stepped with
 
 
 ### Create Aviaries
-Creating new environments can be done by creating a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (`class NewAviary(BaseAviary): ..`) and implementing the following 7 abstract methods
+Creating a new environment can be done by creating a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (i.e. with `class NewAviary(BaseAviary): ..`) and implementing the following 7 abstract methods
 ```
 >>> #### 1
 >>> def _actionSpace(self):
@@ -217,7 +217,7 @@ Creating new environments can be done by creating a child class of [`BaseAviary`
 >>> def _computeInfo(self, obs):
 >>>     return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 ```
-See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py), [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py), and [`DynCtrlAviary._preprocessAction()`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py) for examples
+See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py), [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py), and [`DynCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py) for examples
 
 
 
