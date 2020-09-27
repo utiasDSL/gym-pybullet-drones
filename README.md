@@ -193,29 +193,29 @@ Then, the environment can be stepped with
 
 
 ### Create New Aviaries
-A new environment can be created as a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (`class NewAviary(BaseAviary): ...`) and implementing the following 7 abstract methods
+A new environment can be created as a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (i.e. `class NewAviary(BaseAviary): ...`) and implementing the following 7 abstract methods
 ```
 >>> #### 1
 >>> def _actionSpace(self):
->>>     return spaces.Box(low=np.zeros(4), high=np.ones(4), dtype=np.float32)
+>>>     # e.g. return spaces.Box(low=np.zeros(4), high=np.ones(4), dtype=np.float32)
 >>> #### 2
 >>> def _observationSpace(self):
->>>     return spaces.Box(low=np.zeros(20), high=np.ones(20), dtype=np.float32)
+>>>     # e.g. return spaces.Box(low=np.zeros(20), high=np.ones(20), dtype=np.float32)
 >>> #### 3
 >>> def _computeObs(self):
->>>     return self._getDroneStateVector(0)
+>>>     # e.g. return self._getDroneStateVector(0)
 >>> #### 4
 >>> def _preprocessAction(self, action):
->>>     return np.clip(action, 0, 1)
+>>>     # e.g. return np.clip(action, 0, 1)
 >>> #### 5
 >>> def _computeReward(self, obs):
->>>     return -1
+>>>     # e.g. return -1
 >>> #### 6
 >>> def _computeDone(self, obs):
->>>     return False
+>>>     # e.g. return False
 >>> #### 7
 >>> def _computeInfo(self, obs):
->>>     return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+>>>     # e.g. return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 ```
 See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py), [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py), and [`DynCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py) for examples
 
