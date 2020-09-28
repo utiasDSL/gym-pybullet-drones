@@ -87,7 +87,7 @@ $ pip install -e .
 
 
 
-## Use and Documentation
+## Use, Examples, and Documentation
 
 **Check out file [`README.md`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/JacopoPan/gym-pybullet-drones) for further details**
 
