@@ -21,7 +21,7 @@
 |                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
 |           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|                   *ROS interface* | _WIP_                 | **Yes**                                       | **Yes**                                             |
+|                   *ROS interface* | _ROS2/Python(WIP)_    | ROS/C++                                       | ROS/C++                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
@@ -215,7 +215,7 @@ A new environment can be created as a child class of [`BaseAviary`](https://gith
 >>>     # e.g. return False
 >>> #### 7
 >>> def _computeInfo(self, obs):
->>>     # e.g. return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+>>>     # e.g. return {"answer": 42}        # Calculated by the Deep Thought supercomputer in 7.5M years
 ```
 See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionCtrlAviary.py), [`MARLFlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/MARLFlockAviary.py), [`RLTakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/RLTakeoffAviary.py), and [`DynCtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynCtrlAviary.py) for examples
 
