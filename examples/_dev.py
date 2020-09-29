@@ -23,6 +23,7 @@ from utils import *
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.envs.DynCtrlAviary import DynCtrlAviary
+from gym_pybullet_drones.envs.NormDynCtrlAviary import NormDynCtrlAviary
 from gym_pybullet_drones.envs.VisionCtrlAviary import VisionCtrlAviary
 from gym_pybullet_drones.envs.MARLFlockAviary import MARLFlockAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
