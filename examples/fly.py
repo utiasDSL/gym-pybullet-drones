@@ -4,6 +4,7 @@ import argparse
 from datetime import datetime
 import pdb
 import math
+import random
 import numpy as np
 import pybullet as p
 import matplotlib.pyplot as plt
@@ -45,6 +46,9 @@ if __name__ == "__main__":
     else: env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics,
                     neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, aggregate_phy_steps=AGGR_PHY_STEPS, gui=ARGS.gui, record=ARGS.record_video, obstacles=ARGS.obstacles, user_debug_gui=ARGS.user_debug_gui)
 
+    #### Obtain the PyBullet Client ID from the environment ############################################
+    PYB_CLIENT = env.getPyBulletClient()
+
     #### Initialize a circular trajectory ##############################################################
     PERIOD = 10; NUM_WP = ARGS.control_freq_hz*PERIOD; TARGET_POS = np.zeros((NUM_WP,3))
     for i in range(NUM_WP): TARGET_POS[i,:] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0,0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0,1], INIT_XYZS[0,2]
@@ -62,6 +66,9 @@ if __name__ == "__main__":
     action = { str(i): np.array([0,0,0,0]) for i in range(ARGS.num_drones) }
     START = time.time()
     for i in range(0, int(ARGS.duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
+
+        #### Make it rain rubber ducks #####################################################################
+        # if i/env.SIM_FREQ>5 and i%10==0 and i/env.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
 
         #### Step the simulation ###########################################################################
         obs, reward, done, info = env.step(action)
