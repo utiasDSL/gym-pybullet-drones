@@ -140,7 +140,7 @@ If you wish, please refer to this work as
 
 
 
-## Bonus GIF for Scrolling Down this Far
+## Bonus GIF for Scrolling this Far
 
 <img src="files/readme_images/2020.gif" alt="formation flight" width="360"> <img src="files/readme_images/2020.png" alt="control info" width="450">
 
