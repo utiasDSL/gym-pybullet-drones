@@ -365,7 +365,7 @@ Workspace [`ros2`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/
 - [`RandomControl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/ros2/src/ros2_gym_pybullet_drones/ros2_gym_pybullet_drones/random_control.py) reads `AviaryWrapper`'s `obs` topic and publishes random RPMs on topic `action`
 
 ### Use
-Having installed and sourced ROS2 (on either macOS or Ubuntu, edit `source_ros2_ws.(zsh/bash)` accordingly), run
+With ROS2 installed (on either macOS or Ubuntu, edit `source_ros2_ws.(zsh/bash)` accordingly), run
 ```
 $ cd gym-pybullet-drones/ros2/
 $ ./source_ros2_ws.zsh                     # on macOS, on Ubuntu use ./source_ros2_ws.bash
