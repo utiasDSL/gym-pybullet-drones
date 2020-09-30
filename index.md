@@ -13,7 +13,7 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 |                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
 |                 *RGB/Depth/Segm.* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|                   *ROS interface* | _ROS2/Python (**WIP**)_ | ROS/C++                                     | ROS/C++                                             |
+|                   *ROS interface* | ROS2/Python           | ROS/C++                                       | ROS/C++                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
 |               *Steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | Drag, downwash, ground effect | Drag                                  | Drag                                                |
