@@ -363,11 +363,11 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 Skeleton implementation of `CtrlAviary` running as a [ROS2 Foxy Fitzroy](https://index.ros.org/doc/ros2/Installation/Foxy/) Python node
 ```
 $ cd gym-pybullet-drones/ros2/
+$ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash 
 $ colcon build --packages-select ros2_gym_pybullet_drones
-$ echo "source ~/gym-pybullet-drones/ros2/install/setup.zsh" >> ~/.zshrc # or $ echo "source ~/gym-pybullet-drones/ros2/install/setup.bash" >> ~/.bashrc
-$ source ~/.zshrc                           # or $ source ~/.bashrc
-$ ros2 run ros2_gym_pybullet_drones aviary_wrapper
-$ ros2 run ros2_gym_pybullet_drones random_control
+$ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash
+$ ros2 run ros2_gym_pybullet_drones aviary_wrapper # in one terminal
+$ ros2 run ros2_gym_pybullet_drones random_control # in another terminal
 ```
 
 
