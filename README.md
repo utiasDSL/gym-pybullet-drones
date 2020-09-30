@@ -359,19 +359,24 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 
-## ROS2 Python Wrapper (WIP)
-Skeleton implementation of `CtrlAviary` running as a [ROS2 Foxy Fitzroy](https://index.ros.org/doc/ros2/Installation/Foxy/) Python node
+## ROS2 Python Wrapper
+Workspace [`ros2`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/ros2) contains 2 [ROS2 Foxy Fitzroy](https://index.ros.org/doc/ros2/Installation/Foxy/) Python nodes
+- [`AviaryWrapper`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/ros2/src/ros2_gym_pybullet_drones/ros2_gym_pybullet_drones/aviary_wrapper.py) is a wrapper for a single drone [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py)
+-[`RandomControl`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/ros2/src/ros2_gym_pybullet_drones/ros2_gym_pybullet_drones/random_control.py) reads `AviaryWrapper`'s `obs` topic and publishes random RPMs on topic `action`
+
+### Use
+Having installed ROS2 on macOs or Ubuntu, run
 ```
 $ cd gym-pybullet-drones/ros2/
-$ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash 
+$ ./source_ros2_ws.zsh                     # on macOS or ./source_ros2_ws.bash on Ubuntu
 $ colcon build --packages-select ros2_gym_pybullet_drones
-$ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash
+$ ./source_ros2_ws.zsh                     # on macOS or ./source_ros2_ws.bash on Ubuntu
 $ ros2 run ros2_gym_pybullet_drones aviary_wrapper
 ```
-In a new terminal terminal
+In a new terminal terminal, run
 ```
 $ cd gym-pybullet-drones/ros2/
-$ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash
+$ ./source_ros2_ws.zsh                     # on macOS or ./source_ros2_ws.bash on Ubuntu
 $ ros2 run ros2_gym_pybullet_drones random_control
 ```
 
