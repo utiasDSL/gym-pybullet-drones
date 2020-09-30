@@ -359,7 +359,7 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 
 
 
-## ROS2 Python Wrapper
+## ROS2 Python Wrapper (WIP)
 Skeleton implementation of `CtrlAviary` running as a [ROS2 Foxy Fitzroy](https://index.ros.org/doc/ros2/Installation/Foxy/) Python node
 ```
 $ cd gym-pybullet-drones/ros2/
