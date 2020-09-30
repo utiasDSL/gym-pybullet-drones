@@ -99,7 +99,7 @@ gpustat=0.6.0=pypi_0
 greenlet=0.4.15=py37h1de35cc_0
 grpcio=1.30.0=pypi_0
 gym=0.17.2=pypi_0
-gym-pybullet-drones=1.0.0=dev_0
+gym-pybullet-drones=0.3.1=dev_0
 h5py=2.10.0=py37h3134771_0
 hdf5=1.10.4=hfa1e0ec_0
 heapdict=1.0.1=py_0

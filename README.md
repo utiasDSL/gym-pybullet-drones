@@ -61,7 +61,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 
 ## Requirements
-The repo was written using *Python 3.7.6* on *macOS 10.15* and tested on *Ubuntu 18.04.05*
+The repo was written using *Python 3.7* on *macOS 10.15* and tested on *Ubuntu 18.04*
 
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [`rllib`](https://docs.ray.io/en/master/rllib.html) and [`ffmpeg`](https://ffmpeg.org) (for video recording only)
@@ -366,8 +366,13 @@ $ cd gym-pybullet-drones/ros2/
 $ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash 
 $ colcon build --packages-select ros2_gym_pybullet_drones
 $ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash
-$ ros2 run ros2_gym_pybullet_drones aviary_wrapper # in one terminal
-$ ros2 run ros2_gym_pybullet_drones random_control # in another terminal
+$ ros2 run ros2_gym_pybullet_drones aviary_wrapper
+```
+In a new terminal terminal
+```
+$ cd gym-pybullet-drones/ros2/
+$ ./source_ros2_ws.zsh                     # or ./source_ros2_ws.bash
+$ ros2 run ros2_gym_pybullet_drones random_control
 ```
 
 
