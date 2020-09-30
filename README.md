@@ -364,6 +364,8 @@ Skeleton implementation of `CtrlAviary` running as a [ROS2 Foxy Fitzroy](https:/
 ```
 $ cd gym-pybullet-drones/ros2/
 $ colcon build --packages-select ros2_gym_pybullet_drones
+$ echo "source ~/gym-pybullet-drones/ros2/install/setup.zsh" >> ~/.zshrc # or $ echo "source ~/gym-pybullet-drones/ros2/install/setup.bash" >> ~/.bashrc
+$ source ~/.zshrc                           # or $ source ~/.bashrc
 $ ros2 run ros2_gym_pybullet_drones aviary_wrapper
 $ ros2 run ros2_gym_pybullet_drones random_control
 ```
