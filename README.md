@@ -368,15 +368,15 @@ Workspace [`ros2`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/
 Having installed ROS2 on macOs or Ubuntu, run
 ```
 $ cd gym-pybullet-drones/ros2/
-$ ./source_ros2_ws.zsh                     # on macOS or ./source_ros2_ws.bash on Ubuntu
+$ ./source_ros2_ws.zsh                     # on macOS, on Ubuntu use ./source_ros2_ws.bash
 $ colcon build --packages-select ros2_gym_pybullet_drones
-$ ./source_ros2_ws.zsh                     # on macOS or ./source_ros2_ws.bash on Ubuntu
+$ ./source_ros2_ws.zsh                     # on macOS, on Ubuntu use ./source_ros2_ws.bash
 $ ros2 run ros2_gym_pybullet_drones aviary_wrapper
 ```
 In a new terminal terminal, run
 ```
 $ cd gym-pybullet-drones/ros2/
-$ ./source_ros2_ws.zsh                     # on macOS or ./source_ros2_ws.bash on Ubuntu
+$ ./source_ros2_ws.zsh                     # on macOS, on Ubuntu use ./source_ros2_ws.bash
 $ ros2 run ros2_gym_pybullet_drones random_control
 ```
 
