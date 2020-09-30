@@ -21,7 +21,7 @@
 |                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
 |           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
 |             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|                   *ROS interface* | _ROS2/Python (**WIP**)_ | ROS/C++                                     | ROS/C++                                             |
+|                   *ROS interface* | ROS2/Python           | ROS/C++                                       | ROS/C++                                             |
 |            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
@@ -356,6 +356,17 @@ Class [`Logger`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gy
 >>> logger.plot()                           # Plot data
 ```
 
+
+
+
+## ROS2 Python Wrapper
+Skeleton implementation of `CtrlAviary` running as a [ROS2 Foxy Fitzroy](https://index.ros.org/doc/ros2/Installation/Foxy/) Python node
+```
+$ cd gym-pybullet-drones/ros2/
+$ colcon build --packages-select ros2_gym_pybullet_drones
+$ ros2 run ros2_gym_pybullet_drones aviary_wrapper
+$ ros2 run ros2_gym_pybullet_drones random_control
+```
 
 
 

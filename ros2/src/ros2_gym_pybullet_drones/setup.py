@@ -1,10 +1,10 @@
 from setuptools import setup
 
-package_name = 'gym_pybullet_drones'
+package_name = 'ros2_gym_pybullet_drones'
 
 setup(
     name=package_name,
-    version='0.0.0',
+    version='0.0.1',
     packages=[package_name],
     data_files=[
         ('share/ament_index/resource_index/packages',
@@ -20,7 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'aviary_wrapper = gym_pybullet_drones.aviary_wrapper:main'
+            'aviary_wrapper = ros2_gym_pybullet_drones.aviary_wrapper:main',
+            'random_control = ros2_gym_pybullet_drones.random_control:main',
         ],
     },
 )
