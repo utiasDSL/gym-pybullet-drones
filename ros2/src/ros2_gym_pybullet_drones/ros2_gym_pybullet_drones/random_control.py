@@ -24,14 +24,14 @@ class RandomControl(Node):
         self.timer = self.create_timer(timer_period_sec, self.action_callback)
         #### Subscribe to topic 'obs' ######################################################################
         self.obs_subscription = self.create_subscription(Float32MultiArray, 'obs', self.get_obs_callback, 1); self.obs_subscription  # prevent unused variable warning
-        
+
     #### Publish random RPMs on topic 'action' #########################################################
     def action_callback(self):
         random_rpm13 = random.uniform(.9,1.1)*self.env.HOVER_RPM; random_rpm24 = random.uniform(.9,1.1)*self.env.HOVER_RPM
         msg = Float32MultiArray(); msg.data = [random_rpm13,random_rpm24,random_rpm13,random_rpm24]
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing action: "%f" "%f" "%f" "%f"' % (msg.data[0], msg.data[1], msg.data[2], msg.data[3]))
-        
+
     #### Read the state of drone 0 from topic 'obs' ####################################################
     def get_obs_callback(self, msg):
         self.get_logger().info('I received obs: "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f"' \

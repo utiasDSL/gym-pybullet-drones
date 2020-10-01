@@ -38,7 +38,7 @@ class AviaryWrapper(Node):
                                                             msg.data[5], msg.data[6], msg.data[7], msg.data[8], msg.data[9],
                                                             msg.data[10], msg.data[11], msg.data[12], msg.data[13], msg.data[14],
                                                             msg.data[15], msg.data[16], msg.data[17], msg.data[18], msg.data[19]))
-        
+
     #### Read the action (RPMs) to apply to CtrlAviary from topic 'action' #############################
     def get_action_callback(self, msg):
         self.get_logger().info('I received action: "%f" "%f" "%f" "%f"' % (msg.data[0], msg.data[1], msg.data[2], msg.data[3]))
