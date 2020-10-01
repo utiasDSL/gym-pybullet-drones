@@ -27,7 +27,7 @@ class RandomControl(Node):
         
     #### Publish random RPMs on topic 'action' #########################################################
     def action_callback(self):
-        random_rpm13 = random.gauss(self.env.HOVER_RPM+25, 500); random_rpm24 = random.gauss(self.env.HOVER_RPM+25, 500)
+        random_rpm13 = random.uniform(.9,1.1)*self.env.HOVER_RPM; random_rpm24 = random.uniform(.9,1.1)*self.env.HOVER_RPM
         msg = Float32MultiArray(); msg.data = [random_rpm13,random_rpm24,random_rpm13,random_rpm24]
         self.publisher_.publish(msg)
         self.get_logger().info('Publishing action: "%f" "%f" "%f" "%f"' % (msg.data[0], msg.data[1], msg.data[2], msg.data[3]))
