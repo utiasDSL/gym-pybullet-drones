@@ -15,6 +15,7 @@ class AviaryWrapper(Node):
     #### Initialize the node ###########################################################################
     def __init__(self):
         super().__init__('aviary_wrapper')
+        self.step_cb_count = 0; self.get_action_cb_count = 0
         #### Set the number of drones (must be 1 in this example) and the stepping frequency of the env ####
         num_drones = 1; timer_freq_hz = 240; timer_period_sec = 1/timer_freq_hz
         #### Create the CtrlAviary environment wrapped by the node #########################################
@@ -30,10 +31,11 @@ class AviaryWrapper(Node):
 
     #### Step env CtrlAviary and publish the state of drone 0 on topic 'obs' ###########################
     def step_callback(self):
+        self.step_cb_count += 1
         obs, reward, done, info = self.env.step({"0": self.action})
         msg = Float32MultiArray(); msg.data = obs["0"]["state"].tolist()
         self.publisher_.publish(msg)
-        self.get_logger().info('Publishing obs: "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f"' \
+        if self.step_cb_count%10==0: self.get_logger().info('Publishing obs: "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f" "%f"' \
                                                             % (msg.data[0], msg.data[1], msg.data[2], msg.data[3], msg.data[4],
                                                             msg.data[5], msg.data[6], msg.data[7], msg.data[8], msg.data[9],
                                                             msg.data[10], msg.data[11], msg.data[12], msg.data[13], msg.data[14],
@@ -41,8 +43,9 @@ class AviaryWrapper(Node):
 
     #### Read the action (RPMs) to apply to CtrlAviary from topic 'action' #############################
     def get_action_callback(self, msg):
-        self.get_logger().info('I received action: "%f" "%f" "%f" "%f"' % (msg.data[0], msg.data[1], msg.data[2], msg.data[3]))
+        self.get_action_cb_count += 1
         self.action = np.array([msg.data[0], msg.data[1], msg.data[2], msg.data[3]])
+        if self.get_action_cb_count%10==0: self.get_logger().info('I received action: "%f" "%f" "%f" "%f"' % (msg.data[0], msg.data[1], msg.data[2], msg.data[3]))
 
 
 ######################################################################################################################################################
