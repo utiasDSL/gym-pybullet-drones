@@ -7,7 +7,7 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
 ######################################################################################################################################################
 #### Single drone environment class for reinforcement learning applications (in this implementation, taking off from the origin) #####################
 ######################################################################################################################################################
-class RLTakeoffAviary(BaseAviary):
+class TakeoffAviary(BaseAviary):
 
     ####################################################################################################
     #### Initialize the environment ####################################################################
@@ -30,7 +30,7 @@ class RLTakeoffAviary(BaseAviary):
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
                     gui=False, record=False, obstacles=False, user_debug_gui=True):
-        if num_drones!=1: print("[ERROR] in RLTakeoffAviary.__init__(), RLTakeoffAviary only accepts num_drones=1" ); exit()
+        if num_drones!=1: print("[ERROR] in TakeoffAviary.__init__(), TakeoffAviary only accepts num_drones=1" ); exit()
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui)
@@ -150,9 +150,9 @@ class RLTakeoffAviary(BaseAviary):
     #### Print a warning if any of the 20 values in a state vector is out of the normalization range ###
     ####################################################################################################
     def _clipAndNormalizeStateWarning(self, state, clipped_pos, clipped_rp, clipped_vel, clipped_ang_vel_rp, clipped_ang_vel_y):
-        if not(clipped_pos==np.array(state[0:3])).all(): print("[WARNING] it", self.step_counter, "in RLTakeoffAviary._clipAndNormalizeState(), out-of-bound position [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLTakeoffAviary._computeDone()".format(state[0], state[1], state[2]))
-        if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it", self.step_counter, "in RLTakeoffAviary._clipAndNormalizeState(), out-of-bound roll/pitch [{:.2f} {:.2f}], consider a more conservative implementation of RLTakeoffAviary._computeDone()".format(state[7], state[8]))
-        if not(clipped_vel==np.array(state[10:13])).all(): print("[WARNING] it", self.step_counter, "in RLTakeoffAviary._clipAndNormalizeState(), out-of-bound velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLTakeoffAviary._computeDone()".format(state[10], state[11], state[12]))
-        if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it", self.step_counter, "in RLTakeoffAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLTakeoffAviary._computeDone()".format(state[13], state[14], state[15]))
-        if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it", self.step_counter, "in RLTakeoffAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of RLTakeoffAviary._computeDone()".format(state[13], state[14], state[15]))
+        if not(clipped_pos==np.array(state[0:3])).all(): print("[WARNING] it", self.step_counter, "in TakeoffAviary._clipAndNormalizeState(), out-of-bound position [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of TakeoffAviary._computeDone()".format(state[0], state[1], state[2]))
+        if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it", self.step_counter, "in TakeoffAviary._clipAndNormalizeState(), out-of-bound roll/pitch [{:.2f} {:.2f}], consider a more conservative implementation of TakeoffAviary._computeDone()".format(state[7], state[8]))
+        if not(clipped_vel==np.array(state[10:13])).all(): print("[WARNING] it", self.step_counter, "in TakeoffAviary._clipAndNormalizeState(), out-of-bound velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of TakeoffAviary._computeDone()".format(state[10], state[11], state[12]))
+        if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it", self.step_counter, "in TakeoffAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of TakeoffAviary._computeDone()".format(state[13], state[14], state[15]))
+        if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it", self.step_counter, "in TakeoffAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of TakeoffAviary._computeDone()".format(state[13], state[14], state[15]))
 
