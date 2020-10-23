@@ -1,6 +1,10 @@
 # TODOs 
 TODOs.md
 
+# NumPy saves and videos
+files/*.npy
+files/*.mp4
+
 # macOS users
 .DS_Store
 
