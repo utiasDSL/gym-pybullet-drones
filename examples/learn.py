@@ -8,8 +8,8 @@ import ray
 from ray.tune import register_env
 from ray.rllib.agents import ppo
 
-from gym_pybullet_drones.utils.utils import *
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
+from gym_pybullet_drones.utils.utils import *
 
 if __name__ == "__main__":
 

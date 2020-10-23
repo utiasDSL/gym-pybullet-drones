@@ -29,23 +29,22 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import *
 
-
 if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Ongoing development script')
-    parser.add_argument('--drone',              default=DroneModel.CF2X,    type=lambda model: DroneModel[model],   help='Drone model (default: CF2X)', metavar='')
-    parser.add_argument('--num_drones',         default=3,                  type=int,                               help='Number of drones (default: 5)', metavar='')
-    parser.add_argument('--physics',            default=Physics.PYB,        type=lambda phy: Physics[phy],          help='Physics updates (default: PYB)', metavar='')
-    parser.add_argument('--vision',             default=False,              type=str2bool,                          help='Whether to use VisionCtrlAviary (default: False)', metavar='')
-    parser.add_argument('--gui',                default=True,               type=str2bool,                          help='Whether to use PyBullet GUI (default: True)', metavar='')
-    parser.add_argument('--simulation_freq_hz', default=240,                type=int,                               help='Simulation frequency in Hz (default: 240)', metavar='')
-    parser.add_argument('--control_freq_hz',    default=48,                 type=int,                               help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=15,                 type=int,                               help='Duration of the simulation in seconds (default: 15)', metavar='')
-    parser.add_argument('--debug_marl',         default=False,              type=str2bool,                          help='Whether to print obs, reward, done of FlockAviary (default: False)', metavar='')
-    parser.add_argument('--dyn_ctrl',           default=False,              type=str2bool,                          help='Whether to use DynCtrlAviary (default: False)', metavar='')
-    parser.add_argument('--log',                default=True,               type=str2bool,                          help='Whether to log the simulation (default: True)', metavar='')
-    parser.add_argument('--aggregate',          default=True,               type=str2bool,                          help='Whether to aggregate physics steps (default: True)', metavar='')
+    parser.add_argument('--drone',              default="cf2x",     type=DroneModel,    help='Drone model (default: CF2X)', metavar='', choices=DroneModel)
+    parser.add_argument('--num_drones',         default=3,          type=int,           help='Number of drones (default: 5)', metavar='')
+    parser.add_argument('--physics',            default="pyb",      type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
+    parser.add_argument('--vision',             default=False,      type=str2bool,      help='Whether to use VisionCtrlAviary (default: False)', metavar='')
+    parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
+    parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
+    parser.add_argument('--duration_sec',       default=15,         type=int,           help='Duration of the simulation in seconds (default: 15)', metavar='')
+    parser.add_argument('--debug_marl',         default=False,      type=str2bool,      help='Whether to print obs, reward, done of FlockAviary (default: False)', metavar='')
+    parser.add_argument('--dyn_ctrl',           default=False,      type=str2bool,      help='Whether to use DynCtrlAviary (default: False)', metavar='')
+    parser.add_argument('--log',                default=True,       type=str2bool,      help='Whether to log the simulation (default: True)', metavar='')
+    parser.add_argument('--aggregate',          default=True,       type=str2bool,      help='Whether to aggregate physics steps (default: True)', metavar='')
     ARGS = parser.parse_args()
     
     #### Check this reference as the most accesible/up-to-date introduction

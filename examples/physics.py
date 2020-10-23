@@ -3,9 +3,9 @@ import argparse
 import numpy as np
 import pybullet as p
 
-from gym_pybullet_drones.utils.utils import *
 from gym_pybullet_drones.envs.BaseAviary import DroneModel
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
+from gym_pybullet_drones.utils.utils import *
 
 if __name__ == "__main__":
 
