@@ -27,4 +27,4 @@ def str2bool(val):
     if isinstance(val, bool): return val
     elif val.lower() in ('yes', 'true', 't', 'y', '1'): return True
     elif val.lower() in ('no', 'false', 'f', 'n', '0'): return False
-    else: argparse.ArgumentTypeError("[ERROR] in str2bool(), a Boolean value is expected")
+    else: raise argparse.ArgumentTypeError("[ERROR] in str2bool(), a Boolean value is expected")
