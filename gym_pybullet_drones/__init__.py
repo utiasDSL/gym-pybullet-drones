@@ -23,6 +23,16 @@ register(
     entry_point='gym_pybullet_drones.envs.single_agent_rl:TakeoffAviary',
 )
 
+register(
+    id='hover-aviary-v0',
+    entry_point='gym_pybullet_drones.envs.single_agent_rl:HoverAviary',
+)
+
+register(
+    id='flythrugate-aviary-v0',
+    entry_point='gym_pybullet_drones.envs.single_agent_rl:FlyThruGateAviary',
+)
+
 
 
 
@@ -36,4 +46,7 @@ register(
     entry_point='gym_pybullet_drones.envs.multi_agent_rl:NormDynCtrlAviary',
 )
 
-
+register(
+    id='leaderfollower-aviary-v0',
+    entry_point='gym_pybullet_drones.envs.multi_agent_rl:LeaderFollowerAviary',
+)
