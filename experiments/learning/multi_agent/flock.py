@@ -27,18 +27,8 @@ from gym_pybullet_drones.envs.multi_agent_rl.FlockAviary import FlockAviary
 from gym_pybullet_drones.envs.multi_agent_rl.NormDynCtrlAviary import NormDynCtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
+from gym_pybullet_drones.utils.utils import *
 
-#from utils import *
-def str2bool(val):
-    if isinstance(val, bool): return val
-    elif val.lower() in ('yes', 'true', 't', 'y', '1'): return True
-    elif val.lower() in ('no', 'false', 'f', 'n', '0'): return False
-    else: raise print("[ERROR] in str2bool(), a Boolean value is expected")
-
-def sync(i, start_time, timestep):
-    if timestep>.04 or i%(int(1/(24*timestep)))==0:
-        elapsed = time.time() - start_time
-        if elapsed<(i*timestep): time.sleep(timestep*i - elapsed)
 
 if __name__ == "__main__":
 

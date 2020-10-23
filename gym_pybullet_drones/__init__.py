@@ -42,11 +42,16 @@ register(
 )
 
 register(
+    id='leaderfollower-aviary-v0',
+    entry_point='gym_pybullet_drones.envs.multi_agent_rl:LeaderFollowerAviary',
+)
+
+register(
     id='norm-dyn-ctrl-aviary-v0',
     entry_point='gym_pybullet_drones.envs.multi_agent_rl:NormDynCtrlAviary',
 )
 
 register(
-    id='leaderfollower-aviary-v0',
-    entry_point='gym_pybullet_drones.envs.multi_agent_rl:LeaderFollowerAviary',
+    id='meetup-aviary-v0',
+    entry_point='gym_pybullet_drones.envs.multi_agent_rl:MeetupAviary',
 )

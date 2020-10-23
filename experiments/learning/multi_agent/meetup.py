@@ -23,7 +23,7 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.envs.DynCtrlAviary import DynCtrlAviary
 from gym_pybullet_drones.envs.VisionCtrlAviary import VisionCtrlAviary
-from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderFollowerAviary
+from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary
 from gym_pybullet_drones.envs.multi_agent_rl.NormDynCtrlAviary import NormDynCtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
@@ -42,7 +42,7 @@ if __name__ == "__main__":
     parser.add_argument('--simulation_freq_hz', default=240,                type=int,                               help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,                 type=int,                               help='Control frequency in Hz (default: 48)', metavar='')
     parser.add_argument('--duration_sec',       default=15,                 type=int,                               help='Duration of the simulation in seconds (default: 15)', metavar='')
-    parser.add_argument('--debug_marl',         default=False,              type=str2bool,                          help='Whether to print obs, reward, done of LeaderFollowerAviary (default: False)', metavar='')
+    parser.add_argument('--debug_marl',         default=False,              type=str2bool,                          help='Whether to print obs, reward, done of MeetupAviary (default: False)', metavar='')
     parser.add_argument('--dyn_ctrl',           default=False,              type=str2bool,                          help='Whether to use DynCtrlAviary (default: False)', metavar='')
     parser.add_argument('--log',                default=True,               type=str2bool,                          help='Whether to log the simulation (default: True)', metavar='')
     parser.add_argument('--aggregate',          default=True,               type=str2bool,                          help='Whether to aggregate physics steps (default: True)', metavar='')
@@ -84,16 +84,16 @@ if __name__ == "__main__":
     ray.init(ignore_reinit_error=True)
 
     #### Register the environment ######################################################################
-    register_env("leaderfollower-aviary-v0", lambda _: LeaderFollowerAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz))
+    register_env("meetup-aviary-v0", lambda _: MeetupAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz))
 
     #### for the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
 
     #### Set up the trainer's config ###################################################################
     config = ppo.DEFAULT_CONFIG.copy()
     config["num_workers"] = 0
-    config["env"] = "leaderfollower-aviary-v0"
+    config["env"] = "meetup-aviary-v0"
     #### Unused env to extract correctly sized action and observation spaces ###########################
-    unused_env = LeaderFollowerAviary(num_drones=ARGS.num_drones)
+    unused_env = MeetupAviary(num_drones=ARGS.num_drones)
     config["multiagent"] = { # Map of type MultiAgentPolicyConfigDict from policy ids to tuples of (policy_cls, obs_space, act_space, config).
                             # This defines the observation and action spaces of the policies and any extra config.
                             "policies": {
@@ -137,7 +137,7 @@ if __name__ == "__main__":
     print(policy2.model.base_model.summary())
 
     #### Create test environment ########################################################################
-    env = LeaderFollowerAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz, gui=True, record=False, obstacles=True)
+    env = MeetupAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz, gui=True, record=False, obstacles=True)
     obs = env.reset()
     action = { str(i): np.array([0,0,0,0]) for i in range(ARGS.num_drones) }
     start = time.time()
