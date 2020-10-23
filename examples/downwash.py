@@ -12,14 +12,14 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Downwash example script using CtrlAviary and DSLPIDControl')
-    parser.add_argument('--drone',              default=DroneModel.CF2X,        type=lambda model: DroneModel[model],   help='Drone model (default: CF2X)', metavar='')
-    parser.add_argument('--num_drones',         default=2,                      type=int,                               help='Number of drones (default: 2)', metavar='')
-    parser.add_argument('--physics',            default=Physics.PYB_GND_DRAG_DW,type=lambda phy: Physics[phy],          help='Physics updates (default: PYB_GND_DRAG_DW)', metavar='')
-    parser.add_argument('--gui',                default=True,                   type=str2bool,                          help='Whether to use PyBullet GUI (default: True)', metavar='')
-    parser.add_argument('--record_video',       default=False,                  type=str2bool,                          help='Whether to record a video (default: False)', metavar='')
-    parser.add_argument('--simulation_freq_hz', default=240,                    type=int,                               help='Simulation frequency in Hz (default: 240)', metavar='')
-    parser.add_argument('--control_freq_hz',    default=48,                     type=int,                               help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=10,                     type=int,                               help='Duration of the simulation in seconds (default: 10)', metavar='')
+    parser.add_argument('--drone',              default="cf2x",     type=DroneModel,    help='Drone model (default: CF2X)', metavar='', choices=DroneModel)
+    parser.add_argument('--num_drones',         default=2,          type=int,           help='Number of drones (default: 2)', metavar='')
+    parser.add_argument('--physics',            default="pyb",      type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
+    parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
+    parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
+    parser.add_argument('--duration_sec',       default=10,         type=int,           help='Duration of the simulation in seconds (default: 10)', metavar='')
     ARGS = parser.parse_args()
 
     #### Initialize the simulation #####################################################################

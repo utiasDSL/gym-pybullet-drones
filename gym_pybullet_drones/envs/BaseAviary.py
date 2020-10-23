@@ -17,27 +17,21 @@ import gym
 #### Drone models enumeration ########################################################################################################################
 ######################################################################################################################################################
 class DroneModel(Enum):
-    CF2X = 0                 # Bitcraze Craziflie 2.0 in the X configuration
-    CF2P = 1                 # Bitcraze Craziflie 2.0 in the + configuration
-    HB = 2                   # Generic quadrotor (with AscTec Hummingbird inertial properties)
-
-    #### String representation of DroneModel ###########################################################
-    def __str__(self): return self.name
+    CF2X = "cf2x"            # Bitcraze Craziflie 2.0 in the X configuration
+    CF2P = "cf2p"            # Bitcraze Craziflie 2.0 in the + configuration
+    HB = "hb"                # Generic quadrotor (with AscTec Hummingbird inertial properties)
 
 
 ######################################################################################################################################################
 #### Physics implementations enumeration #############################################################################################################
 ######################################################################################################################################################
 class Physics(Enum):
-    PYB = 0                  # Base PyBullet physics update
-    DYN = 1                  # Update with an explicit model of the dynamics
-    PYB_GND = 2              # PyBullet physics update with ground effect
-    PYB_DRAG = 3             # PyBullet physics update with drag
-    PYB_DW = 4               # PyBullet physics update with downwash
-    PYB_GND_DRAG_DW = 5      # PyBullet physics update with ground effect, drag, and downwash
-
-    #### String representation of Physics ##############################################################
-    def __str__(self): return self.name
+    PYB = "pyb"              # Base PyBullet physics update
+    DYN = "dyn"              # Update with an explicit model of the dynamics
+    PYB_GND = "pyb_gnd"      # PyBullet physics update with ground effect
+    PYB_DRAG = "pyb_drag"    # PyBullet physics update with drag
+    PYB_DW = "pyb_dw"        # PyBullet physics update with downwash
+    PYB_GND_DRAG_DW = "pyb_gnd_drag_dw" # PyBullet physics update with ground effect, drag, and downwash
 
 
 ######################################################################################################################################################
@@ -84,10 +78,7 @@ class BaseAviary(gym.Env):
         self.NUM_DRONES = num_drones; self.NEIGHBOURHOOD_RADIUS = neighbourhood_radius
         #### Options #######################################################################################
         self.DRONE_MODEL = drone_model; self.GUI = gui; self.RECORD = record; self.PHYSICS = physics
-        self.OBSTACLES = obstacles; self.USER_DEBUG = user_debug_gui
-        if self.DRONE_MODEL==DroneModel.CF2X: self.URDF = "cf2x.urdf"
-        elif self.DRONE_MODEL==DroneModel.CF2P: self.URDF = "cf2p.urdf"
-        elif self.DRONE_MODEL==DroneModel.HB: self.URDF = "hb.urdf"
+        self.OBSTACLES = obstacles; self.USER_DEBUG = user_debug_gui; self.URDF = self.DRONE_MODEL.value + ".urdf"
         #### Load the drone properties from the .urdf file #################################################
         self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF, self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3 = self._parseURDFParameters()
         print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(

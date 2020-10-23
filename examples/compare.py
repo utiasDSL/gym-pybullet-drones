@@ -14,10 +14,10 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Trace comparison script using CtrlAviary and DSLPIDControl')
-    parser.add_argument('--physics',            default=Physics.PYB,        type=lambda phy: Physics[phy],  help='Physics updates (default: PYB)', metavar='')
-    parser.add_argument('--gui',                default=False,              type=str2bool,                  help='Whether to use PyBullet GUI (default: False)', metavar='')
-    parser.add_argument('--record_video',       default=False,              type=str2bool,                  help='Whether to record a video (default: False)', metavar='')
-    parser.add_argument('--trace_file',         default="example_trace.pkl",type=str,                       help='Pickle file with the trace to compare to (default: "example_trace.pkl")', metavar='')
+    parser.add_argument('--physics',            default="pyb",              type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
+    parser.add_argument('--gui',                default=False,              type=str2bool,      help='Whether to use PyBullet GUI (default: False)', metavar='')
+    parser.add_argument('--record_video',       default=False,              type=str2bool,      help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--trace_file',         default="example_trace.pkl",type=str,           help='Pickle file with the trace to compare to (default: "example_trace.pkl")', metavar='')
     ARGS = parser.parse_args()
 
     #### Load a trace and control reference from a .pkl file ###########################################
