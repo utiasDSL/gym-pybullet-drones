@@ -55,6 +55,8 @@ if __name__ == "__main__":
         if done: obs = test_env.reset()
     test_env.close()
 
+    # use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<time-date>-tb for the tensorboard results at http://localhost:6006/
+
 
 
 

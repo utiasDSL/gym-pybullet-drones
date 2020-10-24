@@ -6,7 +6,7 @@ files/*.npy
 files/*.mp4
 
 # Learning saves
-expriments/learning/save-*
+experiments/learning/save-*
 
 # macOS users
 .DS_Store

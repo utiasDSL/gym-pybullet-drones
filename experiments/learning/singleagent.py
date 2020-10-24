@@ -33,6 +33,7 @@ if __name__ == "__main__":
     parser.add_argument('--algo',       default='a2c',        type=str,       choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],     help='Help (default: ..)', metavar='')
     parser.add_argument('--pol',        default='mlp',        type=str,       choices=['mlp', 'cnn'],                           help='Help (default: ..)', metavar='')
     ARGS = parser.parse_args()
+    filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.pol+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
 
     #### Check the environment's spaces ################################################################
     env_name = ARGS.env+"-aviary-v0"
@@ -44,24 +45,23 @@ if __name__ == "__main__":
     #### On-policy algorithms ##########################################################################
     onpolicy_kwargs = None # e.g. dict(activation_fn=torch.nn.ReLU, net_arch=[128, dict(vf=[256, 256])])
     if ARGS.algo=='a2c': 
-        model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, verbose=1) if ARGS.pol=='mlp' else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, verbose=1)
+        model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='ppo': 
-        model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, verbose=1) if ARGS.pol=='mlp' else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, verbose=1)
+        model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
 
     #### Off-policy algorithms ##########################################################################
     offpolicy_kwargs = None # e.g. dict(net_arch=[256, 256]) # or dict(net_arch=dict(pi=[64, 64], qf=[400, 300]))
     if ARGS.algo=='sac': 
-        model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, verbose=1) if ARGS.pol=='mlp' else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, verbose=1)
+        model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='td3': 
-        model = TD3(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, verbose=1) if ARGS.pol=='mlp' else TD3(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, verbose=1)
+        model = TD3(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else TD3(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='ddpg': 
-        model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, verbose=1)
+        model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     
     #### Train the model ###############################################################################
     model.learn(total_timesteps=500000/500, log_interval=5)
 
     ### Save
-    filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+'-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.pol+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
     print(filename)
     model.save(filename)
 
