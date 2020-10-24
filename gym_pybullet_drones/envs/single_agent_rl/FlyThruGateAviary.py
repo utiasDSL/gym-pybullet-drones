@@ -1,5 +1,6 @@
 import numpy as np
 from gym import spaces
+import pybullet as p
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
 
@@ -29,11 +30,18 @@ class FlyThruGateAviary(BaseAviary):
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
-                    gui=False, record=False, obstacles=False, user_debug_gui=True):
+                    gui=False, record=False, obstacles=True, user_debug_gui=True):
         if num_drones!=1: print("[ERROR] in TakeoffAviary.__init__(), TakeoffAviary only accepts num_drones=1" ); exit()
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui)
+
+    ####################################################################################################
+    #### Add obstacles to the environment from .urdf files #############################################
+    ####################################################################################################
+    def _addObstacles(self):
+        p.loadURDF("block.urdf", [-.5,-.5,.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+        p.loadURDF("cube_small.urdf", [-.75,-.75,.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Return the action space of the environment, a Box(4,) #########################################

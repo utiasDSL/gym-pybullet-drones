@@ -43,7 +43,9 @@ if __name__ == "__main__":
 
     #### Check the environment's spaces ################################################################
     #
-    env_name = "takeoff"+"-aviary-v0"
+    #env_name = "takeoff"+"-aviary-v0"
+    #env_name = "hover"+"-aviary-v0"
+    env_name = "flythrugate"+"-aviary-v0"
     #
     train_env = gym.make(env_name)
     print("[INFO] Action space:", train_env.action_space)
