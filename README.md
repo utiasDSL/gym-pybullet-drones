@@ -79,6 +79,7 @@ dependencies (except `ffmpeg`), can be installed from file
 $ cd gym-pybullet-drones/
 $ conda create -n myenv --file /files/conda_req_list.txt
 ```
+> Note: remember to periodically upgrade `pybullet` and `rllib` with `$ pip install --upgrade package-name`
 
 
 

@@ -51,10 +51,21 @@ if __name__ == "__main__":
     parser.add_argument('--log',                default=True,       type=str2bool,      help='Whether to log the simulation (default: True)', metavar='')
     parser.add_argument('--aggregate',          default=True,       type=str2bool,      help='Whether to aggregate physics steps (default: True)', metavar='')
     
-    parser.add_argument('--algo',      default="temp",        type=str,       help='Help (default: ..)', metavar='')
-    parser.add_argument('--env',       default="temp",        type=str,       help='Help (default: ..)', metavar='')
+    parser.add_argument('--algo',      default='temp',        type=str,       choices=['temp', 'paper', 'scissors'],     help='Help (default: ..)', metavar='')
+    parser.add_argument('--env',       default='temp',        type=str,       choices=['temp', 'paper', 'scissors'],     help='Help (default: ..)', metavar='')
 
     ARGS = parser.parse_args()
+
+
+    # implement but not necessariliy suitable for continuous actions QMIX,  MADDPG
+    # https://docs.ray.io/en/latest/rllib-algorithms.html#multi-agent-methods
+    # example: https://github.com/ray-project/ray/blob/master/rllib/examples/two_step_game.py
+    
+    # use ad-hoc centralized critics instead
+    # with RLlibs' A2C, PPO, TD3 / DDPG, SAC
+    # example: https://github.com/ray-project/ray/blob/master/rllib/examples/centralized_critic_2.py
+
+    # common parameters?
 
     #### Initialize Ray Tune ###########################################################################
     ray.shutdown()
