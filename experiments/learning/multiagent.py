@@ -23,7 +23,12 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.envs.DynCtrlAviary import DynCtrlAviary
 from gym_pybullet_drones.envs.VisionCtrlAviary import VisionCtrlAviary
+
+from gym_pybullet_drones.envs.multi_agent_rl.FlockAviary import FlockAviary
 from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderFollowerAviary
+from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary
+
+
 from gym_pybullet_drones.envs.multi_agent_rl.NormDynCtrlAviary import NormDynCtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
@@ -45,54 +50,27 @@ if __name__ == "__main__":
     parser.add_argument('--dyn_ctrl',           default=False,      type=str2bool,      help='Whether to use DynCtrlAviary (default: False)', metavar='')
     parser.add_argument('--log',                default=True,       type=str2bool,      help='Whether to log the simulation (default: True)', metavar='')
     parser.add_argument('--aggregate',          default=True,       type=str2bool,      help='Whether to aggregate physics steps (default: True)', metavar='')
-    ARGS = parser.parse_args()
     
-    #### Check this reference as the most accesible/up-to-date introduction
-    # github.com/ray-project/ray/blob/master/doc/source/rllib-training.rst
+    parser.add_argument('--algo',      default="temp",        type=str,       help='Help (default: ..)', metavar='')
+    parser.add_argument('--env',       default="temp",        type=str,       help='Help (default: ..)', metavar='')
 
-    #### WIP notes #####################################################################################
-    #### basic multi agent and variable sharing with AUTO_REUSE github.com/ray-project/ray/blob/master/rllib/examples/multi_agent_cartpole.py
-    #### use ENV_STATE: github.com/ray-project/ray/blob/master/rllib/examples/env/two_step_game.py #####
-    #### 2 trainer example github.com/ray-project/ray/blob/master/rllib/examples/multi_agent_two_trainers.py
-    #### competing policeis github.com/ray-project/ray/blob/master/rllib/examples/rock_paper_scissors_multiagent.py
-    #### use the `MultiAgentEnv.with_agent_groups()` method to define groups
-
-    # Some environments may be very resource-intensive to create. RLlib will create ``num_workers + 1`` copies of the environment
-    # since one copy is needed for the driver process. To avoid paying the extra overhead of the driver copy, which is needed to access
-    # the env's action and observation spaces, you can defer environment initialization until ``reset()`` is called.
-
-    # RLlib tries to pick one of its built-in preprocessor based on the environment's observation space
-    # Discrete observations are one-hot encoded, Atari observations downscaled, and Tuple and Dict observations flattened
-
-    # RLlib supports complex and variable-length observation spaces, including ``gym.spaces.Tuple``, ``gym.spaces.Dict``, and
-    # ``rllib.utils.spaces.Repeated``. The handling of these spaces is transparent to the user. RLlib internally will insert preprocessors
-    # to insert padding for repeated elements, flatten complex observations into a fixed-size vector during transit, and unpack the vector
-    # into the structured tensor before sending it to the model. The flattened observation is available to the model as
-    # ``input_dict["obs_flat"]``, and the unpacked observation as ``input_dict["obs"]``.
-
-    # RLlib picks default models based on a simple heuristic:
-    # A vision network for observations that have a shape of length larger than 2 (for example, (84 x 84 x 3)),
-    # and a fully connected network otherwise
-    # if you set ``"model": {"use_lstm": true}``, the model output will be further processed by an LSTM cell
-
-    # Custom preprocessors are deprecated, since they sometimes conflict with the built-in preprocessors for handling complex observation spaces.
-    # Please use `wrapper classes around your environment instead of preprocessors.
+    ARGS = parser.parse_args()
 
     #### Initialize Ray Tune ###########################################################################
     ray.shutdown()
     ray.init(ignore_reinit_error=True)
 
     #### Register the environment ######################################################################
-    register_env("leaderfollower-aviary-v0", lambda _: LeaderFollowerAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz))
+    register_env("flock-aviary-v0", lambda _: FlockAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz))
 
     #### for the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
 
     #### Set up the trainer's config ###################################################################
     config = ppo.DEFAULT_CONFIG.copy()
     config["num_workers"] = 0
-    config["env"] = "leaderfollower-aviary-v0"
+    config["env"] = "flock-aviary-v0"
     #### Unused env to extract correctly sized action and observation spaces ###########################
-    unused_env = LeaderFollowerAviary(num_drones=ARGS.num_drones)
+    unused_env = FlockAviary(num_drones=ARGS.num_drones)
     config["multiagent"] = { # Map of type MultiAgentPolicyConfigDict from policy ids to tuples of (policy_cls, obs_space, act_space, config).
                             # This defines the observation and action spaces of the policies and any extra config.
                             "policies": {
@@ -136,7 +114,7 @@ if __name__ == "__main__":
     print(policy2.model.base_model.summary())
 
     #### Create test environment ########################################################################
-    env = LeaderFollowerAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz, gui=True, record=False, obstacles=True)
+    env = FlockAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, physics=ARGS.physics, freq=ARGS.simulation_freq_hz, gui=True, record=False, obstacles=True)
     obs = env.reset()
     action = { str(i): np.array([0,0,0,0]) for i in range(ARGS.num_drones) }
     start = time.time()
