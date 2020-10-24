@@ -2,12 +2,13 @@ import numpy as np
 from gym import spaces
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import BaseSingleAgentAviary
 
 
 ######################################################################################################################################################
 #### Single drone environment class for reinforcement learning applications (in this implementation, taking off from the origin) #####################
 ######################################################################################################################################################
-class TakeoffAviary(BaseAviary):
+class TakeoffAviary(BaseSingleAgentAviary):
 
     ####################################################################################################
     #### Initialize the environment ####################################################################
@@ -29,51 +30,11 @@ class TakeoffAviary(BaseAviary):
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
-                    gui=False, record=False, obstacles=False, user_debug_gui=True):
-        if num_drones!=1: print("[ERROR] in TakeoffAviary.__init__(), TakeoffAviary only accepts num_drones=1" ); exit()
+                    gui=False, record=False, obstacles=False, user_debug_gui=True, img_obs=False):
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
-                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui)
-
-    ####################################################################################################
-    #### Return the action space of the environment, a Box(4,) #########################################
-    ####################################################################################################
-    def _actionSpace(self):
-        #### Action vector ######## P0            P1            P2            P3
-        act_lower_bound = np.array([-1,           -1,           -1,           -1])
-        act_upper_bound = np.array([1,            1,            1,            1])
-        return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
-
-    ####################################################################################################
-    #### Return the observation space of the environment, a Box(20,) ###################################
-    ####################################################################################################
-    def _observationSpace(self):
-        #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WR       WP       WY       P0            P1            P2            P3
-        obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
-        obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])
-        return spaces.Box( low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32 )
-
-    ####################################################################################################
-    #### Return the current observation of the environment #############################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - obs (20,) array                  for its content see _observationSpace() ####################
-    ####################################################################################################
-    def _computeObs(self):
-        return self._clipAndNormalizeState(self._getDroneStateVector(0))
-
-    ####################################################################################################
-    #### Preprocess the action passed to step() ########################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - action ((4,1) array)             unclipped RPMs commanded to the 4 motors of the drone ######
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - clipped_action ((4,1) array)     clipped RPMs commanded to the 4 motors of the drone ########
-    ####################################################################################################
-    def _preprocessAction(self, action):
-        rpm = self._normalizedActionToRPM(action)
-        return np.clip(np.array(rpm), 0, self.MAX_RPM)
+                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
+                            img_obs=img_obs)
 
     ####################################################################################################
     #### Compute the current reward value(s) ###########################################################
@@ -85,13 +46,17 @@ class TakeoffAviary(BaseAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        if obs[2] > 0.8: return -1
-        elif obs[2] > 0.5: return 2000
-        elif obs[2] > 0.3: return 1000
-        elif obs[2] > 0.2: return 500
-        elif obs[2] > 0.15: return 100
-        elif obs[2] > 0.1: return 10
-        else: return -1
+        if self.IMG_OBS: 
+            obs = self._getDroneStateVector(0)
+            return 0
+        else:
+            if obs[2] > 0.8: return -1
+            elif obs[2] > 0.5: return 2000
+            elif obs[2] > 0.3: return 1000
+            elif obs[2] > 0.2: return 500
+            elif obs[2] > 0.15: return 100
+            elif obs[2] > 0.1: return 10
+            else: return -1
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -103,12 +68,17 @@ class TakeoffAviary(BaseAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, norm_obs):
-        if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
-            or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
-            or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
-            or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
-            or self.step_counter/self.SIM_FREQ > 3: return True
-        else: return False
+        if self.IMG_OBS:
+            obs = self._getDroneStateVector(0)
+            if self.step_counter/self.SIM_FREQ > 3: return True
+            else: return False
+        else:
+            if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
+                or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
+                or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
+                or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
+                or self.step_counter/self.SIM_FREQ > 3: return True
+            else: return False
 
     ####################################################################################################
     #### Compute the current info dict(s) ##############################################################

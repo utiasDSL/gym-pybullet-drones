@@ -5,6 +5,9 @@ TODOs.md
 files/*.npy
 files/*.mp4
 
+# Learning saves
+expriments/learning/save-*
+
 # macOS users
 .DS_Store
 
