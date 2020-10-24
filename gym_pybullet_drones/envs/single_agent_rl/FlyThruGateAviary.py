@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from gym import spaces
 import pybullet as p
@@ -40,8 +41,10 @@ class FlyThruGateAviary(BaseAviary):
     #### Add obstacles to the environment from .urdf files #############################################
     ####################################################################################################
     def _addObstacles(self):
-        p.loadURDF("block.urdf", [-.5,-.5,.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-        p.loadURDF("cube_small.urdf", [-.75,-.75,.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+        p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../../assets/architrave.urdf", [0,-1,.55], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+        for i in range(10): 
+            p.loadURDF("cube_small.urdf", [-.3,-1,.02+i*0.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+            p.loadURDF("cube_small.urdf", [.3,-1,.02+i*0.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Return the action space of the environment, a Box(4,) #########################################
