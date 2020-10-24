@@ -6,19 +6,20 @@ from stable_baselines3.common.env_checker import check_env
 
 from stable_baselines3 import A2C
 from stable_baselines3.a2c import MlpPolicy as a2cMlpPolicy
-
+from stable_baselines3.a2c import CnnPolicy as a2cCnnPolicy
+#
 from stable_baselines3 import PPO
 from stable_baselines3.ppo import MlpPolicy as ppoMlpPolicy
 #from ray.rllib.agents import ppo
 #import ray
 #from ray.tune import register_env
-
+#
 from stable_baselines3 import SAC
 from stable_baselines3.sac import MlpPolicy as sacMlpPolicy
-
+#
 from stable_baselines3 import TD3
 from stable_baselines3.td3.policies import MlpPolicy as td3MlpPolicy
-
+#
 from stable_baselines3 import DDPG
 
 from gym_pybullet_drones.utils.utils import *
@@ -31,8 +32,8 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
-    parser.add_argument('--algo',      default='temp',        type=str,       choices=['temp', 'paper', 'scissors'],     help='Help (default: ..)', metavar='')
-    parser.add_argument('--env',       default='temp',        type=str,       choices=['temp', 'paper', 'scissors'],     help='Help (default: ..)', metavar='')
+    parser.add_argument('--algo',      default='a2c',        type=str,       choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],     help='Help (default: ..)', metavar='')
+    parser.add_argument('--env',       default='takeoff',        type=str,       choices=['takeoff', 'hover', 'flythrugate'],     help='Help (default: ..)', metavar='')
     
     # add common parameters
     # learning_rate, gamma, add more ?
@@ -45,7 +46,7 @@ if __name__ == "__main__":
     #
     #env_name = "takeoff"+"-aviary-v0"
     #env_name = "hover"+"-aviary-v0"
-    env_name = "flythrugate"+"-aviary-v0"
+    env_name = ARGS.env+"-aviary-v0"
     #
     train_env = gym.make(env_name)
     print("[INFO] Action space:", train_env.action_space)
@@ -53,7 +54,7 @@ if __name__ == "__main__":
     check_env(train_env, warn=True, skip_render_check=True)
 
     #### Train the model ###############################################################################
-    model = A2C(a2cMlpPolicy, train_env, verbose=1)
+    if ARGS.algo == 'a2c': model = A2C(a2cMlpPolicy, train_env, verbose=1)
     model.learn(total_timesteps=500000/1000)
 
     # OR
