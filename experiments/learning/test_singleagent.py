@@ -41,12 +41,14 @@ if __name__ == "__main__":
     if algo=='td3': model = TD3.load(ARGS.file)
     if algo=='ddpg': model = DDPG.load(ARGS.file)
 
+    print(ARGS.file.split("-")[3])
+
     #### Show (and record a video of) the model's performance ##########################################
     env_name = ARGS.file.split("-")[1]+"-aviary-v0"
-    test_env = train_env = gym.make(env_name, gui=True, record=False)
+    test_env = gym.make(env_name, gui=True, record=False, img_obs=False) if ARGS.file.split("-")[3]=='mlp' else gym.make(env_name, gui=True, record=False, img_obs=True)
     obs = test_env.reset()
     start = time.time()
-    for i in range(10*test_env.SIM_FREQ): # larger limit?
+    for i in range(10*test_env.SIM_FREQ): # larger limit? # account for aggregate steps.. test_env.AGGR_PHY_STEPS = 5
         action, _states = model.predict(obs, deterministic=True) # remove deterministic?
         obs, reward, done, info = test_env.step(action)
         test_env.render()

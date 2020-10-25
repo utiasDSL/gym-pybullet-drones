@@ -29,8 +29,8 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
-                    physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
-                    gui=False, record=False, obstacles=False, user_debug_gui=True, img_obs=False):
+                    physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=5,
+                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False):
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
@@ -46,17 +46,14 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        if self.IMG_OBS: 
-            obs = self._getDroneStateVector(0)
-            return 0
-        else:
-            if obs[2] > 0.8: return -1
-            elif obs[2] > 0.5: return 2000
-            elif obs[2] > 0.3: return 1000
-            elif obs[2] > 0.2: return 500
-            elif obs[2] > 0.15: return 100
-            elif obs[2] > 0.1: return 10
-            else: return -1
+        if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        if obs[2] > 0.8: return -1
+        elif obs[2] > 0.5: return 2000
+        elif obs[2] > 0.3: return 1000
+        elif obs[2] > 0.2: return 500
+        elif obs[2] > 0.15: return 100
+        elif obs[2] > 0.1: return 10
+        else: return -1
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -68,17 +65,13 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, norm_obs):
-        if self.IMG_OBS:
-            obs = self._getDroneStateVector(0)
-            if self.step_counter/self.SIM_FREQ > 3: return True
-            else: return False
-        else:
-            if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
-                or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
-                or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
-                or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
-                or self.step_counter/self.SIM_FREQ > 3: return True
-            else: return False
+        if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
+            or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
+            or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
+            or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
+            or self.step_counter/self.SIM_FREQ > 3: return True
+        else: return False
 
     ####################################################################################################
     #### Compute the current info dict(s) ##############################################################

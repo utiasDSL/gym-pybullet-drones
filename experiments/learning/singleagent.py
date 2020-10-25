@@ -59,11 +59,11 @@ if __name__ == "__main__":
         model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     
     #### Train the model ###############################################################################
-    model.learn(total_timesteps=500000/500, log_interval=5)
+    model.learn(total_timesteps=1000*100, log_interval=10)
 
     ### Save
-    print(filename)
     model.save(filename)
+    print(filename)
 
 
 

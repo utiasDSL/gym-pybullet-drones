@@ -1,7 +1,10 @@
+import os
 import numpy as np
 from gym import spaces
+import pybullet as p
+import pybullet_data
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, ImageType, BaseAviary
 
 
 ######################################################################################################################################################
@@ -30,7 +33,7 @@ class BaseSingleAgentAviary(BaseAviary):
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
-                    gui=False, record=False, obstacles=False, user_debug_gui=True, img_obs=False):
+                    gui=False, record=False, obstacles=True, user_debug_gui=True, img_obs=False):
         if num_drones!=1: print("[ERROR] in BaseSingleAgentAviary.__init__(), BaseSingleAgentAviary only accepts num_drones=1"); exit()
         self.IMG_OBS = img_obs
         if self.IMG_OBS:
@@ -40,6 +43,16 @@ class BaseSingleAgentAviary(BaseAviary):
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui)
+
+    ####################################################################################################
+    #### Add obstacles to the environment from .urdf files #############################################
+    ####################################################################################################
+    def _addObstacles(self):
+        if self.IMG_OBS: 
+            p.loadURDF("block.urdf", [1,0,.1], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+            p.loadURDF("cube_small.urdf", [0,1,.1], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+            p.loadURDF("duck_vhacd.urdf", [-1,0,.1], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
+            p.loadURDF("teddy_vhacd.urdf", [0,-1,.1], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 
     ####################################################################################################
     #### Return the action space of the environment, a Box(4,) #########################################
@@ -69,7 +82,14 @@ class BaseSingleAgentAviary(BaseAviary):
     ####################################################################################################
     def _computeObs(self):
         if self.IMG_OBS:
-            if self.step_counter%self.IMG_CAPTURE_FREQ==0: self.rgb[0], self.dep[0], self.seg[0] = self._getDroneImages(0, segmentation=False)
+            if self.step_counter%self.IMG_CAPTURE_FREQ==0: 
+                self.rgb[0], self.dep[0], self.seg[0] = self._getDroneImages(0, segmentation=False)
+                # DEBUG ONLY
+                #### Printing observation to PNG frames example ####################################################
+                if self.GUI:
+                    path = os.path.dirname(os.path.abspath(__file__))+"/../../../files/test/"; os.makedirs(os.path.dirname(path), exist_ok=True)
+                    self._exportImage(img_type=ImageType.RGB, img_input=self.rgb[0], path=path, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
+                #
             return self.rgb[0]
         else: return self._clipAndNormalizeState(self._getDroneStateVector(0))
 
