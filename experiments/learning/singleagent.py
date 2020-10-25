@@ -4,9 +4,7 @@ from datetime import datetime
 import argparse
 import gym
 import torch
-
 from stable_baselines3.common.env_checker import check_env
-
 from stable_baselines3 import A2C
 from stable_baselines3 import PPO
 from stable_baselines3 import SAC
@@ -20,7 +18,6 @@ from stable_baselines3.td3 import MlpPolicy as td3ddpgMlpPolicy
 from stable_baselines3.td3 import CnnPolicy as td3ddpgCnnPolicy
 
 from gym_pybullet_drones.utils.utils import *
-
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
 from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
@@ -28,7 +25,7 @@ from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGa
 if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##########################################
-    parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
+    parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
     parser.add_argument('--env',        default='takeoff',    type=str,       choices=['takeoff', 'hover', 'flythrugate'],      help='Help (default: ..)', metavar='')
     parser.add_argument('--algo',       default='a2c',        type=str,       choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],     help='Help (default: ..)', metavar='')
     parser.add_argument('--pol',        default='mlp',        type=str,       choices=['mlp', 'cnn'],                           help='Help (default: ..)', metavar='')
