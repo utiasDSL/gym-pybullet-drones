@@ -42,28 +42,20 @@ from gym_pybullet_drones.utils.utils import *
 
 
 
-
 class FillInActions(DefaultCallbacks):
     """Fills in the opponent actions info in the training batches."""
-
-    def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id,
-                                  policies, postprocessed_batch,
-                                  original_batches, **kwargs):
+    def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
-        action_encoder = ModelCatalog.get_preprocessor_for_space(Discrete(2))
+        action_encoder = ModelCatalog.get_preprocessor_for_space( Discrete(2) )
 
         # set the opponent actions into the observation
         _, opponent_batch = original_batches[other_id]
-        opponent_actions = np.array([
-            action_encoder.transform(a)
-            for a in opponent_batch[SampleBatch.ACTIONS]
-        ])
+        opponent_actions = np.array([ action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS] ])
         to_update[:, -2:] = opponent_actions
 
 def central_critic_observer(agent_obs, **kw):
     """Rewrites the agent obs to include opponent data for training."""
-
     new_obs = {
         0: {
             "own_obs": agent_obs[0],
@@ -81,8 +73,6 @@ def central_critic_observer(agent_obs, **kw):
 
 
 
-
-
 if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##########################################
@@ -92,16 +82,6 @@ if __name__ == "__main__":
     parser.add_argument('--algo',       default='cc',      type=str,       choices=['cc', 'maddp'],                            help='Help (default: ..)', metavar='')
     ARGS = parser.parse_args()
     filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
-
-    # implement but not necessariliy suitable for continuous actions QMIX,  MADDPG
-    # https://docs.ray.io/en/latest/rllib-algorithms.html#multi-agent-methods
-    # example: https://github.com/ray-project/ray/blob/master/rllib/examples/two_step_game.py
-    
-    # use ad-hoc centralized critics instead
-    # with RLlibs' A2C, PPO, TD3 / DDPG, SAC
-    # example: https://github.com/ray-project/ray/blob/master/rllib/examples/centralized_critic_2.py
-
-    # common parameters?
 
     #### Initialize Ray Tune ###########################################################################
     ray.shutdown()
@@ -139,9 +119,9 @@ if __name__ == "__main__":
             # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0.
             # "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")),
             "num_workers": 0,
-            #"model": {
-            #    "custom_model": "cc_model",
-            #},
+            "model": {
+               "custom_model": "cc_model",
+            },
             "framework": "torch" if args.torch else "tf",
         }
         
@@ -150,17 +130,13 @@ if __name__ == "__main__":
             # This defines the observation and action spaces of the policies and any extra config.
             "policies": {
                 # "pol0": (PPOTFPolicy, unused_env.observation_space["0"], unused_env.action_space["0"], {"framework": "torch"}),
-                # "pol1": (PPOTFPolicy, unused_env.observation_space["1"], unused_env.action_space["1"], {"framework": "torch"}),
-                # "pol2": (PPOTFPolicy, unused_env.observation_space["2"], unused_env.action_space["2"], {"framework": "torch"}),
                 "pol0": (None, unused_env.observation_space["0"], unused_env.action_space["0"], {}),
                 "pol1": (None, unused_env.observation_space["1"], unused_env.action_space["1"], {}),
-                # "pol2": (None, unused_env.observation_space["2"], unused_env.action_space["2"], {}),
             },
             # Function mapping agent ids to policy ids.
             "policy_mapping_fn": lambda agent_id: "pol"+str(agent_id),
             # An additional observation function, see rllib/evaluation/observation_function.py for more info.
-            # "observation_fn": None,
-            "observation_fn": central_critic_observer,
+            "observation_fn": central_critic_observer, # "observation_fn": None,
             # see github.com/ray-project/ray/blob/master/rllib/examples/centralized_critic_2.py
             # more principled but complex way to share observations is using `postprocess_trajectory`
             # see github.com/ray-project/ray/blob/master/rllib/examples/centralized_critic.py
@@ -185,12 +161,8 @@ if __name__ == "__main__":
             },
             "multiagent": {
                 "policies": {
-                    "pol1": (None, Discrete(6), TwoStepGame.action_space, {
-                        "agent_id": 0,
-                    }),
-                    "pol2": (None, Discrete(6), TwoStepGame.action_space, {
-                        "agent_id": 1,
-                    }),
+                    "pol1": (None, Discrete(6), TwoStepGame.action_space, {"agent_id": 0,}),
+                    "pol2": (None, Discrete(6), TwoStepGame.action_space, {"agent_id": 1,}),
                 },
                 "policy_mapping_fn": lambda x: "pol1" if x == 0 else "pol2",
             },
