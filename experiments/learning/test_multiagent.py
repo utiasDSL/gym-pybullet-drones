@@ -34,14 +34,11 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    #parser.add_argument('--num_drones', default=2,                  type=int,                                                           help='Number of drones (default: 2)', metavar='')
-    #parser.add_argument('--env',        default='leaderfollower',   type=str,       choices=['leaderfollower', 'flock', 'meetup'],      help='Help (default: ..)', metavar='')
-    #parser.add_argument('--algo',       default='cc',               type=str,       choices=['cc', 'qmix', 'maddp'],                    help='Help (default: ..)', metavar='')
+    parser.add_argument('--file',      type=str,       help='Help (default: ..)', metavar='')
     ARGS = parser.parse_args()
-    filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
 
     #### Restore agent #################################################################################
-    agent = ppo.PPOTrainer(config=config); agent.restore(checkpoint_path)
+    agent = ppo.PPOTrainer(config=config); agent.restore(ARGS.file)
 
     #### Extract and print policies ####################################################################
     policy0 = agent.get_policy("pol0")
