@@ -36,7 +36,6 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import *
 
 class FillInActions(DefaultCallbacks):
-
     def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
         action_vec_size = 4
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
@@ -78,10 +77,8 @@ class YetAnotherTorchCentralizedCriticModel(TorchModelV2, nn.Module):
     """
 
     def __init__(self, obs_space, action_space, num_outputs, model_config, name):
-
         TorchModelV2.__init__(self, obs_space, action_space, num_outputs, model_config, name)
         nn.Module.__init__(self)
-
         self.action_model = FullyConnectedNetwork(
             #Box(low=0, high=1, shape=(6, )),  # one-hot encoded Discrete(6)
             Box(low=-1, high=1, shape=(20, )),  # one-hot encoded Discrete(6)
@@ -90,7 +87,6 @@ class YetAnotherTorchCentralizedCriticModel(TorchModelV2, nn.Module):
             model_config,
             name + "_action"
             )
-
         self.value_model = FullyConnectedNetwork(
             obs_space, 
             Box(low=-1, high=1, shape=(4, )), # action_space,
@@ -103,14 +99,10 @@ class YetAnotherTorchCentralizedCriticModel(TorchModelV2, nn.Module):
     def forward(self, input_dict, state, seq_lens):
         # Store model-input for possible `value_function()` call.
         self._model_in = [input_dict["obs_flat"], state, seq_lens]
-        return self.action_model({
-            "obs": input_dict["obs"]["own_obs"]
-        }, state, seq_lens)
+        return self.action_model({ "obs": input_dict["obs"]["own_obs"] }, state, seq_lens)
 
     def value_function(self):
-        value_out, _ = self.value_model({
-            "obs": self._model_in[0]
-        }, self._model_in[1], self._model_in[2])
+        value_out, _ = self.value_model({ "obs": self._model_in[0] }, self._model_in[1], self._model_in[2])
         return torch.reshape(value_out, [-1])
 
 
@@ -140,12 +132,11 @@ if __name__ == "__main__":
         unused_env = FlockAviary(num_drones=ARGS.num_drones)
         # print(unused_env.action_space["0"]) # Box(-1.0, 1.0, (4,), float32)
         # print(unused_env.observation_space["0"]) # Dict(neighbors:MultiBinary(2), state:Box(-1.0, 1.0, (20,), float32))
-
-        action_space = Box(-1.0, 1.0, (4,), np.float32)
+        action_space = unused_env.action_space[0]
         observer_space = Dict({
             "own_obs": unused_env.observation_space[0],
             "opponent_obs": unused_env.observation_space[0],
-            "opponent_action": Box(-1.0, 1.0, (4,), np.float32),
+            "opponent_action": unused_env.action_space[0],
         })
 
         #### Register the environment ######################################################################
@@ -184,24 +175,12 @@ if __name__ == "__main__":
             # more principled but complex way to share observations is using `postprocess_trajectory`
             # see github.com/ray-project/ray/blob/master/rllib/examples/centralized_critic.py
         }
-    elif ARGS.algo=='other':
-        pass
 
-
-
-
-
-    #### Ray Tune stopping conditions ##################################################################
-    stop = {
-        "timesteps_total": 100, #8000
-        # "timesteps_total": 0,
-        # "episode_reward_mean": 0,
-    }
-
-
-
-
-    if ARGS.algo=='cc':
+        #### Ray Tune stopping conditions ##################################################################
+        stop = {
+            "timesteps_total": 10, #8000
+            # "episode_reward_mean": 0,
+        }
 
         #### Train #########################################################################################
         results = tune.run(
@@ -210,8 +189,10 @@ if __name__ == "__main__":
             config=config,
             verbose=True,
             checkpoint_at_end=True
-        )  
-    elif ARGS.algo=='maddpg':
+        ) 
+
+    elif ARGS.algo=='other':
+        print("Not yet implemented")
         pass
 
 
