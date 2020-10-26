@@ -204,6 +204,8 @@ if __name__ == "__main__":
     checkpoint_path = checkpoints[0][0]
     print(checkpoint_path)
 
+    ray.shutdown()
+
 
 
 
