@@ -54,7 +54,7 @@ if __name__ == "__main__":
     #### Show (and record a video of) the model's performance ##########################################
     obs = test_env.reset()
     start = time.time()
-    for i in range(10*int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS)):
+    for i in range(10*int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS)): # Up to 10''
         action, _states = model.predict(obs, deterministic=True) # deterministic=False
         obs, reward, done, info = test_env.step(action)
         test_env.render()

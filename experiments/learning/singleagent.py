@@ -58,10 +58,13 @@ if __name__ == "__main__":
         model = TD3(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else TD3(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='ddpg': 
         model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
-    
+
+
+    EPISODE_REWARD_THRESHOLD = 140
+
+
     #### Train the model ###############################################################################
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
-    EPISODE_REWARD_THRESHOLD = 5000
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
     eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1)
     model.learn(total_timesteps=int(1e10), callback=eval_callback, log_interval=100)

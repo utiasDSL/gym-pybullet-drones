@@ -116,8 +116,8 @@ class BaseSingleAgentAviary(BaseAviary):
             # return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=0, y_torque=0, z_torque=0) # DEBUG ONLY
         else:
             rpm = self._normalizedActionToRPM(action)
-            return np.clip(np.array(rpm), 0, self.MAX_RPM)
-            # temp =  np.clip(np.array(rpm), 0, self.MAX_RPM); return np.repeat(temp[0], 4) # DEBUG ONLY
+            # return np.clip(np.array(rpm), 0, self.MAX_RPM)
+            temp =  np.clip(np.array(rpm), 0, self.MAX_RPM); return np.repeat(temp[0], 4) # DEBUG ONLY
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
