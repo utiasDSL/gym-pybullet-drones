@@ -52,8 +52,7 @@ if __name__ == "__main__":
         action, _states = model.predict(obs, deterministic=True) # remove deterministic?
         obs, reward, done, info = test_env.step(action)
         test_env.render()
-        sync(i, start, test_env.TIMESTEP)
-        print(done)
+        sync(i, start, test_env.TIMESTEP) # account for aggregate steps.. test_env.AGGR_PHY_STEPS = 5
         if done: obs = test_env.reset()
     test_env.close()
 

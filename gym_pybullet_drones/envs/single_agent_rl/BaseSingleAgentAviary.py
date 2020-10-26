@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from scipy.optimize import nnls
 from gym import spaces
 import pybullet as p
 import pybullet_data
@@ -43,6 +44,11 @@ class BaseSingleAgentAviary(BaseAviary):
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui)
+        #
+        if self.DRONE_MODEL==DroneModel.CF2X: self.A = np.array([ [1, 1, 1, 1], [.5, .5, -.5, -.5], [-.5, .5, .5, -.5], [-1, 1, -1, 1] ])
+        elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]: self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
+        self.INV_A = np.linalg.inv(self.A); self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
+        
 
     ####################################################################################################
     #### Add obstacles to the environment from .urdf files #############################################
@@ -103,8 +109,10 @@ class BaseSingleAgentAviary(BaseAviary):
     #### - clipped_action ((4,1) array)     clipped RPMs commanded to the 4 motors of the drone ########
     ####################################################################################################
     def _preprocessAction(self, action):
-        rpm = self._normalizedActionToRPM(action)
-        return np.clip(np.array(rpm), 0, self.MAX_RPM)
+        # rpm = self._normalizedActionToRPM(action)
+        # return np.clip(np.array(rpm), 0, self.MAX_RPM)
+        return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=self.MAX_XY_TORQUE*action[1], y_torque=self.MAX_XY_TORQUE*action[2], z_torque=self.MAX_Z_TORQUE*action[3])
+        # return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=0, y_torque=0, z_torque=0)
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
@@ -118,4 +126,35 @@ class BaseSingleAgentAviary(BaseAviary):
     def _clipAndNormalizeState(self, state):
         pass
 
-
+    ####################################################################################################
+    #### Non-negative Least Squares (NNLS) RPM from desired thrust and torques  ########################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - thrust (float)                   desired thrust along the local z-axis ######################
+    #### - x_torque (float)                 desired x-axis torque ######################################
+    #### - y_torque (float)                 desired y-axis torque ######################################
+    #### - z_torque (float)                 desired z-axis torque ######################################
+    ####################################################################################################
+    #### Returns #######################################################################################
+    #### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
+    ####################################################################################################
+    def _nnlsRPM(self, thrust, x_torque, y_torque, z_torque):
+        #### Check the feasibility of thrust and torques ###################################################
+        if self.GUI and (thrust<0 or thrust>self.MAX_THRUST): print("[WARNING] it", self.step_counter, "in DynCtrlAviary._nnlsRPM(), unfeasible thrust {:.2f} outside range [0, {:.2f}]".format(thrust, self.MAX_THRUST))
+        if self.GUI and np.abs(x_torque)>self.MAX_XY_TORQUE: print("[WARNING] it", self.step_counter, "in DynCtrlAviary._nnlsRPM(), unfeasible roll torque {:.2f} outside range [{:.2f}, {:.2f}]".format(x_torque, -self.MAX_XY_TORQUE, self.MAX_XY_TORQUE))
+        if self.GUI and np.abs(y_torque)>self.MAX_XY_TORQUE: print("[WARNING] it", self.step_counter, "in DynCtrlAviary._nnlsRPM(), unfeasible pitch torque {:.2f} outside range [{:.2f}, {:.2f}]".format(y_torque, -self.MAX_XY_TORQUE, self.MAX_XY_TORQUE))
+        if self.GUI and np.abs(z_torque)>self.MAX_Z_TORQUE: print("[WARNING] it", self.step_counter, "in DynCtrlAviary._nnlsRPM(), unfeasible yaw torque {:.2f} outside range [{:.2f}, {:.2f}]".format(z_torque, -self.MAX_Z_TORQUE, self.MAX_Z_TORQUE))
+        B = np.multiply(np.array([thrust, x_torque, y_torque, z_torque]), self.B_COEFF)
+        sq_rpm = np.dot(self.INV_A, B)
+        #### Use NNLS if any of the desired angular velocities is negative #################################
+        if np.min(sq_rpm)<0:
+            sol, res = nnls(self.A, B, maxiter=3*self.A.shape[1])
+            if self.GUI:
+                print("[WARNING] it", self.step_counter, "in DynCtrlAviary._nnlsRPM(), unfeasible squared rotor speeds, using NNLS")
+                print("Negative sq. rotor speeds:\t [{:.2f}, {:.2f}, {:.2f}, {:.2f}]".format(sq_rpm[0], sq_rpm[1], sq_rpm[2], sq_rpm[3]),
+                        "\t\tNormalized: [{:.2f}, {:.2f}, {:.2f}, {:.2f}]".format(sq_rpm[0]/np.linalg.norm(sq_rpm), sq_rpm[1]/np.linalg.norm(sq_rpm), sq_rpm[2]/np.linalg.norm(sq_rpm), sq_rpm[3]/np.linalg.norm(sq_rpm)))
+                print("NNLS:\t\t\t\t [{:.2f}, {:.2f}, {:.2f}, {:.2f}]".format(sol[0], sol[1], sol[2], sol[3]),
+                        "\t\t\tNormalized: [{:.2f}, {:.2f}, {:.2f}, {:.2f}]".format(sol[0]/np.linalg.norm(sol), sol[1]/np.linalg.norm(sol), sol[2]/np.linalg.norm(sol), sol[3]/np.linalg.norm(sol)),
+                        "\t\tResidual: {:.2f}".format(res) )
+            sq_rpm = sol
+        return np.sqrt(sq_rpm)

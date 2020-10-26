@@ -164,6 +164,7 @@ if __name__ == "__main__":
     stop = {
         "timesteps_total": 10, # 8000,
         # "episode_reward_mean": 0,
+        # "training_iteration": 0,
     }
 
     #### Train #########################################################################################

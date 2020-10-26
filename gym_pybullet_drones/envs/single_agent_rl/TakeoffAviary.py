@@ -47,13 +47,26 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeReward(self, obs):
         if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        if obs[2] > 0.8: return -1
-        elif obs[2] > 0.5: return 2000
-        elif obs[2] > 0.3: return 1000
-        elif obs[2] > 0.2: return 500
-        elif obs[2] > 0.15: return 100
-        elif obs[2] > 0.1: return 10
-        else: return -1
+        # if obs[2] > 0.8: return -1
+        # elif obs[2] > 0.5: return 2000
+        # elif obs[2] > 0.3: return 1000
+        # elif obs[2] > 0.2: return 500
+        # elif obs[2] > 0.15: return 100
+        # elif obs[2] > 0.1: return 10
+        # else: return -1
+        if np.abs(obs[0])>=1 or np.abs(obs[1])>=1 or obs[2]>=1 \
+            or np.abs(obs[7])>=1 or np.abs(obs[8])>=1 \
+            or np.abs(obs[10])>=1 or np.abs(obs[11])>=1 or np.abs(obs[12])>=1 \
+            or np.abs(obs[13])>=1 or np.abs(obs[14])>=1 or np.abs(obs[15])>=1:
+            return -10
+        else:
+            if obs[2] > 0.5: return 2000
+            elif obs[2] > 0.3: return 1000
+            elif obs[2] > 0.2: return 500
+            elif obs[2] > 0.15: return 100
+            elif obs[2] > 0.1: return 10
+            else: return -1
+
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -66,11 +79,13 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeDone(self, norm_obs):
         if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
-            or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
-            or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
-            or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
-            or self.step_counter/self.SIM_FREQ > 3: return True
+        # if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
+        #     or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
+        #     or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
+        #     or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
+        #     or self.step_counter/self.SIM_FREQ > 3: return True
+        # else: return False
+        if self.step_counter/self.SIM_FREQ > 5: return True
         else: return False
 
     ####################################################################################################
