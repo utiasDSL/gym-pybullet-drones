@@ -25,15 +25,16 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
     #### - record (bool)                    whether to save a video of the simulation ##################
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
+    #### ...
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=5,
-                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False):
+                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False, dyn_input=False):
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
-                            img_obs=img_obs)
+                            img_obs=img_obs, dyn_input=dyn_input)
 
     ####################################################################################################
     #### Add obstacles to the environment from .urdf files #############################################
@@ -56,6 +57,7 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeReward(self, obs):
         if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        #
         if obs[2] > 0.8: return -1
         elif obs[2] > 0.5: return 2000
         elif obs[2] > 0.3: return 1000
@@ -75,6 +77,7 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeDone(self, norm_obs):
         if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        #
         if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
             or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
             or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \

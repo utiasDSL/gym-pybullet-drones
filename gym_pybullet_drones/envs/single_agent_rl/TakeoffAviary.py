@@ -26,15 +26,16 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - record (bool)                    whether to save a video of the simulation ##################
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
+    #### ...
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=5,
-                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False):
+                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False, dyn_input=False):
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
-                            img_obs=img_obs)
+                            img_obs=img_obs, dyn_input=dyn_input)
 
     ####################################################################################################
     #### Compute the current reward value(s) ###########################################################
@@ -47,25 +48,14 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeReward(self, obs):
         if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        # if obs[2] > 0.8: return -1
-        # elif obs[2] > 0.5: return 2000
-        # elif obs[2] > 0.3: return 1000
-        # elif obs[2] > 0.2: return 500
-        # elif obs[2] > 0.15: return 100
-        # elif obs[2] > 0.1: return 10
-        # else: return -1
-        if np.abs(obs[0])>=1 or np.abs(obs[1])>=1 or obs[2]>=1 \
-            or np.abs(obs[7])>=1 or np.abs(obs[8])>=1 \
-            or np.abs(obs[10])>=1 or np.abs(obs[11])>=1 or np.abs(obs[12])>=1 \
-            or np.abs(obs[13])>=1 or np.abs(obs[14])>=1 or np.abs(obs[15])>=1:
-            return -10
-        else:
-            if obs[2] > 0.5: return 2000
-            elif obs[2] > 0.3: return 1000
-            elif obs[2] > 0.2: return 500
-            elif obs[2] > 0.15: return 100
-            elif obs[2] > 0.1: return 10
-            else: return -1
+        #
+        if obs[2] > 0.85: return -100
+        elif obs[2] > 0.5: return 2000
+        elif obs[2] > 0.3: return 1000
+        elif obs[2] > 0.2: return 500
+        elif obs[2] > 0.15: return 100
+        elif obs[2] > 0.1: return 10
+        else: return -100
 
 
     ####################################################################################################
@@ -79,13 +69,13 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeDone(self, norm_obs):
         if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        # if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
-        #     or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
-        #     or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
-        #     or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
-        #     or self.step_counter/self.SIM_FREQ > 3: return True
-        # else: return False
-        if self.step_counter/self.SIM_FREQ > 5: return True
+        #
+        if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
+                or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
+                or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
+                or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
+                or self.step_counter/self.SIM_FREQ > 5: 
+            return True
         else: return False
 
     ####################################################################################################
@@ -113,15 +103,15 @@ class TakeoffAviary(BaseSingleAgentAviary):
         clipped_pos = np.clip(state[0:3], -1, 1)
         clipped_rp = np.clip(state[7:9], -np.pi/3, np.pi/3)
         clipped_vel = np.clip(state[10:13], -1, 1)
-        clipped_ang_vel_rp = np.clip(state[13:15], -10*np.pi, 10*np.pi)
-        clipped_ang_vel_y = np.clip(state[15], -20*np.pi, 20*np.pi)
+        clipped_ang_vel_rp = np.clip(state[13:15], -np.pi, np.pi) # clipped_ang_vel_rp = np.clip(state[13:15], -10*np.pi, 10*np.pi)
+        clipped_ang_vel_y = np.clip(state[15], -np.pi, np.pi) # clipped_ang_vel_y = np.clip(state[15], -20*np.pi, 20*np.pi)
         if self.GUI: self._clipAndNormalizeStateWarning(state, clipped_pos, clipped_rp, clipped_vel, clipped_ang_vel_rp, clipped_ang_vel_y)
         normalized_pos = clipped_pos
         normalized_rp = clipped_rp/(np.pi/3)
         normalized_y = state[9]/np.pi
         normalized_vel = clipped_vel
-        normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
-        normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
+        normalized_ang_vel_rp = clipped_ang_vel_rp/np.pi # normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
+        normalized_ang_vel_y = clipped_ang_vel_y/np.pi # normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
         return np.hstack([normalized_pos, state[3:7], normalized_rp, normalized_y, normalized_vel, normalized_ang_vel_rp, normalized_ang_vel_y, state[16:20] ]).reshape(20,)
 
     ####################################################################################################

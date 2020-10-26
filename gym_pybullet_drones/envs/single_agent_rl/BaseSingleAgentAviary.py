@@ -30,13 +30,15 @@ class BaseSingleAgentAviary(BaseAviary):
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     #### - img_obs (bool)                   ...
+    #### - dyn_input (bool)                   ...
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
-                    gui=False, record=False, obstacles=True, user_debug_gui=True, img_obs=False):
+                    gui=False, record=False, obstacles=True, user_debug_gui=True, img_obs=False, dyn_input=False):
         if num_drones!=1: print("[ERROR] in BaseSingleAgentAviary.__init__(), BaseSingleAgentAviary only accepts num_drones=1"); exit()
         self.IMG_OBS = img_obs
+        self.DYN_IN = dyn_input
         if self.IMG_OBS:
             self.IMG_RES = np.array([64, 48]); self.IMG_FRAME_PER_SEC = 24; self.IMG_CAPTURE_FREQ = int(freq/self.IMG_FRAME_PER_SEC)
             self.rgb = np.zeros(((num_drones, self.IMG_RES[1], self.IMG_RES[0], 4))); self.dep = np.ones(((num_drones, self.IMG_RES[1], self.IMG_RES[0]))); self.seg = np.zeros(((num_drones, self.IMG_RES[1], self.IMG_RES[0])))
@@ -44,10 +46,10 @@ class BaseSingleAgentAviary(BaseAviary):
         super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui)
-        #
-        if self.DRONE_MODEL==DroneModel.CF2X: self.A = np.array([ [1, 1, 1, 1], [.5, .5, -.5, -.5], [-.5, .5, .5, -.5], [-1, 1, -1, 1] ])
-        elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]: self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
-        self.INV_A = np.linalg.inv(self.A); self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
+        if self.DYN_IN:
+            if self.DRONE_MODEL==DroneModel.CF2X: self.A = np.array([ [1, 1, 1, 1], [.5, .5, -.5, -.5], [-.5, .5, .5, -.5], [-1, 1, -1, 1] ])
+            elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]: self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
+            self.INV_A = np.linalg.inv(self.A); self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
         
 
     ####################################################################################################
@@ -90,12 +92,12 @@ class BaseSingleAgentAviary(BaseAviary):
         if self.IMG_OBS:
             if self.step_counter%self.IMG_CAPTURE_FREQ==0: 
                 self.rgb[0], self.dep[0], self.seg[0] = self._getDroneImages(0, segmentation=False)
-                # DEBUG ONLY
+                # DEBUG ONLY, REMOVE TO IMPROVE RENDERING PERFORMANCE
                 #### Printing observation to PNG frames example ####################################################
                 if self.GUI:
                     path = os.path.dirname(os.path.abspath(__file__))+"/../../../files/test/"; os.makedirs(os.path.dirname(path), exist_ok=True)
                     self._exportImage(img_type=ImageType.RGB, img_input=self.rgb[0], path=path, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
-                #
+                ####################################################################################################
             return self.rgb[0]
         else: return self._clipAndNormalizeState(self._getDroneStateVector(0))
 
@@ -109,10 +111,13 @@ class BaseSingleAgentAviary(BaseAviary):
     #### - clipped_action ((4,1) array)     clipped RPMs commanded to the 4 motors of the drone ########
     ####################################################################################################
     def _preprocessAction(self, action):
-        # rpm = self._normalizedActionToRPM(action)
-        # return np.clip(np.array(rpm), 0, self.MAX_RPM)
-        return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=self.MAX_XY_TORQUE*action[1], y_torque=self.MAX_XY_TORQUE*action[2], z_torque=self.MAX_Z_TORQUE*action[3])
-        # return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=0, y_torque=0, z_torque=0)
+        if self.DYN_IN:
+            return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=self.MAX_XY_TORQUE*action[1], y_torque=self.MAX_XY_TORQUE*action[2], z_torque=self.MAX_Z_TORQUE*action[3])
+            # return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=0, y_torque=0, z_torque=0) # DEBUG ONLY
+        else:
+            rpm = self._normalizedActionToRPM(action)
+            return np.clip(np.array(rpm), 0, self.MAX_RPM)
+            # temp =  np.clip(np.array(rpm), 0, self.MAX_RPM); return np.repeat(temp[0], 4) # DEBUG ONLY
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
