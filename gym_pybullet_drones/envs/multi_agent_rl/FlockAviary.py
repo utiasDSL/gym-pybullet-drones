@@ -44,7 +44,7 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
         #### Action vector ######## P0            P1            P2            P3
         act_lower_bound = np.array([-1,           -1,           -1,           -1])
         act_upper_bound = np.array([1,            1,            1,            1])
-        return spaces.Dict({ str(i): spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32) for i in range(self.NUM_DRONES) })
+        return spaces.Dict({    i   : spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32) for i in range(self.NUM_DRONES) })
 
     ####################################################################################################
     #### Return the observation space of the environment, a Dict with NUM_DRONES entries of Dict of ####
@@ -54,8 +54,9 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
         #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WR       WP       WY       P0            P1            P2            P3
         obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
         obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])
-        return spaces.Dict({ str(i): spaces.Dict ({"state": spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32),
-                                                    "neighbors": spaces.MultiBinary(self.NUM_DRONES) }) for i in range(self.NUM_DRONES) })
+        #return spaces.Dict({    i   : spaces.Dict ({"state": spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32),
+        #                                            "neighbors": spaces.MultiBinary(self.NUM_DRONES) }) for i in range(self.NUM_DRONES) })
+        return spaces.Dict({    i   : spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32) for i in range(self.NUM_DRONES) })
 
     ####################################################################################################
     #### Return the current observation of the environment #############################################
@@ -68,7 +69,8 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
     ####################################################################################################
     def _computeObs(self):
         adjacency_mat = self._getAdjacencyMatrix()
-        return {str(i): {"state": self._clipAndNormalizeState(self._getDroneStateVector(i)), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
+        #return {   i   : {"state": self._clipAndNormalizeState(self._getDroneStateVector(i)), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
+        return {   i   : self._clipAndNormalizeState(self._getDroneStateVector(i)) for i in range(self.NUM_DRONES) }
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################
@@ -97,10 +99,16 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
     def _computeReward(self, obs):
         # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
         # parse velocity and position
+
+        return {   i   : 0 for i in range(self.NUM_DRONES) }
+
+
+
+
         vel = np.zeros((1, self.NUM_DRONES, 3)); pos = np.zeros((1, self.NUM_DRONES, 3))
         for i in range(self.NUM_DRONES):
-            pos[0,i,:] = obs[str(i)]["state"][0:3]
-            vel[0,i,:] = obs[str(i)]["state"][10:13]
+            pos[0,i,:] = obs[   i   ]["state"][0:3]
+            vel[0,i,:] = obs[   i   ]["state"][10:13]
         # compute metrics
         # velocity alignment
         ali = 0
@@ -134,7 +142,7 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
             avg_flock_spac_rew = min(math.fabs(avg_flock_spacing[0] - FLOCK_SPACING_MIN),
                                      math.fabs(avg_flock_spacing[0] - FLOCK_SPACING_MAX))
         reward = ali[0] + avg_flock_linear_speed[0] - avg_flock_spac_rew - var_flock_spacing[0]
-        return {str(i): reward for i in range(self.NUM_DRONES) }
+        return {   i   : reward for i in range(self.NUM_DRONES) }
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -146,7 +154,11 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, obs):
-        done = {str(i): self._individualDone(obs[str(i)]["state"]) for i in range(self.NUM_DRONES)}
+        # done = {   i   : self._individualDone(obs[   i   ]["state"]) for i in range(self.NUM_DRONES)}
+        # done["__all__"] = True if True in done.values() else False
+        # return done
+
+        done = {   i   : True for i in range(self.NUM_DRONES)}
         done["__all__"] = True if True in done.values() else False
         return done
 
@@ -160,7 +172,7 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
     #### - info (..)                        the info dict(s) associated to the current obs/state #######
     ####################################################################################################
     def _computeInfo(self, obs):
-        return {str(i): {} for i in range(self.NUM_DRONES) }
+        return {   i   : {} for i in range(self.NUM_DRONES) }
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
