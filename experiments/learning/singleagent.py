@@ -43,7 +43,7 @@ if __name__ == "__main__":
     IMG_OBS = True if ARGS.pol=='cnn' else False
     DYN_IN = True if ARGS.input=='dyn' else False
     # train_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN) # single environment instead of a vectorized one
-    train_env = make_vec_env(env_name, env_kwargs={"img_obs": IMG_OBS, "dyn_input": DYN_IN}, n_envs=ARGS.cpu, seed=0)
+    train_env = make_vec_env(env_name, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0)
 
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
@@ -67,7 +67,7 @@ if __name__ == "__main__":
 
 
 
-    EPISODE_REWARD_THRESHOLD = 180 # TBD
+    EPISODE_REWARD_THRESHOLD = 175 # TBD
 
 
 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
     # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
-    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=500, deterministic=True, render=False)
+    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=int(2000/ARGS.cpu), deterministic=True, render=False)
     model.learn(total_timesteps=int(1e10), callback=eval_callback, log_interval=100)
 
     ### Save the model #################################################################################
