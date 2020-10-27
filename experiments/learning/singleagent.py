@@ -5,6 +5,7 @@ import argparse
 import gym
 import torch
 from stable_baselines3.common.env_checker import check_env
+from stable_baselines3.common.cmd_util import make_vec_env # Module cmd_util will be renamed to env_util https://github.com/DLR-RM/stable-baselines3/pull/197
 from stable_baselines3 import A2C
 from stable_baselines3 import PPO
 from stable_baselines3 import SAC
@@ -33,6 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('--algo',       default='a2c',        type=str,       choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],     help='Help (default: ..)', metavar='')
     parser.add_argument('--pol',        default='mlp',        type=str,       choices=['mlp', 'cnn'],                           help='Help (default: ..)', metavar='')
     parser.add_argument('--input',      default='rpm',        type=str,       choices=['rpm', 'dyn'],                           help='Help (default: ..)', metavar='')    
+    parser.add_argument('--cpu',        default='4',          type=int,                                                         help='Help (default: ..)', metavar='')    
     ARGS = parser.parse_args()
     filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.pol+'-'+ARGS.input+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
 
@@ -40,10 +42,12 @@ if __name__ == "__main__":
     env_name = ARGS.env+"-aviary-v0"
     IMG_OBS = True if ARGS.pol=='cnn' else False
     DYN_IN = True if ARGS.input=='dyn' else False
-    train_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN) # TO DO: vector env
+    # train_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN) # single environment instead of a vectorized one
+    train_env = make_vec_env(env_name, env_kwargs={"img_obs": IMG_OBS, "dyn_input": DYN_IN}, n_envs=ARGS.cpu, seed=0)
+
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
-    check_env(train_env, warn=True, skip_render_check=True)
+    # check_env(train_env, warn=True, skip_render_check=True)
     
     #### On-policy algorithms ##########################################################################
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 128, dict(vf=[64, 32], pi=[64, 32])]) # or None
