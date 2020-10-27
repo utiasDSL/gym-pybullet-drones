@@ -32,7 +32,7 @@ class TakeoffAviary(BaseSingleAgentAviary):
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=5,
                     gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False, dyn_input=False):
-        super().__init__(drone_model=drone_model, neighbourhood_radius=neighbourhood_radius,
+        super().__init__(drone_model=drone_model, num_drones=num_drones, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
                             img_obs=img_obs, dyn_input=dyn_input)

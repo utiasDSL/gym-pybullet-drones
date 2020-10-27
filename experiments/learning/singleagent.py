@@ -43,8 +43,9 @@ if __name__ == "__main__":
     IMG_OBS = True if ARGS.pol=='cnn' else False
     DYN_IN = True if ARGS.input=='dyn' else False
     # train_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN) # single environment instead of a vectorized one
-    train_env = make_vec_env(env_name, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0)
-
+    if env_name=="takeoff-aviary-v0": train_env = make_vec_env(TakeoffAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0)
+    if env_name=="hover-aviary-v0": train_env = make_vec_env(HoverAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0)
+    if env_name=="flythrugate-aviary-v0": train_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0)
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
     # check_env(train_env, warn=True, skip_render_check=True)

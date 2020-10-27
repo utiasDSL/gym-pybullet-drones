@@ -145,13 +145,6 @@ $ python physics.py                         # Try 'python physics.py -h' to show
 ```
 > Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
 
-- `_dev.py` is an [*always in beta*](https://en.wikipedia.org/wiki/Perpetual_beta) script with the latest features of `gym-pybullet-drones` like RGB, depth and segmentation views from each drone's POV or compatibility with RLlibs's [`MultiAgentEnv`](https://docs.ray.io/en/latest/rllib-env.html#multi-agent-and-hierarchical) class
-```
-$ conda activate myenv                      # If using a conda environment
-$ cd gym-pybullet-drones/examples/
-$ python _dev.py                            # Try 'python _dev.py -h' to show the script's customizable parameters
-```
-
 <img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
 
 
