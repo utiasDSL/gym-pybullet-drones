@@ -62,14 +62,15 @@ if __name__ == "__main__":
         model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
 
 
-    EPISODE_REWARD_THRESHOLD = 100 # TBD
+
+    EPISODE_REWARD_THRESHOLD = 180 # TBD
+
 
 
     #### Train the model ###############################################################################
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
     # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
-    # eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1)
     eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=500, deterministic=True, render=False)
     model.learn(total_timesteps=int(1e10), callback=eval_callback, log_interval=100)
 
@@ -77,8 +78,7 @@ if __name__ == "__main__":
     model.save(filename)
     print(filename)
 
-    # use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<time-date>-tb for the tensorboard results at http://localhost:6006/
-
+    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<time-date>-tb for the tensorboard results at http://localhost:6006/
 
 
 

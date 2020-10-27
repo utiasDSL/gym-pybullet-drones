@@ -51,7 +51,7 @@ class TakeoffAviary(BaseSingleAgentAviary):
 ##### REMOVE
 ############
         obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        if obs[2]>0.75 and obs[2]<.99: return 1
+        if obs[2]>0.75 and obs[2]<.9: return 1
         else: return 0
 
     ####################################################################################################
@@ -68,7 +68,7 @@ class TakeoffAviary(BaseSingleAgentAviary):
 ##### REMOVE
 ############
         norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 \
+        if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or np.abs(norm_obs[2])>=1 \
                 or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
                 or self.step_counter/self.SIM_FREQ > 5: 
             return True
