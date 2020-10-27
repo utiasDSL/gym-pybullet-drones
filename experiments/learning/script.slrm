@@ -12,25 +12,25 @@
 #SBATCH --nodes=1
 #SBATCH --qos=normal                                 # for "high" and "deadline" QoS, refer to https://support.vectorinstitute.ai/AboutVaughan2
 
-#now=$(date +"%m_%d_%Y")                              # current date
-#log_file="~/logs/log-$now.log"
- 
-echo $SLURM_JOB_ID >> /h/jacopo/logs/log.log                    # log the job id
-echo $SLURM_JOB_PARTITION >> /h/jacopo/logs/log.log             # log the job partition
+echo $SLURM_JOB_ID >> $log_file                      # log the job id
+echo $SLURM_JOB_PARTITION >> $log_file               # log the job partition
 
 export LD_LIBRARY_PATH=/pkgs/cuda-10.1/lib64:/pkgs/cudnn-10.1-v7.6.3.30/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}      # required for TensorFlow to see any GPU
 export PATH=/pkgs/anaconda3/bin:$PATH                # exporting the binaries of your preferred version of conda
 source activate /scratch/gobi1/$USER/learning/       # LINE 23 - NOTE: set the path to your conda environment path
 
-echo $CONDA_PREFIX >> /h/jacopo/logs/log.log                    # log the active conda environment 
+echo $CONDA_PREFIX >> $log_file                      # log the active conda environment 
 
-python --version >> /h/jacopo/logs/log.log                     # log Python version
+python --version >> $log_file                        # log Python version
+
+# pip install --user --upgrade gym
+# pip install --user --upgrade ray[rllib]
+# pip install --user --upgrade pybullet
+# pip install --user --upgrade stable-baselines3
 
 cd /scratch/gobi1/$USER/gym-pybullet-drones/
 pip install --user -e .                              # in necessary
 
-pip install --user tensorboard
-
-python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env takeoff --algo ppo --pol mlp --input rpm --cpu 1 >> /h/jacopo/logs/log.log          # the script, with its standard output appended to gym_py_drones_job.log
+python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env takeoff --algo ppo --pol mlp --input rpm --cpu 1 >> $log_file          # the script, with its standard output appended to gym_py_drones_job.log
 
 source deactivate
