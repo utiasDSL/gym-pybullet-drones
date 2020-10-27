@@ -69,10 +69,10 @@ class BaseSingleAgentAviary(BaseAviary):
         #### Action vector ######## P0            P1            P2            P3
         act_lower_bound = np.array([-1,           -1,           -1,           -1])
         act_upper_bound = np.array([1,            1,            1,            1])
-        # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
+        return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
 ##### REMOVE
 ############ 
-        return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 )
+        # return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 )
 
     ####################################################################################################
     #### Return the observation space of the environment, a Box(20,) ###################################
@@ -134,8 +134,8 @@ class BaseSingleAgentAviary(BaseAviary):
             # return np.clip(np.array(rpm), 0, self.MAX_RPM)
 ##### REMOVE
 ############    
-            return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 4) # DEBUG ONLY, single RPM
-            # return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 1) # DEBUG ONLY, 4 RPMs
+            # return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 4) # DEBUG ONLY, single RPM
+            return np.array(self.HOVER_RPM+action*self.HOVER_RPM/20) # DEBUG ONLY, 4 RPMs
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
