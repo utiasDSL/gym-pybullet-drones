@@ -104,8 +104,8 @@ class BaseAviary(gym.Env):
         else:
             #### Without debug GUI #############################################################################
             self.CLIENT = p.connect(p.DIRECT)
-            if platform == "linux":
-                p.setAdditionalSearchPath(pybullet_data.getDataPath()); plugin = p.loadPlugin(egl.get_filename(), "_eglRendererPlugin"); print("plugin=", plugin)
+            #### Remove the following line to AVOID using the EGL Render Plugin and use CPU rendering instead ##
+            if platform == "linux": p.setAdditionalSearchPath(pybullet_data.getDataPath()); plugin = p.loadPlugin(egl.get_filename(), "_eglRendererPlugin"); print("plugin=", plugin)
             if self.RECORD:
                 #### Set the camera parameters to save frames in DIRECT mode #######################################
                 self.VID_WIDTH=int(640); self.VID_HEIGHT=int(480); self.FRAME_PER_SEC = 24; self.CAPTURE_FREQ = int(self.SIM_FREQ/self.FRAME_PER_SEC)

@@ -30,6 +30,8 @@ if __name__ == "__main__":
     # Use as $ python test_singleagent.py --file save-<env>-<algo>-<pol>-<input>-<time-date>
     # Or $ python test_singleagent.py --file save-<env>-<algo>-<pol>-<input>-<time-date>-logs --zip True
 
+    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<input>-<time-date>-tb for the tensorboard results at http://localhost:6006/
+
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
     parser.add_argument('--file',                           type=str,            help='Help (default: ..)', metavar='')
@@ -67,13 +69,6 @@ if __name__ == "__main__":
         sync(np.floor(i*test_env.AGGR_PHY_STEPS), start, test_env.TIMESTEP)
         # if done: obs = test_env.reset() # OPTIONAL
     test_env.close()
-
-    # use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<input>-<time-date>-tb for the tensorboard results at http://localhost:6006/
-
-
-
-
-
 
 
 

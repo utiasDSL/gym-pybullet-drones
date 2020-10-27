@@ -40,16 +40,14 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 |                                   | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
 | --------------------------------: | :--------------------------------: | :---------------------------: |
-| Rendering                         | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
+| Rendering                         | OpenGL                             | CPU-based TinyRenderer        | 
 | Single drone, **no** vision       | 15.5x                              | 16.8x                         |
 | Single drone **with** vision      | 10.8x                              | 1.3x                          |
 | Multi-drone (10), **no** vision   | 2.1x                               | 2.3x                          |
 | Multi-drone (5) **with** vision   | 2.5x                               | 0.2x                          |
 | 80 drones in 4 env, **no** vision | 0.8x                               | 0.95x                         |
 
-> \*\*\* **on Ubuntu only, uncomment the line after `self.CLIENT = p.connect(p.DIRECT)` in `BaseAviary.py`**
-
-> **Note: use `gui=False` and `aggregate_phy_steps=int(SIM_HZ/CTRL_HZ)` to optimize performance**
+> **Note: use `gui=False` and `aggregate_phy_steps=int(SIM_HZ/CTRL_HZ)` for better performance**
 
 > While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, \~5kHz PyBullet physics (CPU-only) is faster than [AirSim (1kHz)](https://arxiv.org/pdf/1705.05065.pdf) and more accurate than [Flightmare's 35kHz simple single quadcopter dynamics](https://arxiv.org/pdf/2009.00563.pdf)
 
