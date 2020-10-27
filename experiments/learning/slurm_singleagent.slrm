@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#SBATCH --job-name=test_job
+#SBATCH --output=/h/YOURUSERNAME/output-%N-%j.out    # LINES 4, 5 - NOTE: for output and error, use absolute paths that exists already
+#SBATCH --error=/h/YOURUSERNAME/error-%N-%j.err      # LINES 4, 5 - NOTE: %N and %j will be replaced by the host name and job id, respectively
+#SBATCH --open-mode=append
+#SBATCH --partition=gpu                              # self-explanatory, set to your preference (e.g. gpu or cpu on MaRS, p100, t4, or cpu on Vaughan)
+#SBATCH --cpus-per-task=1                            # self-explanatory, set to your preference
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=4G                                     # self-explanatory, set to your preference
+#SBATCH --gres=gpu:1                                 # NOTE: you need a GPU for CUDA support; self-explanatory, set to your preference 
+#SBATCH --nodes=1
+#SBATCH --qos=normal                                 # for "high" and "deadline" QoS, refer to https://support.vectorinstitute.ai/AboutVaughan2
+
+rm -f ~/test.log                                     # remove any previous copy of "test.log" which is used by "test.sh" to append its output
+
+echo $SLURM_JOB_ID >> ~/test.log                     # log the job id
+echo $SLURM_JOB_PARTITION >> ~/test.log              # log the job partition
+
+export LD_LIBRARY_PATH=/pkgs/cuda-10.1/lib64:/pkgs/cudnn-10.1-v7.6.3.30/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}      # required for TensorFlow to see any GPU
+
+export PATH=/pkgs/anaconda3/bin:$PATH                # exporting the binaries of your preferred version of conda
+source activate /scratch/gobi1/$USER/learning/       # LINE 23 - NOTE: set the path to your conda environment path
+echo $CONDA_PREFIX >> ~/test.log                     # log the active conda environment 
+
+python --version >> ~/test.log                       # log Python version
+
+python ~/test.py >> ~/test.log                       # the script above, with its standard output appended to test.log
+
+source deactivate
