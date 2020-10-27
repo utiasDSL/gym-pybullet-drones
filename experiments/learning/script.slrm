@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --job-name=gym_py_drones_job
-#SBATCH --output=/h/jacopo/output/output-%N-%j.out   # LINES 4, 5 - NOTE: for output and error, use absolute paths that exists already
-#SBATCH --error=/h/jacopo/error/error-%N-%j.err      # LINES 4, 5 - NOTE: %N and %j will be replaced by the host name and job id, respectively
+#SBATCH --output=/h/jacopo/logs/output-%N-%j.out     # LINES 4, 5 - NOTE: for output and error, use absolute paths that exists already
+#SBATCH --error=/h/jacopo/logs/error-%N-%j.err       # LINES 4, 5 - NOTE: %N and %j will be replaced by the host name and job id, respectively
 #SBATCH --open-mode=append
 #SBATCH --partition=cpu                              # self-explanatory, set to your preference (e.g. gpu or cpu on MaRS, p100, t4, or cpu on Vaughan)
 #SBATCH --cpus-per-task=16                           # self-explanatory, set to your preference
