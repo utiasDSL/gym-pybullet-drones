@@ -5,9 +5,9 @@
 #SBATCH --error=/h/jacopo/error-%N-%j.err            # LINES 4, 5 - NOTE: %N and %j will be replaced by the host name and job id, respectively
 #SBATCH --open-mode=append
 #SBATCH --partition=cpu                              # self-explanatory, set to your preference (e.g. gpu or cpu on MaRS, p100, t4, or cpu on Vaughan)
-#SBATCH --cpus-per-task=32                           # self-explanatory, set to your preference
+#SBATCH --cpus-per-task=16                           # self-explanatory, set to your preference
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem=64G                                    # self-explanatory, set to your preference
+#SBATCH --mem=32G                                    # self-explanatory, set to your preference
 #SBATCH --gres=gpu:1                                 # NOTE: you need a GPU for CUDA support; self-explanatory, set to your preference 
 #SBATCH --nodes=1
 #SBATCH --qos=normal                                 # for "high" and "deadline" QoS, refer to https://support.vectorinstitute.ai/AboutVaughan2
