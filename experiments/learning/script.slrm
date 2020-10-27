@@ -5,27 +5,30 @@
 #SBATCH --error=/h/jacopo/error/error-%N-%j.err      # LINES 4, 5 - NOTE: %N and %j will be replaced by the host name and job id, respectively
 #SBATCH --open-mode=append
 #SBATCH --partition=cpu                              # self-explanatory, set to your preference (e.g. gpu or cpu on MaRS, p100, t4, or cpu on Vaughan)
-#SBATCH --cpus-per-task=4                            # self-explanatory, set to your preference
+#SBATCH --cpus-per-task=16                           # self-explanatory, set to your preference
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem=64G                                    # self-explanatory, set to your preference
+#SBATCH --mem=32G                                    # self-explanatory, set to your preference
 #SBATCH --gres=gpu:0                                 # NOTE: you need a GPU for CUDA support; self-explanatory, set to your preference 
 #SBATCH --nodes=1
 #SBATCH --qos=normal                                 # for "high" and "deadline" QoS, refer to https://support.vectorinstitute.ai/AboutVaughan2
 
-echo $SLURM_JOB_ID >> ~/logs/log-%N-%j.log           # log the job id
-echo $SLURM_JOB_PARTITION >> ~/logs/log-%N-%j.log    # log the job partition
+now=$(date +"%m_%d_%Y")                              # current date
+log_file="~/logs/log-$now.log"
+ 
+echo $SLURM_JOB_ID >> "$log_file"                    # log the job id
+echo $SLURM_JOB_PARTITION >> "$log_file"             # log the job partition
 
 export LD_LIBRARY_PATH=/pkgs/cuda-10.1/lib64:/pkgs/cudnn-10.1-v7.6.3.30/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}      # required for TensorFlow to see any GPU
 export PATH=/pkgs/anaconda3/bin:$PATH                # exporting the binaries of your preferred version of conda
 source activate /scratch/gobi1/$USER/learning/       # LINE 23 - NOTE: set the path to your conda environment path
 
-echo $CONDA_PREFIX >> ~/logs/log-%N-%j.log           # log the active conda environment 
+echo $CONDA_PREFIX >> "$log_file"                    # log the active conda environment 
 
-python --version >> ~/logs/log-%N-%j.log             # log Python version
+python --version >> "$log_file"                      # log Python version
 
 cd /scratch/gobi1/$USER/gym-pybullet-drones/
 pip install --user -e .                              # in necessary
 
-python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env takeoff --algo ppo --pol mlp --input rpm --cpu 4 >> ~/logs/log-%N-%j.log          # the script, with its standard output appended to gym_py_drones_job.log
+python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env takeoff --algo ppo --pol mlp --input rpm --cpu 1 >> "$log_file"          # the script, with its standard output appended to gym_py_drones_job.log
 
 source deactivate

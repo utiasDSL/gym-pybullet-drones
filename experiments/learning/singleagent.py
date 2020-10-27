@@ -76,7 +76,7 @@ if __name__ == "__main__":
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
     # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
-    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=int(2000/ARGS.cpu), deterministic=True, render=False)
+    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=int(1000/ARGS.cpu), deterministic=True, render=False)
     model.learn(total_timesteps=int(1e10), callback=eval_callback, log_interval=100)
 
     ### Save the model #################################################################################

@@ -87,6 +87,7 @@ class BaseSingleAgentAviary(BaseAviary):
 ##### REMOVE
 ############
             return spaces.Box( low=np.array([0,-1]), high=np.array([1,1]), dtype=np.float32 )
+            # return spaces.Box( low=np.array([-1,-1,0, -1,-1,-1, -1,-1,-1, -1,-1,-1]), high=np.array([1,1,1, 1,1,1, 1,1,1, 1,1,1]), dtype=np.float32 )
 
     ####################################################################################################
     #### Return the current observation of the environment #############################################
@@ -111,6 +112,7 @@ class BaseSingleAgentAviary(BaseAviary):
 ##### REMOVE
 ############            
             return np.hstack([ obs[2], obs[12] ])
+            # return np.hstack([ obs[0:3], obs[7:10], obs[10:13], obs[13:15] ])
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################
@@ -132,8 +134,8 @@ class BaseSingleAgentAviary(BaseAviary):
             # return np.clip(np.array(rpm), 0, self.MAX_RPM)
 ##### REMOVE
 ############    
-            return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 4) # DEBUG ONLY
-            # return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 1) # DEBUG ONLY
+            return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 4) # DEBUG ONLY, single RPM
+            # return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 1) # DEBUG ONLY, 4 RPMs
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
