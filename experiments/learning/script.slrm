@@ -29,6 +29,8 @@ python --version >> /h/jacopo/logs/log.log                     # log Python vers
 cd /scratch/gobi1/$USER/gym-pybullet-drones/
 pip install --user -e .                              # in necessary
 
+pip install --user tensorboard
+
 python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env takeoff --algo ppo --pol mlp --input rpm --cpu 1 >> /h/jacopo/logs/log.log          # the script, with its standard output appended to gym_py_drones_job.log
 
 source deactivate
