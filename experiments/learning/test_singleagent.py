@@ -27,18 +27,24 @@ from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGa
 
 if __name__ == "__main__":
 
+    # Use as $ python test_singleagent.py --file save-<env>-<algo>-<pol>-<input>-<time-date>
+    # Or $ python test_singleagent.py --file save-<env>-<algo>-<pol>-<input>-<time-date>-logs --zip True
+
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
-    parser.add_argument('--file',      type=str,       help='Help (default: ..)', metavar='')
+    parser.add_argument('--file',                           type=str,            help='Help (default: ..)', metavar='')
+    parser.add_argument('--zip',       default=False,       type=str2bool,       help='Help (default: ..)', metavar='')
     ARGS = parser.parse_args()
 
     #### Load the model from file ######################################################################
     algo = ARGS.file.split("-")[2]
-    if algo=='a2c': model = A2C.load(ARGS.file)
-    if algo=='ppo': model = PPO.load(ARGS.file)
-    if algo=='sac': model = SAC.load(ARGS.file)
-    if algo=='td3': model = TD3.load(ARGS.file)
-    if algo=='ddpg': model = DDPG.load(ARGS.file)
+    if ARGS.zip: path = ARGS.file+'/best_model.zip'
+    else: path = ARGS.file
+    if algo=='a2c': model = A2C.load(path)
+    if algo=='ppo': model = PPO.load(path)
+    if algo=='sac': model = SAC.load(path)
+    if algo=='td3': model = TD3.load(path)
+    if algo=='ddpg': model = DDPG.load(path)
 
     #### Recreate the environment ######################################################################
     env_name = ARGS.file.split("-")[1]+"-aviary-v0"

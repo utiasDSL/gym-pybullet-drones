@@ -16,7 +16,7 @@ from stable_baselines3.sac.policies import SACPolicy as sacMlpPolicy
 from stable_baselines3.sac import CnnPolicy as sacCnnPolicy
 from stable_baselines3.td3 import MlpPolicy as td3ddpgMlpPolicy
 from stable_baselines3.td3 import CnnPolicy as td3ddpgCnnPolicy
-from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold
+from stable_baselines3.common.callbacks import CheckpointCallback, EvalCallback, StopTrainingOnRewardThreshold
 
 from gym_pybullet_drones.utils.utils import *
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
@@ -24,6 +24,8 @@ from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
 
 if __name__ == "__main__":
+
+    # Use as $ python singleagent.py --env <env> --algo <alg> --pol <mlp/cnn> --input <rpm/dyn>
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
@@ -65,8 +67,10 @@ if __name__ == "__main__":
 
     #### Train the model ###############################################################################
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
+    # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
-    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1)
+    # eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1)
+    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=500, deterministic=True, render=False)
     model.learn(total_timesteps=int(1e10), callback=eval_callback, log_interval=100)
 
     ### Save the model #################################################################################
