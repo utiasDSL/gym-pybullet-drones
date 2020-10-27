@@ -476,8 +476,12 @@ class BaseAviary(gym.Env):
     ####################################################################################################
     def _saveLastAction(self, action):
         if isinstance(action, collections.Mapping):
-            for k, v in action.items(): self.last_action[int(k),:] = v
-        else: self.last_action = np.reshape(action, (self.NUM_DRONES, 4))
+            for k, v in action.items(): 
+                res_v = np.resize(v, (1,4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
+                self.last_action[int(k),:] = res_v
+        else: 
+            res_action = np.resize(action, (1,4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
+            self.last_action = np.reshape(res_action, (self.NUM_DRONES, 4))
 
     ####################################################################################################
     #### Draw the local frame of the nth drone #########################################################

@@ -48,17 +48,11 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeReward(self, obs):
         if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        #
-        # if obs[2] > 0.85: return -100
-        # elif obs[2] > 0.5: return 2000
-        # elif obs[2] > 0.3: return 1000
-        # elif obs[2] > 0.2: return 500
-        # elif obs[2] > 0.15: return 100
-        # elif obs[2] > 0.1: return 10
-        # else: return -100
-        if obs[2]>0.8 and obs[2]<1: return 1
-        else: return -1
-
+##### REMOVE
+############
+        obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        if obs[2]>0.75 and obs[2]<.99: return 1
+        else: return 0
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -71,14 +65,9 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeDone(self, norm_obs):
         if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        #
-        # if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or norm_obs[2]>=1 \
-        #         or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
-        #         or np.abs(norm_obs[10])>=1 or np.abs(norm_obs[11])>=1 or np.abs(norm_obs[12])>=1 \
-        #         or np.abs(norm_obs[13])>=1 or np.abs(norm_obs[14])>=1 or np.abs(norm_obs[15])>=1 \
-        #         or self.step_counter/self.SIM_FREQ > 5: 
-        #     return True
-        # else: return False
+##### REMOVE
+############
+        norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 \
                 or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
                 or self.step_counter/self.SIM_FREQ > 5: 
