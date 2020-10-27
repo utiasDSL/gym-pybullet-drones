@@ -8,7 +8,7 @@
 #SBATCH --cpus-per-task=16                           # self-explanatory, set to your preference
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=32G                                    # self-explanatory, set to your preference
-#SBATCH --gres=gpu:1                                 # NOTE: you need a GPU for CUDA support; self-explanatory, set to your preference 
+#SBATCH --gres=gpu:0                                 # NOTE: you need a GPU for CUDA support; self-explanatory, set to your preference 
 #SBATCH --nodes=1
 #SBATCH --qos=normal                                 # for "high" and "deadline" QoS, refer to https://support.vectorinstitute.ai/AboutVaughan2
 
