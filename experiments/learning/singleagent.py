@@ -60,7 +60,7 @@ if __name__ == "__main__":
         model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
 
 
-    EPISODE_REWARD_THRESHOLD = 110 # TBD
+    EPISODE_REWARD_THRESHOLD = 100 # TBD
 
 
     #### Train the model ###############################################################################
