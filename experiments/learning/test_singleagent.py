@@ -29,7 +29,6 @@ from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGa
 if __name__ == "__main__":
 
     # Use as $ python test_singleagent.py --exp save-<env>-<algo>-<pol>-<input>-<time-date>
-
     # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<input>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
     #### Define and parse (optional) arguments for the script ##########################################

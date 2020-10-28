@@ -48,10 +48,10 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeReward(self, obs):
         #
-        # if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         #
-##### REMOVE
-############
+##### DEV
+#########
         # obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         # if obs[2]>0.75 and obs[2]<.9 and np.abs(obs[0])<0.5 and np.abs(obs[1])<0.5: return 1
         # if obs[2]>0.75 and obs[2]<.9: return 1
@@ -79,10 +79,10 @@ class TakeoffAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeDone(self, norm_obs):
         #
-        # if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         #
-##### REMOVE
-############
+##### DEV
+#########
         # norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         # if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or np.abs(norm_obs[2])>=1 \
         #         or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \

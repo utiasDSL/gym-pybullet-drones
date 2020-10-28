@@ -73,9 +73,9 @@ class BaseSingleAgentAviary(BaseAviary):
         # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
 #### DEV
 ########
-        return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 )
-        # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
-        # return spaces.MultiDiscrete([ 3, 3, 3, 3 ])
+        return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 ) # single RPM
+        # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 ) # 4 RPMs
+        # return spaces.MultiDiscrete([ 3, 3, 3, 3 ]) # Discrete 4 actions
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################
@@ -91,12 +91,12 @@ class BaseSingleAgentAviary(BaseAviary):
         else:
 ######## STD
 ############
-            # rpm = self._normalizedActionToRPM(action)
+            # rpm = self._normalizedActionToRPM(action) # Or return np.array(self.HOVER_RPM * (1+0.05*action))
 ######## DEV
 ############
             return np.repeat(self.HOVER_RPM * (1+0.05*action), 4) # single RPM
             # return np.array(self.HOVER_RPM * (1+0.05*action)) # 4 RPMs
-            # return np.repeat(self.HOVER_RPM, 4) + 100 * (np.array(action)-1)
+            # return np.repeat(self.HOVER_RPM, 4) + 100 * (np.array(action)-1) # Discrete 4 actions
 
     ####################################################################################################
     #### Return the observation space of the environment, a Box(20,) ###################################
@@ -104,12 +104,11 @@ class BaseSingleAgentAviary(BaseAviary):
     def _observationSpace(self):
         if self.IMG_OBS: return spaces.Box(low=0, high=255, shape=(self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
         else:
+            ####
+            #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
             #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WR       WP       WY       P0            P1            P2            P3
             # obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
             # obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])          
-            #
-            ####
-            #### STD
             # return spaces.Box( low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32 )
             #
             ####
@@ -137,9 +136,8 @@ class BaseSingleAgentAviary(BaseAviary):
             return self.rgb[0]
         else: 
             obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-            #
             ####
-            #### STD
+            #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
             # return obs
             #
             ####
