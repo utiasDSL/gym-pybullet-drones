@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Use as sbatch --export=env="takeoff",algo="a2c",pol="mlp",input="rpm" sa_script.slrm
+
 #SBATCH --job-name=gym_py_drones_job
 #SBATCH --output=/h/jacopo/logs/output-%N-%j.out     # NOTE: for output and error, use absolute paths that exists already
 #SBATCH --error=/h/jacopo/logs/error-%N-%j.err       # NOTE: %N and %j will be replaced by the host name and job id, respectively
@@ -39,7 +41,6 @@ python --version >> $log_file                        # log Python version
 cd /scratch/gobi1/$USER/gym-pybullet-drones/
 pip install --user -e .                               # if necessary
 
-# python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env takeoff --algo ppo --pol mlp --input rpm --cpu 1 >> $log_file    # the script, with its standard output appended to gym_py_drones_job.log
-python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/test.py --env $env --algo $algo --pol $pol --input $input --cpu 1 >> $log_file
+python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env $env --algo $algo --pol $pol --input $input --cpu 1 >> $log_file    # the script, with its standard output appended to gym_py_drones_job.log
 
 source deactivate
