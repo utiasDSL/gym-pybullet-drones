@@ -52,7 +52,7 @@ if __name__ == "__main__":
     env_name = ARGS.file.split("-")[1]+"-aviary-v0"
     IMG_OBS = True if ARGS.file.split("-")[3]=='cnn' else False
     DYN_IN = True if ARGS.file.split("-")[4]=='dyn' else False
-    test_env = gym.make(env_name, gui=True, record=False, img_obs=IMG_OBS, dyn_input=DYN_IN)
+    test_env = gym.make(env_name, gui=True, record=True, img_obs=IMG_OBS, dyn_input=DYN_IN)
 
     #### Evaluate the model ############################################################################
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)

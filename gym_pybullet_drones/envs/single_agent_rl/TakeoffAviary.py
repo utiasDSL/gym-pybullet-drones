@@ -47,7 +47,9 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
+        #
         # if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        #
 ##### REMOVE
 ############
         # obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
@@ -57,10 +59,11 @@ class TakeoffAviary(BaseSingleAgentAviary):
         # return -np.abs(0.75-obs[2])**2
         # return -np.linalg.norm(np.array([0,0,0.75])-obs[0:3])**2
         obs = self._getDroneStateVector(0); norm_obs = self._clipAndNormalizeState(obs)
-        target = np.array([0,0,0.1]) # i.e. 0,0,1
-        return -10 * np.linalg.norm(target-norm_obs[0:3])**2 \
-                    -1 * norm_obs[7]**2 -1 * norm_obs[8]**2 \
-                    -1 * norm_obs[15]**2
+        MAX_XYZ = 5
+        target = np.array([0,0,1]) / MAX_XYZ
+        return -10 * np.linalg.norm(target-norm_obs[0:3])**2 # \
+                    # -1 * norm_obs[7]**2 -1 * norm_obs[8]**2 \
+                    # -1 * norm_obs[15]**2
                     # -1 * norm_obs[10]**2 -1 * norm_obs[11]**2 -1 * norm_obs[12]**2 \
                     # -1 * norm_obs[13]**2 -1 * norm_obs[14]**2 \
 
@@ -75,7 +78,9 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, norm_obs):
+        #
         # if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        #
 ##### REMOVE
 ############
         # norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
@@ -83,7 +88,8 @@ class TakeoffAviary(BaseSingleAgentAviary):
         #         or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
         #         or self.step_counter/self.SIM_FREQ > 5: 
         #     return True
-        # if np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
+        # obs = self._getDroneStateVector(0); norm_obs = self._clipAndNormalizeState(obs)
+        # if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or np.abs(norm_obs[2])>=1 \
         #         or self.step_counter/self.SIM_FREQ > 5: 
         #     return True
         if self.step_counter/self.SIM_FREQ > 5: return True
@@ -111,8 +117,8 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - normalized state ((20,1) array)  clipped and normalized simulation state ####################
     ####################################################################################################
     def _clipAndNormalizeState(self, state):
-        MAX_XYZ = 10
-        MAX_PITCH_ROLL = np.pi/2
+        MAX_XYZ = 5
+        MAX_PITCH_ROLL = np.pi
         MAX_VEL = 10
         MAX_PITCH_ROLL_VEL = 10*np.pi
         MAX_YAW_VEL = 20*np.pi

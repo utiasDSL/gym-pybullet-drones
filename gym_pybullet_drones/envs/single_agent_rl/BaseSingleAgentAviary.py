@@ -50,7 +50,6 @@ class BaseSingleAgentAviary(BaseAviary):
             if self.DRONE_MODEL==DroneModel.CF2X: self.A = np.array([ [1, 1, 1, 1], [.5, .5, -.5, -.5], [-.5, .5, .5, -.5], [-1, 1, -1, 1] ])
             elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]: self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
             self.INV_A = np.linalg.inv(self.A); self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
-        
 
     ####################################################################################################
     #### Add obstacles to the environment from .urdf files #############################################
@@ -69,11 +68,14 @@ class BaseSingleAgentAviary(BaseAviary):
         #### Action vector ######## P0            P1            P2            P3
         act_lower_bound = np.array([-1,           -1,           -1,           -1])
         act_upper_bound = np.array([1,            1,            1,            1])
+#### STD
+########
         # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
-##### REMOVE
-############ 
-        return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
+#### DEV
+########
         # return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 )
+        return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
+        # return spaces.MultiDiscrete([ 3, 3, 3, 3 ])
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################
@@ -85,18 +87,16 @@ class BaseSingleAgentAviary(BaseAviary):
     #### - clipped_action ((4,1) array)     clipped RPMs commanded to the 4 motors of the drone ########
     ####################################################################################################
     def _preprocessAction(self, action):
-        if self.DYN_IN:
-            return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=self.MAX_XY_TORQUE*action[1], y_torque=self.MAX_XY_TORQUE*action[2], z_torque=self.MAX_Z_TORQUE*action[3])
-##### REMOVE
-############ 
-            # return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=0, y_torque=0, z_torque=0) # DEBUG ONLY
+        if self.DYN_IN: return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=self.MAX_XY_TORQUE*action[1], y_torque=self.MAX_XY_TORQUE*action[2], z_torque=self.MAX_Z_TORQUE*action[3])
         else:
+######## STD
+############
             # rpm = self._normalizedActionToRPM(action)
-            # return np.clip(np.array(rpm), 0, self.MAX_RPM)
-##### REMOVE
-############    
-            # return np.repeat(self.HOVER_RPM+action*self.HOVER_RPM/20, 4) # DEBUG ONLY, single RPM
-            return np.array(self.HOVER_RPM+action*self.HOVER_RPM/50) # DEBUG ONLY, 4 RPMs
+######## DEV
+############
+            # return np.repeat(self.HOVER_RPM * (1+0.05*action), 4) # DEBUG ONLY, single RPM
+            return np.array(self.HOVER_RPM * (1+0.05*action)) # DEBUG ONLY, 4 RPMs
+            # return np.repeat(self.HOVER_RPM, 4) + 100 * (np.array(action)-1)
 
     ####################################################################################################
     #### Return the observation space of the environment, a Box(20,) ###################################
@@ -105,13 +105,18 @@ class BaseSingleAgentAviary(BaseAviary):
         if self.IMG_OBS: return spaces.Box(low=0, high=255, shape=(self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
         else:
             #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WR       WP       WY       P0            P1            P2            P3
-            obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
-            obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])          
+            # obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
+            # obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])          
+            #
+            ####
+            #### STD
             # return spaces.Box( low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32 )
-##### REMOVE
-############
-            # return spaces.Box( low=np.array([0,-1]), high=np.array([1,1]), dtype=np.float32 )
+            #
+            ####
+            #### ALTERNATIVE OBS SPACE OF SIZE 12
             return spaces.Box( low=np.array([-1,-1,0, -1,-1,-1, -1,-1,-1, -1,-1,-1]), high=np.array([1,1,1, 1,1,1, 1,1,1, 1,1,1]), dtype=np.float32 )
+            ####
+            ####
 
     ####################################################################################################
     #### Return the current observation of the environment #############################################
@@ -132,11 +137,16 @@ class BaseSingleAgentAviary(BaseAviary):
             return self.rgb[0]
         else: 
             obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+            #
+            ####
+            #### STD
             # return obs
-##### REMOVE
-############            
-            # return np.hstack([ obs[2], obs[12] ])
+            #
+            ####
+            #### ALTERNATIVE OBS SPACE OF SIZE 12
             return np.hstack([ obs[0:3], obs[7:10], obs[10:13], obs[13:16] ])
+            ####
+            ####
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################

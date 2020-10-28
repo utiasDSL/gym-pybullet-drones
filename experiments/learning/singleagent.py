@@ -51,25 +51,25 @@ if __name__ == "__main__":
     # check_env(train_env, warn=True, skip_render_check=True)
     
     #### On-policy algorithms ##########################################################################
-    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 128, dict(vf=[128, 64], pi=[128, 64])]) # or None
+    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 256, dict(vf=[256, 128], pi=[256, 128])]) # or None
     if ARGS.algo=='a2c': 
         model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='ppo': 
         model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
 
     #### Off-policy algorithms ##########################################################################
-    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 128, 128, 64]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
+    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 256, 256, 128]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
     if ARGS.algo=='sac': 
         model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='td3': 
         model = TD3(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else TD3(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='ddpg': 
         model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
-
-
-    EPISODE_REWARD_THRESHOLD = 0 # TBD
-
-
+    #
+    #
+    EPISODE_REWARD_THRESHOLD = 0 # With all negative rewards
+    #
+    #
     #### Train the model ###############################################################################
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
     # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')

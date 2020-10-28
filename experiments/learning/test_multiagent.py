@@ -94,7 +94,7 @@ if __name__ == "__main__":
     print(policy1.model.value_model)
 
     #### Create test environment ########################################################################
-    env = FlockAviary(num_drones=ARGS.num_drones, gui=True, record=False, obstacles=True)
+    env = FlockAviary(num_drones=ARGS.num_drones, gui=True, record=True, obstacles=True)
     obs = env.reset()
     action = {    i   : np.array([0,0,0,0]) for i in range(ARGS.num_drones) }
     start = time.time()
