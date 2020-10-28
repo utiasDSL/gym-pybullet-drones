@@ -47,13 +47,23 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        # if self.IMG_OBS: obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
 ##### REMOVE
 ############
-        obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        # obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
         # if obs[2]>0.75 and obs[2]<.9 and np.abs(obs[0])<0.5 and np.abs(obs[1])<0.5: return 1
-        if obs[2]>0.75 and obs[2]<.9: return 1
-        else: return 0
+        # if obs[2]>0.75 and obs[2]<.9: return 1
+        # else: return 0
+        # return -np.abs(0.75-obs[2])**2
+        # return -np.linalg.norm(np.array([0,0,0.75])-obs[0:3])**2
+        obs = self._getDroneStateVector(0); norm_obs = self._clipAndNormalizeState(obs)
+        target = np.array([0,0,0.1]) # i.e. 0,0,1
+        return -10 * np.linalg.norm(target-norm_obs[0:3])**2 \
+                    -1 * norm_obs[7]**2 -1 * norm_obs[8]**2 \
+                    -1 * norm_obs[15]**2
+                    # -1 * norm_obs[10]**2 -1 * norm_obs[11]**2 -1 * norm_obs[12]**2 \
+                    # -1 * norm_obs[13]**2 -1 * norm_obs[14]**2 \
+
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -65,14 +75,18 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, norm_obs):
-        if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        # if self.IMG_OBS: norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
 ##### REMOVE
 ############
-        norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-        if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or np.abs(norm_obs[2])>=1 \
-                or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
-                or self.step_counter/self.SIM_FREQ > 5: 
-            return True
+        # norm_obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
+        # if np.abs(norm_obs[0])>=1 or np.abs(norm_obs[1])>=1 or np.abs(norm_obs[2])>=1 \
+        #         or np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
+        #         or self.step_counter/self.SIM_FREQ > 5: 
+        #     return True
+        # if np.abs(norm_obs[7])>=1 or np.abs(norm_obs[8])>=1 \
+        #         or self.step_counter/self.SIM_FREQ > 5: 
+        #     return True
+        if self.step_counter/self.SIM_FREQ > 5: return True
         else: return False
 
     ####################################################################################################
@@ -97,18 +111,27 @@ class TakeoffAviary(BaseSingleAgentAviary):
     #### - normalized state ((20,1) array)  clipped and normalized simulation state ####################
     ####################################################################################################
     def _clipAndNormalizeState(self, state):
-        clipped_pos = np.clip(state[0:3], -1, 1)
-        clipped_rp = np.clip(state[7:9], -np.pi/2, np.pi/2)
-        clipped_vel = np.clip(state[10:13], -1, 1)
-        clipped_ang_vel_rp = np.clip(state[13:15], -10*np.pi, 10*np.pi)
-        clipped_ang_vel_y = np.clip(state[15], -20*np.pi, 20*np.pi)
+        MAX_XYZ = 10
+        MAX_PITCH_ROLL = np.pi/2
+        MAX_VEL = 10
+        MAX_PITCH_ROLL_VEL = 10*np.pi
+        MAX_YAW_VEL = 20*np.pi
+        #
+        clipped_pos = np.clip(state[0:3], -MAX_XYZ, MAX_XYZ)
+        clipped_rp = np.clip(state[7:9], -MAX_PITCH_ROLL, MAX_PITCH_ROLL)
+        clipped_vel = np.clip(state[10:13], -MAX_VEL, MAX_VEL)
+        clipped_ang_vel_rp = np.clip(state[13:15], -MAX_PITCH_ROLL_VEL, MAX_PITCH_ROLL_VEL)
+        clipped_ang_vel_y = np.clip(state[15], -MAX_YAW_VEL, MAX_YAW_VEL)
+        #
         if self.GUI: self._clipAndNormalizeStateWarning(state, clipped_pos, clipped_rp, clipped_vel, clipped_ang_vel_rp, clipped_ang_vel_y)
-        normalized_pos = clipped_pos
-        normalized_rp = clipped_rp/(np.pi/2)
-        normalized_y = state[9]/np.pi
-        normalized_vel = clipped_vel
-        normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
-        normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
+        #
+        normalized_pos = clipped_pos / MAX_XYZ
+        normalized_rp = clipped_rp / MAX_PITCH_ROLL
+        normalized_y = state[9] / np.pi
+        normalized_vel = clipped_vel / MAX_VEL
+        normalized_ang_vel_rp = clipped_ang_vel_rp / MAX_PITCH_ROLL_VEL
+        normalized_ang_vel_y = clipped_ang_vel_y / MAX_YAW_VEL
+        #
         return np.hstack([normalized_pos, state[3:7], normalized_rp, normalized_y, normalized_vel, normalized_ang_vel_rp, normalized_ang_vel_y, state[16:20] ]).reshape(20,)
 
     ####################################################################################################

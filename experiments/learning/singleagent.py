@@ -34,7 +34,7 @@ if __name__ == "__main__":
     parser.add_argument('--algo',       default='a2c',        type=str,       choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],     help='Help (default: ..)', metavar='')
     parser.add_argument('--pol',        default='mlp',        type=str,       choices=['mlp', 'cnn'],                           help='Help (default: ..)', metavar='')
     parser.add_argument('--input',      default='rpm',        type=str,       choices=['rpm', 'dyn'],                           help='Help (default: ..)', metavar='')    
-    parser.add_argument('--cpu',        default='4',          type=int,                                                         help='Help (default: ..)', metavar='')    
+    parser.add_argument('--cpu',        default='1',          type=int,                                                         help='Help (default: ..)', metavar='')    
     ARGS = parser.parse_args()
     filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.pol+'-'+ARGS.input+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
 
@@ -51,14 +51,14 @@ if __name__ == "__main__":
     # check_env(train_env, warn=True, skip_render_check=True)
     
     #### On-policy algorithms ##########################################################################
-    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 128, dict(vf=[64, 32], pi=[64, 32])]) # or None
+    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 128, dict(vf=[128, 64], pi=[128, 64])]) # or None
     if ARGS.algo=='a2c': 
         model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='ppo': 
         model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
 
     #### Off-policy algorithms ##########################################################################
-    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 128, 64, 32]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
+    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 128, 128, 64]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
     if ARGS.algo=='sac': 
         model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
     if ARGS.algo=='td3': 
@@ -67,9 +67,7 @@ if __name__ == "__main__":
         model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
 
 
-
-    EPISODE_REWARD_THRESHOLD = 175 # TBD
-
+    EPISODE_REWARD_THRESHOLD = 0 # TBD
 
 
     #### Train the model ###############################################################################
@@ -77,7 +75,7 @@ if __name__ == "__main__":
     # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
     eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=int(1000/ARGS.cpu), deterministic=True, render=False)
-    model.learn(total_timesteps=int(1e10), callback=eval_callback, log_interval=100)
+    model.learn(total_timesteps=int(1e12), callback=eval_callback, log_interval=100)
 
     ### Save the model #################################################################################
     model.save(filename)
