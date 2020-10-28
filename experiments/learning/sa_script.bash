@@ -1,16 +1,19 @@
 #!/bin/bash
 
-# for env in ['takeoff', 'hover', 'flythrugate']; do
-#     for algo in ['a2c', 'ppo', 'sac', 'td3', 'ddpg']; do
-#         for pol in ['mlp', 'cnn']; do
-#             for input in ['rpm', 'dyn']; do
-for env in ['takeoff']; do
-    for algo in ['a2c']; do
-        for pol in ['mlp']; do
-            for input in ['rpm']; do
-                # sbatch sa_script.slrm ${env} ${algo} ${pol} ${input}
-                sbatch --export=env=${env},algo=${algo},pol=${pol},input=${input} sa_script.slrm
-                # bash launch_slurm_job.sh gpu example_job_${dropout}_${lr} 1 "python3 train.py --dropout ${dropout} --lr ${lr}"
+# declare -a env_list=( 'takeoff' 'hover' 'flythrugate' )
+# declare -a algo_list=( 'a2c' 'ppo' 'sac' 'td3' 'ddpg' )
+# declare -a pol_list=( 'mlp' 'cnn' )
+# declare -a input_list=( 'rpm' 'dyn' )
+
+declare -a env_list=( 'takeoff' )
+declare -a algo_list=( 'a2c' )
+declare -a pol_list=( 'mlp' )
+declare -a input_list=( 'rpm' )
+for env in ${env_list[@]}; do
+    for algo in ${algo_list[@]}; do
+        for pol in ${pol_list[@]}; do
+            for input in ${input_list[@]}; do
+                sbatch --export=env=$env,algo=$algo,pol=$pol,input=$input sa_script.slrm
             done
         done
     done
