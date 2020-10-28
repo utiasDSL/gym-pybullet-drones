@@ -73,8 +73,8 @@ class BaseSingleAgentAviary(BaseAviary):
         # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
 #### DEV
 ########
-        # return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 )
-        return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
+        return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 )
+        # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
         # return spaces.MultiDiscrete([ 3, 3, 3, 3 ])
 
     ####################################################################################################
@@ -94,8 +94,8 @@ class BaseSingleAgentAviary(BaseAviary):
             # rpm = self._normalizedActionToRPM(action)
 ######## DEV
 ############
-            # return np.repeat(self.HOVER_RPM * (1+0.05*action), 4) # DEBUG ONLY, single RPM
-            return np.array(self.HOVER_RPM * (1+0.05*action)) # DEBUG ONLY, 4 RPMs
+            return np.repeat(self.HOVER_RPM * (1+0.05*action), 4) # single RPM
+            # return np.array(self.HOVER_RPM * (1+0.05*action)) # 4 RPMs
             # return np.repeat(self.HOVER_RPM, 4) + 100 * (np.array(action)-1)
 
     ####################################################################################################

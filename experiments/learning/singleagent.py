@@ -2,6 +2,7 @@ import os
 import time
 from datetime import datetime
 import argparse
+import subprocess
 import gym
 import torch
 from stable_baselines3.common.env_checker import check_env
@@ -36,7 +37,14 @@ if __name__ == "__main__":
     parser.add_argument('--input',      default='rpm',        type=str,       choices=['rpm', 'dyn'],                           help='Help (default: ..)', metavar='')    
     parser.add_argument('--cpu',        default='1',          type=int,                                                         help='Help (default: ..)', metavar='')    
     ARGS = parser.parse_args()
+
+    #### Save directory ################################################################################
     filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.pol+'-'+ARGS.input+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+    if not os.path.exists(filename): os.makedirs(filename+'/')
+
+    #### Print out current git commit hash #############################################################
+    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip(); print(git_commit)
+    with open(filename+'/git_commit.txt', 'w+') as f: f.write(str(git_commit))
 
     #### Check the environment's spaces ################################################################
     env_name = ARGS.env+"-aviary-v0"
@@ -53,18 +61,18 @@ if __name__ == "__main__":
     #### On-policy algorithms ##########################################################################
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 256, dict(vf=[256, 128], pi=[256, 128])]) # or None
     if ARGS.algo=='a2c': 
-        model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
+        model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     if ARGS.algo=='ppo': 
-        model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
+        model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
 
     #### Off-policy algorithms ##########################################################################
     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 256, 256, 128]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
     if ARGS.algo=='sac': 
-        model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
+        model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     if ARGS.algo=='td3': 
-        model = TD3(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else TD3(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
+        model = TD3(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else TD3(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     if ARGS.algo=='ddpg': 
-        model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'-tb/', verbose=1)
+        model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     #
     #
     EPISODE_REWARD_THRESHOLD = 0 # With all negative rewards
@@ -74,14 +82,14 @@ if __name__ == "__main__":
     eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
     # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
-    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'-logs/', log_path=filename+'-logs/', eval_freq=int(1000/ARGS.cpu), deterministic=True, render=False)
+    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'/', log_path=filename+'/', eval_freq=int(1000/ARGS.cpu), deterministic=True, render=False)
     model.learn(total_timesteps=int(1e12), callback=eval_callback, log_interval=100)
 
     ### Save the model #################################################################################
-    model.save(filename)
+    model.save(filename+'/success_model.zip') # Possibly never achieved
     print(filename)
 
-    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<time-date>-tb for the tensorboard results at http://localhost:6006/
+    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
 
 
