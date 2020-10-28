@@ -46,10 +46,10 @@ if __name__ == "__main__":
     git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip(); print(git_commit)
     with open(filename+'/git_commit.txt', 'w+') as f: 
         f.write(str(git_commit))
-        f.write(str(ARG.env))
-        f.write(str(ARG.algo))
-        f.write(str(ARG.pol))
-        f.write(str(ARG.input))
-        f.write(str(ARG.cpu))
+        f.write(str(ARGS.env))
+        f.write(str(ARGS.algo))
+        f.write(str(ARGS.pol))
+        f.write(str(ARGS.input))
+        f.write(str(ARGS.cpu))
 
 

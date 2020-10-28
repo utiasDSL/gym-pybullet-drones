@@ -6,7 +6,7 @@
 # declare -a input_list=( 'rpm' 'dyn' )
 
 declare -a env_list=( 'takeoff' )
-declare -a algo_list=( 'a2c' )
+declare -a algo_list=( 'a2c' 'ppo' )
 declare -a pol_list=( 'mlp' )
 declare -a input_list=( 'rpm' )
 for env in ${env_list[@]}; do
