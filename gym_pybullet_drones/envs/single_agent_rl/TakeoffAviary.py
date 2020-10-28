@@ -61,11 +61,11 @@ class TakeoffAviary(BaseSingleAgentAviary):
         obs = self._getDroneStateVector(0); norm_obs = self._clipAndNormalizeState(obs)
         MAX_XYZ = 5
         target = np.array([0,0,1]) / MAX_XYZ
-        return -10 * np.linalg.norm(target-norm_obs[0:3])**2 # \
-                    # -1 * norm_obs[7]**2 -1 * norm_obs[8]**2 \
-                    # -1 * norm_obs[15]**2
-                    # -1 * norm_obs[10]**2 -1 * norm_obs[11]**2 -1 * norm_obs[12]**2 \
-                    # -1 * norm_obs[13]**2 -1 * norm_obs[14]**2 \
+        return -10 * np.linalg.norm(target-norm_obs[0:3])**2 \
+                    -1 * norm_obs[7]**2 -1 * norm_obs[8]**2 \
+                    -1 * norm_obs[15]**2 \
+                    -1 * norm_obs[10]**2 -1 * norm_obs[11]**2 -1 * norm_obs[12]**2 \
+                    -1 * norm_obs[13]**2 -1 * norm_obs[14]**2 \
 
 
     ####################################################################################################
