@@ -150,6 +150,12 @@ $ python physics.py                         # Try 'python physics.py -h' to show
 
 
 
+## Experiments
+TBD - instructions for the scripts in folder [`/gym-pybullet-drones/experiments/`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/experiments)
+
+
+
+
 ## BaseAviary
 A flight arena for one (ore more) quadrotor can be created as a child class of `BaseAviary()`
 ```
