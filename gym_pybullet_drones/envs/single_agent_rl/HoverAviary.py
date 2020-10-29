@@ -24,15 +24,16 @@ class HoverAviary(BaseSingleAgentAviary):
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     #### ...
+    ####
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=5,
-                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False, dyn_input=False):
+                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False, dyn_input=False, one_d=False):
         super().__init__(drone_model=drone_model, num_drones=num_drones, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
                             aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
-                            img_obs=img_obs, dyn_input=dyn_input)
+                            img_obs=img_obs, dyn_input=dyn_input, one_d=one_d)
 
     ####################################################################################################
     #### Compute the current reward value(s) ###########################################################
@@ -45,7 +46,7 @@ class HoverAviary(BaseSingleAgentAviary):
     ####################################################################################################
     def _computeReward(self, obs):
         obs = self._getDroneStateVector(0)
-        return -10 * np.linalg.norm(np.array([0,0,1])-obs[0:3])**2
+        return -1 * np.linalg.norm(np.array([0,0,1])-obs[0:3])**2
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################

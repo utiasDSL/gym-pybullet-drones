@@ -6,8 +6,8 @@ import subprocess
 import gym
 import torch
 from stable_baselines3.common.env_checker import check_env
-from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.cmd_util import make_vec_env # Module cmd_util will be renamed to env_util https://github.com/DLR-RM/stable-baselines3/pull/197
+from stable_baselines3.common.vec_env import SubprocVecEnv
 from stable_baselines3.common.utils import set_random_seed
 from stable_baselines3 import A2C
 from stable_baselines3 import PPO
@@ -29,7 +29,7 @@ from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGa
 
 if __name__ == "__main__":
 
-    # Use as $ python singleagent.py --env <env> --algo <alg> --pol <mlp/cnn> --input <rpm/dyn>
+    # Use as $ python singleagent.py --env <env> --algo <alg> --pol <mlp/cnn> --input <rpm/dyn> --debug <1D/3D>
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
@@ -38,10 +38,11 @@ if __name__ == "__main__":
     parser.add_argument('--pol',        default='mlp',        type=str,       choices=['mlp', 'cnn'],                           help='Help (default: ..)', metavar='')
     parser.add_argument('--input',      default='rpm',        type=str,       choices=['rpm', 'dyn'],                           help='Help (default: ..)', metavar='')    
     parser.add_argument('--cpu',        default='1',          type=int,                                                         help='Help (default: ..)', metavar='')    
+    parser.add_argument('--debug',      default='1D',         type=str,       choices=['1D', '3D'],                             help='Help (default: ..)', metavar='')    
     ARGS = parser.parse_args()
 
     #### Save directory ################################################################################
-    filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.pol+'-'+ARGS.input+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+    filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.pol+'-'+ARGS.input+'-'+ARGS.debug+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
     if not os.path.exists(filename): os.makedirs(filename+'/')
 
     #### Print out current git commit hash #############################################################
@@ -52,10 +53,15 @@ if __name__ == "__main__":
     env_name = ARGS.env+"-aviary-v0"
     IMG_OBS = True if ARGS.pol=='cnn' else False
     DYN_IN = True if ARGS.input=='dyn' else False
-    # train_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN) # single environment instead of a vectorized one
-    if env_name=="takeoff-aviary-v0": train_env = make_vec_env(TakeoffAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0) 
-    if env_name=="hover-aviary-v0": train_env = make_vec_env(HoverAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0)
-    if env_name=="flythrugate-aviary-v0": train_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), n_envs=ARGS.cpu, seed=0)
+    ONE_D = True if ARGS.debug=='1D' else False
+
+    #### Error #########################################################################################
+    if ONE_D and not ARGS.env in ['takeoff', 'hover']: print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary"); exit()
+
+    # train_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D) # single environment instead of a vectorized one
+    if env_name=="takeoff-aviary-v0": train_env = make_vec_env(TakeoffAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D), n_envs=ARGS.cpu, seed=0) 
+    if env_name=="hover-aviary-v0": train_env = make_vec_env(HoverAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN), one_d=ONE_D, n_envs=ARGS.cpu, seed=0)
+    if env_name=="flythrugate-aviary-v0": train_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D), n_envs=ARGS.cpu, seed=0)
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
     # check_env(train_env, warn=True, skip_render_check=True)
@@ -81,17 +87,17 @@ if __name__ == "__main__":
     #
     #
     #### Train the model ###############################################################################
-    eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
+    eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D)
     # checkpoint_callback = CheckpointCallback(save_freq=1000, save_path=filename+'-logs/', name_prefix='rl_model')
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=EPISODE_REWARD_THRESHOLD, verbose=1)
-    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'/', log_path=filename+'/', eval_freq=int(1000/ARGS.cpu), deterministic=True, render=False)
+    eval_callback = EvalCallback(eval_env, callback_on_new_best=callback_on_best, verbose=1, best_model_save_path=filename+'/', log_path=filename+'/', eval_freq=int(5000/ARGS.cpu), deterministic=True, render=False)
     model.learn(total_timesteps=int(1e12), callback=eval_callback, log_interval=100)
 
     ### Save the model #################################################################################
     model.save(filename+'/success_model.zip') # Possibly never achieved
     print(filename)
 
-    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
+    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<input>-<debug>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
 
 

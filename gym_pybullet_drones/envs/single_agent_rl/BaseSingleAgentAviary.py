@@ -31,15 +31,16 @@ class BaseSingleAgentAviary(BaseAviary):
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     #### - img_obs (bool)                   ...
     #### - dyn_input (bool)                 ...
+    ####
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
-                    gui=False, record=False, obstacles=True, user_debug_gui=True, img_obs=False, dyn_input=False):
+                    gui=False, record=False, obstacles=True, user_debug_gui=True, img_obs=False, dyn_input=False, one_d=False):
         #
         ###################################
         #### 1-D EXPERIMENTS FOR DEBUGGING
-        self.ONE_D_DEBUG = True
+        self.ONE_D_DEBUG = one_d
         ###################################
         if num_drones!=1: print("[ERROR] in BaseSingleAgentAviary.__init__(), BaseSingleAgentAviary only accepts num_drones=1"); exit()
         self.IMG_OBS = img_obs

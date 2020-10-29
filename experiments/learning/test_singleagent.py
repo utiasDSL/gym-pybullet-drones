@@ -28,8 +28,8 @@ from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGa
 
 if __name__ == "__main__":
 
-    # Use as $ python test_singleagent.py --exp save-<env>-<algo>-<pol>-<input>-<time-date>
-    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<input>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
+    # Use as $ python test_singleagent.py --exp save-<env>-<algo>-<pol>-<input>-<debug>-<time-date>
+    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<input>-<debug>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
@@ -52,14 +52,15 @@ if __name__ == "__main__":
     env_name = ARGS.exp.split("-")[1]+"-aviary-v0"
     IMG_OBS = True if ARGS.exp.split("-")[3]=='cnn' else False
     DYN_IN = True if ARGS.exp.split("-")[4]=='dyn' else False
+    ONE_D = True if  ARGS.exp.split("-")[5]=='1D' else False
 
     #### Evaluate the model ############################################################################
-    eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN)
+    eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D)
     mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10)
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
     #### Show, record a video of, and log the model's performance ######################################
-    test_env = gym.make(env_name, gui=True, record=True, img_obs=IMG_OBS, dyn_input=DYN_IN)
+    test_env = gym.make(env_name, gui=True, record=True, img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D)
     logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS), num_drones=1)
     obs = test_env.reset()
     start = time.time()
