@@ -7,9 +7,9 @@
 #SBATCH --error=/h/jacopo/logs/error-%N-%j.err       # NOTE: %N and %j will be replaced by the host name and job id, respectively
 #SBATCH --open-mode=append
 #SBATCH --partition=cpu                              # self-explanatory, set to your preference (e.g. gpu or cpu on MaRS, p100, t4, or cpu on Vaughan)
-#SBATCH --cpus-per-task=16                           # self-explanatory, set to your preference
+#SBATCH --cpus-per-task=8                            # self-explanatory, set to your preference
 #SBATCH --ntasks-per-node=1
-#SBATCH --mem=32G                                    # self-explanatory, set to your preference
+#SBATCH --mem=64G                                    # self-explanatory, set to your preference
 #SBATCH --gres=gpu:0                                 # NOTE: you need a GPU for CUDA support; self-explanatory, set to your preference 
 #SBATCH --nodes=1
 #SBATCH --qos=normal                                 # for "high" and "deadline" QoS, refer to https://support.vectorinstitute.ai/AboutVaughan2
@@ -41,6 +41,6 @@ python --version >> $log_file                        # log Python version
 cd /scratch/gobi1/$USER/gym-pybullet-drones/
 pip install --user -e .                               # if necessary
 
-python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env $env --algo $algo --pol $pol --input $input --cpu 1 >> $log_file    # the script, with its standard output appended to gym_py_drones_job.log
+python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env $env --algo $algo --pol $pol --input $input --cpu 4 >> $log_file    # the script, with its standard output appended to gym_py_drones_job.log
 
 source deactivate

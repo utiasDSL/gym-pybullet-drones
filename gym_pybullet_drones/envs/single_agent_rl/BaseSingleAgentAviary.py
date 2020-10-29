@@ -39,7 +39,7 @@ class BaseSingleAgentAviary(BaseAviary):
         #
         ###################################
         #### 1-D EXPERIMENTS FOR DEBUGGING
-        self.ONE_D_DEBUG = False
+        self.ONE_D_DEBUG = True
         ###################################
         if num_drones!=1: print("[ERROR] in BaseSingleAgentAviary.__init__(), BaseSingleAgentAviary only accepts num_drones=1"); exit()
         self.IMG_OBS = img_obs
