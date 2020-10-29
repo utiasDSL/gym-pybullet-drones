@@ -17,7 +17,7 @@
 
 now=$(date +"%Y_%m_%d-%H_%M_%S")                     # current date
 
-log_file="/h/jacopo/logs/log-$now.log"
+log_file="/h/jacopo/logs/log-$env-$algo-$pol-$input-$now.log"
  
 echo $SLURM_JOB_PARTITION >> $log_file               # log the job partition
 
@@ -27,7 +27,7 @@ export LD_LIBRARY_PATH=/pkgs/cuda-10.1/lib64:/pkgs/cudnn-10.1-v7.6.3.30/lib64${L
 
 export PATH=/pkgs/anaconda3/bin:$PATH                # exporting the binaries of your preferred version of conda
 
-source activate /scratch/gobi1/$USER/learning/       # LINE 23 - NOTE: set the path to your conda environment path
+source activate /scratch/gobi1/$USER/learning/       # NOTE: set the path to your conda environment path
 
 echo $CONDA_PREFIX >> $log_file                      # log the active conda environment 
 

@@ -59,14 +59,14 @@ if __name__ == "__main__":
     # check_env(train_env, warn=True, skip_render_check=True)
     
     #### On-policy algorithms ##########################################################################
-    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 256, dict(vf=[256, 128], pi=[256, 128])]) # or None
+    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[512, 256, dict(vf=[256, 128], pi=[256, 128])]) # or None
     if ARGS.algo=='a2c': 
         model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     if ARGS.algo=='ppo': 
         model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
 
     #### Off-policy algorithms ##########################################################################
-    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[256, 256, 256, 128]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
+    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[512, 256, 256, 128]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
     if ARGS.algo=='sac': 
         model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     if ARGS.algo=='td3': 
@@ -75,7 +75,7 @@ if __name__ == "__main__":
         model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.pol=='mlp' else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     #
     #
-    EPISODE_REWARD_THRESHOLD = 0 # With all negative rewards
+    EPISODE_REWARD_THRESHOLD = -0 # With all negative rewards
     #
     #
     #### Train the model ###############################################################################

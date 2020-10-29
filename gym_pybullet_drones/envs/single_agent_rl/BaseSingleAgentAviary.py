@@ -30,12 +30,17 @@ class BaseSingleAgentAviary(BaseAviary):
     #### - obstacles (bool)                 whether to add obstacles to the simulation #################
     #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
     #### - img_obs (bool)                   ...
-    #### - dyn_input (bool)                   ...
+    #### - dyn_input (bool)                 ...
     ####################################################################################################
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
                     gui=False, record=False, obstacles=True, user_debug_gui=True, img_obs=False, dyn_input=False):
+        #
+        ###################################
+        #### 1-D EXPERIMENTS FOR DEBUGGING
+        self.ONE_D_DEBUG = False
+        ###################################
         if num_drones!=1: print("[ERROR] in BaseSingleAgentAviary.__init__(), BaseSingleAgentAviary only accepts num_drones=1"); exit()
         self.IMG_OBS = img_obs
         self.DYN_IN = dyn_input
@@ -50,6 +55,7 @@ class BaseSingleAgentAviary(BaseAviary):
             if self.DRONE_MODEL==DroneModel.CF2X: self.A = np.array([ [1, 1, 1, 1], [.5, .5, -.5, -.5], [-.5, .5, .5, -.5], [-1, 1, -1, 1] ])
             elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]: self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
             self.INV_A = np.linalg.inv(self.A); self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
+        self.EPISODE_SEC = 5
 
     ####################################################################################################
     #### Add obstacles to the environment from .urdf files #############################################
@@ -68,14 +74,12 @@ class BaseSingleAgentAviary(BaseAviary):
         #### Action vector ######## P0            P1            P2            P3
         act_lower_bound = np.array([-1,           -1,           -1,           -1])
         act_upper_bound = np.array([1,            1,            1,            1])
-#### STD
-########
-        # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
-#### DEV
-########
-        return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 ) # single RPM
-        # return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 ) # 4 RPMs
-        # return spaces.MultiDiscrete([ 3, 3, 3, 3 ]) # Discrete 4 actions
+        if not self.ONE_D_DEBUG: return spaces.Box( low=act_lower_bound, high=act_upper_bound, dtype=np.float32 )
+        #
+        ###################################
+        #### 1-D EXPERIMENTS FOR DEBUGGING
+        else: return spaces.Box( low=np.array([-1]), high=np.array([1]), dtype=np.float32 ) # single RPM
+        ###################################
 
     ####################################################################################################
     #### Preprocess the action passed to step() ########################################################
@@ -87,16 +91,20 @@ class BaseSingleAgentAviary(BaseAviary):
     #### - clipped_action ((4,1) array)     clipped RPMs commanded to the 4 motors of the drone ########
     ####################################################################################################
     def _preprocessAction(self, action):
-        if self.DYN_IN: return self._nnlsRPM(thrust=self.MAX_THRUST*(action[0]+1)/2, x_torque=self.MAX_XY_TORQUE*action[1], y_torque=self.MAX_XY_TORQUE*action[2], z_torque=self.MAX_Z_TORQUE*action[3])
+        if self.DYN_IN: 
+            if not self.ONE_D_DEBUG: return self._nnlsRPM(thrust=(self.GRAVITY*(action[0]+1)), x_torque=(0.05*self.MAX_XY_TORQUE*action[1]), y_torque=(0.05*self.MAX_XY_TORQUE*action[2]), z_torque=(0.05*self.MAX_Z_TORQUE*action[3]))
+            #
+            ###################################
+            #### 1-D EXPERIMENTS FOR DEBUGGING
+            else: return self._nnlsRPM(thrust=(self.GRAVITY*(1+0.05*action[0])), x_torque=0, y_torque=0, z_torque=0)
+            ###################################
         else:
-######## STD
-############
-            # rpm = self._normalizedActionToRPM(action) # Or return np.array(self.HOVER_RPM * (1+0.05*action))
-######## DEV
-############
-            return np.repeat(self.HOVER_RPM * (1+0.05*action), 4) # single RPM
-            # return np.array(self.HOVER_RPM * (1+0.05*action)) # 4 RPMs
-            # return np.repeat(self.HOVER_RPM, 4) + 100 * (np.array(action)-1) # Discrete 4 actions
+            if not self.ONE_D_DEBUG: return np.array(self.HOVER_RPM * (1+0.05*action)) # 4 RPMs in 10% interval of hover, or return self._normalizedActionToRPM(action)
+            #
+            ###################################
+            #### 1-D EXPERIMENTS FOR DEBUGGING
+            else: return np.repeat(self.HOVER_RPM * (1+0.05*action), 4) # single RPM
+            ###################################
 
     ####################################################################################################
     #### Return the observation space of the environment, a Box(20,) ###################################
@@ -104,18 +112,17 @@ class BaseSingleAgentAviary(BaseAviary):
     def _observationSpace(self):
         if self.IMG_OBS: return spaces.Box(low=0, high=255, shape=(self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
         else:
-            ####
+            ###################################
             #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
             #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WR       WP       WY       P0            P1            P2            P3
             # obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
             # obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])          
             # return spaces.Box( low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32 )
             #
-            ####
-            #### ALTERNATIVE OBS SPACE OF SIZE 12
+            ###################################
+            #### OBS SPACE OF SIZE 12
             return spaces.Box( low=np.array([-1,-1,0, -1,-1,-1, -1,-1,-1, -1,-1,-1]), high=np.array([1,1,1, 1,1,1, 1,1,1, 1,1,1]), dtype=np.float32 )
-            ####
-            ####
+            ###################################
 
     ####################################################################################################
     #### Return the current observation of the environment #############################################
@@ -136,15 +143,14 @@ class BaseSingleAgentAviary(BaseAviary):
             return self.rgb[0]
         else: 
             obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
-            ####
+            ###################################
             #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
             # return obs
             #
-            ####
-            #### ALTERNATIVE OBS SPACE OF SIZE 12
+            ###################################
+            #### OBS SPACE OF SIZE 12
             return np.hstack([ obs[0:3], obs[7:10], obs[10:13], obs[13:16] ])
-            ####
-            ####
+            ###################################
 
     ####################################################################################################
     #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
@@ -190,3 +196,5 @@ class BaseSingleAgentAviary(BaseAviary):
                         "\t\tResidual: {:.2f}".format(res) )
             sq_rpm = sol
         return np.sqrt(sq_rpm)
+
+
