@@ -65,7 +65,7 @@ if __name__ == "__main__":
             print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary"); exit()
 
     #### Uncomment to debug slurm scripts ##############################################################
-    # exit()
+    exit()
 
     env_name = ARGS.env+"-aviary-v0"
     # train_env = gym.make(env_name, aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act) # single environment instead of a vectorized one    
@@ -77,14 +77,14 @@ if __name__ == "__main__":
     # check_env(train_env, warn=True, skip_render_check=True)
     
     #### On-policy algorithms ##########################################################################
-    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[512, 256, dict(vf=[256, 128], pi=[256, 128])]) # or None
+    onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]) # or None
     if ARGS.algo=='a2c': 
         model = A2C(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.obs==ObservationType.KIN else A2C(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     if ARGS.algo=='ppo': 
         model = PPO(a2cppoMlpPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.obs==ObservationType.KIN else PPO(a2cppoCnnPolicy, train_env, policy_kwargs=onpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
 
     #### Off-policy algorithms ##########################################################################
-    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[512, 256, 256, 128]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
+    offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU, net_arch=[512, 512, 256, 128]) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
     if ARGS.algo=='sac': 
         model = SAC(sacMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.obs==ObservationType.KIN else SAC(sacCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
     if ARGS.algo=='td3': 
