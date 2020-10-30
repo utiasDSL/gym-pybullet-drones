@@ -65,7 +65,7 @@ if __name__ == "__main__":
             print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary"); exit()
 
     #### Uncomment to debug slurm scripts ##############################################################
-    exit()
+    # exit()
 
     env_name = ARGS.env+"-aviary-v0"
     # train_env = gym.make(env_name, aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act) # single environment instead of a vectorized one    

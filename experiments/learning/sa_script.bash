@@ -8,7 +8,7 @@
 # declare -a act_list=( 'rpm' 'dyn' 'pid' 'one_d_rpm' 'one_d_dyn' 'one_d_pid' )
 
 declare -a env_list=( 'hover' )
-declare -a algo_list=( 'ppo' 'ddpg' )
+declare -a algo_list=( 'ppo' 'sac' 'ddpg' )
 declare -a obs_list=( 'kin' 'rgb' )
 declare -a act_list=( 'rpm' 'pid' )
 
