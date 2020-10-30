@@ -16,7 +16,7 @@
 
 now=$(date +"%Y_%m_%d-%H_%M_%S")                     # current date
 
-log_file="/h/jacopo/logs/log-$env-$algo-$pol-$input-3D-$now.log"
+log_file="/h/jacopo/logs/log-$env-$algo-$obs-$act-3D-$now.log"
  
 echo $SLURM_JOB_PARTITION >> $log_file               # log the job partition
 
