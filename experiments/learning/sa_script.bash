@@ -10,7 +10,7 @@
 declare -a env_list=( 'hover' )
 declare -a algo_list=( 'ppo' 'sac' 'ddpg' )
 declare -a obs_list=( 'kin' 'rgb' )
-declare -a act_list=( 'rpm' 'pid' )
+declare -a act_list=( 'one_d_rpm' )
 
 for env in ${env_list[@]}; do
     for algo in ${algo_list[@]}; do
