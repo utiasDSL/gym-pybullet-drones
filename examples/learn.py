@@ -1,6 +1,7 @@
 import time
 import argparse
 import gym
+import numpy as np
 from stable_baselines3 import A2C
 from stable_baselines3.a2c import MlpPolicy
 from stable_baselines3.common.env_checker import check_env
@@ -8,8 +9,12 @@ import ray
 from ray.tune import register_env
 from ray.rllib.agents import ppo
 
+from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
 from gym_pybullet_drones.utils.utils import *
+
+# Note: this is a minimal working example integrating gym-pybullet-drones with stable-baselines3 and ray[rllib]
+#       NOT an effective learning example
 
 if __name__ == "__main__":
 
@@ -27,7 +32,7 @@ if __name__ == "__main__":
     #### Train the model ###############################################################################
     if not ARGS.rllib:
         model = A2C(MlpPolicy, env, verbose=1)
-        model.learn(total_timesteps=500000)
+        model.learn(total_timesteps=1000) # e.g. 500000
     else:
         ray.shutdown(); ray.init(ignore_reinit_error=True)
         register_env("takeoff-aviary-v0", lambda _: TakeoffAviary())
@@ -35,7 +40,7 @@ if __name__ == "__main__":
         config["num_workers"] = 2
         config["env"] = "takeoff-aviary-v0"
         agent = ppo.PPOTrainer(config)
-        for i in range(100):
+        for i in range(10): # e.g. 100
             results = agent.train()
             print("[INFO] {:d}: episode_reward max {:f} min {:f} mean {:f}".format(i, \
                     results["episode_reward_max"], results["episode_reward_min"], results["episode_reward_mean"]))
@@ -44,17 +49,21 @@ if __name__ == "__main__":
         ray.shutdown()
 
     #### Show (and record a video of) the model's performance ##########################################
-    env = TakeoffAviary(gui=True, record=True)
+    env = TakeoffAviary(gui=True, record=False)
+    logger = Logger(logging_freq_hz=int(env.SIM_FREQ/env.AGGR_PHY_STEPS), num_drones=1)
     obs = env.reset()
     start = time.time()
-    for i in range(10*env.SIM_FREQ):
+    for i in range(3*env.SIM_FREQ):
         if not ARGS.rllib: action, _states = model.predict(obs, deterministic=True)
         else: action, _states, _dict = policy.compute_single_action(obs)
         obs, reward, done, info = env.step(action)
-        env.render()
+        logger.log(drone=0, timestamp=i/env.SIM_FREQ, state= np.hstack([obs[0:3], np.zeros(4), obs[3:15],  np.resize(action, (4)) ]), control=np.zeros(12) )
+        if i%env.SIM_FREQ==0: env.render(); print(done)
         sync(i, start, env.TIMESTEP)
-        print()
-        print(done)
-        print()
         if done: obs = env.reset()
     env.close()
+    logger.plot()
+
+
+
+

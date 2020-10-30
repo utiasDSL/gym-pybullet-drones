@@ -33,8 +33,8 @@ AGGR_PHY_STEPS = 5
 
 if __name__ == "__main__":
 
-    # Use as $ python test_singleagent.py --exp save-<env>-<algo>-<obs>-<act>-<time-date>
-    # Use $ tensorboard --logdir /save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
+    # Use as $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
+    # Use $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
@@ -83,6 +83,7 @@ if __name__ == "__main__":
     test_env.close()
     logger.plot()
     
+
 
 
 

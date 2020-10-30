@@ -17,7 +17,8 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #####################################################################
     env = CtrlAviary(drone_model=DroneModel.CF2X, initial_xyzs=np.array([-.7, -.5, .3]).reshape(1,3),
-                    initial_rpys=np.array([0, -30*(np.pi/180), 0]).reshape(1,3), gui=True, obstacles=True)
+                    initial_rpys=np.array([0, -30*(np.pi/180), 0]).reshape(1,3), gui=True, obstacles=True, 
+                    user_debug_gui=False)
 
     #### Get PyBullet's and drone's ids ################################################################
     PYB_CLIENT = env.getPyBulletClient(); DRONE_IDS = env.getDroneIds()
@@ -77,4 +78,8 @@ if __name__ == "__main__":
 
     #### Close the environment #########################################################################
     env.close()
+
+
+
+
 

@@ -13,8 +13,6 @@ if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Downwash example script using CtrlAviary and DSLPIDControl')
     parser.add_argument('--drone',              default="cf2x",     type=DroneModel,    help='Drone model (default: CF2X)', metavar='', choices=DroneModel)
-    parser.add_argument('--num_drones',         default=2,          type=int,           help='Number of drones (default: 2)', metavar='')
-    parser.add_argument('--physics',            default="pyb",      type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
     parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
@@ -24,7 +22,7 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #####################################################################
     INIT_XYZS = np.array([[.5,0,1],[-.5,0,.5]])
-    env = CtrlAviary(drone_model=ARGS.drone, num_drones=ARGS.num_drones, initial_xyzs=INIT_XYZS, physics=ARGS.physics,
+    env = CtrlAviary(drone_model=ARGS.drone, num_drones=2, initial_xyzs=INIT_XYZS, physics=Physics.PYB_DW,
                     neighbourhood_radius=10, freq=ARGS.simulation_freq_hz, gui=ARGS.gui, record=ARGS.record_video, obstacles=True)
 
     #### Initialize the trajectories ###################################################################
@@ -33,14 +31,14 @@ if __name__ == "__main__":
     wp_counters = np.array([ 0, int(NUM_WP/2) ])
 
     #### Initialize the logger #########################################################################
-    logger = Logger(logging_freq_hz=ARGS.simulation_freq_hz, num_drones=ARGS.num_drones, duration_sec=ARGS.duration_sec)
+    logger = Logger(logging_freq_hz=ARGS.simulation_freq_hz, num_drones=2, duration_sec=ARGS.duration_sec)
 
     #### Initialize the controllers ####################################################################
-    ctrl = [DSLPIDControl(env) for i in range(ARGS.num_drones)]
+    ctrl = [DSLPIDControl(env) for i in range(2)]
 
     #### Run the simulation ############################################################################
     CTRL_EVERY_N_STEPS= int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
-    action = { str(i): np.array([0,0,0,0]) for i in range(ARGS.num_drones) }
+    action = { str(i): np.array([0,0,0,0]) for i in range(2) }
     START = time.time()
     for i in range(ARGS.duration_sec*env.SIM_FREQ):
 
@@ -51,15 +49,15 @@ if __name__ == "__main__":
         if i%CTRL_EVERY_N_STEPS==0:
 
             #### Compute control for the current way point #####################################################
-            for j in range(ARGS.num_drones):
+            for j in range(2):
                 action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP, state=obs[str(j)]["state"],
                                                                             target_pos=np.hstack([ TARGET_POS[wp_counters[j],:], INIT_XYZS[j,2] ]))
 
             #### Go to the next way point and loop #############################################################
-            for j in range(ARGS.num_drones): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
+            for j in range(2): wp_counters[j] = wp_counters[j] + 1 if wp_counters[j]<(NUM_WP-1) else 0
 
         #### Log the simulation ############################################################################
-        for j in range(ARGS.num_drones): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],:], INIT_XYZS[j,2], np.zeros(9) ]))
+        for j in range(2): logger.log(drone=j, timestamp=i/env.SIM_FREQ, state= obs[str(j)]["state"], control=np.hstack([ TARGET_POS[wp_counters[j],:], INIT_XYZS[j,2], np.zeros(9) ]))
 
         #### Printout ######################################################################################
         if i%env.SIM_FREQ==0: env.render()
@@ -75,3 +73,7 @@ if __name__ == "__main__":
 
     #### Plot the simulation results ###################################################################
     logger.plot()
+
+
+
+

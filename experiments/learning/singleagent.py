@@ -50,7 +50,7 @@ if __name__ == "__main__":
     ARGS = parser.parse_args()
 
     #### Save directory ################################################################################
-    filename = os.path.dirname(os.path.abspath(__file__))+'/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.obs.value+'-'+ARGS.act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+    filename = os.path.dirname(os.path.abspath(__file__))+'/results/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.obs.value+'-'+ARGS.act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
     if not os.path.exists(filename): os.makedirs(filename+'/')
 
     #### Print out current git commit hash #############################################################
@@ -110,7 +110,15 @@ if __name__ == "__main__":
     model.save(filename+'/success_model.zip') # Possibly never achieved
     print(filename)
 
-    # Use $ tensorboard --logdir /save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
+    # Use $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
+
+
+
+
+
+
+
+
 
 
 

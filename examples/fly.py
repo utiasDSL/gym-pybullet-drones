@@ -22,7 +22,7 @@ if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary or VisionCtrlAviary and DSLPIDControl')
     parser.add_argument('--drone',              default="cf2x",     type=DroneModel,    help='Drone model (default: CF2X)', metavar='', choices=DroneModel)
-    parser.add_argument('--num_drones',         default=3,          type=int,           help='Number of drones (default: 3)', metavar='')
+    parser.add_argument('--num_drones',         default=5,          type=int,           help='Number of drones (default: 3)', metavar='')
     parser.add_argument('--physics',            default="pyb",      type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
     parser.add_argument('--vision',             default=False,      type=str2bool,      help='Whether to use VisionCtrlAviary (default: False)', metavar='')
     parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
@@ -107,3 +107,8 @@ if __name__ == "__main__":
 
     #### Plot the simulation results ###################################################################
     if ARGS.plot: logger.plot()
+
+
+
+
+

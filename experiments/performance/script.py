@@ -106,3 +106,9 @@ if __name__ == "__main__":
 
     #### Plot the simulation results ###################################################################
     if ARGS.plot: logger.plot()
+
+
+
+
+
+
