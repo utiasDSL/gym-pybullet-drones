@@ -38,8 +38,7 @@ python --version >> $log_file                        # log Python version
 # pip install --user --upgrade stable-baselines3
 
 cd /scratch/gobi1/$USER/gym-pybullet-drones/
-pip install --user -e .                               # if necessary
-
+pip install --user --upgrade --verbose --editable .
 
 if [ "$algo" = "a2c" ] || [ "$algo" = "ppo" ]; then
 
@@ -50,7 +49,6 @@ else
     python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env $env --algo $algo --obs $obs --act $act --cpu 1 >> $log_file    # the script, with its standard output appended to gym_py_drones_job.log
 
 fi
-
 
 source deactivate
 
