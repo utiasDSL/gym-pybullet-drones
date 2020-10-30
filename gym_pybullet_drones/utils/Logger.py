@@ -66,7 +66,7 @@ class Logger(object):
     #### Save the logs to file #########################################################################
     ####################################################################################################
     def save(self):
-        with open(os.path.dirname(os.path.abspath(__file__))+"/../../files/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
+        with open(os.path.dirname(os.path.abspath(__file__))+"/../../files/logs/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
             np.save(out_file, self.timestamps); np.save(out_file, self.states); np.save(out_file, self.controls)
 
     ####################################################################################################

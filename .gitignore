@@ -6,8 +6,8 @@ examples/dev.py
 files/*.npy
 files/*.mp4
 
-# Learning saves
-experiments/learning/save-*
+# Learning results
+experiments/learning/results/
 
 # macOS users
 .DS_Store
