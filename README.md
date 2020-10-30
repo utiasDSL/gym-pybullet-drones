@@ -143,9 +143,14 @@ $ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
 $ python physics.py                         # Try 'python physics.py -h' to show the script's customizable parameters
 ```
-> Tip: also check the examples in [pybullet-examples](https://github.com/JacopoPan/pybullet-examples)
+
+
+
+
+## On-board RGB, Depth, and Segmentation Views
 
 <img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
+
 
 
 
@@ -190,7 +195,7 @@ Then, the environment can be stepped with
 
 
 
-### Create New Aviaries
+### Creating New Aviaries
 A new environment can be created as a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (i.e. `class NewAviary(BaseAviary): ...`) and implementing the following 7 abstract methods
 ```
 >>> #### 1
