@@ -2,7 +2,7 @@ import numpy as np
 from gym import spaces
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
-from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import BaseSingleAgentAviary
+from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType, BaseSingleAgentAviary
 
 
 class HoverAviary(BaseSingleAgentAviary):
@@ -26,14 +26,14 @@ class HoverAviary(BaseSingleAgentAviary):
     #### ...
     ####
     ####################################################################################################
-    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
-                    neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
-                    physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=5,
-                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False, dyn_input=False, one_d=False):
-        super().__init__(drone_model=drone_model, num_drones=num_drones, neighbourhood_radius=neighbourhood_radius,
-                            initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
-                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
-                            img_obs=img_obs, dyn_input=dyn_input, one_d=one_d)
+    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, initial_xyzs=None, initial_rpys=None,
+                    physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
+                    gui=False, record=False,  
+                    obs: ObservationType=ObservationType.KIN,
+                    act: ActionType=ActionType.RPM):
+        super().__init__(drone_model=drone_model, initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
+                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record,
+                            obs=obs, act=act)
 
     ####################################################################################################
     #### Compute the current reward value(s) ###########################################################
@@ -45,8 +45,8 @@ class HoverAviary(BaseSingleAgentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        obs = self._getDroneStateVector(0)
-        return -1 * np.linalg.norm(np.array([0,0,1])-obs[0:3])**2
+        state = self._getDroneStateVector(0)
+        return -1 * np.linalg.norm(np.array([0,0,1])-state[0:3])**2
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -58,7 +58,7 @@ class HoverAviary(BaseSingleAgentAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, obs):
-        if self.step_counter/self.SIM_FREQ > self.EPISODE_SEC: return True
+        if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC: return True
         else: return False
 
     ####################################################################################################
@@ -86,8 +86,8 @@ class HoverAviary(BaseSingleAgentAviary):
         MAX_LIN_VEL_XY = 3 
         MAX_LIN_VEL_Z = 1
         #
-        MAX_XY = MAX_LIN_VEL_XY*self.EPISODE_SEC
-        MAX_Z = MAX_LIN_VEL_Z*self.EPISODE_SEC
+        MAX_XY = MAX_LIN_VEL_XY*self.EPISODE_LEN_SEC
+        MAX_Z = MAX_LIN_VEL_Z*self.EPISODE_LEN_SEC
         #
         MAX_PITCH_ROLL = np.pi # Full range
         MAX_PITCH_ROLL_VEL = 6*np.pi

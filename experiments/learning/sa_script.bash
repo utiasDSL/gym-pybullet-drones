@@ -4,19 +4,19 @@
 
 # declare -a env_list=( 'takeoff' 'hover' 'flythrugate' )
 # declare -a algo_list=( 'a2c' 'ppo' 'sac' 'td3' 'ddpg' )
-# declare -a pol_list=( 'mlp' 'cnn' )
-# declare -a input_list=( 'rpm' 'dyn' )
+# declare -a obs_list=( 'kin' 'rgb' )
+# declare -a act_list=( 'rpm' 'dyn' 'pid' 'one_d_rpm' 'one_d_dyn' 'one_d_pid' )
 
-declare -a env_list=( 'takeoff' )
-declare -a algo_list=( 'a2c' 'ppo' 'sac' 'td3' 'ddpg' )
-declare -a pol_list=( 'mlp' )
-declare -a input_list=( 'rpm' 'dyn' )
+declare -a env_list=( 'hover' )
+declare -a algo_list=( 'ppo' 'td3' )
+declare -a obs_list=( 'kin' 'rgb' )
+declare -a act_list=( 'rpm' 'pid' )
 
 for env in ${env_list[@]}; do
     for algo in ${algo_list[@]}; do
-        for pol in ${pol_list[@]}; do
-            for input in ${input_list[@]}; do
-                sbatch --export=env=$env,algo=$algo,pol=$pol,input=$input sa_script.slrm
+        for obs in ${obs_list[@]}; do
+            for act in ${act_list[@]}; do
+                sbatch --export=env=$env,algo=$algo,obs=$obs,act=$act sa_script.slrm
             done
         done
     done

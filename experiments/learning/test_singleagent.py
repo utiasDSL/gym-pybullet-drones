@@ -25,11 +25,16 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
 from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
+from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
+
+####################
+AGGR_PHY_STEPS = 5
+####################
 
 if __name__ == "__main__":
 
-    # Use as $ python test_singleagent.py --exp save-<env>-<algo>-<pol>-<input>-<debug>-<time-date>
-    # Use $ tensorboard --logdir /save-<env>-<algo>-<pol>-<input>-<debug>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
+    # Use as $ python test_singleagent.py --exp save-<env>-<algo>-<obs>-<act>-<time-date>
+    # Use $ tensorboard --logdir /save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
@@ -50,17 +55,21 @@ if __name__ == "__main__":
 
     #### Parameters to recreate the environment ########################################################
     env_name = ARGS.exp.split("-")[1]+"-aviary-v0"
-    IMG_OBS = True if ARGS.exp.split("-")[3]=='cnn' else False
-    DYN_IN = True if ARGS.exp.split("-")[4]=='dyn' else False
-    ONE_D = True if  ARGS.exp.split("-")[5]=='1D' else False
+    OBS = ObservationType.KIN if ARGS.exp.split("-")[3]=='kin' else ObservationType.RGB
+    if ARGS.exp.split("-")[4]=='rpm': ACT = ActionType.RPM
+    elif ARGS.exp.split("-")[4]=='dyn': ACT = ActionType.DYN
+    elif ARGS.exp.split("-")[4]=='pid': ACT = ActionType.PID
+    elif ARGS.exp.split("-")[4]=='one_d_rpm': ACT = ActionType.ONE_D_RPM
+    elif ARGS.exp.split("-")[4]=='one_d_dyn': ACT = ActionType.ONE_D_DYN
+    elif ARGS.exp.split("-")[4]=='one_d_pid': ACT = ActionType.ONE_D_PID
 
     #### Evaluate the model ############################################################################
-    eval_env = gym.make(env_name, img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D)
+    eval_env = gym.make(env_name, aggregate_phy_steps=AGGR_PHY_STEPS, obs=OBS, act=ACT)
     mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10)
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
     #### Show, record a video of, and log the model's performance ######################################
-    test_env = gym.make(env_name, gui=True, record=True, img_obs=IMG_OBS, dyn_input=DYN_IN, one_d=ONE_D)
+    test_env = gym.make(env_name, gui=True, record=True, aggregate_phy_steps=AGGR_PHY_STEPS, obs=OBS, act=ACT)
     logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS), num_drones=1)
     obs = test_env.reset()
     start = time.time()
@@ -68,7 +77,7 @@ if __name__ == "__main__":
         action, _states = model.predict(obs, deterministic=True) # OPTIONAL 'deterministic=False'
         obs, reward, done, info = test_env.step(action)
         test_env.render()
-        logger.log(drone=0, timestamp=i/test_env.SIM_FREQ, state= np.hstack([obs[0:3], np.zeros(4), obs[3:15],  np.resize(action, (4)) ]), control=np.zeros(12) )
+        if OBS==ObservationType.KIN: logger.log(drone=0, timestamp=i/test_env.SIM_FREQ, state= np.hstack([obs[0:3], np.zeros(4), obs[3:15],  np.resize(action, (4)) ]), control=np.zeros(12) )
         sync(np.floor(i*test_env.AGGR_PHY_STEPS), start, test_env.TIMESTEP)
         # if done: obs = test_env.reset() # OPTIONAL EPISODE HALT
     test_env.close()

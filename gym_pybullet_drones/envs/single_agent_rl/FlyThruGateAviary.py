@@ -4,7 +4,7 @@ from gym import spaces
 import pybullet as p
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
-from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import BaseSingleAgentAviary
+from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType, BaseSingleAgentAviary
 
 
 class FlyThruGateAviary(BaseSingleAgentAviary):
@@ -28,16 +28,14 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
     #### ...
     #### ...
     ####################################################################################################
-    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=1,
-                    neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
-                    physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=5,
-                    gui=False, record=False, obstacles=True, user_debug_gui=False, img_obs=False, dyn_input=False,
-                    one_d=False):
-        super().__init__(drone_model=drone_model, num_drones=num_drones, neighbourhood_radius=neighbourhood_radius,
-                            initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
-                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui,
-                            img_obs=img_obs, dyn_input=dyn_input, 
-                            one_d=False)
+    def __init__(self, drone_model: DroneModel=DroneModel.CF2X, initial_xyzs=None, initial_rpys=None,
+                    physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
+                    gui=False, record=False, 
+                    obs: ObservationType=ObservationType.KIN,
+                    act: ActionType=ActionType.RPM):
+        super().__init__(drone_model=drone_model, initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
+                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record,
+                            obs=obs, act=act)
 
     ####################################################################################################
     #### Add obstacles to the environment from .urdf files #############################################
@@ -49,7 +47,7 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
             p.loadURDF("cube_small.urdf", [-.3,-1,.02+i*0.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
             p.loadURDF("cube_small.urdf", [.3,-1,.02+i*0.05], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 
-       ####################################################################################################
+    ####################################################################################################
     #### Compute the current reward value(s) ###########################################################
     ####################################################################################################
     #### Arguments #####################################################################################
@@ -59,8 +57,9 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        obs = self._getDroneStateVector(0)
-        return -10 * np.linalg.norm(np.array([0,0,1])-obs[0:3])**2
+        state = self._getDroneStateVector(0)
+        norm_ep_time = (self.step_counter/self.SIM_FREQ) / self.EPISODE_LEN_SEC
+        return -10 * np.linalg.norm(np.array([0,-2*norm_ep_time,0.75])-state[0:3])**2
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
@@ -72,7 +71,7 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, obs):
-        if self.step_counter/self.SIM_FREQ > self.EPISODE_SEC: return True
+        if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC: return True
         else: return False
 
     ####################################################################################################
@@ -100,8 +99,8 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
         MAX_LIN_VEL_XY = 3 
         MAX_LIN_VEL_Z = 1
         #
-        MAX_XY = MAX_LIN_VEL_XY*self.EPISODE_SEC
-        MAX_Z = MAX_LIN_VEL_Z*self.EPISODE_SEC
+        MAX_XY = MAX_LIN_VEL_XY*self.EPISODE_LEN_SEC
+        MAX_Z = MAX_LIN_VEL_Z*self.EPISODE_LEN_SEC
         #
         MAX_PITCH_ROLL = np.pi # Full range
         MAX_PITCH_ROLL_VEL = 6*np.pi
