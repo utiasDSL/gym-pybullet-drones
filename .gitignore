@@ -3,8 +3,8 @@ TODOs.md
 examples/dev.py
 
 # NumPy saves and videos
-files/*.npy
-files/*.mp4
+files/logs/*.npy
+files/videos/*.mp4
 
 # Learning results
 experiments/learning/results/save-*

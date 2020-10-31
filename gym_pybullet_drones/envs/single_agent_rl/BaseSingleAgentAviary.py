@@ -1,4 +1,5 @@
 import os
+from datetime import datetime
 from enum import Enum
 import numpy as np
 from scipy.optimize import nnls
@@ -78,6 +79,8 @@ class BaseSingleAgentAviary(BaseAviary):
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
             if self.DRONE_MODEL in [DroneModel.CF2X, DroneModel.CF2P]: self.ctrl = DSLPIDControl(CtrlAviary(drone_model=DroneModel.CF2X))
             elif self.DRONE_MODEL==DroneModel.HB: self.ctrl = SimplePIDControl(CtrlAviary(drone_model=DroneModel.HB))
+        if self.OBS_TYPE==ObservationType.RGB and self.RECORD: self.ONBOARD_IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../../files/videos/onboard-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"; os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
+
 
     ####################################################################################################
     #### Add obstacles to the environment from .urdf files #############################################
@@ -158,12 +161,8 @@ class BaseSingleAgentAviary(BaseAviary):
         if self.OBS_TYPE==ObservationType.RGB:
             if self.step_counter%self.IMG_CAPTURE_FREQ==0: 
                 self.rgb[0], self.dep[0], self.seg[0] = self._getDroneImages(0, segmentation=False)
-                # DEBUG ONLY, REMOVE TO IMPROVE RENDERING PERFORMANCE
                 #### Printing observation to PNG frames example ####################################################
-                if self.GUI:
-                    path = os.path.dirname(os.path.abspath(__file__))+"/../../../files/test/"; os.makedirs(os.path.dirname(path), exist_ok=True)
-                    self._exportImage(img_type=ImageType.RGB, img_input=self.rgb[0], path=path, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
-                ####################################################################################################
+                if self.RECORD: self._exportImage(img_type=ImageType.RGB, img_input=self.rgb[0], path=self.ONBOARD_IMG_PATH, frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ))
             return self.rgb[0]
         elif self.OBS_TYPE==ObservationType.KIN: 
             obs = self._clipAndNormalizeState(self._getDroneStateVector(0))
