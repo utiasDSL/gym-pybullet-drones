@@ -51,27 +51,37 @@ if __name__ == "__main__":
 
     #### Save directory ################################################################################
     filename = os.path.dirname(os.path.abspath(__file__))+'/results/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.obs.value+'-'+ARGS.act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
-    if not os.path.exists(filename): os.makedirs(filename+'/')
+    if not os.path.exists(filename):
+        os.makedirs(filename+'/')
 
     #### Print out current git commit hash #############################################################
-    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip(); print(git_commit)
-    with open(filename+'/git_commit.txt', 'w+') as f: f.write(str(git_commit))
+    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
+    print(git_commit)
+    with open(filename+'/git_commit.txt', 'w+') as f:
+        f.write(str(git_commit))
 
     #### Warning #######################################################################################
     if ARGS.act==ActionType.ONE_D_RPM or ARGS.act==ActionType.ONE_D_DYN or ARGS.act==ActionType.ONE_D_PID:
         print("\n\n\n[WARNING] Simplified 1D problem for debugging purposes\n\n\n")
-        #### Error #########################################################################################
-        if not ARGS.env in ['takeoff', 'hover']: 
-            print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary"); exit()
+    #### Errors #########################################################################################
+        if not ARGS.env in ['takeoff', 'hover']:
+            print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary")
+            exit()
+    if ARGS.algo in ['sac', 'td3', 'ddpg'] and ARGS.cpu!=1:
+        print("[ERROR] The selected algorithm does not support multiple environments")
+        exit()
 
     #### Uncomment to debug slurm scripts ##############################################################
     # exit()
 
     env_name = ARGS.env+"-aviary-v0"
     # train_env = gym.make(env_name, aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act) # single environment instead of a vectorized one    
-    if env_name=="takeoff-aviary-v0": train_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0) 
-    if env_name=="hover-aviary-v0": train_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
-    if env_name=="flythrugate-aviary-v0": train_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
+    if env_name=="takeoff-aviary-v0": 
+        train_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0) 
+    if env_name=="hover-aviary-v0": 
+        train_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
+    if env_name=="flythrugate-aviary-v0": 
+        train_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
     # check_env(train_env, warn=True, skip_render_check=True)
@@ -95,9 +105,12 @@ if __name__ == "__main__":
     #### Create eveluation environment #################################################################
     if ARGS.obs==ObservationType.KIN: eval_env = gym.make(env_name, aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
     elif ARGS.obs==ObservationType.RGB:
-        if env_name=="takeoff-aviary-v0": eval_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0) 
-        if env_name=="hover-aviary-v0": eval_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
-        if env_name=="flythrugate-aviary-v0": eval_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
+        if env_name=="takeoff-aviary-v0": 
+            eval_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0) 
+        if env_name=="hover-aviary-v0": 
+            eval_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
+        if env_name=="flythrugate-aviary-v0": 
+            eval_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
         eval_env = VecTransposeImage(eval_env)
 
     #### Train the model ###############################################################################
