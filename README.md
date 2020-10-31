@@ -64,21 +64,19 @@ The repo was written using *Python 3.7* on *macOS 10.15* and tested on *Ubuntu 1
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [`rllib`](https://docs.ray.io/en/master/rllib.html) and [`ffmpeg`](https://ffmpeg.org) (for video recording only)
 ```
-$ pip install gym
-$ pip install pybullet
-$ pip install stable-baselines3
-$ pip install 'ray[rllib]'
+$ pip install --upgrade gym
+$ pip install --upgrade pybullet
+$ pip install --upgrade stable-baselines3
+$ pip install --upgrade 'ray[rllib]'
 $ brew install ffmpeg                       # on macOS
 $ sudo apt install ffmpeg                   # on Linux
 ```
-Using a [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on macOS, 
-dependencies (except `ffmpeg`), can be installed from file
+In a [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on macOS, 
+dependencies (except `ffmpeg`), can be installed from `conda_req_list.txt`
 ```
 $ cd gym-pybullet-drones/
 $ conda create -n myenv --file /files/conda_req_list.txt
 ```
-> Note: periodically upgrade `pybullet` and `rllib` with `$ pip install --upgrade package-name`
-
 
 
 
