@@ -5,11 +5,15 @@ from ray.rllib.env.multi_agent_env import MultiAgentEnv, ENV_STATE
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
 
+from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
+from gym_pybullet_drones.envs.multi_agent_rl.BaseMultiagentAviary import BaseMultiagentAviary
+
 
 ######################################################################################################################################################
 #### Multi-drone environment class for multi-agent reinforcement learning applications (in this implementation, flocking) ############################
 ######################################################################################################################################################
-class FlockAviary(BaseAviary, MultiAgentEnv):
+class FlockAviary(BaseMultiagentAviary):
 
     ####################################################################################################
     #### Initialize the environment ####################################################################
@@ -31,61 +35,13 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
     def __init__(self, drone_model: DroneModel=DroneModel.CF2X, num_drones: int=2,
                     neighbourhood_radius: float=np.inf, initial_xyzs=None, initial_rpys=None,
                     physics: Physics=Physics.PYB, freq: int=240, aggregate_phy_steps: int=1,
-                    gui=False, record=False, obstacles=False, user_debug_gui=True):
-        if num_drones<2: print("[ERROR] in FlockAviary.__init__(), FlockAviary only accepts num_drones>2" ); exit()
+                    gui=False, record=False, 
+                    obs: ObservationType=ObservationType.KIN,
+                    act: ActionType=ActionType.RPM):
         super().__init__(drone_model=drone_model, num_drones=num_drones, neighbourhood_radius=neighbourhood_radius,
                             initial_xyzs=initial_xyzs, initial_rpys=initial_rpys, physics=physics, freq=freq,
-                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, obstacles=obstacles, user_debug_gui=user_debug_gui)
-
-    ####################################################################################################
-    #### Return the action space of the environment, a Dict of Box(4,) with NUM_DRONES entries #########
-    ####################################################################################################
-    def _actionSpace(self):
-        #### Action vector ######## P0            P1            P2            P3
-        act_lower_bound = np.array([-1,           -1,           -1,           -1])
-        act_upper_bound = np.array([1,            1,            1,            1])
-        return spaces.Dict({    i   : spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32) for i in range(self.NUM_DRONES) })
-
-    ####################################################################################################
-    #### Return the observation space of the environment, a Dict with NUM_DRONES entries of Dict of ####
-    #### { Box(4,), MultiBinary(NUM_DRONES) } ##########################################################
-    ####################################################################################################
-    def _observationSpace(self):
-        #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WR       WP       WY       P0            P1            P2            P3
-        obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
-        obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])
-        #return spaces.Dict({    i   : spaces.Dict ({"state": spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32),
-        #                                            "neighbors": spaces.MultiBinary(self.NUM_DRONES) }) for i in range(self.NUM_DRONES) })
-        return spaces.Dict({    i   : spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32) for i in range(self.NUM_DRONES) })
-
-    ####################################################################################################
-    #### Return the current observation of the environment #############################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - obs (dict)                       {"0":{"state": np.arr(20,),"neighbors": np.arr(NUM_DRONES)},
-    ####                                    .. "NUM_DRONES-1": {..} } ##################################
-    ####                                    for the "state"'s content see _observationSpace() ##########
-    ####                                    "neighbors" is the drone's row of the adjacency matrix #####
-    ####################################################################################################
-    def _computeObs(self):
-        adjacency_mat = self._getAdjacencyMatrix()
-        #return {   i   : {"state": self._clipAndNormalizeState(self._getDroneStateVector(i)), "neighbors": adjacency_mat[i,:] } for i in range(self.NUM_DRONES) }
-        return {   i   : self._clipAndNormalizeState(self._getDroneStateVector(i)) for i in range(self.NUM_DRONES) }
-
-    ####################################################################################################
-    #### Preprocess the action passed to step() ########################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - action (dict of (4,1) array)     unclipped RPMs commanded to the 4 motors of each drone #####
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - clip_action ((N_DRONES,4,1) arr) clipped RPMs commanded to the 4 motors of each drone #######
-    ####################################################################################################
-    def _preprocessAction(self, action):
-        clipped_action = np.zeros((self.NUM_DRONES,4))
-        for k, v in action.items():
-            clipped_action[int(k),:] = np.clip(np.array(self._normalizedActionToRPM(v)), 0, self.MAX_RPM)
-        return clipped_action
+                            aggregate_phy_steps=aggregate_phy_steps, gui=gui, record=record, 
+                            obs=obs, act=act)
 
     ####################################################################################################
     #### Compute the current reward value(s) ###########################################################
@@ -163,6 +119,23 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
         return done
 
     ####################################################################################################
+    ####  Compute the boolean done value of an individual drone ########################################
+    ####################################################################################################
+    #### Arguments #####################################################################################
+    #### - norm_state ((20,1) array)        raw simulation stat data  ##################################
+    ####################################################################################################
+    #### Returns #######################################################################################
+    #### - indiv. done (bool)               whether a drone's done is True based on its norm_state #####
+    ####################################################################################################
+    def _individualDone(self, norm_state):
+        if np.abs(norm_state[0])>=1 or np.abs(norm_state[1])>=1 or norm_state[2]>=1 \
+            or np.abs(norm_state[7])>=1 or np.abs(norm_state[8])>=1 \
+            or np.abs(norm_state[10])>=1 or np.abs(norm_state[11])>=1 or np.abs(norm_state[12])>=1 \
+            or np.abs(norm_state[13])>=1 or np.abs(norm_state[14])>=1 or np.abs(norm_state[15])>=1 \
+            or self.step_counter/self.SIM_FREQ > 3: return True
+        else: return False
+
+    ####################################################################################################
     #### Compute the current info dict(s) ##############################################################
     ####################################################################################################
     #### Arguments #####################################################################################
@@ -208,19 +181,9 @@ class FlockAviary(BaseAviary, MultiAgentEnv):
         if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of FlockAviary._computeDone()".format(state[13], state[14], state[15]))
         if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of FlockAviary._computeDone()".format(state[13], state[14], state[15]))
 
-    ####################################################################################################
-    ####  Compute the boolean done value of an individual drone ########################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - norm_state ((20,1) array)        raw simulation stat data  ##################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - indiv. done (bool)               whether a drone's done is True based on its norm_state #####
-    ####################################################################################################
-    def _individualDone(self, norm_state):
-        if np.abs(norm_state[0])>=1 or np.abs(norm_state[1])>=1 or norm_state[2]>=1 \
-            or np.abs(norm_state[7])>=1 or np.abs(norm_state[8])>=1 \
-            or np.abs(norm_state[10])>=1 or np.abs(norm_state[11])>=1 or np.abs(norm_state[12])>=1 \
-            or np.abs(norm_state[13])>=1 or np.abs(norm_state[14])>=1 or np.abs(norm_state[15])>=1 \
-            or self.step_counter/self.SIM_FREQ > 3: return True
-        else: return False
+
+
+
+
+
+
