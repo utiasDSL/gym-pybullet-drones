@@ -53,14 +53,11 @@ class FlockAviary(BaseMultiagentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
-        # parse velocity and position
 
         return {   i   : 0 for i in range(self.NUM_DRONES) }
 
-
-
-
+        # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
+        # parse velocity and position
         vel = np.zeros((1, self.NUM_DRONES, 3)); pos = np.zeros((1, self.NUM_DRONES, 3))
         for i in range(self.NUM_DRONES):
             pos[0,i,:] = obs[   i   ]["state"][0:3]
@@ -110,30 +107,10 @@ class FlockAviary(BaseMultiagentAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, obs):
-        # done = {   i   : self._individualDone(obs[   i   ]["state"]) for i in range(self.NUM_DRONES)}
-        # done["__all__"] = True if True in done.values() else False
-        # return done
-
-        done = {   i   : True for i in range(self.NUM_DRONES)}
+        bool_val = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else false
+        done = {   i   : bool_val for i in range(self.NUM_DRONES)}
         done["__all__"] = True if True in done.values() else False
         return done
-
-    ####################################################################################################
-    ####  Compute the boolean done value of an individual drone ########################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - norm_state ((20,1) array)        raw simulation stat data  ##################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - indiv. done (bool)               whether a drone's done is True based on its norm_state #####
-    ####################################################################################################
-    def _individualDone(self, norm_state):
-        if np.abs(norm_state[0])>=1 or np.abs(norm_state[1])>=1 or norm_state[2]>=1 \
-            or np.abs(norm_state[7])>=1 or np.abs(norm_state[8])>=1 \
-            or np.abs(norm_state[10])>=1 or np.abs(norm_state[11])>=1 or np.abs(norm_state[12])>=1 \
-            or np.abs(norm_state[13])>=1 or np.abs(norm_state[14])>=1 or np.abs(norm_state[15])>=1 \
-            or self.step_counter/self.SIM_FREQ > 3: return True
-        else: return False
 
     ####################################################################################################
     #### Compute the current info dict(s) ##############################################################
@@ -157,31 +134,51 @@ class FlockAviary(BaseMultiagentAviary):
     #### - normalized state ((20,1) array)  clipped and normalized simulation state ####################
     ####################################################################################################
     def _clipAndNormalizeState(self, state):
-        clipped_pos = np.clip(state[0:3], -1, 1)
-        clipped_rp = np.clip(state[7:9], -np.pi/3, np.pi/3)
-        clipped_vel = np.clip(state[10:13], -1, 1)
-        clipped_ang_vel_rp = np.clip(state[13:15], -10*np.pi, 10*np.pi)
-        clipped_ang_vel_y = np.clip(state[15], -20*np.pi, 20*np.pi)
-        if self.GUI: self._clipAndNormalizeStateWarning(state, clipped_pos, clipped_rp, clipped_vel, clipped_ang_vel_rp, clipped_ang_vel_y)
-        normalized_pos = clipped_pos
-        normalized_rp = clipped_rp/(np.pi/3)
-        normalized_y = state[9]/np.pi
-        normalized_vel = clipped_vel
-        normalized_ang_vel_rp = clipped_ang_vel_rp/(10*np.pi)
-        normalized_ang_vel_y = clipped_ang_vel_y/(20*np.pi)
-        return np.hstack([normalized_pos, state[3:7], normalized_rp, normalized_y, normalized_vel, normalized_ang_vel_rp, normalized_ang_vel_y, state[16:20] ]).reshape(20,)
+        MAX_LIN_VEL_XY = 3 
+        MAX_LIN_VEL_Z = 1
+        #
+        MAX_XY = MAX_LIN_VEL_XY*self.EPISODE_LEN_SEC
+        MAX_Z = MAX_LIN_VEL_Z*self.EPISODE_LEN_SEC
+        #
+        MAX_PITCH_ROLL = np.pi # Full range
+        MAX_PITCH_ROLL_VEL = 6*np.pi
+        MAX_YAW_VEL = 3*np.pi
+        #
+        clipped_pos_xy = np.clip(state[0:2], -MAX_XY, MAX_XY)
+        clipped_pos_z = np.clip(state[2], 0, MAX_Z)
+        clipped_rp = np.clip(state[7:9], -MAX_PITCH_ROLL, MAX_PITCH_ROLL)
+        clipped_vel_xy = np.clip(state[10:12], -MAX_LIN_VEL_XY, MAX_LIN_VEL_XY)
+        clipped_vel_z = np.clip(state[12], -MAX_LIN_VEL_Z, MAX_LIN_VEL_Z)
+        #
+        clipped_ang_vel_rp = np.clip(state[13:15], -MAX_PITCH_ROLL_VEL, MAX_PITCH_ROLL_VEL)
+        clipped_ang_vel_y = np.clip(state[15], -MAX_YAW_VEL, MAX_YAW_VEL)
+        #
+        if self.GUI: self._clipAndNormalizeStateWarning(state, clipped_pos_xy, clipped_pos_z, clipped_rp, clipped_vel_xy, clipped_vel_z, clipped_ang_vel_rp, clipped_ang_vel_y)
+        #
+        normalized_pos_xy = clipped_pos_xy / MAX_XY
+        normalized_pos_z = clipped_pos_z / MAX_Z
+        normalized_rp = clipped_rp / MAX_PITCH_ROLL
+        normalized_y = state[9] / np.pi # No reason to clip
+        normalized_vel_xy = clipped_vel_xy / MAX_LIN_VEL_XY
+        normalized_vel_z = clipped_vel_z / MAX_LIN_VEL_XY
+        normalized_ang_vel_rp = clipped_ang_vel_rp / MAX_PITCH_ROLL_VEL
+        normalized_ang_vel_y = clipped_ang_vel_y / MAX_YAW_VEL
+        # 
+        norm_and_clipped = np.hstack([normalized_pos_xy, normalized_pos_z, state[3:7], normalized_rp, normalized_y, normalized_vel_xy, normalized_vel_z, normalized_ang_vel_rp, normalized_ang_vel_y, state[16:20] ]).reshape(20,)
+        #
+        return norm_and_clipped
 
     ####################################################################################################
     #### Print a warning if any of the 20 values in a state vector is out of the normalization range ###
     ####################################################################################################
-    def _clipAndNormalizeStateWarning(self, state, clipped_pos, clipped_rp, clipped_vel, clipped_ang_vel_rp, clipped_ang_vel_y):
-        if not(clipped_pos==np.array(state[0:3])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), out-of-bound position [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of FlockAviary._computeDone()".format(state[0], state[1], state[2]))
-        if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), out-of-bound roll/pitch [{:.2f} {:.2f}], consider a more conservative implementation of FlockAviary._computeDone()".format(state[7], state[8]))
-        if not(clipped_vel==np.array(state[10:13])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), out-of-bound velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of FlockAviary._computeDone()".format(state[10], state[11], state[12]))
-        if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of FlockAviary._computeDone()".format(state[13], state[14], state[15]))
-        if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), out-of-bound angular velocity [{:.2f} {:.2f} {:.2f}], consider a more conservative implementation of FlockAviary._computeDone()".format(state[13], state[14], state[15]))
-
-
+    def _clipAndNormalizeStateWarning(self, state, clipped_pos_xy, clipped_pos_z, clipped_rp, clipped_vel_xy, clipped_vel_z, clipped_ang_vel_rp, clipped_ang_vel_y):
+        if not(clipped_pos_xy==np.array(state[0:2])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped xy position [{:.2f} {:.2f}]".format(state[0], state[1]))
+        if not(clipped_pos_z==np.array(state[2])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped z position [{:.2f}]".format(state[2]))
+        if not(clipped_rp==np.array(state[7:9])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped roll/pitch [{:.2f} {:.2f}]".format(state[7], state[8]))
+        if not(clipped_vel_xy==np.array(state[10:12])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped xy velocity [{:.2f} {:.2f}]".format(state[10], state[11]))
+        if not(clipped_vel_z==np.array(state[12])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped z velocity [{:.2f}]".format(state[12]))
+        if not(clipped_ang_vel_rp==np.array(state[13:15])).all(): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped angular velocity [{:.2f} {:.2f}]".format(state[13], state[14]))
+        if not(clipped_ang_vel_y==np.array(state[15])): print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped angular velocity [{:.2f}]".format(state[15]))
 
 
 
