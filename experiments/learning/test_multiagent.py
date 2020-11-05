@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import gym
 from gym import error, spaces, utils
 from gym.utils import seeding
+from gym.spaces import Box, Dict
+import torch
+import torch.nn as nn
 import ray
 from ray import tune
 from ray.tune import register_env
@@ -18,57 +21,161 @@ from ray.rllib.agents import ppo
 from ray.rllib.agents.ppo import PPOTrainer, PPOTFPolicy
 from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.utils.test_utils import check_learning_achieved
+from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
+from ray.rllib.agents.callbacks import DefaultCallbacks
+from ray.rllib.models.torch.fcnet import FullyConnectedNetwork
+from ray.rllib.models import ModelCatalog
+from ray.rllib.policy.sample_batch import SampleBatch
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
 from gym_pybullet_drones.envs.multi_agent_rl.FlockAviary import FlockAviary
 from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderFollowerAviary
 from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary
+from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import *
 
-from multiagent import *
+####################
+AGGR_PHY_STEPS = 5
+####################
 
+ACTION_VEC_SIZE = -1
+OWN_OBS_VEC_SIZE = -1
+
+######################################################################################################################################################
+class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
+    """Multi-agent model that implements a centralized value function.
+
+    It assumes the observation is a dict with 'own_obs' and 'opponent_obs', the
+    former of which can be used for computing actions (i.e., decentralized
+    execution), and the latter for optimization (i.e., centralized learning).
+
+    This model has two parts:
+    - An action model that looks at just 'own_obs' to compute actions
+    - A value model that also looks at the 'opponent_obs' / 'opponent_action'
+      to compute the value (it does this by using the 'obs_flat' tensor).
+    """
+
+    def __init__(self, obs_space, action_space, num_outputs, model_config, name):
+        TorchModelV2.__init__(self, obs_space, action_space, num_outputs, model_config, name)
+        nn.Module.__init__(self)
+        self.action_model = FullyConnectedNetwork(
+            Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
+            action_space,
+            num_outputs,
+            model_config,
+            name + "_action"
+            )
+        self.value_model = FullyConnectedNetwork(
+            obs_space, 
+            action_space,
+            1, 
+            model_config, 
+            name + "_vf"
+            )
+        self._model_in = None
+
+    def forward(self, input_dict, state, seq_lens):
+        self._model_in = [input_dict["obs_flat"], state, seq_lens]
+        return self.action_model({ "obs": input_dict["obs"]["own_obs"] }, state, seq_lens)
+
+    def value_function(self):
+        value_out, _ = self.value_model({ "obs": self._model_in[0] }, self._model_in[1], self._model_in[2])
+        return torch.reshape(value_out, [-1])
+
+######################################################################################################################################################
+class FillInActions(DefaultCallbacks):
+    def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
+        to_update = postprocessed_batch[SampleBatch.CUR_OBS]
+        other_id = 1 if agent_id == 0 else 0
+        action_encoder = ModelCatalog.get_preprocessor_for_space( 
+                                                        Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                        )
+        _, opponent_batch = original_batches[other_id]
+        opponent_actions = np.array([ action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS] ])
+        to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
+
+######################################################################################################################################################
+def central_critic_observer(agent_obs, **kw):
+    new_obs = {
+        0: {
+            "own_obs": agent_obs[0],
+            "opponent_obs": agent_obs[1],
+            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+        },
+        1: {
+            "own_obs": agent_obs[1],
+            "opponent_obs": agent_obs[0],
+            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+        },
+    }
+    return new_obs
+
+######################################################################################################################################################
 if __name__ == "__main__":
+
+     # Use as $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
 
     #### Define and parse (optional) arguments for the script ##########################################
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    parser.add_argument('--num_drones',     default=2,      type=int,       help='Number of drones (default: 2)', metavar='')
-    parser.add_argument('--file',                           type=str,       help='Help (default: ..)', metavar='')
+    parser.add_argument('--exp',                            type=str,       help='Help (default: ..)', metavar='')
     ARGS = parser.parse_args()
 
-    # e.g. python test_multiagent.py --file /Users/jacopo/ray_results/PPO/PPO_this-flock-aviary-v0_136de_00000_0_2020-10-25_20-20-39/checkpoint_1/checkpoint-1
+    #### Parameters to recreate the environment ########################################################
+    NUM_DRONES = int(ARGS.exp.split("-")[2])
+    OBS = ObservationType.KIN if ARGS.exp.split("-")[4]=='kin' else ObservationType.RGB
+    if ARGS.exp.split("-")[5]=='rpm': ACT = ActionType.RPM
+    elif ARGS.exp.split("-")[5]=='dyn': ACT = ActionType.DYN
+    elif ARGS.exp.split("-")[5]=='pid': ACT = ActionType.PID
+    elif ARGS.exp.split("-")[5]=='one_d_rpm': ACT = ActionType.ONE_D_RPM
+    elif ARGS.exp.split("-")[5]=='one_d_dyn': ACT = ActionType.ONE_D_DYN
+    elif ARGS.exp.split("-")[5]=='one_d_pid': ACT = ActionType.ONE_D_PID
+
+    #### Constants, and errors #########################################################################
+    if OBS==ObservationType.KIN: OWN_OBS_VEC_SIZE = 12
+    elif OBS==ObservationType.RGB: print("[ERROR] ObservationType.RGB for multi-agent systems not yet implemented"); exit()
+    else: print("[ERROR] unknown ObservationType"); exit()
+    if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]: ACTION_VEC_SIZE = 1
+    elif ACT in [ActionType.RPM, ActionType.DYN]: ACTION_VEC_SIZE = 4
+    elif ACT==ActionType.PID: ACTION_VEC_SIZE = 3
+    else: print("[ERROR] unknown ActionType"); exit()
 
     #### Initialize Ray Tune ###########################################################################
     ray.shutdown()
     ray.init(ignore_reinit_error=True)
 
-    #### Register the custom centralized critic model ##################################################
-    ModelCatalog.register_custom_model( "cc_model", CustomTorchCentralizedCriticModel )
+   #### Register the custom centralized critic model ##################################################
+    ModelCatalog.register_custom_model("cc_model", CustomTorchCentralizedCriticModel)
+
+    #### Register the environment ######################################################################
+    temp_env_name = "this-aviary-v0"
+    if ARGS.exp.split("-")[1]=='flock': register_env(temp_env_name, lambda _: FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=AGGR_PHY_STEPS, obs=OBS, act=ACT))
+    else: print("[ERROR] not yet implemented"); exit()
 
     #### Unused env to extract correctly sized action and observation spaces ###########################
-    temp_env = FlockAviary(num_drones=ARGS.num_drones)
+    if ARGS.exp.split("-")[1]=='flock': temp_env = FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=AGGR_PHY_STEPS, obs=OBS, act=ACT)
+    else: print("[ERROR] not yet implemented"); exit()
     observer_space = Dict({
-        "own_obs": temp_env.observation_space[0], # Box(-1.0, 1.0, (20,), np.float32) or Dict(neighbors:MultiBinary(2), state:Box(-1.0, 1.0, (20,), np.float32))
+        "own_obs": temp_env.observation_space[0],
         "opponent_obs": temp_env.observation_space[0],
         "opponent_action": temp_env.action_space[0],
     })
-    action_space = temp_env.action_space[0] # Box(-1.0, 1.0, (4,), np.float32)
-
-    #### Register the environment ######################################################################
-    register_env("this-flock-aviary-v0", lambda _: FlockAviary(num_drones=ARGS.num_drones))
+    action_space = temp_env.action_space[0]
 
     #### Set up the trainer's config ###################################################################
     config = ppo.DEFAULT_CONFIG.copy() # For the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
     config = {
-        "env": "this-flock-aviary-v0",
+        "env": temp_env_name,
+        "num_workers": 0, #0+ARGS.workers,
+        "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")), # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0
         "batch_mode": "complete_episodes",
         "callbacks": FillInActions,
-        # "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")), # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0
-        "num_workers": 0,
-        "model": {
-           "custom_model": "cc_model",
-        },
         "framework": "torch",
+    }
+
+    #### Set up the model parameters of the trainer's config ###########################################
+    config["model"] = { 
+        "custom_model": "cc_model",
     }
     
     #### Set up the multiagent parameters of the trainer's config ######################################
@@ -83,23 +190,24 @@ if __name__ == "__main__":
 
     #### Restore agent #################################################################################
     agent = ppo.PPOTrainer(config=config)
-    agent.restore(ARGS.file)
+    with open(ARGS.exp+'/checkpoint.txt', 'r+') as f: checkpoint = f.read()
+    agent.restore(checkpoint)
 
     #### Extract and print policies ####################################################################
-    policy0 = agent.get_policy("pol0")
-    policy1 = agent.get_policy("pol1")
-    print(policy0.model.action_model)
-    print(policy0.model.value_model)
-    print(policy1.model.action_model)
-    print(policy1.model.value_model)
+    policy0 = agent.get_policy("pol0"); print(policy0.model.action_model); print(policy0.model.value_model)
+    policy1 = agent.get_policy("pol1"); print(policy1.model.action_model); print(policy1.model.value_model)
 
     #### Create test environment ########################################################################
-    env = FlockAviary(num_drones=ARGS.num_drones, gui=True, record=True, obstacles=True)
-    obs = env.reset()
-    action = {    i   : np.array([0,0,0,0]) for i in range(ARGS.num_drones) }
+    if ARGS.exp.split("-")[1]=='flock': test_env = FlockAviary(num_drones=NUM_DRONES, obs=OBS, act=ACT, gui=True, record=False)
+    else: print("[ERROR] not yet implemented"); exit()
+    logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS), num_drones=NUM_DRONES)
+    obs = test_env.reset()
+    if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]: action = {    i   : np.array([0]) for i in range(NUM_DRONES) }
+    elif ACT in [ActionType.RPM, ActionType.DYN]: action = {    i   : np.array([0,0,0,0]) for i in range(NUM_DRONES) }
+    elif ACT==ActionType.PID: ACTION_VEC_SIZE = action = {    i   : np.array([0,0,0]) for i in range(NUM_DRONES) }
+    else: print("[ERROR] unknown ActionType"); exit()
     start = time.time()
-    for i in range(10*env.SIM_FREQ):
-
+    for i in range(6*test_env.SIM_FREQ):
         #### Deploy the policies ###########################################################################
         # print("Debug Obs", obs)
         temp = {}
@@ -107,11 +215,14 @@ if __name__ == "__main__":
         temp[1] = policy1.compute_single_action(np.hstack([ obs[1], obs[0], action[0] ]))
         # print("Debug Act", temp)
         action = {0: temp[0][0], 1: temp[1][0]}
-        obs, reward, done, info = env.step(action)
-        env.render()
-        sync(i, start, env.TIMESTEP)
-        if done["__all__"]: obs = env.reset()
-    env.close()
+        obs, reward, done, info = test_env.step(action)
+        test_env.render()
+        if OBS==ObservationType.KIN: 
+            for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/test_env.SIM_FREQ, state= np.hstack([obs[j][0:3], np.zeros(4), obs[j][3:15],  np.resize(action[j], (4)) ]), control=np.zeros(12) )
+        sync(i, start, test_env.TIMESTEP)
+        if done["__all__"]: obs = test_env.reset()
+    test_env.close()
+    logger.plot()
 
     #### Shut down Ray #################################################################################
     ray.shutdown()

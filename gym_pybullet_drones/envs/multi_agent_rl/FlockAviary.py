@@ -107,7 +107,7 @@ class FlockAviary(BaseMultiagentAviary):
     #### - done (..)                        the done value(s) associated to the current obs/state ######
     ####################################################################################################
     def _computeDone(self, obs):
-        bool_val = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else false
+        bool_val = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else False
         done = {   i   : bool_val for i in range(self.NUM_DRONES)}
         done["__all__"] = True if True in done.values() else False
         return done

@@ -69,7 +69,7 @@ if __name__ == "__main__":
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
     #### Show, record a video of, and log the model's performance ######################################
-    test_env = gym.make(env_name, gui=True, record=True, aggregate_phy_steps=AGGR_PHY_STEPS, obs=OBS, act=ACT)
+    test_env = gym.make(env_name, gui=True, record=False, aggregate_phy_steps=AGGR_PHY_STEPS, obs=OBS, act=ACT)
     logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS), num_drones=1)
     obs = test_env.reset()
     start = time.time()
