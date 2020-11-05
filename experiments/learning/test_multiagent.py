@@ -79,11 +79,15 @@ if __name__ == "__main__":
     #### Register the environment ######################################################################
     temp_env_name = "this-aviary-v0"
     if ARGS.exp.split("-")[1]=='flock': register_env(temp_env_name, lambda _: FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT))
-    else: print("[ERROR] not yet implemented"); exit()
+    elif ARGS.exp.split("-")[1]=='leaderfollower': register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT))
+    elif ARGS.exp.split("-")[1]=='meetup': register_env(temp_env_name, lambda _: MeetupAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT))
+    else: print("[ERROR] environment not yet implemented"); exit()
 
     #### Unused env to extract correctly sized action and observation spaces ###########################
     if ARGS.exp.split("-")[1]=='flock': temp_env = FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
-    else: print("[ERROR] not yet implemented"); exit()
+    elif ARGS.exp.split("-")[1]=='leaderfollower': temp_env = LeaderFollowerAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
+    elif ARGS.exp.split("-")[1]=='meetup': temp_env = MeetupAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
+    else: print("[ERROR] environment not yet implemented"); exit()
     observer_space = Dict({
         "own_obs": temp_env.observation_space[0],
         "opponent_obs": temp_env.observation_space[0],
@@ -128,7 +132,9 @@ if __name__ == "__main__":
 
     #### Create test environment ########################################################################
     if ARGS.exp.split("-")[1]=='flock': test_env = FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT, gui=True, record=False)
-    else: print("[ERROR] not yet implemented"); exit()
+    elif ARGS.exp.split("-")[1]=='leaderfollower': test_env = LeaderFollowerAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT, gui=True, record=False)
+    elif ARGS.exp.split("-")[1]=='meetup': test_env = MeetupAviary(num_drones=NUM_DRONES, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT, gui=True, record=False)
+    else: print("[ERROR] environment not yet implemented"); exit()
     
     #### Show, record a video of, and log the model's performance ######################################
     obs = test_env.reset()

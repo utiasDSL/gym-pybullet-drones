@@ -86,11 +86,15 @@ if __name__ == "__main__":
     #### Register the environment ######################################################################
     temp_env_name = "this-aviary-v0"
     if ARGS.env=='flock': register_env(temp_env_name, lambda _: FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
-    else: print("[ERROR] not yet implemented"); exit()
+    elif ARGS.env=='leaderfollower': register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
+    elif ARGS.env=='meetup': register_env(temp_env_name, lambda _: MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
+    else: print("[ERROR] environment not yet implemented"); exit()
 
     #### Unused env to extract correctly sized action and observation spaces ###########################
     if ARGS.env=='flock': temp_env = FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
-    else: print("[ERROR] not yet implemented"); exit()
+    elif ARGS.env=='leaderfollower': temp_env = LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
+    elif ARGS.env=='meetup': temp_env = MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
+    else: print("[ERROR] environment not yet implemented"); exit()
     observer_space = Dict({
         "own_obs": temp_env.observation_space[0],
         "opponent_obs": temp_env.observation_space[0],
