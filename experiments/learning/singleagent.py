@@ -28,9 +28,7 @@ from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 
-####################
-AGGR_PHY_STEPS = 5
-####################
+import common_constants
 
 ####################
 EPISODE_REWARD_THRESHOLD = -0 # With all negative rewards
@@ -70,10 +68,10 @@ if __name__ == "__main__":
     # exit()
 
     env_name = ARGS.env+"-aviary-v0"
-    # train_env = gym.make(env_name, aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act) # single environment instead of a vectorized one    
-    if env_name=="takeoff-aviary-v0": train_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0) 
-    if env_name=="hover-aviary-v0": train_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
-    if env_name=="flythrugate-aviary-v0": train_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
+    # train_env = gym.make(env_name, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act) # single environment instead of a vectorized one    
+    if env_name=="takeoff-aviary-v0": train_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0) 
+    if env_name=="hover-aviary-v0": train_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
+    if env_name=="flythrugate-aviary-v0": train_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=ARGS.cpu, seed=0)
     print("[INFO] Action space:", train_env.action_space)
     print("[INFO] Observation space:", train_env.observation_space)
     # check_env(train_env, warn=True, skip_render_check=True)
@@ -90,11 +88,11 @@ if __name__ == "__main__":
     if ARGS.algo=='ddpg': model = DDPG(td3ddpgMlpPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1) if ARGS.obs==ObservationType.KIN else DDPG(td3ddpgCnnPolicy, train_env, policy_kwargs=offpolicy_kwargs, tensorboard_log=filename+'/tb/', verbose=1)
 
     #### Create eveluation environment #################################################################
-    if ARGS.obs==ObservationType.KIN: eval_env = gym.make(env_name, aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
+    if ARGS.obs==ObservationType.KIN: eval_env = gym.make(env_name, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
     elif ARGS.obs==ObservationType.RGB:
-        if env_name=="takeoff-aviary-v0": eval_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0) 
-        if env_name=="hover-aviary-v0": eval_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
-        if env_name=="flythrugate-aviary-v0": eval_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
+        if env_name=="takeoff-aviary-v0": eval_env = make_vec_env(TakeoffAviary, env_kwargs=dict(aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0) 
+        if env_name=="hover-aviary-v0": eval_env = make_vec_env(HoverAviary, env_kwargs=dict(aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
+        if env_name=="flythrugate-aviary-v0": eval_env = make_vec_env(FlyThruGateAviary, env_kwargs=dict(aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act), n_envs=1, seed=0)
         eval_env = VecTransposeImage(eval_env)
 
     #### Train the model ###############################################################################

@@ -53,8 +53,8 @@ class FlockAviary(BaseMultiagentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-
         return {   i   : 0 for i in range(self.NUM_DRONES) }
+        """
 
         # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
         # parse velocity and position
@@ -96,6 +96,8 @@ class FlockAviary(BaseMultiagentAviary):
                                      math.fabs(avg_flock_spacing[0] - FLOCK_SPACING_MAX))
         reward = ali[0] + avg_flock_linear_speed[0] - avg_flock_spac_rew - var_flock_spacing[0]
         return {   i   : reward for i in range(self.NUM_DRONES) }
+        
+        """
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################
