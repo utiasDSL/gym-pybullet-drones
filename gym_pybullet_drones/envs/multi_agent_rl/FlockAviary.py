@@ -56,6 +56,10 @@ class FlockAviary(BaseMultiagentAviary):
         #######
         # TBD #
         #######
+        rewards = {}
+            for i 
+
+        return rewards
         #if self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
 
             # state = self._getDroneStateVector(0)

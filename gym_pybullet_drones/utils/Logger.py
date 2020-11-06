@@ -46,7 +46,7 @@ class Logger(object):
     #### - state ((20,1) array)             drone's state ##############################################
     #### - control ((12,1) array)           drone's control target #####################################
     ####################################################################################################
-    def log(self, drone: int, timestamp, state, control):
+    def log(self, drone: int, timestamp, state, control=np.zeros(12)):
         if drone<0 or drone>=self.NUM_DRONES or timestamp<0 or len(state)!=20 or len(control)!=12: print("[ERROR] in Logger.log(), invalid data")
         current_counter = int(self.counters[drone])
         #### Add rows to the logging matrices every time a counter exceeds their shape #####################
