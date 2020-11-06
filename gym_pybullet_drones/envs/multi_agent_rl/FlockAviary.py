@@ -53,6 +53,16 @@ class FlockAviary(BaseMultiagentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
+        #######
+        # TBD #
+        #######
+        #if self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
+
+            # state = self._getDroneStateVector(0)
+            # return -1 * np.linalg.norm(np.array([0,0,1])-state[0:3])**2
+
+        #   return  {   i   : 0 for i in range(self.NUM_DRONES) }
+        # else:
         return {   i   : 0 for i in range(self.NUM_DRONES) }
         """
 

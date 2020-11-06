@@ -52,6 +52,9 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
         #######
         # TBD #
         #######
+        # state = self._getDroneStateVector(0)
+        # norm_ep_time = (self.step_counter/self.SIM_FREQ) / self.EPISODE_LEN_SEC
+        # return -10 * np.linalg.norm(np.array([0,-2*norm_ep_time,0.75])-state[0:3])**2
         return {   i   : 0 for i in range(self.NUM_DRONES) }
 
     ####################################################################################################
