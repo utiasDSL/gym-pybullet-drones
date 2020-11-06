@@ -21,7 +21,7 @@ if __name__ == "__main__":
     env = CtrlAviary(gui=True)
 
     #### Initialize the logger #########################################################################
-    logger = Logger(logging_freq_hz=int(env.SIM_FREQ/env.AGGR_PHY_STEPS))
+    logger = Logger(logging_freq_hz=env.SIM_FREQ)
 
     #### Initialize the controller #####################################################################
     ctrl = HW1Control(env)
@@ -39,8 +39,9 @@ if __name__ == "__main__":
                                         )
 
     #### Run the simulation ############################################################################
+    DURATION = 10
     START = time.time()
-    for i in range(0, int(10*env.SIM_FREQ), env.AGGR_PHY_STEPS):
+    for i in range(0, DURATION*env.SIM_FREQ):
 
         #### Step the simulation ###########################################################################
         obs, _, _, _ = env.step(action)
