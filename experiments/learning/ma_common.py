@@ -14,6 +14,7 @@ ACTION_VEC_SIZE = None
 
 ######################################################################################################################################################
 def read_file_inputs():
+    # This is a hack around a circular dependency and it should be removed
     OBS_FILE = os.path.dirname(os.path.abspath(__file__))+'/results/obs.txt'
     ACT_FILE = os.path.dirname(os.path.abspath(__file__))+'/results/act.txt'
     global OWN_OBS_VEC_SIZE, ACTION_VEC_SIZE

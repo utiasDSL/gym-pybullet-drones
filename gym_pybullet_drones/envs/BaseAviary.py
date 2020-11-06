@@ -253,7 +253,6 @@ class BaseAviary(gym.Env):
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES); self.USE_GUI_RPM=False; self.last_input_switch = 0
         self.last_action = -1*np.ones((self.NUM_DRONES,4))
         self.last_clipped_action = np.zeros((self.NUM_DRONES,4)); self.gui_input = np.zeros(4)
-        self.no_pybullet_dyn_accs = np.zeros((self.NUM_DRONES,3))
         #### Initialize the drones kinemaatic information ##################################################
         self.pos = np.zeros((self.NUM_DRONES,3)); self.quat = np.zeros((self.NUM_DRONES,4)); self.rpy = np.zeros((self.NUM_DRONES,3))
         self.vel = np.zeros((self.NUM_DRONES,3)); self.ang_v = np.zeros((self.NUM_DRONES,3))
@@ -445,9 +444,9 @@ class BaseAviary(gym.Env):
         torques = np.array([x_torque, y_torque, z_torque])
         torques = torques - np.cross(ang_v, np.dot(self.J, ang_v))
         ang_vel_deriv = np.dot(self.J_INV, torques)
-        self.no_pybullet_dyn_accs[nth_drone] = force_world_frame / self.M
+        no_pybullet_dyn_accs = force_world_frame / self.M
         #### Update state ##################################################################################
-        vel = vel + self.TIMESTEP * self.no_pybullet_dyn_accs[nth_drone]
+        vel = vel + self.TIMESTEP * no_pybullet_dyn_accs
         ang_v = ang_v + self.TIMESTEP * ang_vel_deriv
         pos = pos + self.TIMESTEP * vel
         rpy = rpy + self.TIMESTEP * ang_v
