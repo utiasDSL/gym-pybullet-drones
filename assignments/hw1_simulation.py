@@ -17,8 +17,9 @@ from hw1_control import HW1Control
 
 if __name__ == "__main__":
 
-    #### Create the environment with or without video capture part of each drone's state ###############
-    env = CtrlAviary(gui=True)
+    #### Create the environment ########################################################################
+    GUI = True # set to False to disable rendering
+    env = CtrlAviary(gui=GUI)  
 
     #### Initialize the logger #########################################################################
     logger = Logger(logging_freq_hz=env.SIM_FREQ)
@@ -46,7 +47,7 @@ if __name__ == "__main__":
         #### Step the simulation ###########################################################################
         obs, _, _, _ = env.step(action)
 
-        #### Compute control at the desired frequency @@@@@#################################################
+        #### Compute control ###############################################################################
         state = obs["0"]["state"]
         action["0"] = ctrl.computeControl(current_position=state[0:3], 
                                             current_quaternion=state[3:7], 
@@ -63,13 +64,10 @@ if __name__ == "__main__":
         if i%env.SIM_FREQ==0: env.render()
 
         #### Sync the simulation ###########################################################################
-        sync(i, START, env.TIMESTEP)
+        if GUI: sync(i, START, env.TIMESTEP) 
 
     #### Close the environment #########################################################################
     env.close()
-
-    #### Save the simulation results ###################################################################
-    logger.save()
 
     #### Plot the simulation results ###################################################################
     logger.plot()
