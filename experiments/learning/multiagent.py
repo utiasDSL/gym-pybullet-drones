@@ -38,8 +38,79 @@ from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import Actio
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import *
 
-import common_constants
-from ma_common import CustomTorchCentralizedCriticModel, FillInActions, central_critic_observer
+import shared_constants
+
+OWN_OBS_VEC_SIZE = None
+ACTION_VEC_SIZE = None
+
+######################################################################################################################################################
+class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
+    """Multi-agent model that implements a centralized value function.
+
+    It assumes the observation is a dict with 'own_obs' and 'opponent_obs', the
+    former of which can be used for computing actions (i.e., decentralized
+    execution), and the latter for optimization (i.e., centralized learning).
+
+    This model has two parts:
+    - An action model that looks at just 'own_obs' to compute actions
+    - A value model that also looks at the 'opponent_obs' / 'opponent_action'
+      to compute the value (it does this by using the 'obs_flat' tensor).
+    """
+
+    def __init__(self, obs_space, action_space, num_outputs, model_config, name):
+        TorchModelV2.__init__(self, obs_space, action_space, num_outputs, model_config, name)
+        nn.Module.__init__(self)
+        self.action_model = FullyConnectedNetwork(
+            Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
+            action_space,
+            num_outputs,
+            model_config,
+            name + "_action"
+            )
+        self.value_model = FullyConnectedNetwork(
+            obs_space, 
+            action_space,
+            1, 
+            model_config, 
+            name + "_vf"
+            )
+        self._model_in = None
+
+    def forward(self, input_dict, state, seq_lens):
+        self._model_in = [input_dict["obs_flat"], state, seq_lens]
+        return self.action_model({ "obs": input_dict["obs"]["own_obs"] }, state, seq_lens)
+
+    def value_function(self):
+        value_out, _ = self.value_model({ "obs": self._model_in[0] }, self._model_in[1], self._model_in[2])
+        return torch.reshape(value_out, [-1])
+
+######################################################################################################################################################
+class FillInActions(DefaultCallbacks):
+    def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
+        to_update = postprocessed_batch[SampleBatch.CUR_OBS]
+        other_id = 1 if agent_id == 0 else 0
+        action_encoder = ModelCatalog.get_preprocessor_for_space( 
+                                                        Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                        )
+        _, opponent_batch = original_batches[other_id]
+        opponent_actions = np.array([ action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS] ])
+        to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
+
+######################################################################################################################################################
+def central_critic_observer(agent_obs, **kw):
+    new_obs = {
+        0: {
+            "own_obs": agent_obs[0],
+            "opponent_obs": agent_obs[1],
+            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+        },
+        1: {
+            "own_obs": agent_obs[1],
+            "opponent_obs": agent_obs[0],
+            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+        },
+    }
+    return new_obs
 
 ######################################################################################################################################################
 if __name__ == "__main__":
@@ -63,15 +134,13 @@ if __name__ == "__main__":
     with open(filename+'/git_commit.txt', 'w+') as f: f.write(str(git_commit))
 
     #### Constants, and errors #########################################################################
-    if ARGS.obs==ObservationType.KIN:  o = 12
+    if ARGS.obs==ObservationType.KIN:  OWN_OBS_VEC_SIZE = 12
     elif ARGS.obs==ObservationType.RGB: print("[ERROR] ObservationType.RGB for multi-agent systems not yet implemented"); exit()
     else: print("[ERROR] unknown ObservationType"); exit()
-    if ARGS.act in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]: a = 1
-    elif ARGS.act in [ActionType.RPM, ActionType.DYN]: a = 4
-    elif ARGS.act==ActionType.PID: a = 3
+    if ARGS.act in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]: ACTION_VEC_SIZE = 1
+    elif ARGS.act in [ActionType.RPM, ActionType.DYN]: ACTION_VEC_SIZE = 4
+    elif ARGS.act==ActionType.PID: ACTION_VEC_SIZE = 3
     else: print("[ERROR] unknown ActionType"); exit()
-    with open( os.path.dirname(os.path.abspath(__file__))+'/results/obs.txt', 'w+') as f: f.write(str(o))
-    with open( os.path.dirname(os.path.abspath(__file__))+'/results/act.txt', 'w+') as f: f.write(str(a))
 
     #### Uncomment to debug slurm scripts ##############################################################
     # exit()
@@ -85,15 +154,15 @@ if __name__ == "__main__":
 
     #### Register the environment ######################################################################
     temp_env_name = "this-aviary-v0"
-    if ARGS.env=='flock': register_env(temp_env_name, lambda _: FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
-    elif ARGS.env=='leaderfollower': register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
-    elif ARGS.env=='meetup': register_env(temp_env_name, lambda _: MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
+    if ARGS.env=='flock': register_env(temp_env_name, lambda _: FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
+    elif ARGS.env=='leaderfollower': register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
+    elif ARGS.env=='meetup': register_env(temp_env_name, lambda _: MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
     else: print("[ERROR] environment not yet implemented"); exit()
 
     #### Unused env to extract correctly sized action and observation spaces ###########################
-    if ARGS.env=='flock': temp_env = FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
-    elif ARGS.env=='leaderfollower': temp_env = LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
-    elif ARGS.env=='meetup': temp_env = MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
+    if ARGS.env=='flock': temp_env = FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
+    elif ARGS.env=='leaderfollower': temp_env = LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
+    elif ARGS.env=='meetup': temp_env = MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
     else: print("[ERROR] environment not yet implemented"); exit()
     observer_space = Dict({
         "own_obs": temp_env.observation_space[0],

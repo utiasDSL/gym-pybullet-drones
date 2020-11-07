@@ -27,7 +27,7 @@ from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 
-import common_constants
+import shared_constants
 
 if __name__ == "__main__":
 
@@ -62,7 +62,7 @@ if __name__ == "__main__":
     elif ARGS.exp.split("-")[4]=='one_d_pid': ACT = ActionType.ONE_D_PID
 
     #### Evaluate the model ############################################################################
-    eval_env = gym.make(env_name, aggregate_phy_steps=common_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
+    eval_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
     mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10)
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
