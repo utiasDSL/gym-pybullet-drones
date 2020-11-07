@@ -129,7 +129,7 @@ class BaseSingleAgentAviary(BaseAviary):
             state = self._getDroneStateVector(0)
             rpm, _, _ = self.ctrl.computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                 cur_pos=state[0:3], cur_quat=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16],
-                                                target_pos=state[0:3]+1*np.array([0,0,action[0]]) )
+                                                target_pos=state[0:3]+0.1*np.array([0,0,action[0]]) )
             return rpm
         else: print("[ERROR] in BaseSingleAgentAviary._preprocessAction()")
 

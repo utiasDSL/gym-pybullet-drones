@@ -18,9 +18,7 @@ class HW1Control():
     """Control class for assignment 1.
     """
 
-    def __init__(self,
-                 env: BaseAviary
-                 ):
+    def __init__(self, env: BaseAviary):
         """ Initialization of class HW1Control.
 
         Args:
@@ -39,12 +37,18 @@ class HW1Control():
         #### HOMEWORK CODE (START) #################################
         ############################################################
         ############################################################
-        self.p_coeff_position = np.array([1, 1, 1])
-        self.i_coeff_position = np.array([1, 1, 1])
-        self.d_coeff_position = np.array([1, 1, 1])
-        self.p_coeff_attitude = np.array([1, 1, 1])
-        self.i_coeff_attitude = np.array([1, 1, 1])
-        self.d_coeff_attitude = np.array([1, 1, 1])
+        self.p_coeff_position = None
+        """proportional coefficient(s) for position control."""
+        self.i_coeff_position = None
+        """integral coefficient(s) for position control."""
+        self.d_coeff_position = None
+        """derivative coefficient(s) for position control."""
+        self.p_coeff_attitude = None
+        """proportional coefficient(s) for attitude control."""
+        self.i_coeff_attitude = None
+        """integral coefficient(s) for attitude control."""
+        self.d_coeff_attitude = None
+        """derivative coefficient(s) for attitude control."""
         ############################################################
         ############################################################
         #### HOMEWORK CODE (END) ###################################

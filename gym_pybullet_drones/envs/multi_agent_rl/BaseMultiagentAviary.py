@@ -117,7 +117,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                 state = self._getDroneStateVector(int(k))
                 rpm, _, _ = self.ctrl.computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                     cur_pos=state[0:3], cur_quat=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16],
-                                                    target_pos=state[0:3]+1*np.array([0,0,v[0]]) )
+                                                    target_pos=state[0:3]+0.1*np.array([0,0,v[0]]) )
                 rpm[int(k),:] = rpm
             else: print("[ERROR] in BaseMultiagentAviary._preprocessAction()"); exit()
         return rpm
