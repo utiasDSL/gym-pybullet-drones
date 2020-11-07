@@ -49,13 +49,12 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        #######
-        # TBD #
-        #######
-        # state = self._getDroneStateVector(0)
-        # norm_ep_time = (self.step_counter/self.SIM_FREQ) / self.EPISODE_LEN_SEC
-        # return -10 * np.linalg.norm(np.array([0,-2*norm_ep_time,0.75])-state[0:3])**2
-        return {   i   : 0 for i in range(self.NUM_DRONES) }
+        rewards = {}
+        states = np.array([self._getDroneStateVector(0) for i in range(self.NUM_DRONES)])
+        rewards[0] = -1 * np.linalg.norm(np.array([1,1,1])-states[0,0:3])**2
+        for i in range(1,self.NUM_DRONES):
+            rewards[i] = -1 * np.linalg.norm(states[i-1,0:3]-states[i,0:3])**2
+        return rewards
 
     ####################################################################################################
     #### Compute the current done value(s) #############################################################

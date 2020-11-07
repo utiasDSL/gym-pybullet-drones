@@ -53,23 +53,13 @@ class FlockAviary(BaseMultiagentAviary):
     #### - reward (..)                      the reward(s) associated to the current obs/state ##########
     ####################################################################################################
     def _computeReward(self, obs):
-        #######
-        # TBD #
-        #######
-        # rewards = {}
-        #     for i 
-
-        # return rewards
-        #if self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
-
-            # state = self._getDroneStateVector(0)
-            # return -1 * np.linalg.norm(np.array([0,0,1])-state[0:3])**2
-
-        #   return  {   i   : 0 for i in range(self.NUM_DRONES) }
-        # else:
-        return {   i   : 0 for i in range(self.NUM_DRONES) }
+        rewards = {}
+        states = np.array([self._getDroneStateVector(0) for i in range(self.NUM_DRONES)])
+        rewards[0] = -1 * np.linalg.norm(np.array([0,0,1])-states[0,0:3])**2
+        for i in range(1,self.NUM_DRONES):
+            rewards[i] = -1 * np.linalg.norm(states[i-1,2]-states[i,2])**2
+        return rewards
         """
-
         # obs here is dictionary of the form {"i":{"state": Box(20,), "neighbors": MultiBinary(NUM_DRONES)}}
         # parse velocity and position
         vel = np.zeros((1, self.NUM_DRONES, 3)); pos = np.zeros((1, self.NUM_DRONES, 3))
