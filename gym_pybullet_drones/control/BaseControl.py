@@ -19,10 +19,17 @@ class BaseControl(object):
     #### Arguments #####################################################################################
     #### - env (BaseAviary)                 simulation environment #####################################
     ####################################################################################################
-    def __init__(self, env: BaseAviary):
+    def __init__(self,
+                 env: BaseAviary
+                 ):
         #### Set general use constants #####################################################################
-        self.DRONE_MODEL = env.DRONE_MODEL; self.GRAVITY = env.GRAVITY; self.KF = env.KF; self.KM = env.KM
-        self.MAX_THRUST = env.MAX_THRUST; self.MAX_XY_TORQUE = env.MAX_XY_TORQUE; self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
+        self.DRONE_MODEL = env.DRONE_MODEL
+        self.GRAVITY = env.GRAVITY
+        self.KF = env.KF
+        self.KM = env.KM
+        self.MAX_THRUST = env.MAX_THRUST
+        self.MAX_XY_TORQUE = env.MAX_XY_TORQUE
+        self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
         self.reset()
 
     ####################################################################################################
@@ -47,10 +54,23 @@ class BaseControl(object):
     #### - pos_e ((3,1) array)              current XYZ position error #################################
     #### - yaw_e (float)                    current yaw error ##########################################
     ####################################################################################################
-    def computeControlFromState(self, control_timestep, state, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
+    def computeControlFromState(self,
+                                control_timestep,
+                                state,
+                                target_pos,
+                                target_rpy=np.zeros(3),
+                                target_vel=np.zeros(3),
+                                target_ang_vel=np.zeros(3)
+                                ):
         return self.computeControl(control_timestep=control_timestep,
-                                    cur_pos=state[0:3], cur_quat=state[3:7], cur_vel=state[10:13], cur_ang_vel=state[13:16],
-                                    target_pos=target_pos, target_vel=target_vel, target_ang_vel=target_ang_vel)
+                                   cur_pos=state[0:3],
+                                   cur_quat=state[3:7],
+                                   cur_vel=state[10:13],
+                                   cur_ang_vel=state[13:16],
+                                   target_pos=target_pos,
+                                   target_vel=target_vel,
+                                   target_ang_vel=target_ang_vel
+                                   )
 
     ####################################################################################################
     #### Compute the control action for a single drone, to be implemented in a child class #############
@@ -66,7 +86,15 @@ class BaseControl(object):
     #### - target_vel ((3,1) array)         desired velocity ###########################################
     #### - target_ang_vel ((3,1) array)     desired angular velocity ###################################
     ####################################################################################################
-    def computeControl(self, control_timestep, cur_pos, cur_quat, cur_vel, cur_ang_vel,
-                        target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_ang_vel=np.zeros(3)):
+    def computeControl(self,
+                       control_timestep,
+                       cur_pos,
+                       cur_quat,
+                       cur_vel,
+                       cur_ang_vel,
+                       target_pos,
+                       target_rpy=np.zeros(3),
+                       target_vel=np.zeros(3),
+                       target_ang_vel=np.zeros(3)
+                       ):
         raise NotImplementedError
-
