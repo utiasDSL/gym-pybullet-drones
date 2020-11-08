@@ -43,7 +43,7 @@ import shared_constants
 OWN_OBS_VEC_SIZE = None
 ACTION_VEC_SIZE = None
 
-######################################################################################################################################################
+############################################################
 class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
     """Multi-agent model that implements a centralized value function.
 
@@ -61,42 +61,42 @@ class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
         TorchModelV2.__init__(self, obs_space, action_space, num_outputs, model_config, name)
         nn.Module.__init__(self)
         self.action_model = FullyConnectedNetwork(
-            Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
-            action_space,
-            num_outputs,
-            model_config,
-            name + "_action"
-            )
+                                                  Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
+                                                  action_space,
+                                                  num_outputs,
+                                                  model_config,
+                                                  name + "_action"
+                                                  )
         self.value_model = FullyConnectedNetwork(
-            obs_space, 
-            action_space,
-            1, 
-            model_config, 
-            name + "_vf"
-            )
+                                                 obs_space, 
+                                                 action_space,
+                                                 1, 
+                                                 model_config, 
+                                                 name + "_vf"
+                                                 )
         self._model_in = None
 
     def forward(self, input_dict, state, seq_lens):
         self._model_in = [input_dict["obs_flat"], state, seq_lens]
-        return self.action_model({ "obs": input_dict["obs"]["own_obs"] }, state, seq_lens)
+        return self.action_model({"obs": input_dict["obs"]["own_obs"]}, state, seq_lens)
 
     def value_function(self):
-        value_out, _ = self.value_model({ "obs": self._model_in[0] }, self._model_in[1], self._model_in[2])
+        value_out, _ = self.value_model({"obs": self._model_in[0]}, self._model_in[1], self._model_in[2])
         return torch.reshape(value_out, [-1])
 
-######################################################################################################################################################
+############################################################
 class FillInActions(DefaultCallbacks):
     def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space( 
-                                                        Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
-                                                        )
+                                                                 Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 )
         _, opponent_batch = original_batches[other_id]
-        opponent_actions = np.array([ action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS] ])
+        opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]])
         to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
 
-######################################################################################################################################################
+############################################################
 def central_critic_observer(agent_obs, **kw):
     new_obs = {
         0: {
@@ -112,58 +112,107 @@ def central_critic_observer(agent_obs, **kw):
     }
     return new_obs
 
-######################################################################################################################################################
+############################################################
 if __name__ == "__main__":
 
-    #### Define and parse (optional) arguments for the script ##########################################
+    #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    parser.add_argument('--num_drones', default=2,            type=int,                                                                 help='Number of drones (default: 2)', metavar='')
-    parser.add_argument('--env',        default='flock',      type=str,             choices=['leaderfollower', 'flock', 'meetup'],      help='Help (default: ..)', metavar='')
-    parser.add_argument('--obs',        default='kin',        type=ObservationType,                                                     help='Help (default: ..)', metavar='')
-    parser.add_argument('--act',        default='one_d_rpm',  type=ActionType,                                                          help='Help (default: ..)', metavar='')
-    parser.add_argument('--algo',       default='cc',         type=str,             choices=['cc'],                                     help='Help (default: ..)', metavar='')
-    parser.add_argument('--workers',    default=0,            type=int,                                                                 help='Help (default: ..)', metavar='')        
+    parser.add_argument('--num_drones',  default=2,            type=int,                                                                 help='Number of drones (default: 2)', metavar='')
+    parser.add_argument('--env',         default='flock',      type=str,             choices=['leaderfollower', 'flock', 'meetup'],      help='Help (default: ..)', metavar='')
+    parser.add_argument('--obs',         default='kin',        type=ObservationType,                                                     help='Help (default: ..)', metavar='')
+    parser.add_argument('--act',         default='one_d_rpm',  type=ActionType,                                                          help='Help (default: ..)', metavar='')
+    parser.add_argument('--algo',        default='cc',         type=str,             choices=['cc'],                                     help='Help (default: ..)', metavar='')
+    parser.add_argument('--workers',     default=0,            type=int,                                                                 help='Help (default: ..)', metavar='')        
     ARGS = parser.parse_args()
 
-    #### Save directory ################################################################################
+    #### Save directory ########################################
     filename = os.path.dirname(os.path.abspath(__file__))+'/results/save-'+ARGS.env+'-'+str(ARGS.num_drones)+'-'+ARGS.algo+'-'+ARGS.obs.value+'-'+ARGS.act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
-    if not os.path.exists(filename): os.makedirs(filename+'/')
+    if not os.path.exists(filename):
+        os.makedirs(filename+'/')
 
-    #### Print out current git commit hash #############################################################
-    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip(); print(git_commit)
-    with open(filename+'/git_commit.txt', 'w+') as f: f.write(str(git_commit))
+    #### Print out current git commit hash #####################
+    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
+    with open(filename+'/git_commit.txt', 'w+') as f:
+        f.write(str(git_commit))
 
-    #### Constants, and errors #########################################################################
-    if ARGS.obs==ObservationType.KIN:  OWN_OBS_VEC_SIZE = 12
-    elif ARGS.obs==ObservationType.RGB: print("[ERROR] ObservationType.RGB for multi-agent systems not yet implemented"); exit()
-    else: print("[ERROR] unknown ObservationType"); exit()
-    if ARGS.act in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]: ACTION_VEC_SIZE = 1
-    elif ARGS.act in [ActionType.RPM, ActionType.DYN]: ACTION_VEC_SIZE = 4
-    elif ARGS.act==ActionType.PID: ACTION_VEC_SIZE = 3
-    else: print("[ERROR] unknown ActionType"); exit()
+    #### Constants, and errors #################################
+    if ARGS.obs==ObservationType.KIN:
+        OWN_OBS_VEC_SIZE = 12
+    elif ARGS.obs==ObservationType.RGB:
+        print("[ERROR] ObservationType.RGB for multi-agent systems not yet implemented")
+        exit()
+    else:
+        print("[ERROR] unknown ObservationType")
+        exit()
+    if ARGS.act in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
+        ACTION_VEC_SIZE = 1
+    elif ARGS.act in [ActionType.RPM, ActionType.DYN]:
+        ACTION_VEC_SIZE = 4
+    elif ARGS.act == ActionType.PID:
+        ACTION_VEC_SIZE = 3
+    else:
+        print("[ERROR] unknown ActionType")
+        exit()
 
-    #### Uncomment to debug slurm scripts ##############################################################
+    #### Uncomment to debug slurm scripts ######################
     # exit()
 
-    #### Initialize Ray Tune ###########################################################################
+    #### Initialize Ray Tune ###################################
     ray.shutdown()
     ray.init(ignore_reinit_error=True)
 
-    #### Register the custom centralized critic model ##################################################
+    #### Register the custom centralized critic model ##########
     ModelCatalog.register_custom_model("cc_model", CustomTorchCentralizedCriticModel)
 
-    #### Register the environment ######################################################################
+    #### Register the environment ##############################
     temp_env_name = "this-aviary-v0"
-    if ARGS.env=='flock': register_env(temp_env_name, lambda _: FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
-    elif ARGS.env=='leaderfollower': register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
-    elif ARGS.env=='meetup': register_env(temp_env_name, lambda _: MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act))
-    else: print("[ERROR] environment not yet implemented"); exit()
+    if ARGS.env == 'flock':
+        register_env(temp_env_name, lambda _: FlockAviary(num_drones=ARGS.num_drones,
+                                                          aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                                          obs=ARGS.obs,
+                                                          act=ARGS.act
+                                                          )
+                     )
+    elif ARGS.env == 'leaderfollower':
+        register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=ARGS.num_drones,
+                                                                   aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                                                   obs=ARGS.obs,
+                                                                   act=ARGS.act
+                                                                   )
+                     )
+    elif ARGS.env == 'meetup':
+        register_env(temp_env_name, lambda _: MeetupAviary(num_drones=ARGS.num_drones,
+                                                           aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                                           obs=ARGS.obs,
+                                                           act=ARGS.act
+                                                           )
+                     )
+    else:
+        print("[ERROR] environment not yet implemented")
+        exit()
 
-    #### Unused env to extract correctly sized action and observation spaces ###########################
-    if ARGS.env=='flock': temp_env = FlockAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
-    elif ARGS.env=='leaderfollower': temp_env = LeaderFollowerAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
-    elif ARGS.env=='meetup': temp_env = MeetupAviary(num_drones=ARGS.num_drones, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
-    else: print("[ERROR] environment not yet implemented"); exit()
+    #### Unused env to extract the act and obs spaces ##########
+    if ARGS.env == 'flock':
+        temp_env = FlockAviary(num_drones=ARGS.num_drones,
+                               aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                               obs=ARGS.obs,
+                               act=ARGS.act
+                               )
+    elif ARGS.env == 'leaderfollower':
+        temp_env = LeaderFollowerAviary(num_drones=ARGS.num_drones,
+                                        aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                        obs=ARGS.obs,
+                                        act=ARGS.act
+                                        )
+    elif ARGS.env == 'meetup':
+        temp_env = MeetupAviary(num_drones=ARGS.num_drones,
+                                aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                obs=ARGS.obs,
+                                act=ARGS.act
+                                )
+    else:
+        print("[ERROR] environment not yet implemented")
+        exit()
     observer_space = Dict({
         "own_obs": temp_env.observation_space[0],
         "opponent_obs": temp_env.observation_space[0],
@@ -171,23 +220,23 @@ if __name__ == "__main__":
     })
     action_space = temp_env.action_space[0]
 
-    #### Set up the trainer's config ###################################################################
+    #### Set up the trainer's config ###########################
     config = ppo.DEFAULT_CONFIG.copy() # For the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
     config = {
         "env": temp_env_name,
-        "num_workers": 0+ARGS.workers,
+        "num_workers": 0 + ARGS.workers,
         "num_gpus": int(os.environ.get("RLLIB_NUM_GPUS", "0")), # Use GPUs iff `RLLIB_NUM_GPUS` env var set to > 0
         "batch_mode": "complete_episodes",
         "callbacks": FillInActions,
         "framework": "torch",
     }
 
-    #### Set up the model parameters of the trainer's config ###########################################
+    #### Set up the model parameters of the trainer's config ###
     config["model"] = { 
         "custom_model": "cc_model",
     }
     
-    #### Set up the multiagent parameters of the trainer's config ######################################
+    #### Set up the multiagent params of the trainer's config ##
     config["multiagent"] = { 
         "policies": {
             "pol0": (None, observer_space, action_space, {"agent_id": 0,}),
@@ -197,14 +246,14 @@ if __name__ == "__main__":
         "observation_fn": central_critic_observer, # See rllib/evaluation/observation_function.py for more info
     }
 
-    #### Ray Tune stopping conditions ##################################################################
+    #### Ray Tune stopping conditions ##########################
     stop = {
         "timesteps_total": 100, # 8000,
         # "episode_reward_mean": 0,
         # "training_iteration": 0,
     }
 
-    #### Train #########################################################################################
+    #### Train #################################################
     results = tune.run(
         "PPO",
         stop=stop,
@@ -215,15 +264,14 @@ if __name__ == "__main__":
     )
     # check_learning_achieved(results, 1.0)
 
-    #### Save agent #################################################################################
-    checkpoints = results.get_trial_checkpoints_paths(trial=results.get_best_trial('episode_reward_mean',mode='max'), metric='episode_reward_mean')
-    with open(filename+'/checkpoint.txt', 'w+') as f: f.write(checkpoints[0][0])
+    #### Save agent ############################################
+    checkpoints = results.get_trial_checkpoints_paths(trial=results.get_best_trial('episode_reward_mean',
+                                                                                   mode='max'
+                                                                                   ),
+                                                      metric='episode_reward_mean'
+                                                      )
+    with open(filename+'/checkpoint.txt', 'w+') as f:
+        f.write(checkpoints[0][0])
 
-    #### Shut down Ray #################################################################################
+    #### Shut down Ray #########################################
     ray.shutdown()
-
-
-
-
-
-

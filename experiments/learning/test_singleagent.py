@@ -34,54 +34,85 @@ if __name__ == "__main__":
     # Use as $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
     # Use $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
-    #### Define and parse (optional) arguments for the script ##########################################
+    #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
     parser.add_argument('--exp',                           type=str,            help='Help (default: ..)', metavar='')
     ARGS = parser.parse_args()
 
-    #### Load the model from file ######################################################################
+    #### Load the model from file ##############################
     algo = ARGS.exp.split("-")[2]
 
-    if os.path.isfile(ARGS.exp+'/success_model.zip'): path = ARGS.exp+'/success_model.zip'
-    elif os.path.isfile(ARGS.exp+'/best_model.zip'): path = ARGS.exp+'/best_model.zip'
-    else: print("[ERROR]: no model under the specified path", ARGS.exp)
-    if algo=='a2c': model = A2C.load(path)
-    if algo=='ppo': model = PPO.load(path)
-    if algo=='sac': model = SAC.load(path)
-    if algo=='td3': model = TD3.load(path)
-    if algo=='ddpg': model = DDPG.load(path)
+    if os.path.isfile(ARGS.exp+'/success_model.zip'):
+        path = ARGS.exp+'/success_model.zip'
+    elif os.path.isfile(ARGS.exp+'/best_model.zip'):
+        path = ARGS.exp+'/best_model.zip'
+    else:
+        print("[ERROR]: no model under the specified path", ARGS.exp)
+    if algo == 'a2c':
+        model = A2C.load(path)
+    if algo == 'ppo':
+        model = PPO.load(path)
+    if algo == 'sac':
+        model = SAC.load(path)
+    if algo == 'td3':
+        model = TD3.load(path)
+    if algo == 'ddpg':
+        model = DDPG.load(path)
 
-    #### Parameters to recreate the environment ########################################################
+    #### Parameters to recreate the environment ################
     env_name = ARGS.exp.split("-")[1]+"-aviary-v0"
-    OBS = ObservationType.KIN if ARGS.exp.split("-")[3]=='kin' else ObservationType.RGB
-    if ARGS.exp.split("-")[4]=='rpm': ACT = ActionType.RPM
-    elif ARGS.exp.split("-")[4]=='dyn': ACT = ActionType.DYN
-    elif ARGS.exp.split("-")[4]=='pid': ACT = ActionType.PID
-    elif ARGS.exp.split("-")[4]=='one_d_rpm': ACT = ActionType.ONE_D_RPM
-    elif ARGS.exp.split("-")[4]=='one_d_dyn': ACT = ActionType.ONE_D_DYN
-    elif ARGS.exp.split("-")[4]=='one_d_pid': ACT = ActionType.ONE_D_PID
+    OBS = ObservationType.KIN if ARGS.exp.split("-")[3] == 'kin' else ObservationType.RGB
+    if ARGS.exp.split("-")[4] == 'rpm':
+        ACT = ActionType.RPM
+    elif ARGS.exp.split("-")[4] == 'dyn':
+        ACT = ActionType.DYN
+    elif ARGS.exp.split("-")[4] == 'pid':
+        ACT = ActionType.PID
+    elif ARGS.exp.split("-")[4] == 'one_d_rpm':
+        ACT = ActionType.ONE_D_RPM
+    elif ARGS.exp.split("-")[4] == 'one_d_dyn':
+        ACT = ActionType.ONE_D_DYN
+    elif ARGS.exp.split("-")[4] == 'one_d_pid':
+        ACT = ActionType.ONE_D_PID
 
-    #### Evaluate the model ############################################################################
-    eval_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
-    mean_reward, std_reward = evaluate_policy(model, eval_env, n_eval_episodes=10)
+    #### Evaluate the model ####################################
+    eval_env = gym.make(env_name,
+                        aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                        obs=OBS,
+                        act=ACT
+                        )
+    mean_reward, std_reward = evaluate_policy(model,
+                                              eval_env,
+                                              n_eval_episodes=10
+                                              )
     print("\n\n\nMean reward ", mean_reward, " +- ", std_reward, "\n\n")
 
-    #### Show, record a video of, and log the model's performance ######################################
-    test_env = gym.make(env_name, gui=True, record=False, aggregate_phy_steps=AGGR_PHY_STEPS, obs=OBS, act=ACT)
-    logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS), num_drones=1)
+    #### Show, record a video, and log the model's performance #
+    test_env = gym.make(env_name,
+                        gui=True,
+                        record=False,
+                        aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                        obs=OBS,
+                        act=ACT
+                        )
+    logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS),
+                    num_drones=1
+                    )
     obs = test_env.reset()
     start = time.time()
     for i in range(6*int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS)): # Up to 6''
-        action, _states = model.predict(obs, deterministic=True) # OPTIONAL 'deterministic=False'
+        action, _states = model.predict(obs,
+                                        deterministic=True # OPTIONAL 'deterministic=False'
+                                        )
         obs, reward, done, info = test_env.step(action)
         test_env.render()
-        if OBS==ObservationType.KIN: logger.log(drone=0, timestamp=i/test_env.SIM_FREQ, state= np.hstack([obs[0:3], np.zeros(4), obs[3:15],  np.resize(action, (4)) ]), control=np.zeros(12) )
+        if OBS==ObservationType.KIN:
+            logger.log(drone=0,
+                       timestamp=i/test_env.SIM_FREQ,
+                       state= np.hstack([obs[0:3], np.zeros(4), obs[3:15],  np.resize(action, (4))]),
+                       control=np.zeros(12)
+                       )
         sync(np.floor(i*test_env.AGGR_PHY_STEPS), start, test_env.TIMESTEP)
         # if done: obs = test_env.reset() # OPTIONAL EPISODE HALT
     test_env.close()
     logger.plot()
-    
-
-
-
-

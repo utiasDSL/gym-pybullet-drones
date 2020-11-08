@@ -40,7 +40,7 @@ import shared_constants
 OWN_OBS_VEC_SIZE = None
 ACTION_VEC_SIZE = None
 
-######################################################################################################################################################
+############################################################
 class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
     """Multi-agent model that implements a centralized value function.
 
@@ -58,42 +58,42 @@ class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
         TorchModelV2.__init__(self, obs_space, action_space, num_outputs, model_config, name)
         nn.Module.__init__(self)
         self.action_model = FullyConnectedNetwork(
-            Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
-            action_space,
-            num_outputs,
-            model_config,
-            name + "_action"
-            )
+                                                  Box(low=-1, high=1, shape=(OWN_OBS_VEC_SIZE, )), 
+                                                  action_space,
+                                                  num_outputs,
+                                                  model_config,
+                                                  name + "_action"
+                                                  )
         self.value_model = FullyConnectedNetwork(
-            obs_space, 
-            action_space,
-            1, 
-            model_config, 
-            name + "_vf"
-            )
+                                                 obs_space, 
+                                                 action_space,
+                                                 1, 
+                                                 model_config, 
+                                                 name + "_vf"
+                                                 )
         self._model_in = None
 
     def forward(self, input_dict, state, seq_lens):
         self._model_in = [input_dict["obs_flat"], state, seq_lens]
-        return self.action_model({ "obs": input_dict["obs"]["own_obs"] }, state, seq_lens)
+        return self.action_model({"obs": input_dict["obs"]["own_obs"]}, state, seq_lens)
 
     def value_function(self):
-        value_out, _ = self.value_model({ "obs": self._model_in[0] }, self._model_in[1], self._model_in[2])
+        value_out, _ = self.value_model({"obs": self._model_in[0]}, self._model_in[1], self._model_in[2])
         return torch.reshape(value_out, [-1])
 
-######################################################################################################################################################
+############################################################
 class FillInActions(DefaultCallbacks):
     def on_postprocess_trajectory(self, worker, episode, agent_id, policy_id, policies, postprocessed_batch, original_batches, **kwargs):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space( 
-                                                        Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
-                                                        )
+                                                                 Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 )
         _, opponent_batch = original_batches[other_id]
-        opponent_actions = np.array([ action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS] ])
+        opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]])
         to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
 
-######################################################################################################################################################
+############################################################
 def central_critic_observer(agent_obs, **kw):
     new_obs = {
         0: {
@@ -109,54 +109,107 @@ def central_critic_observer(agent_obs, **kw):
     }
     return new_obs
 
-######################################################################################################################################################
+############################################################
 if __name__ == "__main__":
 
      # Use as $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
 
-    #### Define and parse (optional) arguments for the script ##########################################
+    #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    parser.add_argument('--exp',                            type=str,       help='Help (default: ..)', metavar='')
+    parser.add_argument('--exp',    type=str,       help='Help (default: ..)', metavar='')
     ARGS = parser.parse_args()
 
-    #### Parameters to recreate the environment ########################################################
+    #### Parameters to recreate the environment ################
     NUM_DRONES = int(ARGS.exp.split("-")[2])
-    OBS = ObservationType.KIN if ARGS.exp.split("-")[4]=='kin' else ObservationType.RGB
-    if ARGS.exp.split("-")[5]=='rpm': ACT = ActionType.RPM
-    elif ARGS.exp.split("-")[5]=='dyn': ACT = ActionType.DYN
-    elif ARGS.exp.split("-")[5]=='pid': ACT = ActionType.PID
-    elif ARGS.exp.split("-")[5]=='one_d_rpm': ACT = ActionType.ONE_D_RPM
-    elif ARGS.exp.split("-")[5]=='one_d_dyn': ACT = ActionType.ONE_D_DYN
-    elif ARGS.exp.split("-")[5]=='one_d_pid': ACT = ActionType.ONE_D_PID
+    OBS = ObservationType.KIN if ARGS.exp.split("-")[4] == 'kin' else ObservationType.RGB
+    if ARGS.exp.split("-")[5] == 'rpm':
+        ACT = ActionType.RPM
+    elif ARGS.exp.split("-")[5] == 'dyn':
+        ACT = ActionType.DYN
+    elif ARGS.exp.split("-")[5] == 'pid':
+        ACT = ActionType.PID
+    elif ARGS.exp.split("-")[5] == 'one_d_rpm':
+        ACT = ActionType.ONE_D_RPM
+    elif ARGS.exp.split("-")[5] == 'one_d_dyn':
+        ACT = ActionType.ONE_D_DYN
+    elif ARGS.exp.split("-")[5] == 'one_d_pid':
+        ACT = ActionType.ONE_D_PID
 
-    #### Constants, and errors #########################################################################
-    if OBS==ObservationType.KIN: OWN_OBS_VEC_SIZE = 12
-    elif OBS==ObservationType.RGB: print("[ERROR] ObservationType.RGB for multi-agent systems not yet implemented"); exit()
-    else: print("[ERROR] unknown ObservationType"); exit()
-    if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]: ACTION_VEC_SIZE = 1
-    elif ACT in [ActionType.RPM, ActionType.DYN]: ACTION_VEC_SIZE = 4
-    elif ACT==ActionType.PID: ACTION_VEC_SIZE = 3
-    else: print("[ERROR] unknown ActionType"); exit()
+    #### Constants, and errors #################################
+    if OBS == ObservationType.KIN:
+        OWN_OBS_VEC_SIZE = 12
+    elif OBS == ObservationType.RGB:
+        print("[ERROR] ObservationType.RGB for multi-agent systems not yet implemented")
+        exit()
+    else:
+        print("[ERROR] unknown ObservationType")
+        exit()
+    if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
+        ACTION_VEC_SIZE = 1
+    elif ACT in [ActionType.RPM, ActionType.DYN]:
+        ACTION_VEC_SIZE = 4
+    elif ACT == ActionType.PID:
+        ACTION_VEC_SIZE = 3
+    else:
+        print("[ERROR] unknown ActionType")
+        exit()
 
-    #### Initialize Ray Tune ###########################################################################
+    #### Initialize Ray Tune ###################################
     ray.shutdown()
     ray.init(ignore_reinit_error=True)
 
-   #### Register the custom centralized critic model ##################################################
+    #### Register the custom centralized critic model ##########
     ModelCatalog.register_custom_model("cc_model", CustomTorchCentralizedCriticModel)
 
-    #### Register the environment ######################################################################
+    #### Register the environment ##############################
     temp_env_name = "this-aviary-v0"
-    if ARGS.exp.split("-")[1]=='flock': register_env(temp_env_name, lambda _: FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT))
-    elif ARGS.exp.split("-")[1]=='leaderfollower': register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT))
-    elif ARGS.exp.split("-")[1]=='meetup': register_env(temp_env_name, lambda _: MeetupAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT))
-    else: print("[ERROR] environment not yet implemented"); exit()
+    if ARGS.exp.split("-")[1] == 'flock':
+        register_env(temp_env_name, lambda _: FlockAviary(num_drones=NUM_DRONES,
+                                                          aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                                          obs=OBS,
+                                                          act=ACT
+                                                          )
+                     )
+    elif ARGS.exp.split("-")[1] == 'leaderfollower':
+        register_env(temp_env_name, lambda _: LeaderFollowerAviary(num_drones=NUM_DRONES,
+                                                                   aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                                                   obs=OBS,
+                                                                   act=ACT
+                                                                   )
+                     )
+    elif ARGS.exp.split("-")[1] == 'meetup':
+        register_env(temp_env_name, lambda _: MeetupAviary(num_drones=NUM_DRONES,
+                                                           aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                                           obs=OBS,
+                                                           act=ACT
+                                                           )
+                     )
+    else:
+        print("[ERROR] environment not yet implemented")
+        exit()
 
-    #### Unused env to extract correctly sized action and observation spaces ###########################
-    if ARGS.exp.split("-")[1]=='flock': temp_env = FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
-    elif ARGS.exp.split("-")[1]=='leaderfollower': temp_env = LeaderFollowerAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
-    elif ARGS.exp.split("-")[1]=='meetup': temp_env = MeetupAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT)
-    else: print("[ERROR] environment not yet implemented"); exit()
+    #### Unused env to extract the act and obs spaces ##########
+    if ARGS.exp.split("-")[1] == 'flock':
+        temp_env = FlockAviary(num_drones=NUM_DRONES,
+                               aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                               obs=OBS,
+                               act=ACT
+                               )
+    elif ARGS.exp.split("-")[1] == 'leaderfollower':
+        temp_env = LeaderFollowerAviary(num_drones=NUM_DRONES,
+                                        aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                        obs=OBS,
+                                        act=ACT
+                                        )
+    elif ARGS.exp.split("-")[1] == 'meetup':
+        temp_env = MeetupAviary(num_drones=NUM_DRONES,
+                                aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                obs=OBS,
+                                act=ACT
+                                )
+    else:
+        print("[ERROR] environment not yet implemented")
+        exit()
     observer_space = Dict({
         "own_obs": temp_env.observation_space[0],
         "opponent_obs": temp_env.observation_space[0],
@@ -164,7 +217,7 @@ if __name__ == "__main__":
     })
     action_space = temp_env.action_space[0]
 
-    #### Set up the trainer's config ###################################################################
+    #### Set up the trainer's config ###########################
     config = ppo.DEFAULT_CONFIG.copy() # For the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
     config = {
         "env": temp_env_name,
@@ -175,12 +228,12 @@ if __name__ == "__main__":
         "framework": "torch",
     }
 
-    #### Set up the model parameters of the trainer's config ###########################################
+    #### Set up the model parameters of the trainer's config ###
     config["model"] = { 
         "custom_model": "cc_model",
     }
     
-    #### Set up the multiagent parameters of the trainer's config ######################################
+    #### Set up the multiagent params of the trainer's config ##
     config["multiagent"] = { 
         "policies": {
             "pol0": (None, observer_space, action_space, {"agent_id": 0,}),
@@ -190,55 +243,85 @@ if __name__ == "__main__":
         "observation_fn": central_critic_observer, # See rllib/evaluation/observation_function.py for more info
     }
 
-    #### Restore agent #################################################################################
+    #### Restore agent #########################################
     agent = ppo.PPOTrainer(config=config)
-    with open(ARGS.exp+'/checkpoint.txt', 'r+') as f: checkpoint = f.read()
+    with open(ARGS.exp+'/checkpoint.txt', 'r+') as f:
+        checkpoint = f.read()
     agent.restore(checkpoint)
 
-    #### Extract and print policies ####################################################################
-    policy0 = agent.get_policy("pol0"); print("action model 0", policy0.model.action_model); print("value model 0", policy0.model.value_model)
-    policy1 = agent.get_policy("pol1"); print("action model 1", policy1.model.action_model); print("value model 1", policy1.model.value_model)
+    #### Extract and print policies ############################
+    policy0 = agent.get_policy("pol0")
+    print("action model 0", policy0.model.action_model)
+    print("value model 0", policy0.model.value_model)
+    policy1 = agent.get_policy("pol1")
+    print("action model 1", policy1.model.action_model)
+    print("value model 1", policy1.model.value_model)
 
-    #### Create test environment ########################################################################
-    if ARGS.exp.split("-")[1]=='flock': test_env = FlockAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT, gui=True, record=False)
-    elif ARGS.exp.split("-")[1]=='leaderfollower': test_env = LeaderFollowerAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT, gui=True, record=False)
-    elif ARGS.exp.split("-")[1]=='meetup': test_env = MeetupAviary(num_drones=NUM_DRONES, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=OBS, act=ACT, gui=True, record=False)
-    else: print("[ERROR] environment not yet implemented"); exit()
+    #### Create test environment ###############################
+    if ARGS.exp.split("-")[1] == 'flock':
+        test_env = FlockAviary(num_drones=NUM_DRONES,
+                               aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                               obs=OBS,
+                               act=ACT,
+                               gui=True,
+                               record=False
+                               )
+    elif ARGS.exp.split("-")[1] == 'leaderfollower':
+        test_env = LeaderFollowerAviary(num_drones=NUM_DRONES,
+                                        aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                        obs=OBS,
+                                        act=ACT,
+                                        gui=True,
+                                        record=False
+                                        )
+    elif ARGS.exp.split("-")[1] == 'meetup':
+        test_env = MeetupAviary(num_drones=NUM_DRONES,
+                                aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
+                                obs=OBS,
+                                act=ACT,
+                                gui=True,
+                                record=False
+                                )
+    else:
+        print("[ERROR] environment not yet implemented")
+        exit()
     
-    #### Show, record a video of, and log the model's performance ######################################
+    #### Show, record a video, and log the model's performance #
     obs = test_env.reset()
-    logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS), num_drones=NUM_DRONES)
-    if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]: action = {    i   : np.array([0]) for i in range(NUM_DRONES) }
-    elif ACT in [ActionType.RPM, ActionType.DYN]: action = {    i   : np.array([0,0,0,0]) for i in range(NUM_DRONES) }
-    elif ACT==ActionType.PID: ACTION_VEC_SIZE = action = {    i   : np.array([0,0,0]) for i in range(NUM_DRONES) }
-    else: print("[ERROR] unknown ActionType"); exit()
+    logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS),
+                    num_drones=NUM_DRONES
+                    )
+    if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
+        action = {i: np.array([0]) for i in range(NUM_DRONES)}
+    elif ACT in [ActionType.RPM, ActionType.DYN]:
+        action = {i: np.array([0, 0, 0, 0]) for i in range(NUM_DRONES)}
+    elif ACT==ActionType.PID:
+         action = {i: np.array([0, 0, 0]) for i in range(NUM_DRONES)}
+    else:
+        print("[ERROR] unknown ActionType")
+        exit()
     start = time.time()
     for i in range(6*int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS)): # Up to 6''
-        #### Deploy the policies ###########################################################################
+        #### Deploy the policies ###################################
         # print("Debug Obs", obs)
         temp = {}
-        temp[0] = policy0.compute_single_action(np.hstack([ obs[0], obs[1], action[1] ]))
-        temp[1] = policy1.compute_single_action(np.hstack([ obs[1], obs[0], action[0] ]))
+        temp[0] = policy0.compute_single_action(np.hstack([obs[0], obs[1], action[1]]))
+        temp[1] = policy1.compute_single_action(np.hstack([obs[1], obs[0], action[0]]))
         # print("Debug Act", temp)
         action = {0: temp[0][0], 1: temp[1][0]}
         obs, reward, done, info = test_env.step(action)
         test_env.render()
         if OBS==ObservationType.KIN: 
-            for j in range(NUM_DRONES): logger.log(drone=j, timestamp=i/test_env.SIM_FREQ, state= np.hstack([obs[j][0:3], np.zeros(4), obs[j][3:15],  np.resize(action[j], (4)) ]), control=np.zeros(12) )
+            for j in range(NUM_DRONES):
+                logger.log(drone=j,
+                           timestamp=i/test_env.SIM_FREQ,
+                           state= np.hstack([obs[j][0:3], np.zeros(4), obs[j][3:15], np.resize(action[j], (4))]),
+                           control=np.zeros(12)
+                           )
         sync(np.floor(i*test_env.AGGR_PHY_STEPS), start, test_env.TIMESTEP)
         # if done["__all__"]: obs = test_env.reset() # OPTIONAL EPISODE HALT
     test_env.close()
     logger.plot()
 
-    #### Shut down Ray #################################################################################
+    #### Shut down Ray #########################################
     ray.shutdown()
-
-
-
-
-
-
-
-
-
-

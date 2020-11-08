@@ -5,7 +5,6 @@ Example:
     To run the simulation, type in a terminal
 
         $ python hw1_simulation.py
-
 """
 import time
 import numpy as np
@@ -19,16 +18,16 @@ GUI = True # bool: whether to use PyBullet graphical interface
 
 if __name__ == "__main__":
 
-    # Create the ENVironment ###################################
+    #### Create the ENVironment ################################
     ENV = CtrlAviary(gui=GUI)
 
-    # Initialize the LOGGER ####################################
+    #### Initialize the LOGGER #################################
     LOGGER = Logger(logging_freq_hz=ENV.SIM_FREQ)
 
-    # Initialize the controller ################################
+    #### Initialize the controller #############################
     CTRL = HW1Control(ENV)
 
-    # Initialize the ACTION ####################################
+    #### Initialize the ACTION #################################
     ACTION = {}
     OBS = ENV.reset()
     STATE = OBS["0"]["state"]
@@ -40,18 +39,18 @@ if __name__ == "__main__":
                                        target_velocity=np.zeros(3)
                                        )
 
-    # Initialize target trajectory #############################
+    #### Initialize target trajectory ##########################
     TARGET_TRAJECTORY = np.array([[np.sin(i*((2*np.pi)/(DURATION*ENV.SIM_FREQ))), 0, STATE[2]] for i in range(DURATION*ENV.SIM_FREQ)])
     TARGET_VELOCITY = np.zeros([DURATION*ENV.SIM_FREQ, 3])
 
-    # Run the simulation #######################################
+    #### Run the simulation ####################################
     START = time.time()
     for i in range(0, DURATION*ENV.SIM_FREQ):
 
-        # Step the simulation ######################################
+        #### Step the simulation ###################################
         OBS, _, _, _ = ENV.step(ACTION)
 
-        # Compute control ##########################################
+        #### Compute control #######################################
         STATE = OBS["0"]["state"]
         ACTION["0"] = CTRL.compute_control(current_position=STATE[0:3],
                                            current_quaternion=STATE[3:7],
@@ -61,10 +60,10 @@ if __name__ == "__main__":
                                            target_velocity=TARGET_VELOCITY[i, :]
                                            )
 
-        # Log the simulation #######################################
+        #### Log the simulation ####################################
         LOGGER.log(drone=0, timestamp=i/ENV.SIM_FREQ, state=STATE)
 
-        # Printout #################################################
+        #### Printout ##############################################
         if i%ENV.SIM_FREQ == 0:
             ENV.render()
 
@@ -72,8 +71,8 @@ if __name__ == "__main__":
         if GUI:
             sync(i, START, ENV.TIMESTEP)
 
-    # Close the ENVironment ####################################
+    #### Close the ENVironment #################################
     ENV.close()
 
-    # Plot the simulation results ##############################
+    #### Plot the simulation results ###########################
     LOGGER.plot()

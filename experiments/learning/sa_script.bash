@@ -21,9 +21,3 @@ for env in ${env_list[@]}; do
         done
     done
 done
-
-
-
-
-
-
