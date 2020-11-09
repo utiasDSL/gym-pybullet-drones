@@ -107,12 +107,12 @@ class BaseAviary(gym.Env):
             self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3) )
         #### Compute constants #####################################
         self.GRAVITY = self.G*self.M
-        self.HOVER_RPM = np.sqrt(self.GRAVITY/(4*self.KF))
-        self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY)/(4*self.KF))
+        self.HOVER_RPM = np.sqrt(self.GRAVITY / (4*self.KF))
+        self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY) / (4*self.KF))
         self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
         self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
         self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
-        self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt( (15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST )
+        self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt((15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST)
         #### Create attributes for vision tasks ####################
         self.VISION_ATTR = vision_attributes
         if self.VISION_ATTR:
@@ -174,7 +174,7 @@ class BaseAviary(gym.Env):
                                                                     yaw=-30,
                                                                     pitch=-30,
                                                                     roll=0,
-                                                                    cameraTargetPosition=[0,0,0],
+                                                                    cameraTargetPosition=[0, 0, 0],
                                                                     upAxisIndex=2,
                                                                     physicsClientId=self.CLIENT
                                                                     )
@@ -193,8 +193,8 @@ class BaseAviary(gym.Env):
         else:
             print("[ERROR] invalid initial_xyzs in BaseAviary.__init__(), try initial_xyzs.reshape(NUM_DRONES,3)")
         if initial_rpys is None:
-            self.INIT_RPYS = np.zeros((self.NUM_DRONES,3))
-        elif np.array(initial_rpys).shape == (self.NUM_DRONES,3):
+            self.INIT_RPYS = np.zeros((self.NUM_DRONES, 3))
+        elif np.array(initial_rpys).shape == (self.NUM_DRONES, 3):
             self.INIT_RPYS = initial_rpys
         else:
             print("[ERROR] invalid initial_rpys in BaseAviary.__init__(), try initial_rpys.reshape(NUM_DRONES,3)")
@@ -270,8 +270,8 @@ class BaseAviary(gym.Env):
             clipped_action = np.tile(self.gui_input, (self.NUM_DRONES, 1))
             if self.step_counter%(self.SIM_FREQ/2) == 0:
                 self.GUI_INPUT_TEXT = [p.addUserDebugText("Using GUI RPM",
-                                                          textPosition=[0,0,0],
-                                                          textColorRGB=[1,0,0],
+                                                          textPosition=[0, 0, 0],
+                                                          textColorRGB=[1, 0, 0],
                                                           lifeTime=1,
                                                           textSize=2,
                                                           parentObjectUniqueId=self.DRONE_IDS[i],
@@ -384,11 +384,11 @@ class BaseAviary(gym.Env):
         self.last_clipped_action = np.zeros((self.NUM_DRONES, 4))
         self.gui_input = np.zeros(4)
         #### Initialize the drones kinemaatic information ##########
-        self.pos = np.zeros((self.NUM_DRONES,3))
-        self.quat = np.zeros((self.NUM_DRONES,4))
-        self.rpy = np.zeros((self.NUM_DRONES,3))
-        self.vel = np.zeros((self.NUM_DRONES,3))
-        self.ang_v = np.zeros((self.NUM_DRONES,3))
+        self.pos = np.zeros((self.NUM_DRONES, 3))
+        self.quat = np.zeros((self.NUM_DRONES, 4))
+        self.rpy = np.zeros((self.NUM_DRONES, 3))
+        self.vel = np.zeros((self.NUM_DRONES, 3))
+        self.ang_v = np.zeros((self.NUM_DRONES, 3))
         #### Set PyBullet's parameters #############################
         p.setGravity(0, 0, -self.G, physicsClientId=self.CLIENT)
         p.setRealTimeSimulation(0, physicsClientId=self.CLIENT)
