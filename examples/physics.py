@@ -5,7 +5,7 @@ import pybullet as p
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-from gym_pybullet_drones.utils.utils import *
+from gym_pybullet_drones.utils.utils import sync, str2bool
 
 if __name__ == "__main__":
 

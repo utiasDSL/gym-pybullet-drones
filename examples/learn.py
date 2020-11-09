@@ -11,7 +11,7 @@ from ray.rllib.agents import ppo
 
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
-from gym_pybullet_drones.utils.utils import *
+from gym_pybullet_drones.utils.utils import sync, str2bool
 
 #### Note: this is a minimal working example integrating gym-pybullet-drones with stable-baselines3 and ray[rllib]
 ####       NOT an effective learning example

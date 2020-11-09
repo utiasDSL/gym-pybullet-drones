@@ -15,7 +15,7 @@ from gym_pybullet_drones.envs.VisionAviary import VisionAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.utils.utils import *
+from gym_pybullet_drones.utils.utils import sync, str2bool
 
 if __name__ == "__main__":
 

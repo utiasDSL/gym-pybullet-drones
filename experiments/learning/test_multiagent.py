@@ -33,7 +33,7 @@ from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderF
 from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.utils.utils import *
+from gym_pybullet_drones.utils.utils import sync
 
 import shared_constants
 

@@ -20,7 +20,8 @@ class RandomControl(Node):
         timer_period_sec = 1/timer_freq_hz
         #### Dummy CtrlAviary to obtain the HOVER_RPM constant #####
         self.env = CtrlAviary()
-        #### Declare publishing on 'action' and create a timer to call action_callback every timer_period_sec
+        #### Declare publishing on 'action' and create a timer to ##
+        #### call action_callback every timer_period_sec ###########
         self.publisher_ = self.create_publisher(Float32MultiArray, 'action', 1)
         self.timer = self.create_timer(timer_period_sec, self.action_callback)
         #### Subscribe to topic 'obs' ##############################

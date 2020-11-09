@@ -33,7 +33,8 @@ class AviaryWrapper(Node):
                               )
         #### Initialize an action with the RPMs at hover ###########
         self.action = np.ones(4)*self.env.HOVER_RPM
-        #### Declare publishing on 'obs' and create a timer to call action_callback every timer_period_sec
+        #### Declare publishing on 'obs' and create a timer to call 
+        #### action_callback every timer_period_sec ################
         self.publisher_ = self.create_publisher(Float32MultiArray, 'obs', 1)
         self.timer = self.create_timer(timer_period_sec, self.step_callback)
         #### Subscribe to topic 'action' ###########################

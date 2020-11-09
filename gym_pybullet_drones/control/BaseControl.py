@@ -2,11 +2,9 @@ import math
 import numpy as np
 import pybullet as p
 from enum import Enum
-from scipy.optimize import nnls
 from scipy.spatial.transform import Rotation
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
-
+from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 
 ######################################################################################################################################################
 #### Base control class ##############################################################################################################################
@@ -22,14 +20,11 @@ class BaseControl(object):
     def __init__(self,
                  env: BaseAviary
                  ):
-        #### Set general use constants #####################################################################
+        #### Set general use constants #############################
         self.DRONE_MODEL = env.DRONE_MODEL
         self.GRAVITY = env.GRAVITY
         self.KF = env.KF
         self.KM = env.KM
-        self.MAX_THRUST = env.MAX_THRUST
-        self.MAX_XY_TORQUE = env.MAX_XY_TORQUE
-        self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
         self.reset()
 
     ####################################################################################################

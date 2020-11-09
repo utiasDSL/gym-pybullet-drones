@@ -6,7 +6,6 @@ from scipy.spatial.transform import Rotation
 from gym_pybullet_drones.control.BaseControl import BaseControl
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
 
-
 class DSLPIDControl(BaseControl):
 
     ####################################################################################################
@@ -43,7 +42,7 @@ class DSLPIDControl(BaseControl):
     ####################################################################################################
     def reset(self):
         super().reset()
-        #### Initialized PID control variables #############################################################
+        #### Initialized PID control variables #####################
         self.last_pos_e = np.zeros(3)
         self.integral_pos_e = np.zeros(3)
         self.last_rpy_e = np.zeros(3)
@@ -130,7 +129,7 @@ class DSLPIDControl(BaseControl):
         self.integral_pos_e = self.integral_pos_e + pos_e*control_timestep
         self.integral_pos_e = np.clip(self.integral_pos_e, -2., 2.)
         self.integral_pos_e[2] = np.clip(self.integral_pos_e[2], -0.15, .15)
-        #### PID target thrust #############################################################################
+        #### PID target thrust #####################################
         target_thrust = np.multiply(self.P_COEFF_FOR, pos_e) \
                         + np.multiply(self.I_COEFF_FOR, self.integral_pos_e) \
                         + np.multiply(self.D_COEFF_FOR, vel_e) + np.array([0, 0, self.GRAVITY])
@@ -141,7 +140,7 @@ class DSLPIDControl(BaseControl):
         target_y_ax = np.cross(target_z_ax, target_x_c) / np.linalg.norm(np.cross(target_z_ax, target_x_c))
         target_x_ax = np.cross(target_y_ax, target_z_ax)
         target_rotation = (np.vstack([target_x_ax, target_y_ax, target_z_ax])).transpose()
-        #### Target rotation ###############################################################################
+        #### Target rotation #######################################
         target_euler = (Rotation.from_matrix(target_rotation)).as_euler('XYZ', degrees=False)
         if np.any(np.abs(target_euler) > math.pi):
             print("\n[ERROR] ctrl it", self.control_counter, "in Control._dslPIDPositionControl(), values outside range [-pi,pi]")
@@ -179,7 +178,7 @@ class DSLPIDControl(BaseControl):
         self.integral_rpy_e = self.integral_rpy_e - rot_e*control_timestep
         self.integral_rpy_e = np.clip(self.integral_rpy_e, -1500., 1500.)
         self.integral_rpy_e[0:2] = np.clip(self.integral_rpy_e[0:2], -1., 1.)
-        #### PID target torques ############################################################################
+        #### PID target torques ####################################
         target_torques = - np.multiply(self.P_COEFF_TOR, rot_e) \
                          + np.multiply(self.D_COEFF_TOR, ang_vel_e) \
                          + np.multiply(self.I_COEFF_TOR, self.integral_rpy_e)

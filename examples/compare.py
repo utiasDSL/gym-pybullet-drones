@@ -4,7 +4,7 @@ import argparse
 import pickle
 import numpy as np
 
-from gym_pybullet_drones.utils.utils import *
+from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl

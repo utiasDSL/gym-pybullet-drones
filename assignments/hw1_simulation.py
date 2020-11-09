@@ -12,6 +12,7 @@ from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync
 from hw1_control import HW1Control
+from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 
 DURATION = 10 # int: the duration of the simulation in seconds
 GUI = True # bool: whether to use PyBullet graphical interface
@@ -26,6 +27,7 @@ if __name__ == "__main__":
 
     #### Initialize the controller #############################
     CTRL = HW1Control(ENV)
+    TEMP_CTRL = DSLPIDControl(ENV)
 
     #### Initialize the ACTION #################################
     ACTION = {}
@@ -38,6 +40,7 @@ if __name__ == "__main__":
                                        target_position=STATE[0:3],
                                        target_velocity=np.zeros(3)
                                        )
+    ACTION["0"], _, _ = TEMP_CTRL.computeControlFromState(control_timestep=ENV.TIMESTEP, state=STATE, target_pos=STATE[0:3])
 
     #### Initialize target trajectory ##########################
     TARGET_TRAJECTORY = np.array([[np.sin(i*((2*np.pi)/(DURATION*ENV.SIM_FREQ))), 0, STATE[2]] for i in range(DURATION*ENV.SIM_FREQ)])
@@ -52,13 +55,14 @@ if __name__ == "__main__":
 
         #### Compute control #######################################
         STATE = OBS["0"]["state"]
-        ACTION["0"] = CTRL.compute_control(current_position=STATE[0:3],
-                                           current_quaternion=STATE[3:7],
-                                           current_velocity=STATE[10:13],
-                                           current_angular_velocity=STATE[13:16],
-                                           target_position=TARGET_TRAJECTORY[i, :],
-                                           target_velocity=TARGET_VELOCITY[i, :]
-                                           )
+        # ACTION["0"] = CTRL.compute_control(current_position=STATE[0:3],
+        #                                    current_quaternion=STATE[3:7],
+        #                                    current_velocity=STATE[10:13],
+        #                                    current_angular_velocity=STATE[13:16],
+        #                                    target_position=TARGET_TRAJECTORY[i, :],
+        #                                    target_velocity=TARGET_VELOCITY[i, :]
+        #                                    )
+        if i%5 == 0: ACTION["0"], _, _ = TEMP_CTRL.computeControlFromState(control_timestep=ENV.TIMESTEP*5, state=STATE, target_pos=TARGET_TRAJECTORY[i, :])
 
         #### Log the simulation ####################################
         LOGGER.log(drone=0, timestamp=i/ENV.SIM_FREQ, state=STATE)
