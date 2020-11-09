@@ -7,7 +7,9 @@ Example:
         $ python hw1_simulation.py
 """
 import time
+import random
 import numpy as np
+import pybullet as p
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync
@@ -21,6 +23,7 @@ if __name__ == "__main__":
 
     #### Create the ENVironment ################################
     ENV = CtrlAviary(gui=GUI)
+    PYB_CLIENT = ENV.getPyBulletClient()
 
     #### Initialize the LOGGER #################################
     LOGGER = Logger(logging_freq_hz=ENV.SIM_FREQ)
@@ -50,6 +53,9 @@ if __name__ == "__main__":
     #### Run the simulation ####################################
     START = time.time()
     for i in range(0, DURATION*ENV.SIM_FREQ):
+
+        ### Secret control performance booster #####################
+        if i/ENV.SIM_FREQ>3 and i%30==0 and i/ENV.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [random.gauss(0, 0.3), random.gauss(0, 0.3), 3], p.getQuaternionFromEuler([random.randint(0, 360),random.randint(0, 360),random.randint(0, 360)]), physicsClientId=PYB_CLIENT)
 
         #### Step the simulation ###################################
         OBS, _, _, _ = ENV.step(ACTION)
