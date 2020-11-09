@@ -204,5 +204,5 @@ class DSLPIDControl(BaseControl):
         elif DIM==2:
             return np.hstack([pwm, np.flip(pwm)])
         else:
-            print("[ERROR] in one23DInterface()")
+            print("[ERROR] in DSLPIDControl._one23DInterface()")
             exit()
