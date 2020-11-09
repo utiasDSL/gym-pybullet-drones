@@ -43,7 +43,8 @@ if __name__ == "__main__":
     # ACTION["0"], _, _ = TEMP_CTRL.computeControlFromState(control_timestep=ENV.TIMESTEP, state=STATE, target_pos=STATE[0:3])
 
     #### Initialize target trajectory ##########################
-    TARGET_TRAJECTORY = np.array([[np.sin(i*((2*np.pi)/(DURATION*ENV.SIM_FREQ))), 0, STATE[2]] for i in range(DURATION*ENV.SIM_FREQ)])
+    TWO_D_TARGET_TRAJECTORY = np.array([[np.sin(i*((2*np.pi)/(DURATION*ENV.SIM_FREQ))), 0, STATE[2]] for i in range(DURATION*ENV.SIM_FREQ)])
+    ONE_D_TARGET_TRAJECTORY = np.array([[0, 0, STATE[2]+i/(DURATION*ENV.SIM_FREQ)] for i in range(DURATION*ENV.SIM_FREQ)])
     TARGET_VELOCITY = np.zeros([DURATION*ENV.SIM_FREQ, 3])
 
     #### Run the simulation ####################################
@@ -59,7 +60,7 @@ if __name__ == "__main__":
                                            current_quaternion=STATE[3:7],
                                            current_velocity=STATE[10:13],
                                            current_angular_velocity=STATE[13:16],
-                                           target_position=TARGET_TRAJECTORY[i, :],
+                                           target_position=TWO_D_TARGET_TRAJECTORY[i, :],
                                            target_velocity=TARGET_VELOCITY[i, :]
                                            )
         # if i%5 == 0: ACTION["0"], _, _ = TEMP_CTRL.computeControlFromState(control_timestep=ENV.TIMESTEP*5, state=STATE, target_pos=TARGET_TRAJECTORY[i, :])
