@@ -51,6 +51,16 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             exit()
         vision_attributes = True if obs == ObservationType.RGB else False
         dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
+        self.OBS_TYPE = obs
+        self.ACT_TYPE = act
+        self.EPISODE_LEN_SEC = 5
+        #### Create integrated controllers #########################
+        if act in [ActionType.PID, ActionType.ONE_D_PID]:
+            os.environ['KMP_DUPLICATE_LIB_OK']='True'
+            if self.DRONE_MODEL in [DroneModel.CF2X, DroneModel.CF2P]:
+                self.ctrl = [DSLPIDControl(BaseAviary(drone_model=DroneModel.CF2X)) for i in range(self.NUM_DRONES)]
+            elif self.DRONE_MODEL == DroneModel.HB:
+                self.ctrl = [SimplePIDControl(BaseAviary(drone_model=DroneModel.HB)) for i in range(self.NUM_DRONES)]
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -66,16 +76,6 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                          vision_attributes=vision_attributes,
                          dynamics_attributes=dynamics_attributes
                          )
-        self.OBS_TYPE = obs
-        self.ACT_TYPE = act
-        self.EPISODE_LEN_SEC = 5
-        #### Create integrated controllers #########################
-        if act in [ActionType.PID, ActionType.ONE_D_PID]
-            os.environ['KMP_DUPLICATE_LIB_OK']='True'
-            if self.DRONE_MODEL in [DroneModel.CF2X, DroneModel.CF2P]:
-                self.ctrl = [DSLPIDControl(BaseAviary(drone_model=DroneModel.CF2X)) for i in range(self.NUM_DRONES)]
-            elif self.DRONE_MODEL == DroneModel.HB:
-                self.ctrl = [SimplePIDControl(BaseAviary(drone_model=DroneModel.HB)) for i in range(self.NUM_DRONES)]
 
     ####################################################################################################
     #### Add obstacles to the environment from .urdf files #############################################
@@ -254,8 +254,8 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             obs_12 = np.zeros((self.NUM_DRONES,12))
             for i in range(self.NUM_DRONES):
                 obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
-                obs_12[i,:] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
-            return {i: obs_12[i,:] for i in range(self.NUM_DRONES)}
+                obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
+            return {i: obs_12[i, :] for i in range(self.NUM_DRONES)}
             ############################################################
         else:
             print("[ERROR] in BaseMultiagentAviary._computeObs()")

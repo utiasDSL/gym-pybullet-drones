@@ -1,5 +1,5 @@
 """Control implementation for assignment 1.
-The script is used the simulation in file "hw_simulation.py".
+Class HW1Control is used by the simulation in file "hw_simulation.py".
 
 Example:
     To run the simulation, type in a terminal

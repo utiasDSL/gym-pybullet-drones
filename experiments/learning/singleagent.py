@@ -34,11 +34,12 @@ EPISODE_REWARD_THRESHOLD = -0 # Rewards are always negative
 if __name__ == "__main__":
 
     # Use as $ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
+    # Use $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
-    parser.add_argument('--env',        default='takeoff',    type=str,             choices=['takeoff', 'hover', 'flythrugate'],    help='Help (default: ..)', metavar='')
-    parser.add_argument('--algo',       default='a2c',        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],   help='Help (default: ..)', metavar='')
+    parser.add_argument('--env',        default='hover',      type=str,             choices=['takeoff', 'hover', 'flythrugate'],    help='Help (default: ..)', metavar='')
+    parser.add_argument('--algo',       default='ppo',        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],   help='Help (default: ..)', metavar='')
     parser.add_argument('--obs',        default='kin',        type=ObservationType,                                                 help='Help (default: ..)', metavar='')
     parser.add_argument('--act',        default='one_d_rpm',  type=ActionType,                                                      help='Help (default: ..)', metavar='')
     parser.add_argument('--cpu',        default='1',          type=int,                                                             help='Help (default: ..)', metavar='')        
@@ -213,5 +214,3 @@ if __name__ == "__main__":
     ### Save the model #########################################
     model.save(filename+'/success_model.zip') # Possibly never achieved
     print(filename)
-
-    # Use $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/

@@ -55,7 +55,7 @@ if __name__ == "__main__":
     for i in range(0, DURATION*ENV.SIM_FREQ):
 
         ### Secret control performance booster #####################
-        if i/ENV.SIM_FREQ>3 and i%30==0 and i/ENV.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [random.gauss(0, 0.3), random.gauss(0, 0.3), 3], p.getQuaternionFromEuler([random.randint(0, 360),random.randint(0, 360),random.randint(0, 360)]), physicsClientId=PYB_CLIENT)
+        # if i/ENV.SIM_FREQ>3 and i%30==0 and i/ENV.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [random.gauss(0, 0.3), random.gauss(0, 0.3), 3], p.getQuaternionFromEuler([random.randint(0, 360),random.randint(0, 360),random.randint(0, 360)]), physicsClientId=PYB_CLIENT)
 
         #### Step the simulation ###################################
         OBS, _, _, _ = ENV.step(ACTION)
@@ -69,7 +69,7 @@ if __name__ == "__main__":
                                            target_position=TWO_D_TARGET_TRAJECTORY[i, :],
                                            target_velocity=TARGET_VELOCITY[i, :]
                                            )
-        # if i%5 == 0: ACTION["0"], _, _ = TEMP_CTRL.computeControlFromState(control_timestep=ENV.TIMESTEP*5, state=STATE, target_pos=TARGET_TRAJECTORY[i, :])
+        #if i%5 == 0: ACTION["0"], _, _ = TEMP_CTRL.computeControlFromState(control_timestep=ENV.TIMESTEP*5, state=STATE, target_pos=TWO_D_TARGET_TRAJECTORY[i, :])
 
         #### Log the simulation ####################################
         LOGGER.log(drone=0, timestamp=i/ENV.SIM_FREQ, state=STATE)

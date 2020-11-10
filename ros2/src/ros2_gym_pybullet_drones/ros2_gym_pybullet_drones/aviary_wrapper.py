@@ -1,4 +1,5 @@
 """ROS2 Python wrapper node for class CtrlAviary
+continually calling CtrlAviary.step()
 """
 import rclpy
 import numpy as np

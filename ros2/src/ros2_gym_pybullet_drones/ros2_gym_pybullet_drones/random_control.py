@@ -1,4 +1,5 @@
-"""ROS2 Python node subscribing to AviaryWrapper's 'obs' topic and publishing random RPMs on topic 'action'
+"""ROS2 Python node subscribing to AviaryWrapper's 'obs' topic
+and publishing random RPMs on topic 'action'
 """
 import rclpy
 import random

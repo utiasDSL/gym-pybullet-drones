@@ -101,10 +101,25 @@ class BaseAviary(gym.Env):
         self.USER_DEBUG = user_debug_gui
         self.URDF = self.DRONE_MODEL.value + ".urdf"
         #### Load the drone properties from the .urdf file #########
-        self.M, self.L, self.THRUST2WEIGHT_RATIO, self.J, self.J_INV, self.KF, self.KM, self.COLLISION_H, self.COLLISION_R, self.COLLISION_Z_OFFSET, \
-            self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF, self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3 = self._parseURDFParameters()
+        self.M, \
+        self.L, \
+        self.THRUST2WEIGHT_RATIO, \
+        self.J, \
+        self.J_INV, \
+        self.KF, \
+        self.KM, \
+        self.COLLISION_H,\
+        self.COLLISION_R, \
+        self.COLLISION_Z_OFFSET, \
+        self.MAX_SPEED_KMH, \
+        self.GND_EFF_COEFF, \
+        self.PROP_RADIUS, \
+        self.DRAG_COEFF, \
+        self.DW_COEFF_1, \
+        self.DW_COEFF_2, \
+        self.DW_COEFF_3 = self._parseURDFParameters()
         print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
-            self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3) )
+            self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3))
         #### Compute constants #####################################
         self.GRAVITY = self.G*self.M
         self.HOVER_RPM = np.sqrt(self.GRAVITY / (4*self.KF))

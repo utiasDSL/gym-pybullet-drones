@@ -32,7 +32,6 @@ import shared_constants
 if __name__ == "__main__":
 
     # Use as $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
-    # Use $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
@@ -90,7 +89,7 @@ if __name__ == "__main__":
     #### Show, record a video, and log the model's performance #
     test_env = gym.make(env_name,
                         gui=True,
-                        record=False,
+                        record=True,
                         aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                         obs=OBS,
                         act=ACT
