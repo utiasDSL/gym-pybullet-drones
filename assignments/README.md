@@ -48,7 +48,7 @@ Download the code
 - Go to https://github.com/JacopoPan/gym-pybullet-drones/releases
 - Under version `TBD`, click on "Assets" and download the source code (zip or tar.gz)
 
-<img src="files/readme_images/assignment_img1.png" alt="source code" width="800">
+<img src="../files/readme_images/assignment_img1.png" alt="source code" width="800">
 
 Open the `gym-pybullet-drones-v.TBD` folder in PyCharm 
 
@@ -57,7 +57,7 @@ Open `hw1_simulation.py` in PyCharm
 To run code you may need to configure PyCharm. 
 - Go to `File->Settings` and Select `Project:gym-pybullet-drones.py->Python Interpreter`
 
-<img src="files/readme_images/assignment_img2.png" alt="interpreter" width="800">
+<img src="../files/readme_images/assignment_img2.png" alt="interpreter" width="800">
 
 - Select the `+` 
 
@@ -84,7 +84,7 @@ to files `hw1_simulation.py` and `hw1_control.py`
 
 Go to the "Run" drop down menu and select "Run" 
 
-<img src="files/readme_images/assignment_img3.png" alt="run" width="800">
+<img src="../files/readme_images/assignment_img3.png" alt="run" width="800">
 
-- Select `hw1_simulation.py` 
+- Select `hw1_simulation.py` to start the simulation
 
