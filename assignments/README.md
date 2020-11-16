@@ -21,7 +21,7 @@ $ pip install -e .
 ```
 
 ## Use
-In a terminal,type
+In a terminal, type
 ```
 $ cd assignments/
 $ python hw_simulation.py
