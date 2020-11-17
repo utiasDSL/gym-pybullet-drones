@@ -42,6 +42,11 @@ import shared_constants
 OWN_OBS_VEC_SIZE = None
 ACTION_VEC_SIZE = None
 
+#### Useful links ##########################################
+# Workflow: github.com/ray-project/ray/blob/master/doc/source/rllib-training.rst
+# ENV_STATE example: github.com/ray-project/ray/blob/master/rllib/examples/env/two_step_game.py
+# Competing policies example: github.com/ray-project/ray/blob/master/rllib/examples/rock_paper_scissors_multiagent.py
+
 ############################################################
 class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
     """Multi-agent model that implements a centralized value function.
@@ -218,6 +223,13 @@ if __name__ == "__main__":
         "opponent_action": temp_env.action_space[0],
     })
     action_space = temp_env.action_space[0]
+
+    #### Note ##################################################
+    # RLlib will create ``num_workers + 1`` copies of the
+    # environment since one copy is needed for the driver process.
+    # To avoid paying the extra overhead of the driver copy,
+    # which is needed to access the env's action and observation spaces,
+    # you can defer environment initialization until ``reset()`` is called
 
     #### Set up the trainer's config ###########################
     config = ppo.DEFAULT_CONFIG.copy() # For the default config, see github.com/ray-project/ray/blob/master/rllib/agents/trainer.py
