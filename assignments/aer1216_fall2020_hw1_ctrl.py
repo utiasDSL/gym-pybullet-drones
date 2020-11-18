@@ -2,11 +2,12 @@
 The script is used the simulation in file "aer1216_fall2020_hw1_sim.py".
 
 Example:
-    To run the simulation, type in a terminal
+    To run the simulation, type in a terminal:
 
         $ python aer1216_fall2020_hw1_sim.py
 
 Todo:
+
     * Tune the PD coefficients in HW1Control.__init__()
 """
 import numpy as np
@@ -108,11 +109,11 @@ class HW1Control():
 
         #### Print relevant output #################################
         if self.control_counter%(1/self.timestep) == 0:
-            print(current_position)
-            print(current_velocity)
-            print(target_position)
-            print(target_velocity)
-            print(target_acceleration)
+            print("current_position", current_position)
+            print("current_velocity", current_velocity)
+            print("target_position", target_position)
+            print("target_velocity", target_velocity)
+            print("target_acceleration", target_acceleration)
 
         return np.array([propellers_0_and_3_rpm, propellers_1_and_2_rpm,
                          propellers_1_and_2_rpm, propellers_0_and_3_rpm])

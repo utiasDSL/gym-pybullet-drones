@@ -2,7 +2,7 @@
 The script uses the control defined in file "aer1216_fall2020_hw1_ctrl.py".
 
 Example:
-    To run the simulation, type in a terminal
+    To run the simulation, type in a terminal:
 
         $ python aer1216_fall2020_hw1_sim.py
 """
@@ -20,10 +20,10 @@ import pybullet as p
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync
-from hw1_control import HW1Control
+from aer1216_fall2020_hw1_ctrl import HW1Control
 
-DURATION = 10  # int: the duration of the simulation in seconds
-GUI = True  # bool: whether to use PyBullet graphical interface
+DURATION = 10 # int: the duration of the simulation in seconds
+GUI = True # bool: whether to use PyBullet graphical interface
 RECORD = False # bool: whether to save a video under /files/videos
                # requires to have ffmpeg installed
 
