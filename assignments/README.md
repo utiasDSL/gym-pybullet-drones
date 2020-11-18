@@ -27,6 +27,9 @@ $ cd assignments/
 $ python aer1216_fall2020_hw1_sim.py    #### e.g., for hw1
 ```
 
+## Troubleshooting
+On Ubuntu and macOS, contact `jacopo.panerati {at} utoronto.ca`
+
 # On Windows
 
 ## Requirements
@@ -88,3 +91,5 @@ Go to the "Run" drop down menu and select "Run"
 
 - Select `aer1216_fall2020_hw1_sim.py` to start the simulation
 
+## Troubleshooting
+On Windows, contact `karime.pereida {at} robotics.utias.utoronto.ca`
