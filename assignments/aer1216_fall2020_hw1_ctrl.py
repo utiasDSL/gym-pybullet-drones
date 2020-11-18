@@ -1,10 +1,10 @@
 """Control implementation for assignment 1.
-The script is used the simulation in file "hw_simulation.py".
+The script is used the simulation in file "aer1216_fall2020_hw1_sim.py".
 
 Example:
     To run the simulation, type in a terminal
 
-        $ python hw1_simulation.py
+        $ python aer1216_fall2020_hw1_sim.py
 
 Todo:
     * Tune the PD coefficients in HW1Control.__init__()

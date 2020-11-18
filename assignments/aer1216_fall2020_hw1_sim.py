@@ -1,10 +1,10 @@
 """Simulation script for assignment 1.
-The script uses the control defined in file "hw_control.py".
+The script uses the control defined in file "aer1216_fall2020_hw1_ctrl.py".
 
 Example:
     To run the simulation, type in a terminal
 
-        $ python hw1_simulation.py
+        $ python aer1216_fall2020_hw1_sim.py
 """
 import time
 import random
