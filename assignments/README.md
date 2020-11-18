@@ -77,8 +77,8 @@ To run code you may need to configure PyCharm.
 
 If (as) you did not install the `gym_pybullet_drones` module, uncomment lines 17-18
 ```
-import sys
-sys.path.append('../')
+>>> import sys
+>>> sys.path.append('../')
 ```
 in file `aer1216_fall2020_hw1_sim.py`
 
