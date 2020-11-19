@@ -49,7 +49,7 @@ Download a Python IDE
 
 Download the code
 - Go to https://github.com/JacopoPan/gym-pybullet-drones/releases
-- Under "Release", `v0.5.1`, click on "Assets" and download the source code (zip or tar.gz)
+- Under "Releases" -> `v0.5.1`, click on "Assets" and download the source code (zip or tar.gz)
 
 <img src="../files/readme_images/assignment_img1.png" alt="source code" width="800">
 
