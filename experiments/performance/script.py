@@ -1,3 +1,8 @@
+"""Only used to spawn multiple simulations and evaluate performance.
+
+This script is similar to `examples/fly.py` and used by `parallelism.sh`.
+
+"""
 import os
 import time
 import argparse

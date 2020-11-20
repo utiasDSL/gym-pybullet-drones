@@ -1,3 +1,21 @@
+"""Script demonstrating the use of `gym_pybullet_drones`' Gym interface.
+
+Class TakeoffAviary is used as a learning env for the A2C and PPO algorithms.
+
+Example
+-------
+In a terminal, run as:
+
+    $ python learn.py
+
+Notes
+-----
+The boolean argument --rllib switches between `stable-baselines3` and `ray[rllib]`.
+This is a minimal working example integrating `gym-pybullet-drones` with 
+reinforcement learning libraries `stable-baselines3` and `ray[rllib]`.
+It is not meant as a good/effective learning example.
+
+"""
 import time
 import argparse
 import gym
@@ -12,9 +30,6 @@ from ray.rllib.agents import ppo
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
-
-#### Note: this is a minimal working example integrating gym-pybullet-drones with stable-baselines3 and ray[rllib]
-####       NOT an effective learning example
 
 if __name__ == "__main__":
 

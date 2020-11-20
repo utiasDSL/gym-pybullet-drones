@@ -1,3 +1,21 @@
+"""Learning script for single agent problems.
+
+Agents are based on `stable_baselines3`'s implementation of A2C, PPO SAC, TD3, DDPG.
+
+Example
+-------
+To run the script, type in a terminal:
+
+    $ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
+
+Notes
+-----
+Use:
+    $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/
+to see the tensorboard results at:
+    http://localhost:6006/
+
+"""
 import os
 import time
 from datetime import datetime
@@ -29,12 +47,10 @@ from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import Actio
 
 import shared_constants
 
-EPISODE_REWARD_THRESHOLD = -0 # Rewards are always negative
+EPISODE_REWARD_THRESHOLD = -0 # Upperbound: rewards are always negative, but non-zero
+"""float: Reward threshold to halt the script."""
 
 if __name__ == "__main__":
-
-    # Use as $ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
-    # Use $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/ for the tensorboard results at http://localhost:6006/
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')

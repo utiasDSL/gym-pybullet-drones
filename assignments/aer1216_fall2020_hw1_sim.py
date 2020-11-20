@@ -1,19 +1,20 @@
 """Simulation script for assignment 1.
-The script uses the control defined in file "aer1216_fall2020_hw1_ctrl.py".
 
-Example:
-    To run the simulation, type in a terminal:
+The script uses the control defined in file `aer1216_fall2020_hw1_ctrl.py`.
 
-        $ python aer1216_fall2020_hw1_sim.py
+Example
+-------
+To run the simulation, type in a terminal:
+
+    $ python aer1216_fall2020_hw1_sim.py
+
 """
 import time
 import random
 import numpy as np
 import pybullet as p
 
-#### Uncomment the following 2 lines if 
-#### "module gym_pybullet_drones cannot be found"
-#### i.e., you did not pip install it
+#### Uncomment the following 2 lines if "module gym_pybullet_drones cannot be found"
 # import sys
 # sys.path.append('../')
 
@@ -22,10 +23,12 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync
 from aer1216_fall2020_hw1_ctrl import HW1Control
 
-DURATION = 10 # int: the duration of the simulation in seconds
-GUI = True # bool: whether to use PyBullet graphical interface
-RECORD = False # bool: whether to save a video under /files/videos
-               # requires to have ffmpeg installed
+DURATION = 10
+"""int: The duration of the simulation in seconds."""
+GUI = True
+"""bool: Whether to use PyBullet graphical interface."""
+RECORD = False
+"""bool: Whether to save a video under /files/videos. Requires ffmpeg"""
 
 if __name__ == "__main__":
 
@@ -56,7 +59,7 @@ if __name__ == "__main__":
     TARGET_ACCELERATION = np.zeros([DURATION * ENV.SIM_FREQ, 3])
 
     #### Derive the target trajectory to obtain target velocities and accelerations
-    TARGET_VELOCITY[1:, :] = (TARGET_POSITION[1:, :] - TARGET_POSITION[0:-1, :])/ENV.SIM_FREQ
+    TARGET_VELOCITY[1:, :] = (TARGET_POSITION[1:, :] - TARGET_POSITION[0:-1, :]) / ENV.SIM_FREQ
     TARGET_ACCELERATION[1:, :] = (TARGET_VELOCITY[1:, :] - TARGET_VELOCITY[0:-1, :]) / ENV.SIM_FREQ
 
     #### Run the simulation ####################################

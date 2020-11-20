@@ -1,3 +1,18 @@
+"""Script comparing a gym_pybullet_drones simulation to a trace file.
+
+It is meant to compare/validate the behaviour of a pyhsics implementation.
+
+Example
+-------
+In a terminal, run as:
+
+    $ python compare.py
+
+Notes
+-----
+The comparison is along a 2D trajectory in the X-Z plane, between x == +1 and -1.
+
+"""
 import os
 import time
 import argparse

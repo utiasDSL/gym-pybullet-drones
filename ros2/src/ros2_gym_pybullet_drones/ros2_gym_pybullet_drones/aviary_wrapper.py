@@ -1,5 +1,7 @@
-"""ROS2 Python wrapper node for class CtrlAviary
-continually calling CtrlAviary.step()
+"""ROS2 Python wrapper node for class CtrlAviary.
+
+It creates an environment CtrlAviary and continually calls CtrlAviary.step().
+It publishes on topic 'obs' and reads from topic 'action'.
 """
 import rclpy
 import numpy as np

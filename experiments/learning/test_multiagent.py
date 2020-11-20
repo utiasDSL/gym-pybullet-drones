@@ -1,3 +1,14 @@
+"""Test script for multiagent problems.
+
+This scripts runs the best model found by one of the executions of `multiagent.py`
+
+Example
+-------
+To run the script, type in a terminal:
+
+    $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
+
+"""
 import os
 import time
 import argparse
@@ -37,8 +48,8 @@ from gym_pybullet_drones.utils.utils import sync
 
 import shared_constants
 
-OWN_OBS_VEC_SIZE = None
-ACTION_VEC_SIZE = None
+OWN_OBS_VEC_SIZE = None # Modified at runtime
+ACTION_VEC_SIZE = None # Modified at runtime
 
 ############################################################
 class CustomTorchCentralizedCriticModel(TorchModelV2, nn.Module):
@@ -99,20 +110,18 @@ def central_critic_observer(agent_obs, **kw):
         0: {
             "own_obs": agent_obs[0],
             "opponent_obs": agent_obs[1],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(ACTION_VEC_SIZE), # Filled in by FillInActions
         },
         1: {
             "own_obs": agent_obs[1],
             "opponent_obs": agent_obs[0],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(ACTION_VEC_SIZE), # Filled in by FillInActions
         },
     }
     return new_obs
 
 ############################################################
 if __name__ == "__main__":
-
-     # Use as $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')

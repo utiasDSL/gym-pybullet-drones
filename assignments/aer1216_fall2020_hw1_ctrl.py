@@ -1,34 +1,39 @@
 """Control implementation for assignment 1.
-The script is used the simulation in file "aer1216_fall2020_hw1_sim.py".
 
-Example:
-    To run the simulation, type in a terminal:
+The script is used the simulation in file `aer1216_fall2020_hw1_sim.py`.
 
-        $ python aer1216_fall2020_hw1_sim.py
+Example
+-------
+To run the simulation, type in a terminal:
 
-Todo:
+    $ python aer1216_fall2020_hw1_sim.py
 
-    * Tune the PD coefficients in HW1Control.__init__()
+Notes
+-----
+Tune the PD coefficients in `HW1Control.__init__()`.
+
 """
 import numpy as np
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 
 class HW1Control():
-    """Control class for assignment 1.
-    """
+    """Control class for assignment 1."""
 
     def __init__(self, env: BaseAviary):
         """ Initialization of class HW1Control.
 
-        Args:
-            env (BaseAviary): the PyBullet-based simulation environment.
+        Parameters
+        ----------
+        env : BaseAviary
+            The PyBullet-based simulation environment.
+
         """
         self.g = env.G
-        """float: gravity acceleration, in meters per second squared."""
+        """float: Gravity acceleration, in meters per second squared."""
         self.mass = env.M
-        """float: the mass of quad from environment."""
+        """float: The mass of quad from environment."""
         self.timestep = env.TIMESTEP
-        """float: simulation and control timestep."""
+        """float: Simulation and control timestep."""
         self.kf_coeff = env.KF
         """float: RPMs to force coefficient."""
         self.km_coeff = env.KM
@@ -40,9 +45,9 @@ class HW1Control():
         ############################################################
         ############################################################
         self.p_coeff_position = 1.5
-        """float: proportional coefficient(s) for position control."""
+        """float: Proportional coefficient for position control."""
         self.d_coeff_position = 0.0
-        """float: derivative coefficient(s) for position control."""
+        """float: Derivative coefficient for position control."""
         ############################################################
         ############################################################
         #### HOMEWORK CODE (END) ###################################
@@ -67,15 +72,23 @@ class HW1Control():
         """Compute the propellers' RPMs for the target state, given the
         current state.
 
-        Args:
-            current_position ((3,) NumPy array): global x, y, z, in meters.
-            current_velocity ((3,) NumPy array): global vx, vy, vz, in m/s.
-            target_position ((3,) NumPy array): global x, y, z, in meters.
-            target_velocity ((3,) NumPy array, optional): global, in m/s.
-            target_acceleration ((3,) NumPy array, optional): global, in m/s^2.
+        Parameters
+        ----------
+        current_position : ndarray
+            (3,)-shaped array of floats containing global x, y, z, in meters.
+        current_velocity : ndarray
+            (3,)-shaped array of floats containing global vx, vy, vz, in m/s.
+        target_position : ndarray
+            (3,)-shaped array of float containing global x, y, z, in meters.
+        target_velocity : ndarray, optional
+            (3,)-shaped array of floats containing global, in m/s.
+        target_acceleration : ndarray, optional
+            (3,)-shaped array of floats containing global, in m/s^2.
 
-        Returns:
-            (4,) NumPy array with the desired RPMs of each propeller.
+        Returns
+        -------
+        ndarray
+            (4,)-shaped array of ints containing the desired RPMs of each propeller.
         """
         self.control_counter += 1
         

@@ -1,3 +1,19 @@
+"""Script demonstrating PyBullet's forces and torques.
+
+Uncomment the appropriate calls to `p.applyExternalForce()`
+and `p.applyExternalTorque()` in `p.WORLD_FRAME` or `p.LINK_FRAME`.
+
+Example
+-------
+In a terminal, run as:
+
+    $ python physics.py
+
+Notes
+-----
+This script is for educational purposes and debugging only.
+
+"""
 import time
 import argparse
 import numpy as np

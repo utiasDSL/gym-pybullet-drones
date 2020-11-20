@@ -1,3 +1,20 @@
+"""Script demonstrating the joint use of simulation and control.
+
+The simulation is run by a `CtrlAviary` or `VisionAviary` environment.
+The control is given by the PID implementation in `DSLPIDControl`.
+
+Example
+-------
+In a terminal, run as:
+
+    $ python fly.py
+
+Notes
+-----
+The drones move, at different altitudes, along cicular trajectories 
+in the X-Y plane, around point (0, -.3).
+
+"""
 import os
 import time
 import argparse

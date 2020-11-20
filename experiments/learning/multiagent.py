@@ -1,3 +1,19 @@
+"""Learning script for multi-agent problems.
+
+Agents are based on `ray[rllib]`'s implementation of PPO and use a custom centralized critic.
+
+Example
+-------
+To run the script, type in a terminal:
+
+    $ python multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --num_workers <num_workers>
+
+Notes
+-----
+Check Ray's status at:
+    http://127.0.0.1:8265
+
+"""
 import os
 import time
 import argparse
@@ -39,8 +55,8 @@ from gym_pybullet_drones.utils.Logger import Logger
 
 import shared_constants
 
-OWN_OBS_VEC_SIZE = None
-ACTION_VEC_SIZE = None
+OWN_OBS_VEC_SIZE = None # Modified at runtime
+ACTION_VEC_SIZE = None # Modified at runtime
 
 #### Useful links ##########################################
 # Workflow: github.com/ray-project/ray/blob/master/doc/source/rllib-training.rst
@@ -106,12 +122,12 @@ def central_critic_observer(agent_obs, **kw):
         0: {
             "own_obs": agent_obs[0],
             "opponent_obs": agent_obs[1],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(ACTION_VEC_SIZE), # Filled in by FillInActions
         },
         1: {
             "own_obs": agent_obs[1],
             "opponent_obs": agent_obs[0],
-            "opponent_action": np.zeros(ACTION_VEC_SIZE),  # Filled in by FillInActions
+            "opponent_action": np.zeros(ACTION_VEC_SIZE), # Filled in by FillInActions
         },
     }
     return new_obs

@@ -1,3 +1,14 @@
+"""Test script for single agent problems.
+
+This scripts runs the best model found by one of the executions of `singleagent.py`
+
+Example
+-------
+To run the script, type in a terminal:
+
+    $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
+
+"""
 import os
 import time
 from datetime import datetime
@@ -30,8 +41,6 @@ from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import Actio
 import shared_constants
 
 if __name__ == "__main__":
-
-    # Use as $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')

@@ -1,3 +1,16 @@
+"""Script demonstrating the implementation of the downwash effect model.
+
+Example
+-------
+In a terminal, run as:
+
+    $ python downwash.py
+
+Notes
+-----
+The drones move along 2D trajectories in the X-Z plane, between x == +.5 and -.5.
+
+"""
 import time
 import argparse
 import numpy as np
