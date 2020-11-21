@@ -75,7 +75,7 @@ In a [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#insta
 dependencies (except `ffmpeg`), can be installed from `conda_req_list.txt`
 ```
 $ cd gym-pybullet-drones/
-$ conda create -n myenv --file /files/conda_req_list.txt
+$ conda create -n myenv --file files/conda_req_list.txt
 ```
 
 
