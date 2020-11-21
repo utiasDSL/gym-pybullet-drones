@@ -61,9 +61,7 @@ class HW1Control():
     ################################################################################
 
     def reset(self):
-        """ Resets the controller counters and variables (integral errors and
-        previous control step errors).
-        """
+        """ Resets the controller counter."""
         self.control_counter = 0
 
     ################################################################################
@@ -75,8 +73,7 @@ class HW1Control():
                         target_velocity=np.zeros(3),
                         target_acceleration=np.zeros(3),
                         ):
-        """Compute the propellers' RPMs for the target state, given the
-        current state.
+        """Compute the propellers' RPMs for the target state, given the current state.
 
         Parameters
         ----------
@@ -116,7 +113,7 @@ class HW1Control():
 
         ##### Calculate propeller turn rates given the PD input ####
         # turn_rate = sqrt( (m*u + m*g) / (4*Kf) )
-        propellers_rpm = np.sqrt((u * self.mass + self.mass*self.g) / (4 * self.kf_coeff))
+        propellers_rpm = np.sqrt((u*self.mass + self.g*self.mass) / (4 * self.kf_coeff))
 
         # For up-down motion, assign the same turn rates to all motors
         propellers_0_and_3_rpm, propellers_1_and_2_rpm = propellers_rpm, propellers_rpm

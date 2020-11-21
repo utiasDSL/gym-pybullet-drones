@@ -13,51 +13,44 @@ import pybullet as p
 import pybullet_data
 import gym
 
-#### Drone models enumeration ##############################
 class DroneModel(Enum):
-    CF2X = "cf2x"            # Bitcraze Craziflie 2.0 in the X configuration
-    CF2P = "cf2p"            # Bitcraze Craziflie 2.0 in the + configuration
-    HB = "hb"                # Generic quadrotor (with AscTec Hummingbird inertial properties)
+    """Drone models enumeration class."""
 
-#### Physics implementations enumeration ###################
+    CF2X = "cf2x"   # Bitcraze Craziflie 2.0 in the X configuration
+    CF2P = "cf2p"   # Bitcraze Craziflie 2.0 in the + configuration
+    HB = "hb"       # Generic quadrotor (with AscTec Hummingbird inertial properties)
+
+################################################################################
+
 class Physics(Enum):
-    PYB = "pyb"              # Base PyBullet physics update
-    DYN = "dyn"              # Update with an explicit model of the dynamics
-    PYB_GND = "pyb_gnd"      # PyBullet physics update with ground effect
-    PYB_DRAG = "pyb_drag"    # PyBullet physics update with drag
-    PYB_DW = "pyb_dw"        # PyBullet physics update with downwash
+    """Physics implementations enumeration class."""
+
+    PYB = "pyb"                         # Base PyBullet physics update
+    DYN = "dyn"                         # Update with an explicit model of the dynamics
+    PYB_GND = "pyb_gnd"                 # PyBullet physics update with ground effect
+    PYB_DRAG = "pyb_drag"               # PyBullet physics update with drag
+    PYB_DW = "pyb_dw"                   # PyBullet physics update with downwash
     PYB_GND_DRAG_DW = "pyb_gnd_drag_dw" # PyBullet physics update with ground effect, drag, and downwash
 
-#### Camera capture image type enumeration #################
+################################################################################
+
 class ImageType(Enum):
-    RGB = 0                  # Red, green, blue (and alpha)
-    DEP = 1                  # Depth
-    SEG = 2                  # Segmentation by object id
-    BW = 3                   # Black and white
+    """Camera capture image type enumeration class."""
 
-#### Base multi-drone environment class ####################
+    RGB = 0     # Red, green, blue (and alpha)
+    DEP = 1     # Depth
+    SEG = 2     # Segmentation by object id
+    BW = 3      # Black and white
+
+################################################################################
+
 class BaseAviary(gym.Env):
-    metadata = {'render.modes': ['human']}
+    """Base class for "drone aviary" Gym environments."""
 
-    ####################################################################################################
-    #### Initialize the environment ####################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - drone_model (DroneModel)         desired drone type (associated to an .urdf file) ###########
-    #### - num_drones (int)                 desired number of drones in the aviary #####################
-    #### - neighbourhood_radius (float)     used to compute the drones' adjacency matrix, in meters ####
-    #### - initial_xyzs ((3,1) array)       initial XYZ position of the drones #########################
-    #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
-    #### - physics (Physics)                desired implementation of physics/dynamics #################
-    #### - freq (int)                       the frequency (Hz) at which the physics engine advances ####
-    #### - aggregate_phy_steps (int)        number of physics updates within one call of .step() #######
-    #### - gui (bool)                       whether to use PyBullet's GUI ##############################
-    #### - record (bool)                    whether to save a video of the simulation ##################
-    #### - obstacles (bool)                 whether to add obstacles to the simulation #################
-    #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
-    #### - ...
-    #### - ...
-    ####################################################################################################
+    metadata = {'render.modes': ['human']}
+    
+    ################################################################################
+
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
                  num_drones: int=1,
@@ -74,6 +67,40 @@ class BaseAviary(gym.Env):
                  vision_attributes=False,
                  dynamics_attributes=False
                  ):
+        """ Initialization of a generic aviary environment.
+
+        Parameters
+        ----------
+        drone_model : DroneModel, optional
+            The desired drone type (detailed in an .urdf file in folder `assets`).
+        num_drones : int, optional
+            The desired number of drones in the aviary.
+        neighbourhood_radius : float, optional
+            Radius used to compute the drones' adjacency matrix, in meters.
+        initial_xyzs: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial XYZ position of the drones.
+        initial_rpys: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
+        physics : Physics, optional
+            The desired implementation of PyBullet physics/custom dynamics.
+        freq : int, optional
+            The frequency (Hz) at which the physics engine steps.
+        aggregate_phy_steps : int, optional
+            The number of physics steps within one call to `BaseAviary.step()`.
+        gui : bool, optional
+            Whether to use PyBullet's GUI.
+        record : bool, optional
+            Whether to save a video of the simulation in folder `files/videos/`.
+        obstacles : bool, optional
+            Whether to add obstacles to the simulation.
+        user_debug_gui : bool, optional
+            Whether to draw the drones' axes and the GUI RPMs sliders.
+        vision_attributes : bool, optional
+            Whether to allocate the attributes needed by vision-based aviary subclasses.
+        dynamics_attributes : bool, optional
+            Whether to allocate the attributes needed by subclasses accepting thrust and torques inputs.
+
+        """
         #### Constants #############################################
         self.G = 9.8
         self.RAD2DEG = 180/np.pi
@@ -214,14 +241,19 @@ class BaseAviary(gym.Env):
         self._updateAndStoreKinematicInformation()
         #### Start video recording #################################
         self._startVideoRecording()
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Reset the environment #########################################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - obs (..)                         initial observation, see _computeObs() in the child class ##
-    ####################################################################################################
     def reset(self):
+        """Resets the environment.
+
+        Returns
+        -------
+        ndarray | dict[..]
+            The initial observation, check the specific implementation of `_computeObs()`
+            in each subclass for its format.
+
+        """
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
         self._housekeeping()
@@ -231,22 +263,36 @@ class BaseAviary(gym.Env):
         self._startVideoRecording()
         #### Return the initial observation ########################
         return self._computeObs()
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Advance the environment by one simulation step ################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - action (..)                      to motors' speed, see _preprocessAction() in the child class
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - obs (..)                         observation, see _computeObs() in the child class ##########
-    #### - reward (..)                      reward value, see _computeReward() in the child class ######
-    #### - done (..)                        whether the current episode is over, see computeDone() #####
-    #### - info (Dict)                      currently unused, see _computeInfo() in the child class ####
-    ####################################################################################################
     def step(self,
              action
              ):
+        """Advances the environment by one simulation step.
+
+        Parameters
+        ----------
+        action : ndarray | dict[..]
+            The input action for one or more drones, translated into RPMs by
+            the specific implementation of `_preprocessAction()` in each subclass.
+
+        Returns
+        -------
+        ndarray | dict[..]
+            The step's observation, check the specific implementation of `_computeObs()`
+            in each subclass for its format.
+        float | dict[..]
+            The step's reward value(s), check the specific implementation of `_computeReward()`
+            in each subclass for its format.
+        bool | dict[..]
+            Whether the current epoisode is over, check the specific implementation of `_computeDone()`
+            in each subclass for its format.
+        dict[..]
+            Additional information as a dictionary, check the specific implementation of `_computeInfo()`
+            in each subclass for its format.
+
+        """
         #### Save PNG video frames if RECORD=True and GUI=False ####
         if self.RECORD and not self.GUI and self.step_counter%self.CAPTURE_FREQ == 0:
             [w, h, rgb, dep, seg] = p.getCameraImage(width=self.VID_WIDTH,
@@ -332,14 +378,23 @@ class BaseAviary(gym.Env):
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.AGGR_PHY_STEPS)
         return obs, reward, done, info
-
-    ####################################################################################################
-    #### Print a textual output of the environment #####################################################
-    ####################################################################################################
+    
+    ################################################################################
+    
     def render(self,
                mode='human',
                close=False
                ):
+        """Prints a textual output of the environment.
+
+        Parameters
+        ----------
+        mode : str, optional
+            Unused.
+        close : bool, optional
+            Unused.
+
+        """
         if self.first_render_call and not self.GUI:
             print("[WARNING] BaseAviary.render() is implemented as text-only, re-initialize the environment using Aviary(gui=True) to use PyBullet's graphical interface")
             self.first_render_call = False
@@ -352,31 +407,51 @@ class BaseAviary(gym.Env):
                   "——— velocity {:+06.2f}, {:+06.2f}, {:+06.2f}".format(self.vel[i, 0], self.vel[i, 1], self.vel[i, 2]),
                   "——— roll {:+06.2f}, pitch {:+06.2f}, yaw {:+06.2f}".format(self.rpy[i, 0]*self.RAD2DEG, self.rpy[i, 1]*self.RAD2DEG, self.rpy[i, 2]*self.RAD2DEG),
                   "——— angular velocities {:+06.2f}, {:+06.2f}, {:+06.2f} ——— ".format(self.ang_v[i, 0]*self.RAD2DEG, self.ang_v[i, 1]*self.RAD2DEG, self.ang_v[i, 2]*self.RAD2DEG))
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Close the environment #########################################################################
-    ####################################################################################################
     def close(self):
+        """Terminates the environment.
+        """
         if self.RECORD and self.GUI:
             p.stopStateLogging(self.VIDEO_ID, physicsClientId=self.CLIENT)
         p.disconnect(physicsClientId=self.CLIENT)
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Return the PyBullet Client Id #################################################################
-    ####################################################################################################
     def getPyBulletClient(self):
+        """Returns the PyBullet Client Id.
+
+        Returns
+        -------
+        int:
+            The PyBullet Client Id.
+
+        """
         return self.CLIENT
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Return the Drone Id ###########################################################################
-    ####################################################################################################
     def getDroneIds(self):
-        return self.DRONE_IDS
+        """Return the Drone Ids.
 
-    ####################################################################################################
-    #### Housekeeping of variables and PyBullet's parameters/objects in the reset() function ###########
-    ####################################################################################################
+        Returns
+        -------
+        ndarray:
+            (NUM_DRONES,)-shaped array of ints containing the drones' ids.
+
+        """
+        return self.DRONE_IDS
+    
+    ################################################################################
+
     def _housekeeping(self):
+        """Housekeeping function.
+
+        Allocation and zero-ing of the variables and PyBullet's parameters/objects
+        in the `reset()` function.
+
+        """
         #### Initialize/reset counters and zero-valued variables ###
         self.RESET_TIME = time.time()
         self.step_counter = 0
@@ -418,20 +493,30 @@ class BaseAviary(gym.Env):
             # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES:
             self._addObstacles()
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Update and store the drones kinemaatic information ############################################
-    ####################################################################################################
     def _updateAndStoreKinematicInformation(self):
+        """Updates and stores the drones kinemaatic information.
+
+        This method is meant to limit the number of calls to PyBullet in each step
+        and improve performance (at the expense of memory).
+
+        """
         for i in range (self.NUM_DRONES):
             self.pos[i], self.quat[i] = p.getBasePositionAndOrientation(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
             self.rpy[i] = p.getEulerFromQuaternion(self.quat[i])
             self.vel[i], self.ang_v[i] = p.getBaseVelocity(self.DRONE_IDS[i], physicsClientId=self.CLIENT)
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Start saving the video output as .mp4, if GUI is True,  or .png, otherwise ####################
-    ####################################################################################################
     def _startVideoRecording(self):
+        """Starts the recording of a video output.
+
+        The format of the video output is .mp4, if GUI is True, or .png, otherwise.
+        The video is saved under folder `files/videos`.
+
+        """
         if self.RECORD and self.GUI:
             self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4,
                                                 fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4",
@@ -441,39 +526,57 @@ class BaseAviary(gym.Env):
             self.FRAME_NUM = 0
             self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Return the state vector of the nth drone ######################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - state ((20,) array)              the state vector of the nth drone ##########################
-    ####################################################################################################
     def _getDroneStateVector(self,
                              nth_drone
                              ):
+        """Returns the state vector of the n-th drone.
+
+        Parameters
+        ----------
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        Returns
+        -------
+        ndarray 
+            (20,)-shaped array of floats containing the state vector of the n-th drone.
+            Check the only line in this method and `_updateAndStoreKinematicInformation()`
+            to understand its format.
+
+        """
         state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
                            self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_action[nth_drone, :]])
         return state.reshape(20,)
 
-    ####################################################################################################
-    #### Return camera captures from the nth drone POV #################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    #### - segmentation (bool)              whehter to compute the compute the segmentation mask #######
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - rgb ((h,w,4) array)              RBG(A) image captured from the nth_drone's POV #############
-    #### - dep ((h,w) array)                depth image captured from the nth_drone's POV ##############
-    #### - seg ((h,w) array)                segmentation image captured from the nth_drone's POV #######
-    ####################################################################################################
+    ################################################################################
+
     def _getDroneImages(self,
                         nth_drone,
                         segmentation: bool=True
                         ):
+        """Returns camera captures from the n-th drone POV.
+
+        Parameters
+        ----------
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+        segmentation : bool, optional
+            Whehter to compute the compute the segmentation mask.
+            It affects performance.
+
+        Returns
+        -------
+        ndarray 
+            (h, w, 4)-shaped array of uint8's containing the RBG(A) image captured from the n-th drone's POV.
+        ndarray
+            (h, w)-shaped array of uint8's containing the depth image captured from the n-th drone's POV.
+        ndarray
+            (h, w)-shaped array of uint8's containing the segmentation image captured from the n-th drone's POV.
+
+        """
         if self.IMG_RES is None:
             print("[ERROR] in BaseAviary._getDroneImages(), remember to set self.IMG_RES to np.array([width, height])")
             exit()
@@ -504,21 +607,29 @@ class BaseAviary(gym.Env):
         seg = np.reshape(seg, (h, w))
         return rgb, dep, seg
 
-    ####################################################################################################
-    #### Save an image returned by _getDroneImages() as a PNG file #####################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - img_type (ImageType)             image type: RGBA, depth, segmentation, b&w (from RGB) ######
-    #### - img_input ((h,w,?) array)        matrix with 1 (depth/seg) or 4 (RGBA) channels #############
-    #### - path (str)                       where to save the images as PNGs ###########################
-    #### - frame_num (int)                  number to append to the frame's filename ###################
-    ####################################################################################################
+    ################################################################################
+
     def _exportImage(self,
                      img_type: ImageType,
                      img_input,
                      path: str,
                      frame_num: int=0
                      ):
+        """Returns camera captures from the n-th drone POV.
+
+        Parameters
+        ----------
+        img_type : ImageType
+            The image type: RGB(A), depth, segmentation, or B&W (from RGB).
+        img_input : ndarray
+            (h, w, 4)-shaped array of uint8's for RBG(A) or B&W images.
+            (h, w)-shaped array of uint8's for depth or segmentation images.
+        path : str
+            Path where to save the output as PNG.
+        fram_num: int, optional
+            Frame number to append to the PNG's filename.
+
+        """
         if img_type == ImageType.RGB:
             (Image.fromarray(img_input.astype('uint8'), 'RGBA')).save(path+"frame_"+str(frame_num)+".png")
         elif img_type == ImageType.DEP:
@@ -533,31 +644,43 @@ class BaseAviary(gym.Env):
         if img_type != ImageType.RGB:
             (Image.fromarray(temp)).save(path+"frame_"+str(frame_num)+".png")
 
-    ####################################################################################################
-    #### Compute the adjacency matrix of a multi-drone system using NEIGHBOURHOOD_RADIUS ###############
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - adj_mat ((NUM_DRONES,NUM_DRONES) array)    adj_mat[i,j]=1 if i,j are neighbors, 0 otherwise #
-    ####################################################################################################
+    ################################################################################
+
     def _getAdjacencyMatrix(self):
+        """Computes the adjacency matrix of a multi-drone system.
+
+        Attribute NEIGHBOURHOOD_RADIUS is used to determine neighboring relationships.
+
+        Returns
+        -------
+        ndarray
+            (NUM_DRONES, NUM_DRONES)-shaped array of 0's and 1's representing the adjacency matrix 
+            of the system: adj_mat[i,j] == 1 if (i, j) are neighbors; == 0 otherwise.
+
+        """
         adjacency_mat = np.identity(self.NUM_DRONES)
         for i in range(self.NUM_DRONES-1):
             for j in range(self.NUM_DRONES-i-1):
                 if np.linalg.norm(self.pos[i, :]-self.pos[j+i+1, :]) < self.NEIGHBOURHOOD_RADIUS:
                     adjacency_mat[i, j+i+1] = adjacency_mat[j+i+1, i] = 1
         return adjacency_mat
-
-    ####################################################################################################
-    #### Base PyBullet physics implementation ##########################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - rpm ((4,1) array)                RPM values of the 4 motors #################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    ####################################################################################################
+    
+    ################################################################################
+    
     def _physics(self,
                  rpm,
                  nth_drone
                  ):
+        """Base PyBullet physics implementation.
+
+        Parameters
+        ----------
+        rpm : ndarray
+            (4)-shaped array of ints containing the RPMs values of the 4 motors.
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        """
         forces = np.array(rpm**2)*self.KF
         torques = np.array(rpm**2)*self.KM
         z_torque = (-torques[0] + torques[1] - torques[2] + torques[3])
@@ -576,17 +699,24 @@ class BaseAviary(gym.Env):
                               physicsClientId=self.CLIENT
                               )
 
-    ####################################################################################################
-    #### PyBullet implementation of ground effect, from (Shi et al., 2019) #############################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - rpm ((4,1) array)                RPM values of the 4 motors #################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    ####################################################################################################
+    ################################################################################
+    
     def _groundEffect(self,
                       rpm,
                       nth_drone
                       ):
+        """PyBullet implementation of a ground effect model.
+
+        Inspired by the analytical model used for comparison in (Shi et al., 2019).
+
+        Parameters
+        ----------
+        rpm : ndarray
+            (4)-shaped array of ints containing the RPMs values of the 4 motors.
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        """
         #### Kin. info of all links (propellers and center of mass)
         link_states = np.array(p.getLinkStates(self.DRONE_IDS[nth_drone],
                                                linkIndices=[0, 1, 2, 3, 4],
@@ -610,18 +740,25 @@ class BaseAviary(gym.Env):
                                      )
         #### TODO: a more realistic model accounting for the drone's
         #### Attitude and its z-axis velocity in the world frame ###
-
-    ####################################################################################################
-    #### PyBullet implementation of drag, from (Forster, 2015) #########################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - rpm ((4,1) array)                RPM values of the 4 motors #################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    ####################################################################################################
+    
+    ################################################################################
+    
     def _drag(self,
               rpm,
               nth_drone
               ):
+        """PyBullet implementation of a drag model.
+
+        Based on the the system identification in (Forster, 2015).
+
+        Parameters
+        ----------
+        rpm : ndarray
+            (4)-shaped array of ints containing the RPMs values of the 4 motors.
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        """
         #### Rotation matrix of the base ###########################
         base_rot = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone, :])).reshape(3, 3)
         #### Simple draft model applied to the base/center of mass #
@@ -634,16 +771,22 @@ class BaseAviary(gym.Env):
                              flags=p.LINK_FRAME,
                              physicsClientId=self.CLIENT
                              )
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### PyBullet implementation of ground effect, SiQi Zhou's modelling ###############################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    ####################################################################################################
     def _downwash(self,
                   nth_drone
                   ):
+        """PyBullet implementation of a ground effect model.
+
+        Based on experiments conducted at the Dynamic Systems Lab by SiQi Zhou.
+
+        Parameters
+        ----------
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        """
         for i in range(self.NUM_DRONES):
             delta_z = self.pos[i, 2] - self.pos[nth_drone, 2]
             delta_xy = np.linalg.norm(np.array(self.pos[i, 0:2]) - np.array(self.pos[nth_drone, 0:2]))
@@ -659,17 +802,24 @@ class BaseAviary(gym.Env):
                                      physicsClientId=self.CLIENT
                                      )
 
-    ####################################################################################################
-    #### Explicit dynamics implementation from github.com/utiasDSL/dsl__projects__benchmark ############
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - rpm ((4,1) array)                RPM values of the 4 motors #################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    ####################################################################################################
+    ################################################################################
+
     def _dynamics(self,
                   rpm,
                   nth_drone
                   ):
+        """Explicit dynamics implementation.
+
+        Based on code written at the Dynamic Systems Lab by James Xu.
+
+        Parameters
+        ----------
+        rpm : ndarray
+            (4)-shaped array of ints containing the RPMs values of the 4 motors.
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        """
         #### Current state #########################################
         pos = self.pos[nth_drone,:]
         quat = self.quat[nth_drone,:]
@@ -720,9 +870,25 @@ class BaseAviary(gym.Env):
     #### Returns #######################################################################################
     #### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
     ####################################################################################################
+    
+    ################################################################################
+
     def _normalizedActionToRPM(self,
                                action
                                ):
+        """De-normalizes the [-1, 1] range to the [0, MAX_RPM] range.
+
+        Parameters
+        ----------
+        action : ndarray
+            (4)-shaped array of ints containing an input in the [-1, 1] range.
+
+        Returns
+        -------
+        ndarray
+            (4)-shaped array of ints containing RPMs for the 4 motors in the [0, MAX_RPM] range.
+
+        """
         if np.any(np.abs(action)) > 1:
             print("\n[ERROR] it", self.step_counter, "in BaseAviary._normalizedActionToRPM(), out-of-bound action")
         return np.where(action <= 0, (action+1)*self.HOVER_RPM, action*self.MAX_RPM) # Non-linear mapping: -1 -> 0, 0 -> HOVER_RPM, 1 -> MAX_RPM
@@ -733,9 +899,24 @@ class BaseAviary(gym.Env):
     #### Arguments #####################################################################################
     #### - action ((4,1) array or dict)     an array or a dict of arrays to be stored in last_action ###
     ####################################################################################################
+    
+    ################################################################################
+
     def _saveLastAction(self,
                         action
                         ):
+        """Stores the most recent action into attribute `self.last_action`.
+
+        The last action can be used to compute aerodynamic effects.
+        The method disambiguates between array and dict inputs 
+        (for single or multi-agent aviaries, respectively).
+
+        Parameters
+        ----------
+        action : ndarray | dict
+            (4)-shaped array of ints (or dictionary of arrays) containing the current RPMs input.
+
+        """
         if isinstance(action, collections.Mapping):
             for k, v in action.items(): 
                 res_v = np.resize(v, (1, 4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
@@ -743,16 +924,20 @@ class BaseAviary(gym.Env):
         else: 
             res_action = np.resize(action, (1, 4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
             self.last_action = np.reshape(res_action, (self.NUM_DRONES, 4))
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Draw the local frame of the nth drone #########################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - nth_drone (int)                  order position of the drone in list self.DRONE_IDS #########
-    ####################################################################################################
     def _showDroneLocalAxes(self,
                             nth_drone
                             ):
+        """Draws the local frame of the n-th drone in PyBullet's GUI.
+
+        Parameters
+        ----------
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        """
         if self.GUI:
             AXIS_LENGTH = 2*self.L
             self.X_AX[nth_drone] = p.addUserDebugLine(lineFromXYZ=[0, 0, 0],
@@ -779,11 +964,15 @@ class BaseAviary(gym.Env):
                                                       replaceItemUniqueId=int(self.Z_AX[nth_drone]),
                                                       physicsClientId=self.CLIENT
                                                       )
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Add obstacles to the environment from .urdf files #############################################
-    ####################################################################################################
     def _addObstacles(self):
+        """Add obstacles to the environment.
+
+        These obstacles are loaded from standard URDF files included in Bullet.
+
+        """
         p.loadURDF("samurai.urdf",
                    physicsClientId=self.CLIENT
                    )
@@ -802,11 +991,16 @@ class BaseAviary(gym.Env):
                    p.getQuaternionFromEuler([0,0,0]),
                    physicsClientId=self.CLIENT
                    )
-
-    ####################################################################################################
-    #### Load parameters from the .urdf file ###########################################################
-    ####################################################################################################
+    
+    ################################################################################
+    
     def _parseURDFParameters(self):
+        """Loads parameters from an URDF file.
+
+        This method is nothing more than a custom XML parser for the .urdf
+        files in folder `assets/`.
+
+        """
         URDF_TREE = etxml.parse(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF).getroot()
         M = float(URDF_TREE[1][0][1].attrib['value'])
         L = float(URDF_TREE[0].attrib['arm'])
@@ -833,50 +1027,80 @@ class BaseAviary(gym.Env):
         DW_COEFF_3 = float(URDF_TREE[0].attrib['dw_coeff_3'])
         return M, L, THRUST2WEIGHT_RATIO, J, J_INV, KF, KM, COLLISION_H, COLLISION_R, COLLISION_Z_OFFSET, MAX_SPEED_KMH, \
                GND_EFF_COEFF, PROP_RADIUS, DRAG_COEFF, DW_COEFF_1, DW_COEFF_2, DW_COEFF_3
-
-    ####################################################################################################
-    #### Return the action space of the environment, to be implemented in a child class ################
-    ####################################################################################################
+    
+    ################################################################################
+    
     def _actionSpace(self):
-        raise NotImplementedError
+        """Returns the action space of the environment.
 
-    ####################################################################################################
-    #### Return the observation space of the environment, to be implemented in a child class ###########
-    ####################################################################################################
+        Must be implemented in a subclass.
+
+        """
+        raise NotImplementedError
+    
+    ################################################################################
+
     def _observationSpace(self):
-        raise NotImplementedError
+        """Returns the observation space of the environment.
 
-    ####################################################################################################
-    #### Return the current observation of the environment, to be implemented in a child class #########
-    ####################################################################################################
+        Must be implemented in a subclass.
+
+        """
+        raise NotImplementedError
+    
+    ################################################################################
+    
     def _computeObs(self):
-        raise NotImplementedError
+        """Returns the current observation of the environment.
 
-    ####################################################################################################
-    #### Preprocess the action passed to .step() into motors' RPMs, to be implemented in a child class #
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - action (..)                      input to the environment's .step() function ################
-    ####################################################################################################
+        Must be implemented in a subclass.
+
+        """
+        raise NotImplementedError
+    
+    ################################################################################
+
     def _preprocessAction(self,
                           action
                           ):
+        """Pre-processes the action passed to `.step()` into motors' RPMs.
+
+        Must be implemented in a subclass.
+
+        Parameters
+        ----------
+        action : ndarray | dict[..]
+            The input action for one or more drones, to be translated into RPMs.
+
+        """
         raise NotImplementedError
 
-    ####################################################################################################
-    #### Compute the current reward value(s), to be implemented in a child class #######################
-    ####################################################################################################
+    ################################################################################
+
     def _computeReward(self):
+        """Computes the current reward value(s).
+
+        Must be implemented in a subclass.
+
+        """
         raise NotImplementedError
 
-    ####################################################################################################
-    #### Compute the current done value(s), to be implemented in a child class #########################
-    ####################################################################################################
+    ################################################################################
+
     def _computeDone(self):
+        """Computes the current done value(s).
+
+        Must be implemented in a subclass.
+
+        """
         raise NotImplementedError
 
-    ####################################################################################################
-    #### Compute the current info dict(s), to be implemented in a child class ##########################
-    ####################################################################################################
+    ################################################################################
+
     def _computeInfo(self):
+        """Computes the current info dict(s).
+
+        Must be implemented in a subclass.
+
+        """
         raise NotImplementedError
