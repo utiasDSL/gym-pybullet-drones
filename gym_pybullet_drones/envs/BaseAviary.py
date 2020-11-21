@@ -67,7 +67,7 @@ class BaseAviary(gym.Env):
                  vision_attributes=False,
                  dynamics_attributes=False
                  ):
-        """ Initialization of a generic aviary environment.
+        """Initialization of a generic aviary environment.
 
         Parameters
         ----------

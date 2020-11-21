@@ -3,28 +3,11 @@ from gym import spaces
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
 
-######################################################################################################################################################
-#### Multi-drone environment class for control applications ##########################################################################################
-######################################################################################################################################################
 class CtrlAviary(BaseAviary):
+    """Multi-drone environment class for control applications."""
 
-    ####################################################################################################
-    #### Initialize the environment ####################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - drone_model (DroneModel)         desired drone type (associated to an .urdf file) ###########
-    #### - num_drones (int)                 desired number of drones in the aviary #####################
-    #### - neighbourhood_radius (float)     used to compute the drones' adjacency matrix, in meters ####
-    #### - initial_xyzs ((3,1) array)       initial XYZ position of the drones #########################
-    #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
-    #### - physics (Physics)                desired implementation of physics/dynamics #################
-    #### - freq (int)                       the frequency (Hz) at which the physics engine advances ####
-    #### - aggregate_phy_steps (int)        number of physics updates within one call of .step() #######
-    #### - gui (bool)                       whether to use PyBullet's GUI ##############################
-    #### - record (bool)                    whether to save a video of the simulation ##################
-    #### - obstacles (bool)                 whether to add obstacles to the simulation #################
-    #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
-    ####################################################################################################
+    ################################################################################
+
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
                  num_drones: int=1,
@@ -39,6 +22,36 @@ class CtrlAviary(BaseAviary):
                  obstacles=False,
                  user_debug_gui=True
                  ):
+        """Initialization of an aviary environment for control applications.
+
+        Parameters
+        ----------
+        drone_model : DroneModel, optional
+            The desired drone type (detailed in an .urdf file in folder `assets`).
+        num_drones : int, optional
+            The desired number of drones in the aviary.
+        neighbourhood_radius : float, optional
+            Radius used to compute the drones' adjacency matrix, in meters.
+        initial_xyzs: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial XYZ position of the drones.
+        initial_rpys: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
+        physics : Physics, optional
+            The desired implementation of PyBullet physics/custom dynamics.
+        freq : int, optional
+            The frequency (Hz) at which the physics engine steps.
+        aggregate_phy_steps : int, optional
+            The number of physics steps within one call to `BaseAviary.step()`.
+        gui : bool, optional
+            Whether to use PyBullet's GUI.
+        record : bool, optional
+            Whether to save a video of the simulation in folder `files/videos/`.
+        obstacles : bool, optional
+            Whether to add obstacles to the simulation.
+        user_debug_gui : bool, optional
+            Whether to draw the drones' axes and the GUI RPMs sliders.
+
+        """
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -53,10 +66,18 @@ class CtrlAviary(BaseAviary):
                          user_debug_gui=user_debug_gui
                          )
 
-    ####################################################################################################
-    #### Return the action space of the environment, a Dict of Box(4,) with NUM_DRONES entries #########
-    ####################################################################################################
+    ################################################################################
+
     def _actionSpace(self):
+        """Returns the action space of the environment.
+
+        Returns
+        -------
+        dict[str, ndarray]
+            A Dict of Box(4,) with NUM_DRONES entries,
+            indexed by drone Id in string format.
+
+        """
         #### Action vector ######## P0            P1            P2            P3
         act_lower_bound = np.array([0.,           0.,           0.,           0.])
         act_upper_bound = np.array([self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM])
@@ -64,12 +85,19 @@ class CtrlAviary(BaseAviary):
                                                high=act_upper_bound,
                                                dtype=np.float32
                                                ) for i in range(self.NUM_DRONES)})
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Return the observation space of the environment, a Dict with NUM_DRONES entries of Dict of ####
-    #### { Box(4,), MultiBinary(NUM_DRONES) } ##########################################################
-    ####################################################################################################
     def _observationSpace(self):
+        """Returns the observation space of the environment.
+
+        Returns
+        -------
+        dict[str, dict[str, ndarray]]
+            A Dict with NUM_DRONES entries indexed by Id in string format,
+            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+
+        """
         #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WR       WP       WY       P0            P1            P2            P3
         obs_lower_bound = np.array([-np.inf, -np.inf, 0.,     -1., -1., -1., -1., -np.pi, -np.pi, -np.pi, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,           0.,           0.,           0.])
         obs_upper_bound = np.array([np.inf,  np.inf,  np.inf, 1.,  1.,  1.,  1.,  np.pi,  np.pi,  np.pi,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM])
@@ -80,59 +108,91 @@ class CtrlAviary(BaseAviary):
                                                  "neighbors": spaces.MultiBinary(self.NUM_DRONES)
                                                  }) for i in range(self.NUM_DRONES)})
 
-    ####################################################################################################
-    #### Return the current observation of the environment #############################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - obs (dict)                       {"0":{"state": np.arr(20,),"neighbors": np.arr(NUM_DRONES)},
-    ####                                    .. "NUM_DRONES-1": {..} } ##################################
-    ####                                    for the "state"'s content see _observationSpace() ##########
-    ####                                    "neighbors" is the drone's row of the adjacency matrix #####
-    ####################################################################################################
+    ################################################################################
+
     def _computeObs(self):
+        """Returns the current observation of the environment.
+
+        For the value of key "state", see the implementation of `_getDroneStateVector()`,
+        the value of key "neighbors" is the drone's own row of the adjacency matrix.
+
+        Returns
+        -------
+        dict[str, dict[str, ndarray]]
+            A Dict with NUM_DRONES entries indexed by Id in string format,
+            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+
+        """
         adjacency_mat = self._getAdjacencyMatrix()
         return {str(i): {"state": self._getDroneStateVector(i), "neighbors": adjacency_mat[i, :]} for i in range(self.NUM_DRONES)}
 
-    ####################################################################################################
-    #### Preprocess the action passed to step() ########################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - action (dict of (4,1) array)     unclipped RPMs commanded to the 4 motors of each drone #####
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - clip_action ((N_DRONES,4,1) arr) clipped RPMs commanded to the 4 motors of each drone #######
-    ####################################################################################################
+    ################################################################################
+
     def _preprocessAction(self,
                           action
                           ):
+        """Pre-processes the action passed to `.step()` into motors' RPMs.
+
+        Clips and converts a dictionary into a 2D array.
+
+        Parameters
+        ----------
+        action : dict[str, ndarray]
+            The (unbounded) input action for each drone, to be translated into feasible RPMs.
+
+        Returns
+        -------
+        ndarray
+            (NUM_DRONES, 4)-shaped array of ints containing to clipped RPMs
+            commanded to the 4 motors of each drone.
+
+        """
         clipped_action = np.zeros((self.NUM_DRONES, 4))
         for k, v in action.items():
             clipped_action[int(k), :] = np.clip(np.array(v), 0, self.MAX_RPM)
         return clipped_action
 
-    ####################################################################################################
-    #### Compute the current reward value(s) ###########################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - reward (..)                      the reward(s) associated to the current obs/state ##########
-    ####################################################################################################
+    ################################################################################
+
     def _computeReward(self):
+        """Computes the current reward value(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        int
+            Dummy value.
+
+        """
         return -1
 
-    ####################################################################################################
-    #### Compute the current done value(s) #############################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - done (..)                        the done value(s) associated to the current obs/state ######
-    ####################################################################################################
+    ################################################################################
+    
     def _computeDone(self):
+        """Computes the current done value(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        bool
+            Dummy value.
+
+        """
         return False
 
-    ####################################################################################################
-    #### Compute the current info dict(s) ##############################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - info (..)                        the info dict(s) associated to the current obs/state #######
-    ####################################################################################################
+    ################################################################################
+    
     def _computeInfo(self):
+        """Computes the current info dict(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        dict[str, int]
+            Dummy value.
+
+        """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years

@@ -11,48 +11,29 @@ from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 
-######################################################################################################################################################
-#### Action type enumeration #########################################################################################################################
-######################################################################################################################################################
 class ActionType(Enum):
-    RPM = "rpm"
-    DYN = "dyn"
-    PID = "pid"
-    ONE_D_RPM = "one_d_rpm"
-    ONE_D_DYN = "one_d_dyn"
-    ONE_D_PID = "one_d_pid"
+    """Action type enumeration class."""
+    RPM = "rpm"                 # RPMS
+    DYN = "dyn"                 # Desired thrust and torques
+    PID = "pid"                 # PID control
+    ONE_D_RPM = "one_d_rpm"     # 1D (identical input to all motors) with RPMs
+    ONE_D_DYN = "one_d_dyn"     # 1D (identical input to all motors) with desired thrust and torques
+    ONE_D_PID = "one_d_pid"     # 1D (identical input to all motors) with PID control
 
-######################################################################################################################################################
-#### Observation type enumeration #########################################################################################################################
-######################################################################################################################################################
+################################################################################
+
 class ObservationType(Enum):
-    KIN = "kin"
-    RGB = "rgb"
+    """Observation type enumeration class."""
+    KIN = "kin"     # Kinematic information (pose, linear and angular velocities)
+    RGB = "rgb"     # RGB camera capture in each drone's POV
 
-######################################################################################################################################################
-#### Single drone environment class for reinforcement learning applications (in this implementation, taking off from the origin) #####################
-######################################################################################################################################################
+################################################################################
+
 class BaseSingleAgentAviary(BaseAviary):
+    """Base single drone environment class for reinforcement learning."""
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Initialize the environment ####################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - drone_model (DroneModel)         desired drone type (associated to an .urdf file) ###########
-    #### - num_drones (int)                 desired number of drones in the aviary #####################
-    #### - neighbourhood_radius (float)     used to compute the drones' adjacency matrix, in meters ####
-    #### - initial_xyzs ((3,1) array)       initial XYZ position of the drones #########################
-    #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
-    #### - physics (Physics)                desired implementation of physics/dynamics #################
-    #### - freq (int)                       the frequency (Hz) at which the physics engine advances ####
-    #### - aggregate_phy_steps (int)        number of physics updates within one call of .step() #######
-    #### - gui (bool)                       whether to use PyBullet's GUI ##############################
-    #### - record (bool)                    whether to save a video of the simulation ##################
-    #### - obstacles (bool)                 whether to add obstacles to the simulation #################
-    #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
-    #### - 
-    ####
-    ####################################################################################################
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
                  initial_xyzs=None,
@@ -65,6 +46,37 @@ class BaseSingleAgentAviary(BaseAviary):
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM
                  ):
+        """Initialization of a generic single agent RL environment.
+
+        Attribute `num_drones` is automatically set to 1; `vision_attributes`
+        and `dynamics_attributes` are selected based on the choice of `obs`
+        and `act`; `obstacles` is set to True and overridden with landmarks for
+        vision applications; `user_debug_gui` is set to False for performance.
+
+        Parameters
+        ----------
+        drone_model : DroneModel, optional
+            The desired drone type (detailed in an .urdf file in folder `assets`).
+        initial_xyzs: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial XYZ position of the drones.
+        initial_rpys: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
+        physics : Physics, optional
+            The desired implementation of PyBullet physics/custom dynamics.
+        freq : int, optional
+            The frequency (Hz) at which the physics engine steps.
+        aggregate_phy_steps : int, optional
+            The number of physics steps within one call to `BaseAviary.step()`.
+        gui : bool, optional
+            Whether to use PyBullet's GUI.
+        record : bool, optional
+            Whether to save a video of the simulation in folder `files/videos/`.
+        obs : ObservationType, optional
+            The type of observation space (kinematic information or vision)
+        act : ActionType, optional
+            The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
+
+        """
         vision_attributes = True if obs == ObservationType.RGB else False
         dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
         self.OBS_TYPE = obs
@@ -90,12 +102,17 @@ class BaseSingleAgentAviary(BaseAviary):
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
                          dynamics_attributes=dynamics_attributes
-                         ) 
+                         )
 
-    ####################################################################################################
-    #### Add obstacles to the environment from .urdf files #############################################
-    ####################################################################################################
+    ################################################################################
+
     def _addObstacles(self):
+        """Add obstacles to the environment.
+
+        Only if the observation is of type RGB, 4 landmarks are added.
+        Overrides BaseAviary's method.
+
+        """
         if self.OBS_TYPE == ObservationType.RGB:
             p.loadURDF("block.urdf",
                        [1, 0, .1],
@@ -120,10 +137,17 @@ class BaseSingleAgentAviary(BaseAviary):
         else:
             pass
 
-    ####################################################################################################
-    #### Return the action space of the environment, a Box(4,) #########################################
-    ####################################################################################################
+    ################################################################################
+
     def _actionSpace(self):
+        """Returns the action space of the environment.
+
+        Returns
+        -------
+        ndarray
+            A Box() of size 1, 3, or 3, depending on the action type.
+
+        """
         if self.ACT_TYPE == ActionType.RPM or self.ACT_TYPE == ActionType.DYN:
             size = 4
         elif self.ACT_TYPE == ActionType.PID:
@@ -138,16 +162,30 @@ class BaseSingleAgentAviary(BaseAviary):
                           dtype=np.float32
                           )
 
-    ####################################################################################################
-    #### Preprocess the action passed to step() ########################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - action ((4,1) array)             unclipped RPMs commanded to the 4 motors of the drone ######
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - clipped_action ((4,1) array)     clipped RPMs commanded to the 4 motors of the drone ########
-    ####################################################################################################
-    def _preprocessAction(self, action):
+    ################################################################################
+
+    def _preprocessAction(self,
+                          action
+                          ):
+        """Pre-processes the action passed to `.step()` into motors' RPMs.
+
+        Parameter `action` is processed differenly for each of the different
+        action types: `action` can be of length 1, 3, or 4, and represent 
+        RPMs, desired thrust and torques, or the next target position to reach 
+        using PID control.
+
+        Parameters
+        ----------
+        action : ndarray
+            The input action for each drone, to be translated into RPMs.
+
+        Returns
+        -------
+        ndarray
+            (4,)-shaped array of ints containing to clipped RPMs
+            commanded to the 4 motors of each drone.
+
+        """
         if self.ACT_TYPE == ActionType.RPM:
             return np.array(self.HOVER_RPM * (1+0.05*action))
         elif self.ACT_TYPE == ActionType.DYN:
@@ -203,10 +241,17 @@ class BaseSingleAgentAviary(BaseAviary):
         else:
             print("[ERROR] in BaseSingleAgentAviary._preprocessAction()")
 
-    ####################################################################################################
-    #### Return the observation space of the environment, a Box(20,) ###################################
-    ####################################################################################################
+    ################################################################################
+
     def _observationSpace(self):
+        """Returns the observation space of the environment.
+
+        Returns
+        -------
+        ndarray
+            A Box() of shape (H,W,4) or (12,) depending on the observation type.
+
+        """
         if self.OBS_TYPE == ObservationType.RGB:
             return spaces.Box(low=0,
                               high=255,
@@ -229,14 +274,18 @@ class BaseSingleAgentAviary(BaseAviary):
             ############################################################
         else:
             print("[ERROR] in BaseSingleAgentAviary._observationSpace()")
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Return the current observation of the environment #############################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - obs (20,) array                  for its content see _observationSpace() ####################
-    ####################################################################################################
     def _computeObs(self):
+        """Returns the current observation of the environment.
+
+        Returns
+        -------
+        ndarray
+            A Box() of shape (H,W,4) or (12,) depending on the observation type.
+
+        """
         if self.OBS_TYPE == ObservationType.RGB:
             if self.step_counter%self.IMG_CAPTURE_FREQ == 0: 
                 self.rgb[0], self.dep[0], self.seg[0] = self._getDroneImages(0,
@@ -261,17 +310,20 @@ class BaseSingleAgentAviary(BaseAviary):
             ############################################################
         else:
             print("[ERROR] in BaseSingleAgentAviary._computeObs()")
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - state ((20,1) array)             raw simulation state #######################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - ...
-    ####################################################################################################
     def _clipAndNormalizeState(self,
                                state
                                ):
+        """Normalizes a drone's state to the [-1,1] range.
+
+        Must be implemented in a subclass.
+
+        Parameters
+        ----------
+        state : ndarray
+            Array containing the non-normalized state of a single drone.
+
+        """
         raise NotImplementedError
