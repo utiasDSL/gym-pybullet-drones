@@ -5,26 +5,35 @@ from cycler import cycler
 import numpy as np
 import matplotlib.pyplot as plt
 
-#os.environ['KMP_DUPLICATE_LIB_OK']='True'
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
-######################################################################################################################################################
-#### Logger class ####################################################################################################################################
-######################################################################################################################################################
 class Logger(object):
+    """A class for logging and visualization.
 
-    ####################################################################################################
-    #### Initialize the logger #########################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - logging_freq_hz (int)            logging frequency in Hz ####################################
-    #### - num_drones (int)                 number of drones ###########################################
-    #### - duration_sec (int)               (opt) to preallocate the log arrays, improves performance ##
-    ####################################################################################################
+    Stores, saves to file, and plots the kinematic information and RPMs
+    of a simulation with one or more drones.
+
+    """
+
+    ################################################################################
+
     def __init__(self,
                  logging_freq_hz: int,
                  num_drones: int=1,
                  duration_sec: int=0
                  ):
+        """Logger class __init__ method.
+
+        Parameters
+        ----------
+        logging_freq_hz : int
+            Logging frequency in Hz.
+        num_drones : int, optional
+            Number of drones.
+        duration_sec : int, optional
+            Used to preallocate the log arrays (improves performance).
+
+        """
         self.LOGGING_FREQ_HZ = logging_freq_hz
         self.NUM_DRONES = num_drones
         self.PREALLOCATED_ARRAYS = False if duration_sec == 0 else True
@@ -60,21 +69,28 @@ class Logger(object):
                                                                                                              # ang_vel_y,
                                                                                                              # ang_vel_z
 
-    ####################################################################################################
-    #### Log entries for a single simulation step, of a single drone ###################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - drone (int)                      drone associated to the log entry ##########################
-    #### - timestamp (float)                timestamp of the log in simulation clock ###################
-    #### - state ((20,1) array)             drone's state ##############################################
-    #### - control ((12,1) array)           drone's control target #####################################
-    ####################################################################################################
+    ################################################################################
+
     def log(self,
             drone: int,
             timestamp,
             state,
             control=np.zeros(12)
             ):
+        """Logs entries for a single simulation step, of a single drone.
+
+        Parameters
+        ----------
+        drone : int
+            Id of the drone associated to the log entry.
+        timestamp : float
+            Timestamp of the log in simulation clock.
+        state : ndarray
+            (20,)-shaped array of floats containing the drone's state.
+        control : ndarray, optional
+            (12,)-shaped array of floats containing the drone's control target.
+
+        """
         if drone < 0 or drone >= self.NUM_DRONES or timestamp < 0 or len(state) != 20 or len(control) != 12:
             print("[ERROR] in Logger.log(), invalid data")
         current_counter = int(self.counters[drone])
@@ -92,22 +108,27 @@ class Logger(object):
         self.controls[drone, :, current_counter] = control
         self.counters[drone] = current_counter + 1
 
-    ####################################################################################################
-    #### Save the logs to file #########################################################################
-    ####################################################################################################
+    ################################################################################
+
     def save(self):
+        """Save the logs to file.
+        """
         with open(os.path.dirname(os.path.abspath(__file__))+"/../../files/logs/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
             np.save(out_file, self.timestamps)
             np.save(out_file, self.states)
             np.save(out_file, self.controls)
 
-    ####################################################################################################
-    #### Plot the logged (state) data ##################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - pwm (bool)                       if True, convert logged RPM into PWM values ################
-    ####################################################################################################
+    ################################################################################
+    
     def plot(self, pwm=False):
+        """Logs entries for a single simulation step, of a single drone.
+
+        Parameters
+        ----------
+        pwm : bool, optional
+            If True, converts logged RPM into PWM values (for Crazyflies).
+
+        """
         #### Loop over colors and line styles ######################
         plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) + cycler('linestyle', ['-', '--', ':', '-.'])))
         fig, axs = plt.subplots(8, 2)

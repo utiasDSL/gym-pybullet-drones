@@ -19,6 +19,8 @@ from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 class HW1Control():
     """Control class for assignment 1."""
 
+    ################################################################################
+
     def __init__(self, env: BaseAviary):
         """ Initialization of class HW1Control.
 
@@ -56,11 +58,15 @@ class HW1Control():
 
         self.reset()
 
+    ################################################################################
+
     def reset(self):
         """ Resets the controller counters and variables (integral errors and
         previous control step errors).
         """
         self.control_counter = 0
+
+    ################################################################################
 
     def compute_control(self,
                         current_position,

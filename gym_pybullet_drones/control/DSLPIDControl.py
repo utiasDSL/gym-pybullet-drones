@@ -7,16 +7,25 @@ from gym_pybullet_drones.control.BaseControl import BaseControl
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
 
 class DSLPIDControl(BaseControl):
+    """PID control class for Crazyflies.
 
-    ####################################################################################################
-    #### Initialize the controller #####################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - env (BaseAviary)                 simulation environment #####################################
-    ####################################################################################################
+    Based on work conducted at UTIAS' DSL by SiQi Zhou and James Xu.
+
+    """
+
+    ################################################################################
+
     def __init__(self,
                  env: BaseAviary
                  ):
+        """DSL PID control initialization.
+
+        Parameters
+        ----------
+        env : BaseAviary
+            The simulation environment to control.
+
+        """
         super().__init__(env=env)
         if self.DRONE_MODEL != DroneModel.CF2X and self.DRONE_MODEL != DroneModel.CF2P:
             print("[ERROR] in DSLPIDControl.__init__(), DSLPIDControl requires DroneModel.CF2X or DroneModel.CF2P")
@@ -37,10 +46,14 @@ class DSLPIDControl(BaseControl):
             self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
         self.reset()
 
-    ####################################################################################################
-    #### Reset the controller ##########################################################################
-    ####################################################################################################
+    ################################################################################
+
     def reset(self):
+        """Resets the control classes.
+
+        The previous step's and integral errors for both position and attitude are set to zero.
+
+        """
         super().reset()
         #### Initialized PID control variables #####################
         self.last_pos_e = np.zeros(3)
@@ -48,25 +61,8 @@ class DSLPIDControl(BaseControl):
         self.last_rpy_e = np.zeros(3)
         self.integral_rpy_e = np.zeros(3)
 
-    ####################################################################################################
-    #### Compute the control action for a single drone #################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - control_timestep (float)         time step at which control is computed #####################
-    #### - cur_pos ((3,1) array)            current position ###########################################
-    #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
-    #### - cur_vel ((3,1) array)            current velocity ###########################################
-    #### - cur_ang_vel ((3,1) array)        current angular velocity ###################################
-    #### - target_pos ((3,1) array)         desired position ###########################################
-    #### - target_rpy ((3,1) array)         desired orientation as roll, pitch, yaw ####################
-    #### - target_vel ((3,1) array)         desired velocity ###########################################
-    #### - target_ang_vel ((3,1) array)     desired angular velocity ###################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
-    #### - pos_e ((3,1) array)              current XYZ position error #################################
-    #### - yaw_e (float)                    current yaw error ##########################################
-    ####################################################################################################
+    ################################################################################
+    
     def computeControl(self,
                        control_timestep,
                        cur_pos,
@@ -78,6 +74,41 @@ class DSLPIDControl(BaseControl):
                        target_vel=np.zeros(3),
                        target_ang_vel=np.zeros(3)
                        ):
+        """Computes the PID control action (as RPMs) for a single drone.
+
+        This methods sequentially calls `_dslPIDPositionControl()` and `_dslPIDAttitudeControl()`.
+
+        Parameters
+        ----------
+        control_timestep : float
+            The time step at which control is computed.
+        cur_pos : ndarray
+            (3,1)-shaped array of floats containing the current position.
+        cur_quat : ndarray
+            (4,1)-shaped array of floats containing the current orientation as a quaternion.
+        cur_vel : ndarray
+            (3,1)-shaped array of floats containing the current velocity.
+        cur_ang_vel : ndarray
+            (3,1)-shaped array of floats containing the current angular velocity.
+        target_pos : ndarray
+            (3,1)-shaped array of floats containing the desired position.
+        target_rpy : ndarray, optional
+            (3,1)-shaped array of floats containing the desired orientation as roll, pitch, yaw.
+        target_vel : ndarray, optional
+            (3,1)-shaped array of floats containing the desired velocity.
+        target_ang_vel : ndarray, optional
+            (3,1)-shaped array of floats containing the desired angular velocity.
+
+        Returns
+        -------
+        ndarray
+            (4,1)-shaped array of integers containing the RPMs to apply to each of the 4 motors.
+        ndarray
+            (3,1)-shaped array of floats containing the current XYZ position error.
+        float
+            The current yaw error.
+
+        """
         self.control_counter += 1
         thrust, computed_target_rpy, pos_e = self._dslPIDPositionControl(control_timestep,
                                                                          cur_pos,
@@ -96,24 +127,9 @@ class DSLPIDControl(BaseControl):
                                           )
         cur_rpy = p.getEulerFromQuaternion(cur_quat)
         return rpm, pos_e, computed_target_rpy[2] - cur_rpy[2]
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### DSL's CF2.x PID position control ##############################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - control_timestep (float)         time step (inverse of freq.) at which control is computed ##
-    #### - cur_pos ((3,1) array)            current position ###########################################
-    #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
-    #### - cur_vel ((3,1) array)            current velocity ###########################################
-    #### - target_pos ((3,1) array)         desired position ###########################################
-    #### - target_rpy ((3,1) array)         desired orientation as roll, pitch, yaw ####################
-    #### - target_vel ((3,1) array)         desired velocity ###########################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - thrust (float)                   thrust along the drone z-axis ##############################
-    #### - target_rpy ((3,1) array)         target roll, pitch, and yaw ################################
-    #### - yaw_e (float)                    current yaw error ##########################################
-    ####################################################################################################
     def _dslPIDPositionControl(self,
                                control_timestep,
                                cur_pos,
@@ -123,6 +139,35 @@ class DSLPIDControl(BaseControl):
                                target_rpy,
                                target_vel
                                ):
+        """DSL's CF2.x PID position control.
+
+        Parameters
+        ----------
+        control_timestep : float
+            The time step at which control is computed.
+        cur_pos : ndarray
+            (3,1)-shaped array of floats containing the current position.
+        cur_quat : ndarray
+            (4,1)-shaped array of floats containing the current orientation as a quaternion.
+        cur_vel : ndarray
+            (3,1)-shaped array of floats containing the current velocity.
+        target_pos : ndarray
+            (3,1)-shaped array of floats containing the desired position.
+        target_rpy : ndarray
+            (3,1)-shaped array of floats containing the desired orientation as roll, pitch, yaw.
+        target_vel : ndarray
+            (3,1)-shaped array of floats containing the desired velocity.
+
+        Returns
+        -------
+        float
+            The target thrust along the drone z-axis.
+        ndarray
+            (3,1)-shaped array of floats containing the target roll, pitch, and yaw.
+        float
+            The current position error.
+
+        """
         cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat)).reshape(3, 3)
         pos_e = target_pos - cur_pos
         vel_e = target_vel - cur_vel
@@ -145,21 +190,9 @@ class DSLPIDControl(BaseControl):
         if np.any(np.abs(target_euler) > math.pi):
             print("\n[ERROR] ctrl it", self.control_counter, "in Control._dslPIDPositionControl(), values outside range [-pi,pi]")
         return thrust, target_euler, pos_e
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### DSL's CF2.x PID attitude control ##############################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - control_timestep (float)         time step at which control is computed #####################
-    #### - thrust (float)                   desired thrust along the drone z-axis ######################
-    #### - cur_quat ((4,1) array)           current orientation as a quaternion ########################
-    #### - cur_ang_vel ((3,1) array)        current angular velocity ###################################
-    #### - target_euler ((3,1) array)       computed target Euler angles ###############################
-    #### - target_ang_vel ((3,1) array)     desired angular velocity ###################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
-    ####################################################################################################
     def _dslPIDAttitudeControl(self,
                                control_timestep,
                                thrust,
@@ -168,6 +201,29 @@ class DSLPIDControl(BaseControl):
                                target_euler,
                                target_ang_vel
                                ):
+        """DSL's CF2.x PID attitude control.
+
+        Parameters
+        ----------
+        control_timestep : float
+            The time step at which control is computed.
+        thrust : float
+            The target thrust along the drone z-axis.
+        cur_quat : ndarray
+            (4,1)-shaped array of floats containing the current orientation as a quaternion.
+        cur_ang_vel : ndarray
+            (3,1)-shaped array of floats containing the current angular velocity.
+        target_euler : ndarray
+            (3,1)-shaped array of floats containing the computed target Euler angles.
+        target_ang_vel : ndarray
+            (3,1)-shaped array of floats containing the desired angular velocity.
+
+        Returns
+        -------
+        ndarray
+            (4,1)-shaped array of integers containing the RPMs to apply to each of the 4 motors.
+
+        """
         cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat)).reshape(3, 3)
         target_quat = (Rotation.from_euler('XYZ', target_euler, degrees=False)).as_quat()
         w,x,y,z = target_quat
@@ -186,17 +242,23 @@ class DSLPIDControl(BaseControl):
         pwm = thrust + np.dot(self.MIXER_MATRIX, target_torques)
         pwm = np.clip(pwm, self.MIN_PWM, self.MAX_PWM)
         return self.PWM2RPM_SCALE * pwm + self.PWM2RPM_CONST
+    
+    ################################################################################
 
-    ####################################################################################################
-    #### Utility function interfacing 1, 2, or 3D use cases ############################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - thrust ((?,1) array)             a desired thrust input with 1, 2, or 4 components ##########
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - pwm ((4,1) array)                PWM values to apply to the 4 motors ########################
-    ####################################################################################################
     def _one23DInterface(thrust):
+        """Utility function interfacing 1, 2, or 3D use cases.
+
+        Parameters
+        ----------
+        thrust : ndarray
+            Array of floats of length 1, 2, or 4 containing a desired thrust input.
+
+        Returns
+        -------
+        ndarray
+            (4,1)-shaped array of integers containing the PWM (not RPMs) to apply to each of the 4 motors.
+
+        """
         DIM = len(np.array(thrust))
         pwm = np.clip((np.sqrt(np.array(thrust)/(self.KF*(4/DIM)))-self.PWM2RPM_CONST)/self.PWM2RPM_SCALE, self.MIN_PWM, self.MAX_PWM)
         if DIM in [1, 4]:

@@ -1,32 +1,49 @@
+"""General use functions.
+"""
 import time
 import argparse
 import numpy as np
 from scipy.optimize import nnls
 
-####################################################################################################
-#### Sync the stepped simulation with the wall-clock ###############################################
-####################################################################################################
-#### Arguments #####################################################################################
-#### - i (int)                              current simulation iteration ###########################
-#### - start_time (timestamp)               timestamp of the simulation start ######################
-#### - timestep (float)                     desired, wall-clock step of the simulation's rendering #
-####################################################################################################
+################################################################################
+
 def sync(i, start_time, timestep):
+    """Syncs the stepped simulation with the wall-clock.
+
+    Function `sync` calls time.sleep() to pause a for-loop
+    running faster than the expected timestep.
+
+    Parameters
+    ----------
+    i : int
+        Current simulation iteration.
+    start_time : timestamp
+        Timestamp of the simulation start.
+    timestep : float
+        Desired, wall-clock step of the simulation's rendering.
+
+    """
     if timestep > .04 or i%(int(1/(24*timestep))) == 0:
         elapsed = time.time() - start_time
         if elapsed < (i*timestep):
             time.sleep(timestep*i - elapsed)
 
-####################################################################################################
-#### Convert a string into a boolean ###############################################################
-####################################################################################################
-#### Arguments #####################################################################################
-#### - val (?)                              input value (possibly stirng) to interpret as boolean ##
-####################################################################################################
-#### Returns #######################################################################################
-#### - _ (bool)                             the boolean interpretation of the input value ##########
-####################################################################################################
+################################################################################
+
 def str2bool(val):
+    """Converts a string into a boolean.
+
+    Parameters
+    ----------
+    val : str | bool
+        Input value (possibly string) to interpret as boolean.
+
+    Returns
+    -------
+    bool
+        Interpretation of `val` as True or False.
+
+    """
     if isinstance(val, bool):
         return val
     elif val.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -36,20 +53,8 @@ def str2bool(val):
     else:
         raise argparse.ArgumentTypeError("[ERROR] in str2bool(), a Boolean value is expected")
 
-####################################################################################################
-#### Non-negative Least Squares (NNLS) RPM from desired thrust and torques  ########################
-####################################################################################################
-#### Arguments #####################################################################################
-#### - thrust (float)                   desired thrust along the local z-axis ######################
-#### - x_torque (float)                 desired x-axis torque ######################################
-#### - y_torque (float)                 desired y-axis torque ######################################
-#### - z_torque (float)                 desired z-axis torque ######################################
-#### - ...
-#### - ...
-####################################################################################################
-#### Returns #######################################################################################
-#### - rpm ((4,1) array)                RPM values to apply to the 4 motors ########################
-####################################################################################################
+################################################################################
+
 def nnlsRPM(thrust,
             x_torque,
             y_torque,
@@ -63,6 +68,43 @@ def nnlsRPM(thrust,
             b_coeff,
             gui=False
             ):
+    """Non-negative Least Squares (NNLS) RPMs from desired thrust and torques.
+
+    This function uses the NNLS implementation in `scipy.optimize`.
+
+    Parameters
+    ----------
+    thrust : float
+        Desired thrust along the drone's z-axis.
+    x_torque : float
+        Desired drone's x-axis torque.
+    y_torque : float
+        Desired drone's y-axis torque.
+    z_torque : float
+        Desired drone's z-axis torque.
+    counter : int
+        Simulation or control iteration, only used for printouts.
+    max_thrust : float
+        Maximum thrust of the quadcopter.
+    max_xy_torque : float
+        Maximum torque around the x and y axes of the quadcopter.
+    max_z_torque : float
+        Maximum torque around the z axis of the quadcopter.
+    a : ndarray
+        (4, 4)-shaped array of floats containing the motors configuration.
+    inv_a : ndarray
+        (4, 4)-shaped array of floats, inverse of a.
+    b_coeff : ndarray
+        (4,1)-shaped array of floats containing the coefficients to re-scale thrust and torques. 
+    gui : boolean, optional
+        Whether a GUI is active or not, only used for printouts.
+
+    Returns
+    -------
+    ndarray
+        (4,)-shaped array of ints containing the desired RPMs of each propeller.
+
+    """
     #### Check the feasibility of thrust and torques ###########
     if gui and thrust < 0 or thrust > max_thrust:
         print("[WARNING] iter", counter, "in utils.nnlsRPM(), unfeasible thrust {:.2f} outside range [0, {:.2f}]".format(thrust, max_thrust))
