@@ -5,26 +5,10 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType, BaseSingleAgentAviary
 
 class HoverAviary(BaseSingleAgentAviary):
+    """Single agent RL problem: hover at position."""
 
-    ####################################################################################################
-    #### Initialize the environment ####################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - drone_model (DroneModel)         desired drone type (associated to an .urdf file) ###########
-    #### - num_drones (int)                 desired number of drones in the aviary #####################
-    #### - neighbourhood_radius (float)     used to compute the drones' adjacency matrix, in meters ####
-    #### - initial_xyzs ((3,1) array)       initial XYZ position of the drones #########################
-    #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
-    #### - physics (Physics)                desired implementation of physics/dynamics #################
-    #### - freq (int)                       the frequency (Hz) at which the physics engine advances ####
-    #### - aggregate_phy_steps (int)        number of physics updates within one call of .step() #######
-    #### - gui (bool)                       whether to use PyBullet's GUI ##############################
-    #### - record (bool)                    whether to save a video of the simulation ##################
-    #### - obstacles (bool)                 whether to add obstacles to the simulation #################
-    #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
-    #### ...
-    ####
-    ####################################################################################################
+    ################################################################################
+    
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
                  initial_xyzs=None,
@@ -37,6 +21,34 @@ class HoverAviary(BaseSingleAgentAviary):
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM
                  ):
+        """Initialization of a single agent RL environment.
+
+        Using the generic single agent RL superclass.
+
+        Parameters
+        ----------
+        drone_model : DroneModel, optional
+            The desired drone type (detailed in an .urdf file in folder `assets`).
+        initial_xyzs: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial XYZ position of the drones.
+        initial_rpys: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
+        physics : Physics, optional
+            The desired implementation of PyBullet physics/custom dynamics.
+        freq : int, optional
+            The frequency (Hz) at which the physics engine steps.
+        aggregate_phy_steps : int, optional
+            The number of physics steps within one call to `BaseAviary.step()`.
+        gui : bool, optional
+            Whether to use PyBullet's GUI.
+        record : bool, optional
+            Whether to save a video of the simulation in folder `files/videos/`.
+        obs : ObservationType, optional
+            The type of observation space (kinematic information or vision)
+        act : ActionType, optional
+            The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
+
+        """
         super().__init__(drone_model=drone_model,
                          initial_xyzs=initial_xyzs,
                          initial_rpys=initial_rpys,
@@ -49,49 +61,69 @@ class HoverAviary(BaseSingleAgentAviary):
                          act=act
                          )
 
-    ####################################################################################################
-    #### Compute the current reward value(s) ###########################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - reward (..)                      the reward(s) associated to the current obs/state ##########
-    ####################################################################################################
+    ################################################################################
+    
     def _computeReward(self):
+        """Computes the current reward value.
+
+        Returns
+        -------
+        float
+            The reward.
+
+        """
         state = self._getDroneStateVector(0)
         return -1 * np.linalg.norm(np.array([0, 0, 1])-state[0:3])**2
 
-    ####################################################################################################
-    #### Compute the current done value(s) #############################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - done (..)                        the done value(s) associated to the current obs/state ######
-    ####################################################################################################
+    ################################################################################
+    
     def _computeDone(self):
+        """Computes the current done value.
+
+        Returns
+        -------
+        bool
+            Whether the current episode is done.
+
+        """
         if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC:
             return True
         else:
             return False
 
-    ####################################################################################################
-    #### Compute the current info dict(s) ##############################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - info (..)                        the info dict(s) associated to the current obs/state #######
-    ####################################################################################################
+    ################################################################################
+    
     def _computeInfo(self):
+        """Computes the current info dict(s).
+
+        Unused.
+
+        Returns
+        -------
+        dict[str, int]
+            Dummy value.
+
+        """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
-    ####################################################################################################
-    #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - state ((20,1) array)             raw simulation state #######################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - normalized state ((20,1) array)  clipped and normalized simulation state ####################
-    ####################################################################################################
+    ################################################################################
+    
     def _clipAndNormalizeState(self,
                                state
                                ):
+        """Normalizes a drone's state to the [-1,1] range.
+
+        Parameters
+        ----------
+        state : ndarray
+            (20,)-shaped array of floats containing the non-normalized state of a single drone.
+
+        Returns
+        -------
+        ndarray
+            (20,)-shaped array of floats containing the normalized state of a single drone.
+
+        """
         MAX_LIN_VEL_XY = 3 
         MAX_LIN_VEL_Z = 1
 
@@ -144,10 +176,9 @@ class HoverAviary(BaseSingleAgentAviary):
                                       ]).reshape(20,)
 
         return norm_and_clipped
-
-    ####################################################################################################
-    #### Print a warning if any of the 20 values in a state vector is out of the normalization range ###
-    ####################################################################################################
+    
+    ################################################################################
+    
     def _clipAndNormalizeStateWarning(self,
                                       state,
                                       clipped_pos_xy,
@@ -158,6 +189,11 @@ class HoverAviary(BaseSingleAgentAviary):
                                       clipped_ang_vel_rp,
                                       clipped_ang_vel_y
                                       ):
+        """Debugging printouts associated to `_clipAndNormalizeState`.
+
+        Print a warning if any of the 20 values in a state vector is out of the normalization range.
+        
+        """
         if not(clipped_pos_xy == np.array(state[0:2])).all():
             print("[WARNING] it", self.step_counter, "in HoverAviary._clipAndNormalizeState(), clipped xy position [{:.2f} {:.2f}]".format(state[0], state[1]))
         if not(clipped_pos_z == np.array(state[2])).all():

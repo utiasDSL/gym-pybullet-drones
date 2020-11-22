@@ -9,29 +9,11 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 from gym_pybullet_drones.envs.multi_agent_rl.BaseMultiagentAviary import BaseMultiagentAviary
 
-
-######################################################################################################################################################
-#### Multi-drone environment class for multi-agent reinforcement learning applications (in this implementation, flocking) ############################
-######################################################################################################################################################
 class FlockAviary(BaseMultiagentAviary):
+    """Multi-agent RL problem: flocking."""
 
-    ####################################################################################################
-    #### Initialize the environment ####################################################################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - drone_model (DroneModel)         desired drone type (associated to an .urdf file) ###########
-    #### - num_drones (int)                 desired number of drones in the aviary #####################
-    #### - neighbourhood_radius (float)     used to compute the drones' adjacency matrix, in meters ####
-    #### - initial_xyzs ((3,1) array)       initial XYZ position of the drones #########################
-    #### - initial_rpys ((3,1) array)       initial orientations of the drones (radians) ###############
-    #### - physics (Physics)                desired implementation of physics/dynamics #################
-    #### - freq (int)                       the frequency (Hz) at which the physics engine advances ####
-    #### - aggregate_phy_steps (int)        number of physics updates within one call of .step() #######
-    #### - gui (bool)                       whether to use PyBullet's GUI ##############################
-    #### - record (bool)                    whether to save a video of the simulation ##################
-    #### - obstacles (bool)                 whether to add obstacles to the simulation #################
-    #### - user_debug_gui (bool)            whether to draw the drones' axes and the GUI sliders #######
-    ####################################################################################################
+    ################################################################################
+
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
                  num_drones: int=2,
@@ -45,6 +27,38 @@ class FlockAviary(BaseMultiagentAviary):
                  record=False, 
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM):
+        """Initialization of a multi-agent RL environment.
+
+        Using the generic multi-agent RL superclass.
+
+        Parameters
+        ----------
+        drone_model : DroneModel, optional
+            The desired drone type (detailed in an .urdf file in folder `assets`).
+        num_drones : int, optional
+            The desired number of drones in the aviary.
+        neighbourhood_radius : float, optional
+            Radius used to compute the drones' adjacency matrix, in meters.
+        initial_xyzs: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial XYZ position of the drones.
+        initial_rpys: ndarray | None, optional
+            (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
+        physics : Physics, optional
+            The desired implementation of PyBullet physics/custom dynamics.
+        freq : int, optional
+            The frequency (Hz) at which the physics engine steps.
+        aggregate_phy_steps : int, optional
+            The number of physics steps within one call to `BaseAviary.step()`.
+        gui : bool, optional
+            Whether to use PyBullet's GUI.
+        record : bool, optional
+            Whether to save a video of the simulation in folder `files/videos/`.
+        obs : ObservationType, optional
+            The type of observation space (kinematic information or vision)
+        act : ActionType, optional
+            The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
+
+        """
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -59,13 +73,17 @@ class FlockAviary(BaseMultiagentAviary):
                          act=act
                          )
 
-    ####################################################################################################
-    #### Compute the current reward value(s) ###########################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - reward (..)                      the reward(s) associated to the current obs/state ##########
-    ####################################################################################################
+    ################################################################################
+    
     def _computeReward(self):
+        """Computes the current reward value(s).
+
+        Returns
+        -------
+        dict[int, float]
+            The reward value for each drone.
+
+        """
         rewards = {}
         states = np.array([self._getDroneStateVector(0) for i in range(self.NUM_DRONES)])
         rewards[0] = -1 * np.linalg.norm(np.array([0, 0, 1]) - states[0, 0:3])**2
@@ -115,39 +133,56 @@ class FlockAviary(BaseMultiagentAviary):
         return {   i   : reward for i in range(self.NUM_DRONES) }
         """
 
-    ####################################################################################################
-    #### Compute the current done value(s) #############################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - done (..)                        the done value(s) associated to the current obs/state ######
-    ####################################################################################################
+    ################################################################################
+    
     def _computeDone(self):
+        """Computes the current done value(s).
+
+        Returns
+        -------
+        dict[int | "__all__", bool]
+            Dictionary with the done value of each drone and 
+            one additional boolean value for key "__all__".
+
+        """
         bool_val = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else False
         done = {i: bool_val for i in range(self.NUM_DRONES)}
         done["__all__"] = True if True in done.values() else False
         return done
 
-    ####################################################################################################
-    #### Compute the current info dict(s) ##############################################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - info (..)                        the info dict(s) associated to the current obs/state #######
-    ####################################################################################################
+    ################################################################################
+    
     def _computeInfo(self):
+        """Computes the current info dict(s).
+
+        Unused.
+
+        Returns
+        -------
+        dict[int, dict[]]
+            Dictionary of empty dictionaries.
+
+        """
         return {i: {} for i in range(self.NUM_DRONES)}
 
-    ####################################################################################################
-    #### Normalize the 20 values in the simulation state to the [-1,1] range ###########################
-    ####################################################################################################
-    #### Arguments #####################################################################################
-    #### - state ((20,1) array)             raw simulation state #######################################
-    ####################################################################################################
-    #### Returns #######################################################################################
-    #### - normalized state ((20,1) array)  clipped and normalized simulation state ####################
-    ####################################################################################################
+    ################################################################################
+
     def _clipAndNormalizeState(self,
                                state
                                ):
+        """Normalizes a drone's state to the [-1,1] range.
+
+        Parameters
+        ----------
+        state : ndarray
+            (20,)-shaped array of floats containing the non-normalized state of a single drone.
+
+        Returns
+        -------
+        ndarray
+            (20,)-shaped array of floats containing the normalized state of a single drone.
+
+        """
         MAX_LIN_VEL_XY = 3 
         MAX_LIN_VEL_Z = 1
 
@@ -201,9 +236,8 @@ class FlockAviary(BaseMultiagentAviary):
 
         return norm_and_clipped
 
-    ####################################################################################################
-    #### Print a warning if any of the 20 values in a state vector is out of the normalization range ###
-    ####################################################################################################
+    ################################################################################
+
     def _clipAndNormalizeStateWarning(self,
                                       state,
                                       clipped_pos_xy,
@@ -214,6 +248,11 @@ class FlockAviary(BaseMultiagentAviary):
                                       clipped_ang_vel_rp,
                                       clipped_ang_vel_y
                                       ):
+        """Debugging printouts associated to `_clipAndNormalizeState`.
+
+        Print a warning if any of the 20 values in a state vector is out of the normalization range.
+        
+        """
         if not(clipped_pos_xy == np.array(state[0:2])).all():
             print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped xy position [{:.2f} {:.2f}]".format(state[0], state[1]))
         if not(clipped_pos_z == np.array(state[2])).all():
