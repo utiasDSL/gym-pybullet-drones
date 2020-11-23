@@ -1,10 +1,13 @@
-# On Ubuntu or macOS
+# AER1216 Fall 2020
+Quadcopter control exercises for University of Toronto's Fall 2020 course *AER1216: Fundamentals of Unmanned Aerial Vehicles*
+
+## On Ubuntu or macOS
 
 The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
 
 > Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
 
-## Requirements
+### Requirements
 In a terminal, type
 ```
 pip install --upgrade numpy Pillow matplotlib cycler 
@@ -19,7 +22,7 @@ On *Ubuntu*
 $ sudo apt install ffmpeg
 ```
 
-## Installation
+### Installation
 In a terminal, type
 ```
 $ wget https://github.com/JacopoPan/gym-pybullet-drones/archive/v0.5.1.zip
@@ -28,19 +31,19 @@ $ cd gym-pybullet-drones-0.5.1/
 $ pip install -e .
 ```
 
-## Use
+### Use
 In a terminal, type
 ```
 $ cd assignments/
-$ python aer1216_fall2020_hw1_sim.py    #### e.g., for hw1
+$ python aer1216_fall2020_hw1_sim.py        # e.g., for hw1
 ```
 
-## Troubleshooting
+### Troubleshooting
 On Ubuntu and macOS, contact `jacopo.panerati {at} utoronto.ca`
 
-# On Windows
+## On Windows
 
-## Requirements
+### Requirements
 
 Download Visual Studio and [C++ 14.0](https://visualstudio.microsoft.com/downloads/)
 - We recommend the free Community version
@@ -53,7 +56,7 @@ Download a Python IDE
 - We recommend [PyCharm Community](https://www.jetbrains.com/pycharm/download/#section=windows)
 - Select all the options in the installer and reboot
 
-## Installation
+### Installation
 
 Download the code
 - Go to https://github.com/JacopoPan/gym-pybullet-drones/releases
@@ -84,7 +87,7 @@ To run code you may need to configure PyCharm.
 
 > Type `Cycler` and click "Install package".
 
-## Use
+### Use
 
 If (as) you did not install the `gym_pybullet_drones` module, uncomment lines 17-18
 ```
@@ -99,5 +102,5 @@ Go to the "Run" drop down menu and select "Run"
 
 - Select `aer1216_fall2020_hw1_sim.py` to start the simulation
 
-## Troubleshooting
+### Troubleshooting
 On Windows, contact `karime.pereida {at} robotics.utias.utoronto.ca`
