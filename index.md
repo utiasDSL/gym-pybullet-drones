@@ -19,6 +19,8 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 |             *Aerodynamic effects* | Drag, downwash, ground effect | Drag                                  | Drag                                                |
 |          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) API* | **Yes** | No | **Yes**                                                   |
 | *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py)* | **Yes**  | No | No                                     |
+| *[PyMARL](https://github.com/oxwhirl/pymarl) integration* | *WIP*  | No                                   | No                                                  |
+
 
 
 
@@ -52,30 +54,30 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 
 
-## Requirements
-The repo was written using *Python 3.7.6* on *macOS 10.15* and tested on *Ubuntu 18.04.05*
+## Requirements and Installation
+The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
 
+
+
+
+### On *macOS* and *Ubuntu*
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
-[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [`rllib`](https://docs.ray.io/en/master/rllib.html) and [`ffmpeg`](https://ffmpeg.org) (for video recording)
-```
-$ pip install gym
-$ pip install pybullet
-$ pip install stable-baselines3
-$ pip install 'ray[rllib]'
-$ brew install ffmpeg                       # on macOS
-$ sudo apt install ffmpeg                   # on Linux
-```
-Using a [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#install-conda), 
-dependencies (except `ffmpeg`), can be installed from file
-```
-$ cd gym-pybullet-drones/
-$ conda create -n myenv --file /files/conda_req_list.txt
-```
+[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
 
+> Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
 
-
-
-## Installation
+```
+pip install --upgrade numpy matplotlib Pillow cycler 
+pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
+```
+Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
+```
+$ brew install ffmpeg
+```
+On *Ubuntu*
+```
+$ sudo apt install ffmpeg
+```
 The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
 and can be installed with `pip install --editable`
 ```
@@ -83,6 +85,12 @@ $ git clone https://github.com/JacopoPan/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
 $ pip install -e .
 ```
+
+
+
+
+### On *Windows*
+Check out these step-by-step [instructions](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/assignments#on-windows) written by Karime Pereida for *Windows 10*
 
 
 
@@ -136,6 +144,11 @@ If you wish, please refer to this work as
 - Guanya Shi, Xichen Shi, Michael O’Connell, Rose Yu, Kamyar Azizzadenesheli, Animashree Anandkumar, Yisong Yue, and Soon-Jo Chung (2019)
 [*Neural Lander: Stable Drone Landing Control Using Learned Dynamics*](https://arxiv.org/pdf/1811.08027.pdf)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
+- C. Karen Liu and Dan Negrut (2020) [*The Role of Physics-Based Simulators in Robotics*](https://www.annualreviews.org/doi/pdf/10.1146/annurev-control-072220-093055)
+- Aaqib Parvez Mohammed and Matias Valdenegro-Toro (2020) [*Can Reinforcement Learning for Continuous Control Generalize Across Physics Engines?*](https://arxiv.org/pdf/2010.14444.pdf)
+- Eric Liang, Richard Liaw, Philipp Moritz, Robert Nishihara, Roy Fox, Ken Goldberg, Joseph E. Gonzalez, Michael I. Jordan, and Ion Stoica (2018) [*RLlib: Abstractions for Distributed Reinforcement Learning*](https://arxiv.org/pdf/1712.09381.pdf)
+- Antonin Raffin, Ashley Hill, Maximilian Ernestus, Adam Gleave, Anssi Kanervisto, and Noah Dormann (2019) [*Stable Baselines3*](https://github.com/DLR-RM/stable-baselines3)
+- Mikayel Samvelyan, Tabish Rashid, Christian Schroeder de Witt, Gregory Farquhar, Nantas Nardelli, Tim G. J. Rudner, Chia-Man Hung, Philip H. S. Torr, Jakob Foerster, and Shimon Whiteson (2019) [*The StarCraft Multi-Agent Challenge*](https://arxiv.org/pdf/1902.04043.pdf)
 
 
 
