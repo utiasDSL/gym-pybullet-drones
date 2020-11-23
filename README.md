@@ -149,7 +149,7 @@ Folder [`experiments/learning`](https://github.com/JacopoPan/gym-pybullet-drones
 
 For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), run the [training script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py) as
 ```
-$ cd cd gym-pybullet-drones/experiments/learning/
+$ cd gym-pybullet-drones/experiments/learning/
 $ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
 ```
 Run the [replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py) to visualize the best trained agent(s) as
@@ -158,7 +158,7 @@ $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time
 ```
 For multi-agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib.html) run the [train script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/multiagent.py) as
 ```
-$ cd cd gym-pybullet-drones/experiments/learning/
+$ cd gym-pybullet-drones/experiments/learning/
 $ python multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --num_workers <num_workers>
 ```
 Run the [replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py) to visualize the best trained agent(s) as
