@@ -153,21 +153,21 @@ $ python physics.py                         # Try 'python physics.py -h' to show
 ## Experiments
 Folder [`experiments/learning`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/experiments/learning) contains scripts with template learning pipelines
 
-For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [train](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py) with
+For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), run the [training script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py) as
 ```
 $ cd cd gym-pybullet-drones/experiments/learning/
 $ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
 ```
-[Replay](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py) the best trained agent with
+Run the [replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py) to visualize the best trained agent(s) as
 ```
 $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
 ```
-For single agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib.html) [train](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/multiagent.py) with
+For multi-agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib.html) run the [train script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/multiagent.py) as
 ```
 $ cd cd gym-pybullet-drones/experiments/learning/
 $ python multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --num_workers <num_workers>
 ```
-[Replay](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py) the best trained agent with
+Run the [replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py) to visualize the best trained agent(s) as
 ```
 $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
 ```
