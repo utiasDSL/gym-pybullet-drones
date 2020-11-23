@@ -95,8 +95,8 @@ $ pip install -e .
 
 
 
-## On *Windows*
-Check out [these instructions](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/assignments#on-windows) written by Karime Pereida
+### On *Windows*
+Check out these step-by-step [instructions](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/assignments#on-windows) written by Karime Pereida for *Windows 10*
 
 
 
@@ -107,7 +107,6 @@ There are 2 basic template scripts in `examples/`: `fly.py` and `learn.py`
 
 - `fly.py` runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
-$ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
 $ python fly.py                             # Try 'python fly.py -h' to show the script's customizable parameters
 ```
@@ -119,7 +118,6 @@ $ python fly.py                             # Try 'python fly.py -h' to show the
 
 - `learn.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
-$ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
 $ python learn.py                           # Try 'python learn.py -h' to show the script's customizable parameters
 ```
@@ -130,7 +128,6 @@ Other scripts in folder `examples/` are:
 
 - `compare.py` which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/example_trace.pkl)
 ```
-$ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
 $ python compare.py                         # Try 'python compare.py -h' to show the script's customizable parameters
 ```
@@ -138,7 +135,6 @@ $ python compare.py                         # Try 'python compare.py -h' to show
 
 - `downwash.py` is a flight script with only 2 drones, to test the downwash model
 ```
-$ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
 $ python downwash.py                        # Try 'python downwash.py -h' to show the script's customizable parameters
 ```
@@ -147,7 +143,6 @@ $ python downwash.py                        # Try 'python downwash.py -h' to sho
 
 - `physics.py` is an accessory script that can be used to understand PyBullet's force and torque APIs for different [URDF links](http://wiki.ros.org/urdf/XML/link) in `p.WORLD_FRAME` and `p.LINK_FRAME`
 ```
-$ conda activate myenv                      # If using a conda environment
 $ cd gym-pybullet-drones/examples/
 $ python physics.py                         # Try 'python physics.py -h' to show the script's customizable parameters
 ```
@@ -158,13 +153,24 @@ $ python physics.py                         # Try 'python physics.py -h' to show
 ## Experiments
 Folder [`experiments/learning`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/experiments/learning) contains scripts with template learning pipelines
 
-For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html)
-- [RL training script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py)
-- [RL replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py)
-
-For single agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib.html)
-- [MARL training script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/multiagent.py)
-- [MARL replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py)
+For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [train](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py) with
+```
+$ cd cd gym-pybullet-drones/experiments/learning/
+$ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
+```
+[Replay](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py) the best trained agent with
+```
+$ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
+```
+For single agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib.html) [train](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/multiagent.py) with
+```
+$ cd cd gym-pybullet-drones/experiments/learning/
+$ python multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --num_workers <num_workers>
+```
+[Replay](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py) the best trained agent with
+```
+$ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
+```
 
 
 
@@ -363,7 +369,6 @@ Workspace [`ros2`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/
 With ROS2 installed (on either macOS or Ubuntu, edit `ros2_and_pkg_setups.(zsh/bash)` accordingly), run
 ```
 $ cd gym-pybullet-drones/ros2/
-$ conda activate myenv                      # If using a conda environment
 $ source ros2_and_pkg_setups.zsh            # On macOS, on Ubuntu use $ source ros2_and_pkg_setups.bash
 $ colcon build --packages-select ros2_gym_pybullet_drones
 $ source ros2_and_pkg_setups.zsh            # On macOS, on Ubuntu use $ source ros2_and_pkg_setups.bash
@@ -372,7 +377,6 @@ $ ros2 run ros2_gym_pybullet_drones aviary_wrapper
 In a new terminal terminal, run
 ```
 $ cd gym-pybullet-drones/ros2/
-$ conda activate myenv                      # If using a conda environment
 $ source ros2_and_pkg_setups.zsh            # On macOS, on Ubuntu use $ source ros2_and_pkg_setups.bash
 $ ros2 run ros2_gym_pybullet_drones random_control
 ```
