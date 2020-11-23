@@ -1,14 +1,22 @@
 # On Ubuntu or macOS
 
-The repo was written using *Python 3.7* on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
+The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
+
+> Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
 
 ## Requirements
 In a terminal, type
 ```
-$ pip install --upgrade gym
-$ pip install --upgrade pybullet
-$ pip install --upgrade stable-baselines3
-$ pip install --upgrade 'ray[rllib]'
+pip install --upgrade numpy matplotlib Pillow cycler 
+pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
+```
+On *macOS*
+```
+$ brew install ffmpeg
+```
+On *Ubuntu*
+```
+$ sudo apt install ffmpeg
 ```
 
 ## Installation

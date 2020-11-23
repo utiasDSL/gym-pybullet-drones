@@ -1,4 +1,5 @@
 # gym-pybullet-drones
+
 [Simple](https://en.wikipedia.org/wiki/KISS_principle) OpenAI [Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning with quadrotors 
 
 <img src="files/readme_images/helix.gif" alt="formation flight" width="360"> <img src="files/readme_images/helix.png" alt="control info" width="450">
@@ -26,7 +27,8 @@
 |         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
 |             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
 |          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) interface* | **Yes** | No | **Yes**                                             |
-| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) interface* | **Yes**  | No | No                           |
+| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) interface* | **Yes** | No | No                           |
+| *[PyMARL](https://github.com/oxwhirl/pymarl) integration* | *WIP*  | No                                   | No                                   |
 
 
 
@@ -58,29 +60,30 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 
 
-## Requirements
-The repo was written using *Python 3.7* on *macOS 10.15* and tested on *Ubuntu 18.04*
+## Requirements and Installation
+The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
 
+
+
+
+### On *macOS* and *Ubuntu*
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
-[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), [`rllib`](https://docs.ray.io/en/master/rllib.html) and [`ffmpeg`](https://ffmpeg.org) (for video recording only)
-```
-$ pip install --upgrade gym
-$ pip install --upgrade pybullet
-$ pip install --upgrade stable-baselines3
-$ pip install --upgrade 'ray[rllib]'
-$ brew install ffmpeg                       # on macOS
-$ sudo apt install ffmpeg                   # on Linux
-```
-In a [`conda` environment](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on macOS, 
-dependencies (except `ffmpeg`), can be installed from `conda_req_list.txt`
-```
-$ cd gym-pybullet-drones/
-$ conda create -n myenv --file /files/conda_req_list.txt
-```
+[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
 
+> Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
 
-
-## Installation
+```
+pip install --upgrade numpy matplotlib Pillow cycler 
+pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
+```
+Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
+```
+$ brew install ffmpeg
+```
+On *Ubuntu*
+```
+$ sudo apt install ffmpeg
+```
 The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
 and can be installed with `pip install --editable`
 ```
@@ -88,6 +91,13 @@ $ git clone https://github.com/JacopoPan/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
 $ pip install -e .
 ```
+
+
+
+
+## On *Windows*
+Check out [these instructions](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/assignments#on-windows) written by Karime Pereida
+
 
 
 
@@ -145,22 +155,22 @@ $ python physics.py                         # Try 'python physics.py -h' to show
 
 
 
-## On-board RGB, Depth, and Segmentation Views
-
-<img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
-
-
-
-
-
 ## Experiments
-TBD - instructions for the scripts in folder [`/gym-pybullet-drones/experiments/`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/experiments)
+Folder [`experiments/learning`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/experiments/learning) contains scripts with template learning pipelines
+
+For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html)
+- [RL training script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py)
+- [RL replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py)
+
+For single agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib.html)
+- [MARL training script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/multiagent.py)
+- [MARL replay script](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py)
 
 
 
 
 ## BaseAviary
-A flight arena for one (ore more) quadrotor can be created as a child class of `BaseAviary()`
+A flight arena for one (ore more) quadrotor can be created as a subclass of `BaseAviary()`
 ```
 >>> env = BaseAviary( 
 >>>       drone_model=DroneModel.CF2X,      # See DroneModel Enum class for other quadcopter models 
@@ -194,7 +204,7 @@ Then, the environment can be stepped with
 
 
 ### Creating New Aviaries
-A new environment can be created as a child class of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (i.e. `class NewAviary(BaseAviary): ...`) and implementing the following 7 abstract methods
+A new RL problem can be created as a subclass of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) (i.e. `class NewAviary(BaseAviary): ...`) and implementing the following 7 abstract methods
 ```
 >>> #### 1
 >>> def _actionSpace(self):
@@ -209,22 +219,22 @@ A new environment can be created as a child class of [`BaseAviary`](https://gith
 >>> def _preprocessAction(self, action):
 >>>     # e.g. return np.clip(action, 0, 1)
 >>> #### 5
->>> def _computeReward(self, obs):
+>>> def _computeReward(self):
 >>>     # e.g. return -1
 >>> #### 6
->>> def _computeDone(self, obs):
+>>> def _computeDone(self):
 >>>     # e.g. return False
 >>> #### 7
->>> def _computeInfo(self, obs):
+>>> def _computeInfo(self):
 >>>     # e.g. return {"answer": 42}        # Calculated by the Deep Thought supercomputer in 7.5M years
 ```
-See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionAviary.py), [`FlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/multi_agent_rl/FlockAviary.py), [`TakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/TakeoffAviary.py), and [`DynAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynAviary.py) for examples
+See [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionAviary.py), [`HoverAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/HoverAviary.py), and [`FlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/multi_agent_rl/FlockAviary.py) for examples
 
 
 
 
-### Action Spaces
-The action space's definition of an environment must be implemented in each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) by function
+### Action Spaces Examples
+The action space's definition of an environment must be implemented in each subclass of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) by function
 ```
 >>> def _actionSpace(self):
 >>>     ...
@@ -233,18 +243,13 @@ In [`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/g
 
 The dictionary's keys are `"0"`, `"1"`, .., `"n"`—where `n` is the number of drones
 
-The action space of [`FlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/multi_agent_rl/FlockAviary.py) has the same structure but values are normalized in range `[-1, 1]`
-
-The action space of [`TakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/TakeoffAviary.py) is a single [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) normalized to the `[-1, 1]` range
-
-Each child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) also needs to implement a preprocessing step translating actions into RPMs
+Each subclass of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) also needs to implement a preprocessing step translating actions into RPMs
 ```
 >>> def _preprocessAction(self, action):
 >>>     ...
 ```
-[`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionAviary.py), [`FlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/multi_agent_rl/FlockAviary.py), and [`TakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/TakeoffAviary.py) all simply clip the inputs to `MAX_RPM`
+`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py), [`VisionAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionAviary.py), [`HoverAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/HoverAviary.py), and [`FlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/multi_agent_rl/FlockAviary.py) all simply clip the inputs to `MAX_RPM`
 
-#### Pre-process Actions for Control by Thrust and Torques
 [`DynAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/DynAviary.py)'s `action` input to `DynAviary.step()` is a [`Dict()`](https://github.com/openai/gym/blob/master/gym/spaces/dict.py) of [`Box(4,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) containing
 - The desired thrust along the drone's z-axis
 - The desired torque around the drone's x-axis
@@ -256,8 +261,8 @@ From these, desired RPMs are computed by [`DynAviary._preprocessAction()`](https
 
 
 
-### Observation Spaces
-The observation space's definition of an environment must be implemented by every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
+### Observation Spaces Examples
+The observation space's definition of an environment must be implemented by every subclass of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
 ```
 >>> def _observationSpace(self):
 >>>     ...
@@ -276,13 +281,9 @@ Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) c
 
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix)
 
-The observation space of [`FlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/multi_agent_rl/FlockAviary.py) has the same structure but normalized to the `[-1, 1]` range
-
-The observation space of [`TakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/TakeoffAviary.py) is a single [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py), normalized to the `[-1, 1]` range
-
 The observation space of [`VisionAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VisionAviary.py) is the same as[`CtrlAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) but also includes keys `rgb`, `dep`, and `seg` (in each drone's dictionary) for the matrices containing the drone's RGB, depth, and segmentation views
 
-To fill/customize the content of each `obs`, every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) needs to implement
+To fill/customize the content of `obs`, every subclass of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py) needs to implement
 ```
 >>> def _computeObs(self, action):
 >>>     ...
@@ -291,17 +292,14 @@ See [`BaseAviary._exportImage()`](https://github.com/JacopoPan/gym-pybullet-dron
 
 
 
-### Reward, Done, and Info
-`Reward`, `done` and `info` are computed by the implementation of 3 functions in every child of [`BaseAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/BaseAviary.py)
+
+### Obstacles
+Objects can be added to an environment using [`loadURDF` (or `loadSDF`, `loadMJCF`)](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.sbnykoneq1me) in method `_addObstacles()`
 ```
->>> def _computeReward(self, obs):
->>>     ...                                 # float or dict of floats
->>> def _computeDone(self, obs):
->>>     ...                                 # bool or dict of bools
->>> def _computeInfo(self, obs):
->>>     ...                                 # dict or dict of dicts
+>>> def _addObstacles(self):
+>>>     ...
+>>>     p.loadURDF("sphere2.urdf", [0,0,0], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
 ```
-See [`TakeoffAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/TakeoffAviary.py) and [`FlockAviary`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/multi_agent_rl/FlockAviary.py) for example implementations
 
 
 
@@ -314,13 +312,9 @@ Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in 
 
 
 
-### Obstacles
-Objects can be added to an environment using [`loadURDF` (or `loadSDF`, `loadMJCF`)](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.sbnykoneq1me) in method `_addObstacles()`
-```
->>> def _addObstacles(self):
->>>     ...
->>>     p.loadURDF("sphere2.urdf", [0,0,0], p.getQuaternionFromEuler([0,0,0]), physicsClientId=self.CLIENT)
-```
+## On-board RGB, Depth, and Segmentation Views
+
+<img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
 
 
 
