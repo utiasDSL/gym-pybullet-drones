@@ -43,7 +43,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 > \*\*\* **on Ubuntu only, uncomment the line after `p.connect(p.DIRECT)` in `BaseAviary.py`**
 
-> **Note: use `gui=False` and `aggregate_phy_steps=int(SIM_HZ/CTRL_HZ)` for better performance**
+> **Use `gui=False` and `aggregate_phy_steps=int(SIM_HZ/CTRL_HZ)` for performance**
 
 > While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, \~5kHz PyBullet physics (CPU-only) is faster than [AirSim (1kHz)](https://arxiv.org/pdf/1705.05065.pdf) and more accurate than [Flightmare's 35kHz simple single quadcopter dynamics](https://arxiv.org/pdf/2009.00563.pdf)
 
@@ -55,7 +55,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 
 ## Requirements and Installation
-The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
+The repo was written using *Python 3* on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
 
 
 
