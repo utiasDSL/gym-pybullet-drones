@@ -126,13 +126,6 @@ $ python learn.py                           # Try 'python learn.py -h' to show t
 
 Other scripts in folder `examples/` are:
 
-- `compare.py` which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/example_trace.pkl)
-```
-$ cd gym-pybullet-drones/examples/
-$ python compare.py                         # Try 'python compare.py -h' to show the script's customizable parameters
-```
-<img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="360"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
-
 - `downwash.py` is a flight script with only 2 drones, to test the downwash model
 ```
 $ cd gym-pybullet-drones/examples/
@@ -141,11 +134,12 @@ $ python downwash.py                        # Try 'python downwash.py -h' to sho
 
 <img src="files/readme_images/downwash.gif" alt="downwash example" width="360"> <img src="files/readme_images/downwash.png" alt="control info" width="450">
 
-- `physics.py` is an accessory script that can be used to understand PyBullet's force and torque APIs for different [URDF links](http://wiki.ros.org/urdf/XML/link) in `p.WORLD_FRAME` and `p.LINK_FRAME`
+- `compare.py` which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/files/example_trace.pkl)
 ```
 $ cd gym-pybullet-drones/examples/
-$ python physics.py                         # Try 'python physics.py -h' to show the script's customizable parameters
+$ python compare.py                         # Try 'python compare.py -h' to show the script's customizable parameters
 ```
+<img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="360"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
 
 
 
