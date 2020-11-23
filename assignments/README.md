@@ -7,7 +7,7 @@ The repo was written using *Python 3.7* with [`conda`](https://github.com/Jacopo
 ## Requirements
 In a terminal, type
 ```
-pip install --upgrade numpy matplotlib Pillow cycler 
+pip install --upgrade numpy Pillow matplotlib cycler 
 pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
 ```
 On *macOS*

@@ -73,7 +73,7 @@ Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](http
 > Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
 
 ```
-pip install --upgrade numpy matplotlib Pillow cycler 
+pip install --upgrade numpy Pillow matplotlib cycler 
 pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
 ```
 Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
