@@ -64,7 +64,7 @@ The repo was written using *Python 3* on *macOS 10.15* and tested on *macOS 11*,
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
 
-> Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
+> Note: if your default `python` is 2.7, replace `pip` with `pip3` and `python` with `python3`
 
 ```
 pip install --upgrade numpy matplotlib Pillow cycler 
