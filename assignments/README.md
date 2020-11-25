@@ -25,9 +25,9 @@ $ sudo apt install ffmpeg
 ### Installation
 In a terminal, type
 ```
-$ wget https://github.com/JacopoPan/gym-pybullet-drones/archive/v0.5.1.zip
-$ unzip v0.5.1.zip
-$ cd gym-pybullet-drones-0.5.1/
+$ wget https://github.com/JacopoPan/gym-pybullet-drones/archive/v0.5.2.zip
+$ unzip v0.5.2.zip
+$ cd gym-pybullet-drones-0.5.2/
 $ pip install -e .
 ```
 
@@ -60,13 +60,13 @@ Download a Python IDE
 
 Download the code
 - Go to https://github.com/JacopoPan/gym-pybullet-drones/releases
-- Under "Releases" -> `v0.5.1`, click on "Assets" and download the source code (zip or tar.gz)
+- Under "Releases" -> `v0.5.2`, click on "Assets" and download the source code (zip or tar.gz)
 
 <img src="../files/readme_images/assignment_img1.png" alt="source code" width="800">
 
-Unzip and open folder `gym-pybullet-drones-v0.5.1` in PyCharm 
+Unzip and open folder `gym-pybullet-drones-v0.5.2` in PyCharm 
 
-Open `aer1216_fall2020_hw1_sim.py` in PyCharm
+Open `aer1216_fall2020_hw1_sim.py` (or `aer1216_fall2020_hw2_sim.py`) in PyCharm
 
 To run code you may need to configure PyCharm. 
 - Go to `File->Settings` and Select `Project:gym-pybullet-drones.py->Python Interpreter`
@@ -94,13 +94,13 @@ If (as) you did not install the `gym_pybullet_drones` module, uncomment lines 17
 >>> import sys
 >>> sys.path.append('../')
 ```
-in file `aer1216_fall2020_hw1_sim.py`
+in file `aer1216_fall2020_hw1_sim.py` (or `aer1216_fall2020_hw2_sim.py`)
 
 Go to the "Run" drop down menu and select "Run" 
 
 <img src="../files/readme_images/assignment_img3.png" alt="run" width="800">
 
-- Select `aer1216_fall2020_hw1_sim.py` to start the simulation
+- Select `aer1216_fall2020_hw1_sim.py` (or `aer1216_fall2020_hw2_sim.py`) to start the simulation
 
 ### Troubleshooting
 On Windows, contact `karime.pereida {at} robotics.utias.utoronto.ca`
