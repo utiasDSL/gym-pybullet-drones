@@ -93,7 +93,7 @@ if __name__ == "__main__":
                                  env_kwargs=sa_env_kwargs,
                                  n_envs=ARGS.cpu,
                                  seed=0
-                                 ) 
+                                 )
     if env_name == "hover-aviary-v0":
         train_env = make_vec_env(HoverAviary,
                                  env_kwargs=sa_env_kwargs,
