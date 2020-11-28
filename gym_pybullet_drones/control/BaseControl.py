@@ -56,7 +56,7 @@ class BaseControl(object):
                                 target_pos,
                                 target_rpy=np.zeros(3),
                                 target_vel=np.zeros(3),
-                                target_ang_vel=np.zeros(3)
+                                target_rpy_rates=np.zeros(3)
                                 ):
         """Interface method using `computeControl`.
 
@@ -75,8 +75,8 @@ class BaseControl(object):
             (3,1)-shaped array of floats containing the desired orientation as roll, pitch, yaw.
         target_vel : ndarray, optional
             (3,1)-shaped array of floats containing the desired velocity.
-        target_ang_vel : ndarray, optional
-            (3,1)-shaped array of floats containing the desired angular velocity.
+        target_rpy_rates : ndarray, optional
+            (3,1)-shaped array of floats containing the desired roll, pitch, and yaw rates.
 
         """
         return self.computeControl(control_timestep=control_timestep,
@@ -85,8 +85,9 @@ class BaseControl(object):
                                    cur_vel=state[10:13],
                                    cur_ang_vel=state[13:16],
                                    target_pos=target_pos,
+                                   target_rpy=target_rpy,
                                    target_vel=target_vel,
-                                   target_ang_vel=target_ang_vel
+                                   target_rpy_rates=target_rpy_rates
                                    )
 
     ################################################################################
@@ -100,7 +101,7 @@ class BaseControl(object):
                        target_pos,
                        target_rpy=np.zeros(3),
                        target_vel=np.zeros(3),
-                       target_ang_vel=np.zeros(3)
+                       target_rpy_rates=np.zeros(3)
                        ):
         """Abstract method to compute the control action for a single drone.
 
@@ -124,8 +125,8 @@ class BaseControl(object):
             (3,1)-shaped array of floats containing the desired orientation as roll, pitch, yaw.
         target_vel : ndarray, optional
             (3,1)-shaped array of floats containing the desired velocity.
-        target_ang_vel : ndarray, optional
-            (3,1)-shaped array of floats containing the desired angular velocity.
+        target_rpy_rates : ndarray, optional
+            (3,1)-shaped array of floats containing the desired roll, pitch, and yaw rates.
 
         """
         raise NotImplementedError

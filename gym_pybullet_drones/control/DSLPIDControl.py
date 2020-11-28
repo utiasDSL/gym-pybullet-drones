@@ -55,6 +55,8 @@ class DSLPIDControl(BaseControl):
 
         """
         super().reset()
+        #### Store the last roll, pitch, and yaw ###################
+        self.last_rpy = np.zeros(3)
         #### Initialized PID control variables #####################
         self.last_pos_e = np.zeros(3)
         self.integral_pos_e = np.zeros(3)
@@ -72,11 +74,12 @@ class DSLPIDControl(BaseControl):
                        target_pos,
                        target_rpy=np.zeros(3),
                        target_vel=np.zeros(3),
-                       target_ang_vel=np.zeros(3)
+                       target_rpy_rates=np.zeros(3)
                        ):
         """Computes the PID control action (as RPMs) for a single drone.
 
         This methods sequentially calls `_dslPIDPositionControl()` and `_dslPIDAttitudeControl()`.
+        Parameter `cur_ang_vel` is unused.
 
         Parameters
         ----------
@@ -96,8 +99,8 @@ class DSLPIDControl(BaseControl):
             (3,1)-shaped array of floats containing the desired orientation as roll, pitch, yaw.
         target_vel : ndarray, optional
             (3,1)-shaped array of floats containing the desired velocity.
-        target_ang_vel : ndarray, optional
-            (3,1)-shaped array of floats containing the desired angular velocity.
+        target_rpy_rates : ndarray, optional
+            (3,1)-shaped array of floats containing the desired roll, pitch, and yaw rates.
 
         Returns
         -------
@@ -121,9 +124,8 @@ class DSLPIDControl(BaseControl):
         rpm = self._dslPIDAttitudeControl(control_timestep,
                                           thrust,
                                           cur_quat,
-                                          cur_ang_vel,
                                           computed_target_rpy,
-                                          target_ang_vel
+                                          target_rpy_rates
                                           )
         cur_rpy = p.getEulerFromQuaternion(cur_quat)
         return rpm, pos_e, computed_target_rpy[2] - cur_rpy[2]
@@ -197,9 +199,8 @@ class DSLPIDControl(BaseControl):
                                control_timestep,
                                thrust,
                                cur_quat,
-                               cur_ang_vel,
                                target_euler,
-                               target_ang_vel
+                               target_rpy_rates
                                ):
         """DSL's CF2.x PID attitude control.
 
@@ -211,12 +212,10 @@ class DSLPIDControl(BaseControl):
             The target thrust along the drone z-axis.
         cur_quat : ndarray
             (4,1)-shaped array of floats containing the current orientation as a quaternion.
-        cur_ang_vel : ndarray
-            (3,1)-shaped array of floats containing the current angular velocity.
         target_euler : ndarray
             (3,1)-shaped array of floats containing the computed target Euler angles.
-        target_ang_vel : ndarray
-            (3,1)-shaped array of floats containing the desired angular velocity.
+        target_rpy_rates : ndarray
+            (3,1)-shaped array of floats containing the desired roll, pitch, and yaw rates.
 
         Returns
         -------
@@ -225,18 +224,20 @@ class DSLPIDControl(BaseControl):
 
         """
         cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat)).reshape(3, 3)
+        cur_rpy = np.array(p.getEulerFromQuaternion(cur_quat))
         target_quat = (Rotation.from_euler('XYZ', target_euler, degrees=False)).as_quat()
         w,x,y,z = target_quat
         target_rotation = (Rotation.from_quat([w, x, y, z])).as_matrix()
         rot_matrix_e = np.dot((target_rotation.transpose()),cur_rotation) - np.dot(cur_rotation.transpose(),target_rotation)
-        rot_e = np.array([rot_matrix_e[2, 1], rot_matrix_e[0, 2], rot_matrix_e[1, 0]])
-        ang_vel_e = target_ang_vel - cur_ang_vel
+        rot_e = np.array([rot_matrix_e[2, 1], rot_matrix_e[0, 2], rot_matrix_e[1, 0]]) 
+        rpy_rates_e = target_rpy_rates - (cur_rpy - self.last_rpy)/control_timestep
+        self.last_rpy = cur_rpy
         self.integral_rpy_e = self.integral_rpy_e - rot_e*control_timestep
         self.integral_rpy_e = np.clip(self.integral_rpy_e, -1500., 1500.)
         self.integral_rpy_e[0:2] = np.clip(self.integral_rpy_e[0:2], -1., 1.)
         #### PID target torques ####################################
         target_torques = - np.multiply(self.P_COEFF_TOR, rot_e) \
-                         + np.multiply(self.D_COEFF_TOR, ang_vel_e) \
+                         + np.multiply(self.D_COEFF_TOR, rpy_rates_e) \
                          + np.multiply(self.I_COEFF_TOR, self.integral_rpy_e)
         target_torques = np.clip(target_torques, -3200, 3200)
         pwm = thrust + np.dot(self.MIXER_MATRIX, target_torques)

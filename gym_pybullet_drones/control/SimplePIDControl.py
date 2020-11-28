@@ -71,11 +71,12 @@ class SimplePIDControl(BaseControl):
                        target_pos,
                        target_rpy=np.zeros(3),
                        target_vel=np.zeros(3),
-                       target_ang_vel=np.zeros(3)
+                       target_rpy_rates=np.zeros(3)
                        ):
         """Computes the PID control action (as RPMs) for a single drone.
 
         This methods sequentially calls `_simplePIDPositionControl()` and `_simplePIDAttitudeControl()`.
+        Parameters `cur_ang_vel`, `target_rpy`, `target_vel`, and `target_rpy_rates` are unused.
 
         Parameters
         ----------
@@ -95,8 +96,8 @@ class SimplePIDControl(BaseControl):
             (3,1)-shaped array of floats containing the desired orientation as roll, pitch, yaw.
         target_vel : ndarray, optional
             (3,1)-shaped array of floats containing the desired velocity.
-        target_ang_vel : ndarray, optional
-            (3,1)-shaped array of floats containing the desired angular velocity.
+        target_rpy_rates : ndarray, optional
+            (3,1)-shaped array of floats containing the the desired roll, pitch, and yaw rates.
 
         Returns
         -------

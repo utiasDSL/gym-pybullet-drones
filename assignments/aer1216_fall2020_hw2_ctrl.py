@@ -11,8 +11,10 @@ To run the simulation, type in a terminal:
 Notes
 -----
 To-dos
+    Search for work "Objective" this file (there are 4 occurrences)
     Fill appropriate values in the 3 by 3 matrix self.matrix_u2rpm.
-
+    Compute u_1 for the linear controller and the second nonlinear one
+    Compute u_2
 
 """
 import numpy as np
@@ -38,15 +40,17 @@ class HW2Control():
 
         """
         self.g = env.G
-        """float: gravity acceleration, in meters per second squared."""
+        """float: Gravity acceleration, in meters per second squared."""
         self.mass = env.M
-        """float: the mass of quad from environment."""
+        """float: The mass of quad from environment."""
         self.inertia_xx = env.J[0][0]
-        """float: the inertia of quad around x axis."""
+        """float: The inertia of quad around x axis."""
         self.arm_length = env.L
-        """float: the inertia of quad around x axis."""
+        """float: The inertia of quad around x axis."""
         self.timestep = env.TIMESTEP
-        """float: simulation and control timestep."""
+        """float: Simulation and control timestep."""
+        self.last_rpy = np.zeros(3)
+        """ndarray: Store the last roll, pitch, and yaw."""
         self.kf_coeff = env.KF
         """float: RPMs to force coefficient."""
         self.km_coeff = env.KM
@@ -65,11 +69,7 @@ class HW2Control():
         ############################################################
 
         # Objective 1 of 4: fill appropriate values in the 3 by 3 matrix
-        self.matrix_u2rpm = np.linalg.inv(np.array([ 
-                                                     [0,  0,  0],
-                                                     [0,  0,  0],
-                                                     [0,  0,  0] 
-                                                    ]))
+        self.matrix_u2rpm = -1
         """ndarray: (3, 3)-shaped array of ints to determine motor rpm from force and torque."""
 
         ############################################################
@@ -77,6 +77,8 @@ class HW2Control():
         #### HOMEWORK CODE (END) ###################################
         ############################################################
         ############################################################
+
+        self.matrix_u2rpm_inv = np.linalg.inv(self.matrix_u2rpm)
 
         self.p_coeff_position["z"] = 0.7 * 0.7
         self.d_coeff_position["z"] = 2 * 0.5 * 0.7
@@ -101,7 +103,6 @@ class HW2Control():
                         current_position,
                         current_velocity,
                         current_rpy,
-                        current_rpy_dot,
                         target_position,
                         target_velocity=np.zeros(3),
                         target_acceleration=np.zeros(3),
@@ -116,8 +117,6 @@ class HW2Control():
             (3,)-shaped array of floats containing global vx, vy, vz, in m/s.
         current_rpy : ndarray
             (3,)-shaped array of floats containing roll, pitch, yaw, in rad.
-        current_rpy_dot : ndarray
-            (3,)-shaped array of floats containing roll_dot, pitch_dot, yaw_dot, in rad/s.
         target_position : ndarray
             (3,)-shaped array of float containing global x, y, z, in meters.
         target_velocity : ndarray, optional
@@ -131,6 +130,9 @@ class HW2Control():
             (4,)-shaped array of ints containing the desired RPMs of each propeller.
         """
         self.control_counter += 1
+
+        #### Compute roll, pitch, and yaw rates ####################
+        current_rpy_dot = (current_rpy - self.last_rpy) / self.timestep
 
         ##### Calculate PD control in y, z #########################
         y_ddot = self.pd_control(target_position[1],
@@ -167,7 +169,7 @@ class HW2Control():
         ############################################################
         ############################################################
         
-        # Variable that you might use
+        # Variables that you might use
         #   self.g
         #   self.mass
         #   self.inertia_xx
@@ -209,8 +211,8 @@ class HW2Control():
         u = np.array([ [u_1 / self.kf_coeff],
                        [u_2 / (self.arm_length*self.kf_coeff)],
                        [0] ])
-        propellers_rpm = np.dot(self.matrix_u2rpm, u)
-        
+        propellers_rpm = np.dot(self.matrix_u2rpm_inv, u)
+
         #### Command the turn rates of propellers 1 and 3 ##########
         propellers_1_rpm = np.sqrt(propellers_rpm[1, 0])
         propellers_3_rpm = np.sqrt(propellers_rpm[2, 0])
@@ -225,6 +227,9 @@ class HW2Control():
             print("target_position", target_position)
             print("target_velocity", target_velocity)
             print("target_acceleration", target_acceleration)
+
+        #### Store the last step's roll, pitch, and yaw ############
+        self.last_rpy = current_rpy
 
         return np.array([propellers_0_and_2_rpm, propellers_1_rpm,
                          propellers_0_and_2_rpm, propellers_3_rpm])

@@ -406,7 +406,7 @@ class BaseAviary(gym.Env):
                   "——— x {:+06.2f}, y {:+06.2f}, z {:+06.2f}".format(self.pos[i, 0], self.pos[i, 1], self.pos[i, 2]),
                   "——— velocity {:+06.2f}, {:+06.2f}, {:+06.2f}".format(self.vel[i, 0], self.vel[i, 1], self.vel[i, 2]),
                   "——— roll {:+06.2f}, pitch {:+06.2f}, yaw {:+06.2f}".format(self.rpy[i, 0]*self.RAD2DEG, self.rpy[i, 1]*self.RAD2DEG, self.rpy[i, 2]*self.RAD2DEG),
-                  "——— angular velocities {:+06.2f}, {:+06.2f}, {:+06.2f} ——— ".format(self.ang_v[i, 0]*self.RAD2DEG, self.ang_v[i, 1]*self.RAD2DEG, self.ang_v[i, 2]*self.RAD2DEG))
+                  "——— angular velocity {:+06.4f}, {:+06.4f}, {:+06.4f} ——— ".format(self.ang_v[i, 0], self.ang_v[i, 1], self.ang_v[i, 2]))
     
     ################################################################################
 
@@ -471,6 +471,8 @@ class BaseAviary(gym.Env):
         self.rpy = np.zeros((self.NUM_DRONES, 3))
         self.vel = np.zeros((self.NUM_DRONES, 3))
         self.ang_v = np.zeros((self.NUM_DRONES, 3))
+        if self.PHYSICS == Physics.DYN:
+            self.rpy_rates = np.zeros((self.NUM_DRONES, 3))
         #### Set PyBullet's parameters #############################
         p.setGravity(0, 0, -self.G, physicsClientId=self.CLIENT)
         p.setRealTimeSimulation(0, physicsClientId=self.CLIENT)
@@ -824,7 +826,7 @@ class BaseAviary(gym.Env):
         quat = self.quat[nth_drone,:]
         rpy = self.rpy[nth_drone,:]
         vel = self.vel[nth_drone,:]
-        ang_v = self.ang_v[nth_drone,:]
+        rpy_rates = self.rpy_rates[nth_drone,:]
         rotation = np.array(p.getMatrixFromQuaternion(quat)).reshape(3, 3)
         #### Compute forces and torques ############################
         forces = np.array(rpm**2) * self.KF
@@ -840,25 +842,28 @@ class BaseAviary(gym.Env):
             x_torque = (forces[1] - forces[3]) * self.L
             y_torque = (-forces[0] + forces[2]) * self.L
         torques = np.array([x_torque, y_torque, z_torque])
-        torques = torques - np.cross(ang_v, np.dot(self.J, ang_v))
-        ang_vel_deriv = np.dot(self.J_INV, torques)
+        torques = torques - np.cross(rpy_rates, np.dot(self.J, rpy_rates))
+        rpy_rates_deriv = np.dot(self.J_INV, torques)
         no_pybullet_dyn_accs = force_world_frame / self.M
         #### Update state ##########################################
         vel = vel + self.TIMESTEP * no_pybullet_dyn_accs
-        ang_v = ang_v + self.TIMESTEP * ang_vel_deriv
+        rpy_rates = rpy_rates + self.TIMESTEP * rpy_rates_deriv
         pos = pos + self.TIMESTEP * vel
-        rpy = rpy + self.TIMESTEP * ang_v
+        rpy = rpy + self.TIMESTEP * rpy_rates
         #### Set PyBullet's state ##################################
         p.resetBasePositionAndOrientation(self.DRONE_IDS[nth_drone],
                                           pos,
                                           p.getQuaternionFromEuler(rpy),
                                           physicsClientId=self.CLIENT
                                           )
+        #### Note: the base's velocity only stored and not used ####
         p.resetBaseVelocity(self.DRONE_IDS[nth_drone],
                             vel,
-                            ang_v,
+                            [-1, -1, -1], # ang_vel not computed by DYN
                             physicsClientId=self.CLIENT
                             )
+        #### Store the roll, pitch, yaw rates for the next step ####
+        self.rpy_rates[nth_drone,:] = rpy_rates
 
     ####################################################################################################
     #### Denormalize the [-1,1] range to the [0, MAX RPM] range ########################################
