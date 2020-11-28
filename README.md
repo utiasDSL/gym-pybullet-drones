@@ -276,7 +276,7 @@ Each [`Box(20,)`](https://github.com/openai/gym/blob/master/gym/spaces/box.py) c
 - Quaternion orientation in `WORLD_FRAME` (4 values)
 - Roll, pitch and yaw angles in `WORLD_FRAME` (in radians, 3 values)
 - The velocity vector in `WORLD_FRAME` (in m/s, 3 values)
-- Angular velocities in `WORLD_FRAME` (in rad/s, 3 values)
+- Angular velocity in `WORLD_FRAME` (3 values)
 - Motors' speeds (in RPMs, 4 values)
 
 Each [`MultiBinary(num_drones)`](https://github.com/openai/gym/blob/master/gym/spaces/multi_binary.py) contains the drone's own row of the multi-robot system [adjacency matrix](https://en.wikipedia.org/wiki/Adjacency_matrix)
