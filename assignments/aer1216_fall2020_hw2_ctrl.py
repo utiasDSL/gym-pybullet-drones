@@ -69,7 +69,10 @@ class HW2Control():
         ############################################################
 
         # Objective 1 of 4: fill appropriate values in the 3 by 3 matrix
-        self.matrix_u2rpm = -1
+        self.matrix_u2rpm = np.array([ [2,   1,   1],
+                                       [0,   1,  -1],
+                                       [2,  -1,  -1] 
+                                      ])
         """ndarray: (3, 3)-shaped array of ints to determine motor rpm from force and torque."""
 
         ############################################################
@@ -187,7 +190,7 @@ class HW2Control():
         if self.CTRL_TYPE == 0:
             #### Linear Control ########################################
             # Objective 2 of 4: compute u_1 for the linear controller
-            u_1 = -1
+            u_1 = self.mass * (self.g + z_ddot)
 
         elif self.CTRL_TYPE == 1:
             #### Nonlinear Control 1 ###################################
@@ -196,10 +199,10 @@ class HW2Control():
         elif self.CTRL_TYPE == 2:
             #### Nonlinear Control 2 ###################################
             # Objective 3 of 4: compute u_1 for the second nonlinear controller
-            u_1 = -1
+            u_1 = self.mass * np.sqrt(y_ddot**2+(self.g + z_ddot)**2)
 
         # Objective 4 of 4: compute u_2
-        u_2 = -1
+        u_2 = self.inertia_xx * roll_ddot
 
         ############################################################
         ############################################################
