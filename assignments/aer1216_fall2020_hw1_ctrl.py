@@ -1,6 +1,6 @@
 """Control implementation for assignment 1.
 
-The script is used the simulation in file `aer1216_fall2020_hw1_sim.py`.
+The controller used the simulation in file `aer1216_fall2020_hw1_sim.py`.
 
 Example
 -------
