@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>ros2_gym_pybullet_drones</name>
+  <version>0.0.1</version>
+  <description>A ROS2 Python wrapper for gym-pybullet-drones</description>
+  <maintainer email="jacopo.panerati@utoronto.ca">Jacopo Panerati</maintainer>
+  <license>MIT License</license>
+
+  <test_depend>ament_copyright</test_depend>
+  <test_depend>ament_flake8</test_depend>
+  <test_depend>ament_pep257</test_depend>
+  <test_depend>python3-pytest</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+    <exec_depend>rclpy</exec_depend>
+    <exec_depend>std_msgs</exec_depend>
+  </export>
+</package>

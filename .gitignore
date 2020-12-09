@@ -1,6 +1,13 @@
-# TODOs and dev
+# TODOs 
 TODOs.md
-# examples/dev.py
+examples/debug.py
+
+# NumPy saves and videos
+files/logs/*.npy
+files/videos/*.mp4
+
+# Learning results
+experiments/learning/results/save-*
 
 # macOS users
 .DS_Store
