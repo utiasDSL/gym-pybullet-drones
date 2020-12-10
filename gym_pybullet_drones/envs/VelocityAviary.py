@@ -52,6 +52,12 @@ class VelocityAviary(BaseAviary):
             Whether to draw the drones' axes and the GUI RPMs sliders.
 
         """
+        #### Create integrated controllers #########################
+        os.environ['KMP_DUPLICATE_LIB_OK']='True'
+        if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
+            self.ctrl = [DSLPIDControl(CtrlAviary(drone_model=DroneModel.CF2X)) for i in range(num_drones)]
+        elif drone_model == DroneModel.HB:
+            self.ctrl = [SimplePIDControl(CtrlAviary(drone_model=DroneModel.HB)) for i in range(num_drones)]
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -148,15 +154,20 @@ class VelocityAviary(BaseAviary):
             commanded to the 4 motors of each drone.
 
         """
-        clipped_action = np.zeros((self.NUM_DRONES, 4))
+        rpm = np.zeros((self.NUM_DRONES, 4))
         for k, v in action.items():
-            clipped_action[int(k), :] = np.zeros(4)
-
-            #########################
-            #### TO BE IMPLEMENTED ##
-            #########################
-
-        return clipped_action
+            state = self._getDroneStateVector(int(k))
+            temp, _, _ = self.ctrl[k].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+                                                    cur_pos=state[0:3],
+                                                    cur_quat=state[3:7],
+                                                    cur_vel=state[10:13],
+                                                    cur_ang_vel=state[13:16],
+                                                    target_pos=state[0:3], #+0.1*v,
+                                                    #target_rpy=np.zeros(3),
+                                                    target_vel=v[3] * v[0:2]
+                                                    )
+            rpm[int(k),:] = temp
+        return rpm
 
     ################################################################################
 
