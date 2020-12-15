@@ -25,7 +25,7 @@ $ sudo apt install ffmpeg
 ### Installation
 In a terminal, type
 ```
-$ wget https://github.com/JacopoPan/gym-pybullet-drones/archive/v0.5.2.zip
+$ wget https://github.com/utiasDSL/gym-pybullet-drones/archive/v0.5.2.zip
 $ unzip v0.5.2.zip
 $ cd gym-pybullet-drones-0.5.2/
 $ pip install -e .
@@ -59,7 +59,7 @@ Download a Python IDE
 ### Installation
 
 Download the code
-- Go to https://github.com/JacopoPan/gym-pybullet-drones/releases
+- Go to https://github.com/utiasDSL/gym-pybullet-drones/releases
 - Under "Releases" -> `v0.5.2`, click on "Assets" and download the source code (zip or tar.gz)
 
 <img src="../files/readme_images/assignment_img1.png" alt="source code" width="800">
