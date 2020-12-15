@@ -47,7 +47,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 > While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, \~5kHz PyBullet physics (CPU-only) is faster than [AirSim (1kHz)](https://arxiv.org/pdf/1705.05065.pdf) and more accurate than [Flightmare's 35kHz simple single quadcopter dynamics](https://arxiv.org/pdf/2009.00563.pdf)
 
-> Exploiting parallel computation—i.e., multiple (80) drones in multiple (4) environments, see script [`parallelism.sh`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/examples/parallelism.sh)—achieves PyBullet physics updates at \~20kHz 
+> Exploiting parallel computation—i.e., multiple (80) drones in multiple (4) environments, see script [`parallelism.sh`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/examples/parallelism.sh)—achieves PyBullet physics updates at \~20kHz 
 
 > Multi-agent 6-ch. video capture at \~750kB/s with CPU rendering (`(64*48)*(4+4+2)*24*5*0.2`) is comparable to [Flightmare's 240 RGB frames/s](https://arxiv.org/pdf/2009.00563.pdf) (`(32*32)*3*240`)—although in more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and up to an order of magnitude faster on Ubuntu, with OpenGL rendering
 
@@ -81,7 +81,7 @@ $ sudo apt install ffmpeg
 The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
 and can be installed with `pip install --editable`
 ```
-$ git clone https://github.com/JacopoPan/gym-pybullet-drones.git
+$ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
 $ pip install -e .
 ```
@@ -90,14 +90,14 @@ $ pip install -e .
 
 
 ### On *Windows*
-Check out these step-by-step [instructions](https://github.com/JacopoPan/gym-pybullet-drones/tree/master/assignments#on-windows) written by Karime Pereida for *Windows 10*
+Check out these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/assignments#on-windows) written by Karime Pereida for *Windows 10*
 
 
 
 
 ## Use, Examples, and Documentation
 
-**Check out file [`README.md`](https://github.com/JacopoPan/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/JacopoPan/gym-pybullet-drones) for further details**
+**Check out file [`README.md`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/utiasDSL/gym-pybullet-drones) for further details**
 
 ### Way Point Navigation
 <img src="files/readme_images/wp.gif" alt="sparse way points flight" width="360"> <img src="files/readme_images/wp.png" alt="control info" width="450">
@@ -127,7 +127,7 @@ If you wish, please refer to this work as
 @MISC{gym-pybullet-drones2020,
     author = {Panerati, Jacopo and Zheng, Hehui and Zhou, SiQi and Xu, James and Prorok, Amanda and Sch\"{o}llig, Angela P.},
     title = {Learning to Fly: a PyBullet-based Gym environment to simulate and learn the control of multiple nano-quadcopters},
-    howpublished = {\url{https://github.com/JacopoPan/gym-pybullet-drones}},
+    howpublished = {\url{https://github.com/utiasDSL/gym-pybullet-drones}},
     year = {2020}
 }
 ```
