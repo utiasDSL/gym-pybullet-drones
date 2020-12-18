@@ -200,14 +200,14 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                                         )
             elif self.ACT_TYPE == ActionType.PID: 
                 state = self._getDroneStateVector(int(k))
-                rpm, _, _ = self.ctrl[k].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+                rpm_k, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                         cur_pos=state[0:3],
                                                         cur_quat=state[3:7],
                                                         cur_vel=state[10:13],
                                                         cur_ang_vel=state[13:16],
                                                         target_pos=state[0:3]+0.1*v
                                                         )
-                rpm[int(k),:] = rpm
+                rpm[int(k),:] = rpm_k
             elif self.ACT_TYPE == ActionType.ONE_D_RPM: 
                 rpm[int(k),:] = np.repeat(self.HOVER_RPM * (1+0.05*v), 4)
             elif self.ACT_TYPE == ActionType.ONE_D_DYN: 
