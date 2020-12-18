@@ -1,7 +1,11 @@
+import os
 import numpy as np
 from gym import spaces
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
+from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
+from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 
 class VelocityAviary(BaseAviary):
     """Multi-drone environment class for high-level planning."""
@@ -157,14 +161,14 @@ class VelocityAviary(BaseAviary):
         rpm = np.zeros((self.NUM_DRONES, 4))
         for k, v in action.items():
             state = self._getDroneStateVector(int(k))
-            temp, _, _ = self.ctrl[k].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+            temp, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                     cur_pos=state[0:3],
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
                                                     target_pos=state[0:3], #+0.1*v,
                                                     #target_rpy=np.zeros(3),
-                                                    target_vel=v[3] * v[0:2]
+                                                    target_vel=v[3] * v[0:3]
                                                     )
             rpm[int(k),:] = temp
         return rpm
