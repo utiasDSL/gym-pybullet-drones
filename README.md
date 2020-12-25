@@ -70,11 +70,9 @@ The repo was written using *Python 3.7* with [`conda`](https://github.com/Jacopo
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
 
-> Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
-
 ```
-pip install --upgrade numpy Pillow matplotlib cycler 
-pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
+pip3 install --upgrade numpy Pillow matplotlib cycler 
+pip3 install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
 ```
 Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
 ```
@@ -89,7 +87,7 @@ and can be installed with `pip install --editable`
 ```
 $ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
-$ pip install -e .
+$ pip3 install -e .
 ```
 
 
@@ -108,7 +106,7 @@ There are 2 basic template scripts in `examples/`: `fly.py` and `learn.py`
 - `fly.py` runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
 $ cd gym-pybullet-drones/examples/
-$ python fly.py                             # Try 'python fly.py -h' to show the script's customizable parameters
+$ pytho3 fly.py                             # Try 'python3 fly.py -h' to show the script's customizable parameters
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
 
@@ -119,7 +117,7 @@ $ python fly.py                             # Try 'python fly.py -h' to show the
 - `learn.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
 $ cd gym-pybullet-drones/examples/
-$ python learn.py                           # Try 'python learn.py -h' to show the script's customizable parameters
+$ python3 learn.py                           # Try 'python3 learn.py -h' to show the script's customizable parameters
 ```
 <img src="files/readme_images/learn1.gif" alt="learning 1" width="400"> <img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
 <img src="files/readme_images/learn3.gif" alt="learning 3" width="400"> <img src="files/readme_images/learn4.gif" alt="learning 4" width="400">
@@ -129,7 +127,7 @@ Other scripts in folder `examples/` are:
 - `downwash.py` is a flight script with only 2 drones, to test the downwash model
 ```
 $ cd gym-pybullet-drones/examples/
-$ python downwash.py                        # Try 'python downwash.py -h' to show the script's customizable parameters
+$ python3 downwash.py                        # Try 'python3 downwash.py -h' to show the script's customizable parameters
 ```
 
 <img src="files/readme_images/downwash.gif" alt="downwash example" width="360"> <img src="files/readme_images/downwash.png" alt="control info" width="450">
@@ -137,7 +135,7 @@ $ python downwash.py                        # Try 'python downwash.py -h' to sho
 - `compare.py` which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/files/example_trace.pkl)
 ```
 $ cd gym-pybullet-drones/examples/
-$ python compare.py                         # Try 'python compare.py -h' to show the script's customizable parameters
+$ python3 compare.py                         # Try 'python3 compare.py -h' to show the script's customizable parameters
 ```
 <img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="360"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
 
@@ -150,20 +148,20 @@ Folder [`experiments/learning`](https://github.com/utiasDSL/gym-pybullet-drones/
 For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), run the [training script](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py) as
 ```
 $ cd gym-pybullet-drones/experiments/learning/
-$ python singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
+$ python3 singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
 ```
 Run the [replay script](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py) to visualize the best trained agent(s) as
 ```
-$ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
+$ python3 test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
 ```
 For multi-agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib.html) run the [train script](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/learning/multiagent.py) as
 ```
 $ cd gym-pybullet-drones/experiments/learning/
-$ python multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --num_workers <num_workers>
+$ python3 multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --num_workers <num_workers>
 ```
 Run the [replay script](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py) to visualize the best trained agent(s) as
 ```
-$ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
+$ python3 test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
 ```
 
 
