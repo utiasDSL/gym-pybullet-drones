@@ -88,9 +88,9 @@ class VelocityAviary(BaseAviary):
             indexed by drone Id in string format.
 
         """
-        #### Action vector ######### X       Y       Z   Speed (m/s)
-        act_lower_bound = np.array([-1,     -1,     -1,           0])
-        act_upper_bound = np.array([ 1,      1,      1,          10])
+        #### Action vector ######### X       Y       Z   fract. of MAX_SPEED_KMH
+        act_lower_bound = np.array([-1,     -1,     -1,                        0])
+        act_upper_bound = np.array([ 1,      1,      1,                        1])
         return spaces.Dict({str(i): spaces.Box(low=act_lower_bound,
                                                high=act_upper_bound,
                                                dtype=np.float32
@@ -161,6 +161,9 @@ class VelocityAviary(BaseAviary):
         rpm = np.zeros((self.NUM_DRONES, 4))
         for k, v in action.items():
             state = self._getDroneStateVector(int(k))
+
+            factor = self.MAX_SPEED_KMH * (1000/3600) # move to init
+
             temp, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                     cur_pos=state[0:3],
                                                     cur_quat=state[3:7],
@@ -168,7 +171,7 @@ class VelocityAviary(BaseAviary):
                                                     cur_ang_vel=state[13:16],
                                                     target_pos=state[0:3], #+0.1*v,
                                                     #target_rpy=np.zeros(3),
-                                                    target_vel=v[3] * v[0:3]
+                                                    target_vel=v[3] * factor * v[0:3]
                                                     )
             rpm[int(k),:] = temp
         return rpm
