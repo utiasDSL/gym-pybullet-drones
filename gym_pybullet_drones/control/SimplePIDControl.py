@@ -15,6 +15,36 @@ class SimplePIDControl(BaseControl):
 
     ################################################################################
 
+    # def __init__(self,
+    #              env: BaseAviary
+    #              ):
+    #     """Simple PID control (without yaw control) initialization.
+
+    #     Parameters
+    #     ----------
+    #     env : BaseAviary
+    #         The simulation environment to control.
+
+    #     """
+    #     super().__init__(env=env)
+    #     if self.DRONE_MODEL != DroneModel.HB:
+    #         print("[ERROR] in SimplePIDControl.__init__(), DSLPIDControl requires DroneModel.HB")
+    #         exit()
+    #     self.P_COEFF_FOR = np.array([.1, .1, .2])
+    #     self.I_COEFF_FOR = np.array([.0001, .0001, .0001])
+    #     self.D_COEFF_FOR = np.array([.3, .3, .4])
+    #     self.P_COEFF_TOR = np.array([.3, .3, .05])
+    #     self.I_COEFF_TOR = np.array([.0001, .0001, .0001])
+    #     self.D_COEFF_TOR = np.array([.3, .3, .5])
+    #     self.MAX_ROLL_PITCH = np.pi/6
+    #     self.MAX_THRUST = env.MAX_THRUST
+    #     self.MAX_XY_TORQUE = env.MAX_XY_TORQUE
+    #     self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
+    #     self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
+    #     self.INV_A = np.linalg.inv(self.A)
+    #     self.B_COEFF = np.array([1/self.KF, 1/(self.KF*env.L), 1/(self.KF*env.L), 1/self.KM])
+    #     self.reset()
+
     def __init__(self,
                  env: BaseAviary
                  ):

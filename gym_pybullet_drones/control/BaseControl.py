@@ -16,6 +16,28 @@ class BaseControl(object):
 
     ################################################################################
 
+    # def __init__(self,
+    #              env: BaseAviary
+    #              ):
+    #     """Common control classes __init__ method.
+
+    #     Parameters
+    #     ----------
+    #     env : BaseAviary
+    #         The simulation environment to control.
+
+    #     """
+    #     #### Set general use constants #############################
+    #     self.DRONE_MODEL = env.DRONE_MODEL
+    #     """int: The number of drones in the simulation environment."""
+    #     self.GRAVITY = env.GRAVITY
+    #     """float: The gravitational force (M*g) acting on each drone."""
+    #     self.KF = env.KF
+    #     """float: The coefficient converting RPMs into thrust."""
+    #     self.KM = env.KM
+    #     """float: The coefficient converting RPMs into torque."""
+    #     self.reset()
+
     def __init__(self,
                  env: BaseAviary
                  ):
