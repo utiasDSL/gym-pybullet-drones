@@ -322,7 +322,7 @@ Folder [`control`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/g
 
 [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/DSLPIDControl.py) (for `DroneModel.CF2X/P`) and [`SimplePIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/SimplePIDControl.py) (for `DroneModel.HB`) can be used as
 ```   
->>> ctrl = [DSLPIDControl(env) for i in range(num_drones)]                          # Initialize "num_drones" controllers
+>>> ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]  # Initialize "num_drones" controllers
 >>> ...
 >>> for i in range(num_drones):                                                     # Compute control for each drone
 >>>     action[str(i)], _, _ = ctrl[i].computeControlFromState(.                    # Write the action in a dictionary

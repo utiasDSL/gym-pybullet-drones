@@ -61,7 +61,7 @@ if __name__ == "__main__":
                     )
 
     #### Initialize the controllers ############################
-    ctrl = [DSLPIDControl(env) for i in range(2)]
+    ctrl = [DSLPIDControl(drone_model=ARGS.drone) for i in range(2)]
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))

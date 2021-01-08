@@ -11,8 +11,6 @@ from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 
-from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-
 class ActionType(Enum):
     """Action type enumeration class."""
     RPM = "rpm"                 # RPMS
@@ -88,9 +86,9 @@ class BaseSingleAgentAviary(BaseAviary):
         if act in [ActionType.PID, ActionType.ONE_D_PID]:
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
             if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
-                self.ctrl = [DSLPIDControl(CtrlAviary(drone_model=DroneModel.CF2X))]
+                self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X)]
             elif drone_model == DroneModel.HB:
-                self.ctrl = [SimplePIDControl(CtrlAviary(drone_model=DroneModel.HB))]
+                self.ctrl = [SimplePIDControl(drone_model=DroneModel.HB)]
         super().__init__(drone_model=drone_model,
                          num_drones=1,
                          initial_xyzs=initial_xyzs,

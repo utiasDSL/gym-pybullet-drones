@@ -15,49 +15,21 @@ class DSLPIDControl(BaseControl):
 
     ################################################################################
 
-    # def __init__(self,
-    #              env: BaseAviary
-    #              ):
-    #     """DSL PID control initialization.
-
-    #     Parameters
-    #     ----------
-    #     env : BaseAviary
-    #         The simulation environment to control.
-
-    #     """
-    #     super().__init__(env=env)
-    #     if self.DRONE_MODEL != DroneModel.CF2X and self.DRONE_MODEL != DroneModel.CF2P:
-    #         print("[ERROR] in DSLPIDControl.__init__(), DSLPIDControl requires DroneModel.CF2X or DroneModel.CF2P")
-    #         exit()
-    #     self.P_COEFF_FOR = np.array([.4, .4, 1.25])
-    #     self.I_COEFF_FOR = np.array([.05, .05, .05])
-    #     self.D_COEFF_FOR = np.array([.2, .2, .5])
-    #     self.P_COEFF_TOR = np.array([70000., 70000., 60000.])
-    #     self.I_COEFF_TOR = np.array([.0, .0, 500.])
-    #     self.D_COEFF_TOR = np.array([20000., 20000., 12000.])
-    #     self.PWM2RPM_SCALE = 0.2685
-    #     self.PWM2RPM_CONST = 4070.3
-    #     self.MIN_PWM = 20000
-    #     self.MAX_PWM = 65535
-    #     if self.DRONE_MODEL == DroneModel.CF2X:
-    #         self.MIXER_MATRIX = np.array([ [.5, -.5,  -1], [.5, .5, 1], [-.5,  .5,  -1], [-.5, -.5, 1] ])
-    #     elif self.DRONE_MODEL == DroneModel.CF2P:
-    #         self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
-    #     self.reset()
-
     def __init__(self,
-                 env: BaseAviary
+                 drone_model: DroneModel,
+                 g: float=9.8
                  ):
-        """DSL PID control initialization.
+        """Common control classes __init__ method.
 
         Parameters
         ----------
-        env : BaseAviary
-            The simulation environment to control.
+        drone_model : DroneModel
+            The type of drone to control (detailed in an .urdf file in folder `assets`).
+        g : float, optional
+            The gravitational acceleration in m/s^2.
 
         """
-        super().__init__(env=env)
+        super().__init__(drone_model=drone_model, g=g)
         if self.DRONE_MODEL != DroneModel.CF2X and self.DRONE_MODEL != DroneModel.CF2P:
             print("[ERROR] in DSLPIDControl.__init__(), DSLPIDControl requires DroneModel.CF2X or DroneModel.CF2P")
             exit()

@@ -67,7 +67,7 @@ if __name__ == "__main__":
                     )
 
     #### Initialize the controller #############################
-    ctrl = DSLPIDControl(env)
+    ctrl = DSLPIDControl(drone_model=env.DRONE_MODEL)
 
     #### Run the comparison ####################################
     START = time.time()
