@@ -58,7 +58,7 @@ class VelocityAviary(BaseAviary):
         #### Create integrated controllers #########################
         os.environ['KMP_DUPLICATE_LIB_OK']='True'
         if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
-            self.ctrl = [DSLPIDControl(drone_model=drone_model=DroneModel.CF2X) for i in range(num_drones)]
+            self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
         elif drone_model == DroneModel.HB:
             self.ctrl = [SimplePIDControl(drone_model=DroneModel.HB) for i in range(num_drones)]
         super().__init__(drone_model=drone_model,
