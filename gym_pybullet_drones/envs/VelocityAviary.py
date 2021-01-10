@@ -161,15 +161,15 @@ class VelocityAviary(BaseAviary):
         for k, v in action.items():
             state = self._getDroneStateVector(int(k))
 
-            factor = self.MAX_SPEED_KMH * (1000/3600) # move to init
+            factor = self.MAX_SPEED_KMH * (1000/3600) # move to init / scale down
 
             temp, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                     cur_pos=state[0:3],
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
-                                                    target_pos=state[0:3], #+0.1*v,
-                                                    #target_rpy=np.zeros(3),
+                                                    target_pos=state[0:3], #+0.1*v, # alternative implementation?
+                                                    #target_rpy=np.zeros(3), # add keeping current yaw? or drivetrain?
                                                     target_vel=v[3] * factor * v[0:3]
                                                     )
             rpm[int(k),:] = temp
