@@ -330,6 +330,7 @@ Folder [`control`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/g
 >>>                                    state=obs[str(i)]["state"],
 >>>                                    target_pos=TARGET_POS)
 ```
+For high-level coordination of quadcopters using a *target velocity* input, [`VelocityAviary`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VelocityAviary.py) directly integrates PID control within an aviary/gym environment.
 
 
 
@@ -376,7 +377,7 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 
 
-## Ongoing Development
+## Future Developments
 - Downwash as a force field (see `_downwash()` in class `BaseAviary`)
 - Heterogeneous multi-robot systems (import multiple URDF in `_housekeeping()` in class `BaseAviary`)
 - Interface to and template scripts using [PyMARL](https://github.com/oxwhirl/pymarl)
