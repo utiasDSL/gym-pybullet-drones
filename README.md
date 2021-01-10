@@ -330,7 +330,7 @@ Folder [`control`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/g
 >>>                                    state=obs[str(i)]["state"],
 >>>                                    target_pos=TARGET_POS)
 ```
-For high-level coordination, using a *velocity input*, [`VelocityAviary`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VelocityAviary.py) integrates PID control within a `gym.Env`.
+For high-level coordination—using a *velocity input*—[`VelocityAviary`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VelocityAviary.py) integrates PID control within a `gym.Env`.
 
 
 
