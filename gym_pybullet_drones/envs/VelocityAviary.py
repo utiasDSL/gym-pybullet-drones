@@ -175,7 +175,7 @@ class VelocityAviary(BaseAviary):
                                                     cur_ang_vel=state[13:16],
                                                     target_pos=state[0:3], # same as the current position
                                                     target_rpy=np.array([0,0,state[9]]), # keep current yaw
-                                                    target_vel=self.SPEED_LIMIT * v[3] * v_unit_vector # target the desired velocity vector
+                                                    target_vel=self.SPEED_LIMIT * np.abs(v[3]) * v_unit_vector # target the desired velocity vector
                                                     )
             rpm[int(k),:] = temp
         return rpm
