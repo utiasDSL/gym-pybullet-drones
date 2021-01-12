@@ -366,8 +366,8 @@ class BaseAviary(gym.Env):
             if self.PHYSICS != Physics.DYN:
                 p.stepSimulation(physicsClientId=self.CLIENT)
             #### Save the last applied action (e.g. to compute drag) ###
-            if self.PHYSICS in [Physics.PYB_DRAG, Physics.PYB_GND_DRAG_DW]:
-                self.last_clipped_action = clipped_action
+            #if self.PHYSICS in [Physics.PYB_DRAG, Physics.PYB_GND_DRAG_DW]:
+            self.last_clipped_action = clipped_action
         #### Update and store the drones kinematic information #####
         self._updateAndStoreKinematicInformation()
         #### Prepare the return values #############################
@@ -550,7 +550,7 @@ class BaseAviary(gym.Env):
 
         """
         state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
-                           self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_action[nth_drone, :]])
+                           self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :]])
         return state.reshape(20,)
 
     ################################################################################
