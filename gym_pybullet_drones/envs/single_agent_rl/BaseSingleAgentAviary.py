@@ -222,7 +222,7 @@ class BaseSingleAgentAviary(BaseAviary):
                 v_unit_vector = action[0:3] / np.linalg.norm(action[0:3])
             else:
                 v_unit_vector = np.zeros(3)
-            rpm, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+            rpm, _, _ = self.ctrl[0].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                     cur_pos=state[0:3],
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],

@@ -76,6 +76,8 @@ if __name__ == "__main__":
         ACT = ActionType.DYN
     elif ARGS.exp.split("-")[4] == 'pid':
         ACT = ActionType.PID
+    elif ARGS.exp.split("-")[4] == 'vel':
+        ACT = ActionType.VEL
     elif ARGS.exp.split("-")[4] == 'one_d_rpm':
         ACT = ActionType.ONE_D_RPM
     elif ARGS.exp.split("-")[4] == 'one_d_dyn':

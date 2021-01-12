@@ -137,6 +137,8 @@ if __name__ == "__main__":
         ACT = ActionType.DYN
     elif ARGS.exp.split("-")[5] == 'pid':
         ACT = ActionType.PID
+    elif ARGS.exp.split("-")[5] == 'vel':
+        ACT = ActionType.VEL
     elif ARGS.exp.split("-")[5] == 'one_d_rpm':
         ACT = ActionType.ONE_D_RPM
     elif ARGS.exp.split("-")[5] == 'one_d_dyn':
@@ -155,7 +157,7 @@ if __name__ == "__main__":
         exit()
     if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         ACTION_VEC_SIZE = 1
-    elif ACT in [ActionType.RPM, ActionType.DYN]:
+    elif ACT in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
         ACTION_VEC_SIZE = 4
     elif ACT == ActionType.PID:
         ACTION_VEC_SIZE = 3
@@ -302,7 +304,7 @@ if __name__ == "__main__":
                     )
     if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         action = {i: np.array([0]) for i in range(NUM_DRONES)}
-    elif ACT in [ActionType.RPM, ActionType.DYN]:
+    elif ACT in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
         action = {i: np.array([0, 0, 0, 0]) for i in range(NUM_DRONES)}
     elif ACT==ActionType.PID:
          action = {i: np.array([0, 0, 0]) for i in range(NUM_DRONES)}

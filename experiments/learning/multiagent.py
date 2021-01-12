@@ -166,7 +166,7 @@ if __name__ == "__main__":
         exit()
     if ARGS.act in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         ACTION_VEC_SIZE = 1
-    elif ARGS.act in [ActionType.RPM, ActionType.DYN]:
+    elif ARGS.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
         ACTION_VEC_SIZE = 4
     elif ARGS.act == ActionType.PID:
         ACTION_VEC_SIZE = 3
