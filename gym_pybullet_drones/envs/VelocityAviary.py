@@ -74,6 +74,8 @@ class VelocityAviary(BaseAviary):
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui
                          )
+        #### Set a limit on the maximum target speed ###############
+        self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
 
     ################################################################################
 
@@ -159,18 +161,21 @@ class VelocityAviary(BaseAviary):
         """
         rpm = np.zeros((self.NUM_DRONES, 4))
         for k, v in action.items():
+            #### Get the current state of the drone  ###################
             state = self._getDroneStateVector(int(k))
-
-            factor = self.MAX_SPEED_KMH * (1000/3600) # move to init / scale down
-
+            #### Normalize the first 3 components of the target velocity
+            if np.linalg.norm(v[0:3]) != 0:
+                v_unit_vector = v[0:3] / np.linalg.norm(v[0:3])
+            else:
+                v_unit_vector = np.zeros(3)
             temp, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                     cur_pos=state[0:3],
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
-                                                    target_pos=state[0:3], #+0.1*v, # alternative implementation?
-                                                    #target_rpy=np.zeros(3), # add keeping current yaw? or drivetrain?
-                                                    target_vel=v[3] * factor * v[0:3]
+                                                    target_pos=state[0:3], # same as the current position
+                                                    target_rpy=np.array([0,0,state[9]]), # keep current yaw
+                                                    target_vel=self.SPEED_LIMIT * v[3] * v_unit_vector # target the desired velocity vector
                                                     )
             rpm[int(k),:] = temp
         return rpm
