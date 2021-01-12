@@ -217,13 +217,21 @@ class BaseSingleAgentAviary(BaseAviary):
                                                     )
             return rpm
         elif self.ACT_TYPE == ActionType.VEL:
-################
-################
-################
-            pass
-################
-################
-################
+            state = self._getDroneStateVector(0)
+            if np.linalg.norm(action[0:3]) != 0:
+                v_unit_vector = action[0:3] / np.linalg.norm(action[0:3])
+            else:
+                v_unit_vector = np.zeros(3)
+            rpm, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+                                                    cur_pos=state[0:3],
+                                                    cur_quat=state[3:7],
+                                                    cur_vel=state[10:13],
+                                                    cur_ang_vel=state[13:16],
+                                                    target_pos=state[0:3], # same as the current position
+                                                    target_rpy=np.array([0,0,state[9]]), # keep current yaw
+                                                    target_vel=self.SPEED_LIMIT * np.abs(action[3]) * v_unit_vector # target the desired velocity vector
+                                                    )
+            return rpm
         elif self.ACT_TYPE == ActionType.ONE_D_RPM:
             return np.repeat(self.HOVER_RPM * (1+0.05*action), 4)
         elif self.ACT_TYPE == ActionType.ONE_D_DYN:
