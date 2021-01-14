@@ -136,6 +136,49 @@ class BaseControl(object):
         """
         raise NotImplementedError
 
+################################################################################
+
+    def setPIDCoefficients(self,
+                           p_coeff_pos=None,
+                           i_coeff_pos=None,
+                           d_coeff_pos=None,
+                           p_coeff_att=None,
+                           i_coeff_att=None,
+                           d_coeff_att=None
+                           ):
+        """Sets the coefficients of a PID controller.
+
+        This method throws an error message and exist is the coefficients
+        were not initialized (e.g. when the controller is not a PID one).
+
+        Parameters
+        ----------
+        p_coeff_pos : ndarray, optional
+            (3,1)-shaped array of floats containing the position control proportional coefficients.
+        i_coeff_pos : ndarray, optional
+            (3,1)-shaped array of floats containing the position control integral coefficients.
+        d_coeff_pos : ndarray, optional
+            (3,1)-shaped array of floats containing the position control derivative coefficients.
+        p_coeff_att : ndarray, optional
+            (3,1)-shaped array of floats containing the attitude control proportional coefficients.
+        i_coeff_att : ndarray, optional
+            (3,1)-shaped array of floats containing the attitude control integral coefficients.
+        d_coeff_att : ndarray, optional
+            (3,1)-shaped array of floats containing the attitude control derivative coefficients.
+
+        """
+        ATTR_LIST = ['P_COEFF_FOR', 'I_COEFF_FOR', 'D_COEFF_FOR', 'P_COEFF_TOR', 'I_COEFF_TOR', 'D_COEFF_TOR']
+        if not all(hasattr(self, attr) for attr in ATTR_LIST):
+            print("[ERROR] in BaseControl.setPIDCoefficients(), not all PID coefficients were initialized in the instantiated control class.")
+            exit()
+        else:
+            self.P_COEFF_FOR = self.P_COEFF_FOR if p_coeff_pos is None else p_coeff_pos
+            self.I_COEFF_FOR = self.I_COEFF_FOR if i_coeff_pos is None else i_coeff_pos
+            self.D_COEFF_FOR = self.D_COEFF_FOR if d_coeff_pos is None else d_coeff_pos
+            self.P_COEFF_TOR = self.P_COEFF_TOR if p_coeff_att is None else p_coeff_att
+            self.I_COEFF_TOR = self.I_COEFF_TOR if i_coeff_att is None else i_coeff_att
+            self.D_COEFF_TOR = self.D_COEFF_TOR if d_coeff_att is None else d_coeff_att
+
     ################################################################################
     
     def _getURDFParameter(self,
