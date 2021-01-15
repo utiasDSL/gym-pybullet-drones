@@ -332,7 +332,7 @@ Folder [`control`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/g
 ```
 For high-level coordination—using a *velocity input*—[`VelocityAviary`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/VelocityAviary.py) integrates PID control within a `gym.Env`.
 
-Method [`setPIDCoefficients`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/BaseControl.py) can be used to change the coefficients of the given PID controllers and implement parameter tuning as a learning problems (see [`TuneAviary`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/TuneAviary.py).  
+Method [`setPIDCoefficients`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/BaseControl.py) can be used to change the coefficients of one of the given PID controllers—and implement learning problems whose goal is parameter tuning (e.g. [`TuneAviary`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/single_agent_rl/TuneAviary.py)).  
 
 
 
