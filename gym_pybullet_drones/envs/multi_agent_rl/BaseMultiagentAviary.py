@@ -61,11 +61,14 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         obs : ObservationType, optional
             The type of observation space (kinematic information or vision)
         act : ActionType, optional
-            The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control)
+            The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
         if num_drones < 2:
-            print("[ERROR] in BaseMultiagentAviary.__init__(), num_drones should be >= 2" )
+            print("[ERROR] in BaseMultiagentAviary.__init__(), num_drones should be >= 2")
+            exit()
+        if act == ActionType.TUN:
+            print("[ERROR] in BaseMultiagentAviary.__init__(), ActionType.TUN can only used with BaseSingleAgentAviary")
             exit()
         vision_attributes = True if obs == ObservationType.RGB else False
         dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
@@ -79,6 +82,8 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                 self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
             elif drone_model == DroneModel.HB:
                 self.ctrl = [SimplePIDControl(drone_model=DroneModel.HB) for i in range(num_drones)]
+            else:
+                print("[ERROR] in BaseMultiagentAviary.__init()__, no controller is available for the specified drone_model")
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -168,6 +173,11 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         action types: the input to n-th drone, `action[n]` can be of length
         1, 3, or 4, and represent RPMs, desired thrust and torques, or the next
         target position to reach using PID control.
+
+        Parameter `action` is processed differenly for each of the different
+        action types: `action` can be of length 1, 3, or 4 and represent 
+        RPMs, desired thrust and torques, the next target position to reach 
+        using PID control, a desired velocity vector, etc.
 
         Parameters
         ----------

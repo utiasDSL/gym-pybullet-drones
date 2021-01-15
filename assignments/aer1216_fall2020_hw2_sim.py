@@ -92,7 +92,7 @@ if __name__ == "__main__":
     TARGET_ACCELERATION = np.zeros([DURATION * ENV.SIM_FREQ, 3])
 
     #### Derive the target trajectory to obtain target velocities and accelerations
-    TARGET_VELOCITY[1:, :] = (TARGET_POSITION[1:, :] - TARGET_POSITION[0:-1, :])/ENV.SIM_FREQ
+    TARGET_VELOCITY[1:, :] = (TARGET_POSITION[1:, :] - TARGET_POSITION[0:-1, :]) / ENV.SIM_FREQ
     TARGET_ACCELERATION[1:, :] = (TARGET_VELOCITY[1:, :] - TARGET_VELOCITY[0:-1, :]) / ENV.SIM_FREQ
 
     #### Run the simulation ####################################
