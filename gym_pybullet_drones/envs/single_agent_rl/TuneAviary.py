@@ -86,7 +86,7 @@ class TuneAviary(BaseSingleAgentAviary):
         
         ####
         state = self._getDroneStateVector(0)
-        i = int(self.step_counter / self.AGGR_PHY_STEPS)
+        i = min(int(self.step_counter / self.AGGR_PHY_STEPS), self.TRAJ_STEPS - 1)
         rpm, _, _ = self.ctrl.computeControl(control_timestep=self.CTRL_TIMESTEP, 
                                              cur_pos=state[0:3],
                                              cur_quat=state[3:7],
@@ -109,7 +109,7 @@ class TuneAviary(BaseSingleAgentAviary):
 
         """
         state = self._getDroneStateVector(0)
-        i = int(self.step_counter / self.AGGR_PHY_STEPS)
+        i = min(int(self.step_counter / self.AGGR_PHY_STEPS), self.TRAJ_STEPS - 1)
         return -1 * np.linalg.norm(self.TARGET_POSITION[i, :]-state[0:3])**2
 
     ################################################################################

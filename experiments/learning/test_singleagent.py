@@ -36,6 +36,7 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
 from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
+from gym_pybullet_drones.envs.single_agent_rl.TuneAviary import TuneAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 
 import shared_constants
@@ -78,6 +79,8 @@ if __name__ == "__main__":
         ACT = ActionType.PID
     elif ARGS.exp.split("-")[4] == 'vel':
         ACT = ActionType.VEL
+    elif ARGS.exp.split("-")[4] == 'tun':
+        ACT = ActionType.TUN
     elif ARGS.exp.split("-")[4] == 'one_d_rpm':
         ACT = ActionType.ONE_D_RPM
     elif ARGS.exp.split("-")[4] == 'one_d_dyn':

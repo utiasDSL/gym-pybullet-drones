@@ -84,13 +84,6 @@ class BaseSingleAgentAviary(BaseAviary):
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
-        #### Try _trajectoryTrackingRPMs exists IFF ActionType.TUN #
-        if act == ActionType.TUN:
-            try:
-                self._trajectoryTrackingRPMs() 
-            except AttributeError:
-                print("[ERROR] in BaseSingleAgentAviary.__init__(), ActionType.TUN requires an implementation of _trajectoryTrackingRPMs in the instantiated subclass")
-                exit()
         #### Create integrated controllers #########################
         if act in [ActionType.PID, ActionType.VEL, ActionType.TUN, ActionType.ONE_D_PID]:
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -131,6 +124,10 @@ class BaseSingleAgentAviary(BaseAviary):
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
+        #### Try _trajectoryTrackingRPMs exists IFF ActionType.TUN #
+        if act == ActionType.TUN and not (hasattr(self.__class__, '_trajectoryTrackingRPMs') and callable(getattr(self.__class__, '_trajectoryTrackingRPMs'))):
+                print("[ERROR] in BaseSingleAgentAviary.__init__(), ActionType.TUN requires an implementation of _trajectoryTrackingRPMs in the instantiated subclass")
+                exit()
 
     ################################################################################
 
