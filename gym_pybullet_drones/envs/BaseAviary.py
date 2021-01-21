@@ -863,6 +863,27 @@ class BaseAviary(gym.Env):
                             )
         #### Store the roll, pitch, yaw rates for the next step ####
         self.rpy_rates[nth_drone,:] = rpy_rates
+
+    ################################################################################
+
+    def _symbolicUpdate(self,
+                        rpm,
+                        nth_drone
+                        ):
+        """Symbolic dynamics update implementation.
+
+        To be implemented, based on sympy or CasADi.
+        For the 2D case only.
+
+        Parameters
+        ----------
+        rpm : ndarray
+            (4)-shaped array of ints containing the RPMs values of the 4 motors.
+        nth_drone : int
+            The ordinal number/position of the desired drone in list self.DRONE_IDS.
+
+        """
+        pass
     
     ################################################################################
 
