@@ -11,11 +11,6 @@ register(
 )
 
 register(
-    id='sym-aviary-v0',
-    entry_point='gym_pybullet_drones.envs:Symbolic2DAviary',
-)
-
-register(
     id='velocity-aviary-v0',
     entry_point='gym_pybullet_drones.envs:VelocityAviary',
 )
