@@ -380,6 +380,7 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 
 ## Future Developments
+- 2D aviary with symbolic [CasADi](https://web.casadi.org) dynamics for control applications
 - Downwash as a force field (see `_downwash()` in class `BaseAviary`)
 - Heterogeneous multi-robot systems (import multiple URDF in `_housekeeping()` in class `BaseAviary`)
 - Interface to and template scripts using [PyMARL](https://github.com/oxwhirl/pymarl)
