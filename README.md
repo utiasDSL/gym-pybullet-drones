@@ -384,6 +384,7 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 - Downwash as a force field (see `_downwash()` in class `BaseAviary`)
 - Heterogeneous multi-robot systems (import multiple URDF in `_housekeeping()` in class `BaseAviary`)
 - Interface to and template scripts using [PyMARL](https://github.com/oxwhirl/pymarl)
+- Google [Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) examples
 
 
 
