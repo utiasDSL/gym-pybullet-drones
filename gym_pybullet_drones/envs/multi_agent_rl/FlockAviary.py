@@ -85,7 +85,7 @@ class FlockAviary(BaseMultiagentAviary):
 
         """
         rewards = {}
-        states = np.array([self._getDroneStateVector(0) for i in range(self.NUM_DRONES)])
+        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
         rewards[0] = -1 * np.linalg.norm(np.array([0, 0, 1]) - states[0, 0:3])**2
         for i in range(1, self.NUM_DRONES):
             rewards[i] = -1 * np.linalg.norm(states[i-1, 2] - states[i, 2])**2

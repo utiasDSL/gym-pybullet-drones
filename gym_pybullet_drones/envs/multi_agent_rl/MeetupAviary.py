@@ -85,7 +85,7 @@ class MeetupAviary(BaseMultiagentAviary):
 
         """
         rewards = {}
-        states = np.array([self._getDroneStateVector(0) for i in range(self.NUM_DRONES)])
+        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
         for i in range(int(self.NUM_DRONES/2)):
             val = -1 * np.linalg.norm(states[i, 0:3] - states[self.NUM_DRONES-1-i, 0:3])**2
             rewards[i] = val
