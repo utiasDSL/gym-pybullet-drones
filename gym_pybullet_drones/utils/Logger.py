@@ -119,6 +119,61 @@ class Logger(object):
             np.save(out_file, self.controls)
 
     ################################################################################
+
+    def save_as_csv(self,
+                    comment: str=""
+                    ):
+        """Save the logs---on your Desktop---as comma separated values.
+
+        Parameters
+        ----------
+        comment : str, optional
+            Added to the foldername.
+
+        """
+        csv_dir = os.environ.get('HOME')+"/Desktop/save-flight-"+comment+"-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+        if not os.path.exists(csv_dir):
+            os.makedirs(csv_dir+'/')
+        t = np.arange(0, self.timestamps.shape[1]/self.LOGGING_FREQ_HZ, 1/self.LOGGING_FREQ_HZ)
+        for i in range(self.NUM_DRONES):
+            with open(csv_dir+"/x"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 0, :]])), delimiter=",")
+            with open(csv_dir+"/y"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 1, :]])), delimiter=",")
+            with open(csv_dir+"/z"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 2, :]])), delimiter=",")
+            ####
+            with open(csv_dir+"/r"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 6, :]])), delimiter=",")
+            with open(csv_dir+"/p"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 7, :]])), delimiter=",")
+            with open(csv_dir+"/ya"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 8, :]])), delimiter=",")
+            ####
+            with open(csv_dir+"/vx"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 3, :]])), delimiter=",")
+            with open(csv_dir+"/vy"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 4, :]])), delimiter=",")
+            with open(csv_dir+"/vz"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 5, :]])), delimiter=",")
+            ####
+            with open(csv_dir+"/wx"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 9, :]])), delimiter=",")
+            with open(csv_dir+"/wy"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 10, :]])), delimiter=",")
+            with open(csv_dir+"/wz"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 11, :]])), delimiter=",")
+            ####
+            with open(csv_dir+"/ra"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 12, :]])), delimiter=",")
+            with open(csv_dir+"/rb"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 13, :]])), delimiter=",")
+            with open(csv_dir+"/rc"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 14, :]])), delimiter=",")
+            with open(csv_dir+"/rd"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 15, :]])), delimiter=",")
+
+    ################################################################################
     
     def plot(self, pwm=False):
         """Logs entries for a single simulation step, of a single drone.

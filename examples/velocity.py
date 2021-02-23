@@ -1,3 +1,18 @@
+"""Script demonstrating the joint use of velocity input.
+
+The simulation is run by a `VelocityAviary` environment.
+
+Example
+-------
+In a terminal, run as:
+
+    $ python velocity.py
+
+Notes
+-----
+The drones use interal PID control to track a target velocity.
+
+"""
 import os
 import time
 import argparse
@@ -32,7 +47,7 @@ if __name__ == "__main__":
     parser.add_argument('--obstacles',          default=False,      type=str2bool,      help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=10,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+    parser.add_argument('--duration_sec',       default=5,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
     ARGS = parser.parse_args()
 
     #### Initialize the simulation #############################
@@ -49,7 +64,7 @@ if __name__ == "__main__":
     AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
     PHY = Physics.PYB
 
-    #### Create the environment with or without video capture ##
+    #### Create the environment ################################
     env = VelocityAviary(drone_model=ARGS.drone,
                          num_drones=3,
                          initial_xyzs=INIT_XYZS,
@@ -74,14 +89,18 @@ if __name__ == "__main__":
     wp_counters = np.array([0 for i in range(3)])
 
     #### Initialize the velocity target ########################
-    TARGET_VEL = np.zeros((NUM_WP,4))
+    TARGET_VEL = np.zeros((3,NUM_WP,4))
+    # for i in range(NUM_WP):
+    #     if i < NUM_WP/2:
+    #         # TARGET_VEL[i, :] = 1, 1, 1, 0.99
+    #         TARGET_VEL[i, :] = 0, 1, 0, 0.99
+    #     else:
+    #         # TARGET_VEL[i, :] = -1, -1, -1, 0.99
+    #         TARGET_VEL[i, :] = 0, -1, 0, 0.99
     for i in range(NUM_WP):
-        if i < NUM_WP/2:
-            # TARGET_VEL[i, :] = 1, 1, 1, 0.99
-            TARGET_VEL[i, :] = 0, 1, 0, 0.99
-        else:
-            # TARGET_VEL[i, :] = -1, -1, -1, 0.99
-            TARGET_VEL[i, :] = 0, -1, 0, 0.99
+        TARGET_VEL[0, i, :] = [-0.2, 1, 0, 0.99] if i < NUM_WP/4 else [0.2, -1, 0, 0.99]
+        TARGET_VEL[1, i, :] = [0, 1, 0, 0.99] if i < NUM_WP/3 else [0, -1, 0, 0.99]
+        TARGET_VEL[2, i, :] = [0.2, 1, 0, 0.99] if i < NUM_WP/2 else [-0.2, -1, 0, 0.99]
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=int(ARGS.simulation_freq_hz/AGGR_PHY_STEPS),
@@ -105,7 +124,7 @@ if __name__ == "__main__":
 
             #### Compute control for the current way point #############
             for j in range(3):
-                action[str(j)] = TARGET_VEL[wp_counters[j], :] 
+                action[str(j)] = TARGET_VEL[j, wp_counters[j], :] 
 
             #### Go to the next way point and loop #####################
             for j in range(3): 
@@ -116,7 +135,7 @@ if __name__ == "__main__":
             logger.log(drone=j,
                        timestamp=i/env.SIM_FREQ,
                        state= obs[str(j)]["state"],
-                       control=np.hstack([TARGET_VEL[wp_counters[j], 0:3], np.zeros(9)])
+                       control=np.hstack([TARGET_VEL[j, wp_counters[j], 0:3], np.zeros(9)])
                        )
 
         #### Printout ##############################################
@@ -129,6 +148,8 @@ if __name__ == "__main__":
 
     #### Close the environment #################################
     env.close()
+
+    # logger.save_as_csv("test") # Optional CSV save
 
     #### Plot the simulation results ###########################
     if ARGS.plot:
