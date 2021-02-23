@@ -98,10 +98,12 @@ class FillInActions(DefaultCallbacks):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space( 
-                                                                 Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 # Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 Box(-1, 1, (ACTION_VEC_SIZE,), np.float32) # Bounded
                                                                  )
         _, opponent_batch = original_batches[other_id]
-        opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]])
+        # opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]) # Unbounded
+        opponent_actions = np.array([action_encoder.transform(np.clip(a, -1, 1)) for a in opponent_batch[SampleBatch.ACTIONS]]) # Bounded
         to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
 
 ############################################################
@@ -314,11 +316,9 @@ if __name__ == "__main__":
     start = time.time()
     for i in range(6*int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS)): # Up to 6''
         #### Deploy the policies ###################################
-        # print("Debug Obs", obs)
         temp = {}
-        temp[0] = policy0.compute_single_action(np.hstack([obs[0], obs[1], action[1]]))
-        temp[1] = policy1.compute_single_action(np.hstack([obs[1], obs[0], action[0]]))
-        # print("Debug Act", temp)
+        temp[0] = policy0.compute_single_action(np.hstack([action[1], obs[1], obs[0]])) # Counterintuitive order, check params.json
+        temp[1] = policy1.compute_single_action(np.hstack([action[0], obs[0], obs[1]]))
         action = {0: temp[0][0], 1: temp[1][0]}
         obs, reward, done, info = test_env.step(action)
         test_env.render()

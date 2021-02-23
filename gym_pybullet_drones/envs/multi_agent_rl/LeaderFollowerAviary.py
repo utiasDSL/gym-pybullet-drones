@@ -86,9 +86,10 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
         """
         rewards = {}
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        rewards[0] = -1 * np.linalg.norm(np.array([1, 1, 1]) - states[0, 0:3])**2
+        rewards[0] = -1 * np.linalg.norm(np.array([0, 0, 0.5]) - states[0, 0:3])**2
+        # rewards[1] = -1 * np.linalg.norm(np.array([states[1, 0], states[1, 1], 0.5]) - states[1, 0:3])**2 # DEBUG WITH INDEPENDENT REWARD 
         for i in range(1, self.NUM_DRONES):
-            rewards[i] = -1 * np.linalg.norm(states[i-1, 0:3] - states[i, 0:3])**2
+            rewards[i] = -(1/self.NUM_DRONES) * np.linalg.norm(np.array([states[i, 0], states[i, 1], states[0, 2]]) - states[i, 0:3])**2
         return rewards
 
     ################################################################################
@@ -105,7 +106,7 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
         """
         bool_val = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else False
         done = {i: bool_val for i in range(self.NUM_DRONES)}
-        done["__all__"] = True if True in done.values() else False
+        done["__all__"] = bool_val # True if True in done.values() else False
         return done
 
     ################################################################################
