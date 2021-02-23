@@ -91,11 +91,6 @@ class DynAviary(BaseAviary):
                                                high=act_upper_bound,
                                                dtype=np.float32
                                                ) for i in range(self.NUM_DRONES)})
-
-    ####################################################################################################
-    #### Return the observation space of the environment, a Dict with NUM_DRONES entries of Dict of ####
-    #### { Box(4,), MultiBinary(NUM_DRONES) } ##########################################################
-    ####################################################################################################
     
     ################################################################################
     
