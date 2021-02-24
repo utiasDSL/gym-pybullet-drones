@@ -150,6 +150,16 @@ class Logger(object):
             with open(csv_dir+"/ya"+str(i)+".csv", 'wb') as out_file:
                 np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 8, :]])), delimiter=",")
             ####
+            with open(csv_dir+"/rr"+str(i)+".csv", 'wb') as out_file:
+                rdot = np.hstack([0, (self.states[i, 6, 1:] - self.states[i, 6, 0:-1]) * self.LOGGING_FREQ_HZ ])
+                np.savetxt(out_file, np.transpose(np.vstack([t, rdot])), delimiter=",")
+            with open(csv_dir+"/pr"+str(i)+".csv", 'wb') as out_file:
+                pdot = np.hstack([0, (self.states[i, 7, 1:] - self.states[i, 7, 0:-1]) * self.LOGGING_FREQ_HZ ])
+                np.savetxt(out_file, np.transpose(np.vstack([t, pdot])), delimiter=",")
+            with open(csv_dir+"/yar"+str(i)+".csv", 'wb') as out_file:
+                ydot = np.hstack([0, (self.states[i, 8, 1:] - self.states[i, 8, 0:-1]) * self.LOGGING_FREQ_HZ ])
+                np.savetxt(out_file, np.transpose(np.vstack([t, ydot])), delimiter=",")
+            ###
             with open(csv_dir+"/vx"+str(i)+".csv", 'wb') as out_file:
                 np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 3, :]])), delimiter=",")
             with open(csv_dir+"/vy"+str(i)+".csv", 'wb') as out_file:
@@ -164,14 +174,23 @@ class Logger(object):
             with open(csv_dir+"/wz"+str(i)+".csv", 'wb') as out_file:
                 np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 11, :]])), delimiter=",")
             ####
-            with open(csv_dir+"/ra"+str(i)+".csv", 'wb') as out_file:
+            with open(csv_dir+"/rpm0-"+str(i)+".csv", 'wb') as out_file:
                 np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 12, :]])), delimiter=",")
-            with open(csv_dir+"/rb"+str(i)+".csv", 'wb') as out_file:
+            with open(csv_dir+"/rpm1-"+str(i)+".csv", 'wb') as out_file:
                 np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 13, :]])), delimiter=",")
-            with open(csv_dir+"/rc"+str(i)+".csv", 'wb') as out_file:
+            with open(csv_dir+"/rpm2-"+str(i)+".csv", 'wb') as out_file:
                 np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 14, :]])), delimiter=",")
-            with open(csv_dir+"/rd"+str(i)+".csv", 'wb') as out_file:
+            with open(csv_dir+"/rpm3-"+str(i)+".csv", 'wb') as out_file:
                 np.savetxt(out_file, np.transpose(np.vstack([t, self.states[i, 15, :]])), delimiter=",")
+            ####
+            with open(csv_dir+"/pwm0-"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, (self.states[i, 12, :] - 4070.3) / 0.2685])), delimiter=",")
+            with open(csv_dir+"/pwm1-"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, (self.states[i, 13, :] - 4070.3) / 0.2685])), delimiter=",")
+            with open(csv_dir+"/pwm2-"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, (self.states[i, 14, :] - 4070.3) / 0.2685])), delimiter=",")
+            with open(csv_dir+"/pwm3-"+str(i)+".csv", 'wb') as out_file:
+                np.savetxt(out_file, np.transpose(np.vstack([t, (self.states[i, 15, :] - 4070.3) / 0.2685])), delimiter=",")
 
     ################################################################################
     

@@ -128,5 +128,5 @@ if __name__ == "__main__":
         sync(np.floor(i*test_env.AGGR_PHY_STEPS), start, test_env.TIMESTEP)
         # if done: obs = test_env.reset() # OPTIONAL EPISODE HALT
     test_env.close()
-    # logger.save_as_csv("sa") # Optional CSV save
+    logger.save_as_csv("sa") # Optional CSV save
     logger.plot()

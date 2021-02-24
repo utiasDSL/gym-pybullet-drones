@@ -107,7 +107,7 @@ if __name__ == "__main__":
 
     #### Save the simulation results ###########################
     logger.save()
-    # logger.save_as_csv("dw") # Optional CSV save
+    logger.save_as_csv("dw") # Optional CSV save
 
     #### Plot the simulation results ###########################
     logger.plot()

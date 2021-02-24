@@ -149,8 +149,7 @@ if __name__ == "__main__":
     #### Close the environment #################################
     env.close()
 
-    # logger.save_as_csv("vel") # Optional CSV save
-
     #### Plot the simulation results ###########################
+    logger.save_as_csv("vel") # Optional CSV save
     if ARGS.plot:
         logger.plot()
