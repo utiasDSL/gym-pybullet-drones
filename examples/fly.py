@@ -190,6 +190,7 @@ if __name__ == "__main__":
 
     #### Save the simulation results ###########################
     logger.save()
+    # logger.save_as_csv("pid") # Optional CSV save
 
     #### Plot the simulation results ###########################
     if ARGS.plot:
