@@ -1,0 +1,32 @@
+
+configs: 'configs/configs.yaml'
+
+env: 'hover' # choices=['takeoff', 'hover', 'flythrugate', 'tune']
+algo: 'TD3' # choices=['TD3', 'DDPG', 'SAC']
+seed: 2
+obs: 'kin'
+act: 'one_d_rpm'
+cpu: 1
+start_timesteps: 200 # Time steps initial random policy is used
+eval_freq: 1000 # How often (time steps) we evaluate
+max_timesteps: 1000000 # Max time steps to run environment
+expl_noise: 0.1 # Std of Gaussian exploration noise
+batch_size: 256 # Batch size for both actor and critic
+discount: 0.99 # Discount factor
+tau: 0.005 # Target network update rate
+policy_noise: 0.2 # Noise added to target policy
+noise_clip: 0.5 # Range to clip target policy noise
+policy_freq: 2 # Frequency of delayed policy updates
+save_model: "store_true" # Save model and optimizer parameters
+load_model: "" # Model load file name, "" doesn't load, 
+
+
+
+
+
+
+
+
+
+
+
