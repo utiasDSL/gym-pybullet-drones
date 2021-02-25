@@ -130,3 +130,9 @@ if __name__ == "__main__":
     test_env.close()
     logger.save_as_csv("sa") # Optional CSV save
     logger.plot()
+
+    # with np.load(ARGS.exp+'/evaluations.npz') as data:
+    #     print(data.files)
+    #     print(data['timesteps'])
+    #     print(data['results'])
+    #     print(data['ep_lengths'])
