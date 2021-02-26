@@ -30,7 +30,7 @@ if __name__ == "__main__":
     parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=10,         type=int,           help='Duration of the simulation in seconds (default: 10)', metavar='')
+    parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 10)', metavar='')
     ARGS = parser.parse_args()
 
     #### Initialize the simulation #############################
@@ -47,7 +47,7 @@ if __name__ == "__main__":
                      )
 
     #### Initialize the trajectories ###########################
-    PERIOD = 10
+    PERIOD = 5
     NUM_WP = ARGS.control_freq_hz*PERIOD
     TARGET_POS = np.zeros((NUM_WP, 2))
     for i in range(NUM_WP):
@@ -79,7 +79,7 @@ if __name__ == "__main__":
             for j in range(2):
                 action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
                                                                        state=obs[str(j)]["state"],
-                                                                       target_pos=np.hstack([TARGET_POS[wp_counters[j], :], INIT_XYZS[j, 2]])
+                                                                       target_pos=np.hstack([TARGET_POS[wp_counters[j], :], INIT_XYZS[j, 2]]),
                                                                        )
 
             #### Go to the next way point and loop #####################

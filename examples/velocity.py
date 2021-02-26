@@ -54,19 +54,21 @@ if __name__ == "__main__":
     INIT_XYZS = np.array([
                           [ 0, 0, .1],
                           [.3, 0, .1],
-                          [.6, 0, .1]
+                          [.6, 0, .1],
+                          [0.9, 0, .1]
                           ])
     INIT_RPYS = np.array([
                           [0, 0, 0],
                           [0, 0, np.pi/3],
-                          [0, 0, np.pi/4]
+                          [0, 0, np.pi/4],
+                          [0, 0, np.pi/2]
                           ])
     AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
     PHY = Physics.PYB
 
     #### Create the environment ################################
     env = VelocityAviary(drone_model=ARGS.drone,
-                         num_drones=3,
+                         num_drones=4,
                          initial_xyzs=INIT_XYZS,
                          initial_rpys=INIT_RPYS,
                          physics=Physics.PYB,
@@ -86,30 +88,24 @@ if __name__ == "__main__":
     #### Compute number of control steps in the simlation ######
     PERIOD = ARGS.duration_sec
     NUM_WP = ARGS.control_freq_hz*PERIOD
-    wp_counters = np.array([0 for i in range(3)])
+    wp_counters = np.array([0 for i in range(4)])
 
     #### Initialize the velocity target ########################
-    TARGET_VEL = np.zeros((3,NUM_WP,4))
-    # for i in range(NUM_WP):
-    #     if i < NUM_WP/2:
-    #         # TARGET_VEL[i, :] = 1, 1, 1, 0.99
-    #         TARGET_VEL[i, :] = 0, 1, 0, 0.99
-    #     else:
-    #         # TARGET_VEL[i, :] = -1, -1, -1, 0.99
-    #         TARGET_VEL[i, :] = 0, -1, 0, 0.99
+    TARGET_VEL = np.zeros((4,NUM_WP,4))
     for i in range(NUM_WP):
-        TARGET_VEL[0, i, :] = [-0.2, 1, 0, 0.99] if i < NUM_WP/4 else [0.2, -1, 0, 0.99]
-        TARGET_VEL[1, i, :] = [0, 1, 0, 0.99] if i < NUM_WP/3 else [0, -1, 0, 0.99]
-        TARGET_VEL[2, i, :] = [0.2, 1, 0, 0.99] if i < NUM_WP/2 else [-0.2, -1, 0, 0.99]
+        TARGET_VEL[0, i, :] = [-0.5, 1, 0, 0.99] if i < (NUM_WP/8) else [0.5, -1, 0, 0.99]
+        TARGET_VEL[1, i, :] = [0, 1, 0, 0.99] if i < (NUM_WP/8+NUM_WP/6) else [0, -1, 0, 0.99]
+        TARGET_VEL[2, i, :] = [0.2, 1, 0.2, 0.99] if i < (NUM_WP/8+2*NUM_WP/6) else [-0.2, -1, -0.2, 0.99]
+        TARGET_VEL[3, i, :] = [0, 1, 0.5, 0.99] if i < (NUM_WP/8+3*NUM_WP/6) else [0, -1, -0.5, 0.99]
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=int(ARGS.simulation_freq_hz/AGGR_PHY_STEPS),
-                    num_drones=3
+                    num_drones=4
                     )
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
-    action = {str(i): np.array([0,0,0,0]) for i in range(3)}
+    action = {str(i): np.array([0,0,0,0]) for i in range(4)}
     START = time.time()
     for i in range(0, int(ARGS.duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
@@ -123,15 +119,15 @@ if __name__ == "__main__":
         if i%CTRL_EVERY_N_STEPS == 0:
 
             #### Compute control for the current way point #############
-            for j in range(3):
+            for j in range(4):
                 action[str(j)] = TARGET_VEL[j, wp_counters[j], :] 
 
             #### Go to the next way point and loop #####################
-            for j in range(3): 
+            for j in range(4): 
                 wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
-        for j in range(3):
+        for j in range(4):
             logger.log(drone=j,
                        timestamp=i/env.SIM_FREQ,
                        state= obs[str(j)]["state"],

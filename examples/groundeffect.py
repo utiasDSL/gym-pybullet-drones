@@ -43,12 +43,12 @@ if __name__ == "__main__":
     parser.add_argument('--aggregate',          default=False,      type=str2bool,      help='Whether to aggregate physics steps (default: False)', metavar='')
     parser.add_argument('--obstacles',          default=True,       type=str2bool,      help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
-    parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+    parser.add_argument('--control_freq_hz',    default=240,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
+    parser.add_argument('--duration_sec',       default=4,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
     ARGS = parser.parse_args()
 
     #### Initialize the simulation #############################
-    INIT_XYZ = np.array([0, 0, 0.03]).reshape(1,3)
+    INIT_XYZ = np.array([0, 0, 0.014]).reshape(1,3)
     AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
 
     #### Initialize a vertical trajectory ######################
@@ -56,7 +56,7 @@ if __name__ == "__main__":
     NUM_WP = ARGS.control_freq_hz*PERIOD
     TARGET_POS = np.zeros((NUM_WP,3))
     for i in range(NUM_WP):
-        TARGET_POS[i, :] = INIT_XYZ[0, 0], INIT_XYZ[0, 1], INIT_XYZ[0, 2] + 0.25 * (np.sin((i/NUM_WP)*(2*np.pi)) + 1)
+        TARGET_POS[i, :] = INIT_XYZ[0, 0], INIT_XYZ[0, 1], INIT_XYZ[0, 2] + 0.15 * (np.sin((i/NUM_WP)*(2*np.pi)) + 1)
     wp_counter = 0
 
     #### Create the environment ################################
@@ -64,6 +64,7 @@ if __name__ == "__main__":
                      num_drones=1,
                      initial_xyzs=INIT_XYZ,
                      physics=Physics.PYB_GND,
+                     #physics=Physics.PYB,
                      neighbourhood_radius=10,
                      freq=ARGS.simulation_freq_hz,
                      aggregate_phy_steps=AGGR_PHY_STEPS,
