@@ -236,13 +236,13 @@ if __name__ == "__main__":
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(5000/ARGS.cpu),
+                                 eval_freq=int(2000/ARGS.cpu),
                                  deterministic=True,
                                  render=False
                                  )
-    model.learn(total_timesteps=int(1e12),
+    model.learn(total_timesteps=35000, #int(1e12),
                 callback=eval_callback,
-                log_interval=100
+                log_interval=100,
                 )
 
     ### Save the model #########################################
