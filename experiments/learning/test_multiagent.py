@@ -6,7 +6,7 @@ Example
 -------
 To run the script, type in a terminal:
 
-    $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
+    $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<time_date>
 
 """
 import os

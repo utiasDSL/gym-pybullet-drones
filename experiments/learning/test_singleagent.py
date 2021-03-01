@@ -6,7 +6,7 @@ Example
 -------
 To run the script, type in a terminal:
 
-    $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time-date>
+    $ python test_singleagent.py --exp ./results/save-<env>-<algo>-<obs>-<act>-<time_date>
 
 """
 import os

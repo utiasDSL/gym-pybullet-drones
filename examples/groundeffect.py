@@ -64,7 +64,7 @@ if __name__ == "__main__":
                      num_drones=1,
                      initial_xyzs=INIT_XYZ,
                      physics=Physics.PYB_GND,
-                     #physics=Physics.PYB,
+                     # physics=Physics.PYB, # For comparison
                      neighbourhood_radius=10,
                      freq=ARGS.simulation_freq_hz,
                      aggregate_phy_steps=AGGR_PHY_STEPS,
