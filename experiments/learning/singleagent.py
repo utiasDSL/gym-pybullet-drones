@@ -21,6 +21,7 @@ import time
 from datetime import datetime
 import argparse
 import subprocess
+import numpy as np
 import gym
 import torch
 from stable_baselines3.common.env_checker import check_env
@@ -245,6 +246,11 @@ if __name__ == "__main__":
                 log_interval=100,
                 )
 
-    ### Save the model #########################################
-    model.save(filename+'/success_model.zip') # Possibly never achieved
+    #### Save the model ########################################
+    model.save(filename+'/success_model.zip')
     print(filename)
+
+    #### Print training progression ############################
+    with np.load(filename+'/evaluations.npz') as data:
+        for j in range(data['timesteps'].shape[0]):
+            print(str(data['timesteps'][j])+","+str(data['results'][j][0][0]))
