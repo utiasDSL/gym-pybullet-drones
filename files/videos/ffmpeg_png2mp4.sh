@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # USE
-# 1. copy the script in the directory where the framse are saved: $ cp ./ffmpeg_png2mp4.sh ./videos/video-MM-DD-YYYY_HH.MM.SS
+# 1. copy the script in the directory where the framse are saved: $ cp ./ffmpeg_png2mp4.sh ./video-MM-DD-YYYY_HH.MM.SS
 # 2. correct the values of FRAME_RATE and RESOLUTION, if necessary (remember not to add spaces before of after the = sign)
-# 3. make the script executable, if needed: $ cd ./videos/video-MM-DD-YYYY_HH.MM.SS; $ chmod +x ./ffmpeg_png2mp4.sh
+# 3. make the script executable, if needed: $ cd ./video-MM-DD-YYYY_HH.MM.SS; $ chmod +x ./ffmpeg_png2mp4.sh
 # 4. run the script to create "video.mp4" in the same directory: $ ./ffmpeg_png2mp4.sh
 
 FRAME_RATE=24
