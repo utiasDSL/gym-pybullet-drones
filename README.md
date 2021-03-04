@@ -1,6 +1,3 @@
-# NOTE
-This repository's `master` branch is actively developed, please `git pull` frequently and feel free to open new [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) for any undesired, unexpected, or (presumably) incorrect behavior. Thanks 🙏
-
 # gym-pybullet-drones
 
 [Simple](https://en.wikipedia.org/wiki/KISS_principle) OpenAI [Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning with quadrotors 
@@ -11,7 +8,23 @@ This repository's `master` branch is actively developed, please `git pull` frequ
 
 - Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
-- Suggestions and corrections are very welcome in the form of [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) and [pull requests](https://github.com/utiasDSL/gym-pybullet-drones/pulls), respectively
+
+
+
+
+## Citation
+If you wish, please cite this work as
+```
+@MISC{panerati2021learning,
+      title={Learning to Fly---a Gym Environment with PyBullet Physics for Reinforcement Learning of Multi-agent Quadcopter Control}, 
+      author={Jacopo Panerati and Hehui Zheng and SiQi Zhou and James Xu and Amanda Prorok and Angela P. Schoellig},
+      year={2021},
+      eprint={2103.02142},
+      archivePrefix={arXiv},
+      primaryClass={cs.RO}
+}
+```
+
 
 
 
@@ -389,19 +402,6 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 - Interface to and template scripts using [PyMARL](https://github.com/oxwhirl/pymarl)
 - Google [Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) examples
 
-
-
-
-## Citation
-If you wish, please cite this work as
-```
-@MISC{gym-pybullet-drones2021,
-    author = {Panerati, Jacopo and Zheng, Hehui and Zhou, SiQi and Xu, James and Prorok, Amanda and Schoellig, Angela P.},
-    title = {Learning to Fly—a Gym Environment with PyBullet Physics for Reinforcement Learning of Multi-agent Quadcopter Control},
-    howpublished = {\url{https://github.com/utiasDSL/gym-pybullet-drones}},
-    year = {2021}
-}
-```
 
 
 
