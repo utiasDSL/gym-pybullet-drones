@@ -24,6 +24,9 @@ class Logger(object):
                  ):
         """Logger class __init__ method.
 
+        Note: the order in which information is stored by Logger.log() is not the same
+        as the one in, e.g., the obs["id"]["state"], check the implementation below.
+
         Parameters
         ----------
         logging_freq_hz : int
@@ -39,6 +42,7 @@ class Logger(object):
         self.PREALLOCATED_ARRAYS = False if duration_sec == 0 else True
         self.counters = np.zeros(num_drones)
         self.timestamps = np.zeros((num_drones, duration_sec*self.LOGGING_FREQ_HZ))
+        #### Note: this is the suggest information to log ##############################
         self.states = np.zeros((num_drones, 16, duration_sec*self.LOGGING_FREQ_HZ)) #### 16 states: pos_x,
                                                                                                   # pos_y,
                                                                                                   # pos_z,
@@ -55,7 +59,7 @@ class Logger(object):
                                                                                                   # rpm1,
                                                                                                   # rpm2,
                                                                                                   # rpm3
-        #### Note: this is not the same order nor length ###########
+        #### Note: this is the suggest information to log ##############################
         self.controls = np.zeros((num_drones, 12, duration_sec*self.LOGGING_FREQ_HZ)) #### 12 control targets: pos_x,
                                                                                                              # pos_y,
                                                                                                              # pos_z,
@@ -104,6 +108,7 @@ class Logger(object):
             current_counter = self.timestamps.shape[1]-1
         #### Log the information and increase the counter ##########
         self.timestamps[drone, current_counter] = timestamp
+        #### Re-order the kinematic obs (of most Aviaries) #########
         self.states[drone, :, current_counter] = np.hstack([state[0:3], state[10:13], state[7:10], state[13:20]])
         self.controls[drone, :, current_counter] = control
         self.counters[drone] = current_counter + 1
