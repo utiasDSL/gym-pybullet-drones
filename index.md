@@ -1,14 +1,9 @@
-> This repository's `master` branch is actively developed, please `git pull` frequently and feel free to open new [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) for any undesired, unexpected, or (presumably) incorrect behavior. Thanks 🙏
-
-[Simple](https://en.wikipedia.org/wiki/KISS_principle) OpenAI [Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning
-
-The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x nano-quadrotor](https://www.bitcraze.io/documentation/hardware/crazyflie_2_1/crazyflie_2_1-datasheet.pdf)
-
-<img src="files/readme_images/helix.gif" alt="formation flight" width="360"> <img src="files/readme_images/helix.png" alt="control info" width="450">
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/-zyrmneaz88/maxresdefault.jpg)](https://www.youtube.com/watch?v=-zyrmneaz88)
 
 
 
 
+## Citation
 ```
 @MISC{panerati2021learning,
       title={Learning to Fly---a Gym Environment with PyBullet Physics for Reinforcement Learning of Multi-agent Quadcopter Control}, 
@@ -19,6 +14,17 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
       primaryClass={cs.RO}
 }
 ```
+
+
+
+
+> This repository's `master` branch is actively developed, please `git pull` frequently and feel free to open new [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) for any undesired, unexpected, or (presumably) incorrect behavior. Thanks 🙏
+
+[Simple](https://en.wikipedia.org/wiki/KISS_principle) OpenAI [Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning
+
+The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x nano-quadrotor](https://www.bitcraze.io/documentation/hardware/crazyflie_2_1/crazyflie_2_1-datasheet.pdf)
+
+<img src="files/readme_images/helix.gif" alt="formation flight" width="360"> <img src="files/readme_images/helix.png" alt="control info" width="450">
 
 
 
@@ -137,19 +143,6 @@ Check out these step-by-step [instructions](https://github.com/utiasDSL/gym-pybu
 ### Trace Comparison
 <img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="360"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
 
-
-
-
-## Citation
-If you wish, please refer to this work as
-```
-@MISC{gym-pybullet-drones2020,
-    author = {Panerati, Jacopo and Zheng, Hehui and Zhou, SiQi and Xu, James and Prorok, Amanda and Sch\"{o}llig, Angela P.},
-    title = {Learning to Fly: a PyBullet Gym environment to learn the control of multiple nano-quadcopters},
-    howpublished = {\url{https://github.com/utiasDSL/gym-pybullet-drones}},
-    year = {2020}
-}
-```
 
 
 
