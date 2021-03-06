@@ -293,7 +293,7 @@ if __name__ == "__main__":
                                 obs=OBS,
                                 act=ACT,
                                 gui=True,
-                                record=True
+                                record=False
                                 )
     else:
         print("[ERROR] environment not yet implemented")

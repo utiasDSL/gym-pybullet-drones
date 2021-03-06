@@ -186,7 +186,7 @@ A flight arena for one (ore more) quadrotor can be created as a subclass of `Bas
 >>>       freq=240,                         # Stepping frequency of the simulation
 >>>       aggregate_phy_steps=1,            # Number of physics updates within each call to BaseAviary.step()
 >>>       gui=True,                         # Whether to display PyBullet's GUI, only use this for debbuging
->>>       record=False,                     # Whether to save a .mp4 video (if gui=True) or .png frames (if gui=False) in gym-pybullet-drones/files/, see script /files/ffmpeg_png2mp4.sh for encoding
+>>>       record=False,                     # Whether to save a .mp4 video (if gui=True) or .png frames (if gui=False) in gym-pybullet-drones/files/, see script /files/videos/ffmpeg_png2mp4.sh for encoding
 >>>       obstacles=False,                  # Whether to add obstacles to the environment
 >>>       user_debug_gui=True)              # Whether to use addUserDebugLine and addUserDebugParameter calls (it can slow down the GUI)
 ````

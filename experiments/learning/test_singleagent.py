@@ -103,7 +103,7 @@ if __name__ == "__main__":
     #### Show, record a video, and log the model's performance #
     test_env = gym.make(env_name,
                         gui=True,
-                        record=True,
+                        record=False,
                         aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                         obs=OBS,
                         act=ACT
