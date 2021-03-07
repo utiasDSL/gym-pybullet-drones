@@ -70,7 +70,7 @@ Check these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet
 
 **Check out file [`README.md`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/utiasDSL/gym-pybullet-drones) for further details**
 
-### Track
+### Trajectory Tracking
 <img src="files/readme_images/wp.gif" alt="sparse way points flight" width="360"> <img src="files/readme_images/wp.png" alt="control info" width="450">
 
 ### RGB, Depth, and Segmentation Views
