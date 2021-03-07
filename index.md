@@ -36,7 +36,6 @@ The repo was written using *Python 3* on *macOS 10.15* and tested on *macOS 11*,
 ### On *macOS* and *Ubuntu*
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
-
 ```
 pip3 install --upgrade numpy matplotlib Pillow cycler 
 pip3 install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
@@ -68,7 +67,7 @@ Check these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet
 
 ## Use, Examples, and Documentation
 
-**Check out file [`README.md`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/utiasDSL/gym-pybullet-drones) for further details**
+**Refer to the [`master` branch](https://github.com/utiasDSL/gym-pybullet-drones)'s [`README.md`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/README.md) for further details**
 
 ### Trajectory Tracking
 <img src="files/readme_images/wp.gif" alt="sparse way points flight" width="360"> <img src="files/readme_images/wp.png" alt="control info" width="450">
