@@ -29,56 +29,6 @@ The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x na
 
 
 
-## Overview
-
-|                                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
-|---------------------------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
-|                         *Physics* | PyBullet              | FastPhysicsEngine / PhysX                     | *Ad hoc* / Gazebo                                   |
-|                       *Rendering* | PyBullet              | Unreal Engine 4                               | Unity                                               |
-|                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
-|                 *RGB/Depth/Segm.* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|                   *ROS interface* | ROS2/Python           | ROS/C++                                       | ROS/C++                                             |
-|            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
-|               *Steppable physics* | **Yes**               | No                                            | **Yes**                                             |
-|             *Aerodynamic effects* | Drag, downwash, ground effect | Drag                                  | Drag                                                |
-|          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) API* | **Yes** | No | **Yes**                                                   |
-| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py)* | **Yes**  | No | No                                     |
-| *[PyMARL](https://github.com/oxwhirl/pymarl) integration* | *WIP*  | No                                   | No                                                  |
-
-
-
-
-
-## Performance
-Simulation **speed-up with respect to the wall-clock** when using
-- *240Hz* (in simulation clock) PyBullet physics for **EACH** drone
-- **AND** *48Hz* (in simulation clock) PID control of **EACH** drone
-- **AND** nearby *obstacles* **AND** a mildly complex *background* (see GIFs)
-- **AND** *24FPS* (in sim. clock), *64x48 pixel* capture of *6 ch.* (RGBA, depth, segm.) on **EACH** drone
-
-|                                  | Lenovo P52 (i7-8850H/Quadro-P2000) | 2020 MacBook Pro (i7-1068NG7) |
-| -------------------------------: | :--------------------------------: | :---------------------------: |
-| Rendering                        | OpenGL \*\*\*                      | CPU-based TinyRenderer        | 
-| 1 drone **w/o** viz.             | 15.5x                              | 16.8x                         |
-| 1 drone **w/** viz.              | 10.8x                              | 1.3x                          |
-| 10 drones **w/o** viz.           | 2.1x                               | 2.3x                          |
-| 5 drones **w/** viz.             | 2.5x                               | 0.2x                          |
-| 80 drones in 4 env, **w/o** viz. | 0.8x                               | 0.95x                         |
-
-> \*\*\* **on Ubuntu only, uncomment the line after `p.connect(p.DIRECT)` in `BaseAviary.py`**
-
-> **Use `gui=False` and `aggregate_phy_steps=int(SIM_HZ/CTRL_HZ)` for performance**
-
-> While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, \~5kHz PyBullet physics (CPU-only) is faster than [AirSim (1kHz)](https://arxiv.org/pdf/1705.05065.pdf) and more accurate than [Flightmare's 35kHz simple single quadcopter dynamics](https://arxiv.org/pdf/2009.00563.pdf)
-
-> Exploiting parallel computation—i.e., multiple (80) drones in multiple (4) environments, see script [`parallelism.sh`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/examples/parallelism.sh)—achieves PyBullet physics updates at \~20kHz 
-
-> Multi-agent 6-ch. video capture at \~750kB/s with CPU rendering (`(64*48)*(4+4+2)*24*5*0.2`) is comparable to [Flightmare's 240 RGB frames/s](https://arxiv.org/pdf/2009.00563.pdf) (`(32*32)*3*240`)—although in more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and up to an order of magnitude faster on Ubuntu, with OpenGL rendering
-
-
-
-
 ## Requirements and Installation
 The repo was written using *Python 3* on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
 
@@ -89,11 +39,9 @@ The repo was written using *Python 3* on *macOS 10.15* and tested on *macOS 11*,
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
 
-> Note: if your default `python` is 2.7, replace `pip` with `pip3` and `python` with `python3`
-
 ```
-pip install --upgrade numpy matplotlib Pillow cycler 
-pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
+pip3 install --upgrade numpy matplotlib Pillow cycler 
+pip3 install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
 ```
 Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
 ```
@@ -108,7 +56,7 @@ and can be installed with `pip install --editable`
 ```
 $ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
-$ pip install -e .
+$ pip3 install -e .
 ```
 
 
@@ -124,23 +72,23 @@ Check out these step-by-step [instructions](https://github.com/utiasDSL/gym-pybu
 
 **Check out file [`README.md`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/README.md) in the the repo's [`master` branch](https://github.com/utiasDSL/gym-pybullet-drones) for further details**
 
-### Way Point Navigation
+### Track
 <img src="files/readme_images/wp.gif" alt="sparse way points flight" width="360"> <img src="files/readme_images/wp.png" alt="control info" width="450">
 
 ### RGB, Depth, and Segmentation Views
 <img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
 
-### Downwash Effect
+### Downwash
 <img src="files/readme_images/downwash.gif" alt="downwash example" width="360"> <img src="files/readme_images/downwash.png" alt="control info" width="450">
 
-### Learning
+### Learn
 <img src="files/readme_images/learn1.gif" alt="learning 1" width="400"><img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
 <img src="files/readme_images/learn3.gif" alt="learning 3" width="400"><img src="files/readme_images/learn4.gif" alt="learning 4" width="400">
 
-### Control Failure
+### Debug
 <img src="files/readme_images/crash.gif" alt="yaw saturation" width="360"> <img src="files/readme_images/crash.png" alt="control info" width="450">
 
-### Trace Comparison
+### Compare
 <img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="360"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
 
 
