@@ -75,7 +75,6 @@ The repo was written using *Python 3.7* with [`conda`](https://github.com/Jacopo
 ### On *macOS* and *Ubuntu*
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
-
 ```
 pip3 install --upgrade numpy Pillow matplotlib cycler 
 pip3 install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
@@ -100,7 +99,7 @@ $ pip3 install -e .
 
 
 ### On *Windows*
-Check out these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/assignments#on-windows) written by Dr. Karime Pereida for *Windows 10*
+Check these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/assignments#on-windows) written by Dr. Karime Pereida for *Windows 10*
 
 
 
