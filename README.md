@@ -127,7 +127,7 @@ $ python3 learn.py                           # Try 'python3 learn.py -h' to show
 <img src="files/readme_images/learn1.gif" alt="learning 1" width="400"> <img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
 <img src="files/readme_images/learn3.gif" alt="learning 3" width="400"> <img src="files/readme_images/learn4.gif" alt="learning 4" width="400">
 
-Other scripts in folder `examples/` are:
+Other scripts in folder `examples/` are
 
 - `downwash.py` is a flight script with only 2 drones, to test the downwash model
 ```
