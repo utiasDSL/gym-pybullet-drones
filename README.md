@@ -395,7 +395,7 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 
 ## Citation
-If you wish, please cite this work as
+If you wish, please cite this work [link](https://arxiv.org/abs/2103.02142) as
 ```
 @MISC{panerati2021learning,
       title={Learning to Fly---a Gym Environment with PyBullet Physics for Reinforcement Learning of Multi-agent Quadcopter Control}, 
