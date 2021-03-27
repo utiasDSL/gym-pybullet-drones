@@ -172,7 +172,7 @@ $ python3 test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs
 
 
 
-## BaseAviary
+## Class `BaseAviary`
 A flight arena for one (ore more) quadrotor can be created as a subclass of `BaseAviary()`
 ```
 >>> env = BaseAviary( 
@@ -315,14 +315,14 @@ Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in 
 
 
 
-## On-board RGB, Depth, and Segmentation Views
+## RGB, Depth, and Segmentation Views
 
 <img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
 
 
 
 
-## Control
+## PID Control
 Folder [`control`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/) contains the implementations of 2 PID controllers
 
 [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/DSLPIDControl.py) (for `DroneModel.CF2X/P`) and [`SimplePIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/control/SimplePIDControl.py) (for `DroneModel.HB`) can be used as
@@ -365,7 +365,6 @@ Workspace [`ros2`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/r
 - [`AviaryWrapper`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/ros2/src/ros2_gym_pybullet_drones/ros2_gym_pybullet_drones/aviary_wrapper.py) is a wrapper node for a single-drone [`CtrlAviary`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/gym_pybullet_drones/envs/CtrlAviary.py) environment
 - [`RandomControl`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/ros2/src/ros2_gym_pybullet_drones/ros2_gym_pybullet_drones/random_control.py) reads `AviaryWrapper`'s `obs` topic and publishes random RPMs on topic `action`
 
-### Use
 With ROS2 installed (on either macOS or Ubuntu, edit `ros2_and_pkg_setups.(zsh/bash)` accordingly), run
 ```
 $ cd gym-pybullet-drones/ros2/
@@ -429,7 +428,7 @@ If you wish, please cite this work [(link)](https://arxiv.org/abs/2103.02142) as
 
 
 
-## Bonus GIF for Scrolling this Far
+Bonus GIF for scrolling this far
 
 <img src="files/readme_images/2020.gif" alt="formation flight" width="360"> <img src="files/readme_images/2020.png" alt="control info" width="450">
 
