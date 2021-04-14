@@ -319,7 +319,9 @@ if __name__ == "__main__":
         temp = {}
         temp[0] = policy0.compute_single_action(np.hstack([action[1], obs[1], obs[0]])) # Counterintuitive order, check params.json
         temp[1] = policy1.compute_single_action(np.hstack([action[0], obs[0], obs[1]]))
-        action = {0: temp[0][0], 1: temp[1][0]}
+        action = {0: temp[0][0]}
+        for i in range(1, NUM_DRONES):
+            action[i] = temp[1][0]
         obs, reward, done, info = test_env.step(action)
         test_env.render()
         if OBS==ObservationType.KIN: 
