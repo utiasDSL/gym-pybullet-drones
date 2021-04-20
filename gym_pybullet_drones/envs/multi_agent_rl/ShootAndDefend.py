@@ -74,9 +74,28 @@ class ShootAndDefend(BaseMultiagentAviary):
             The defender's bounding volume is attached to the plane adjacent to
             the goal plane.
         """
+
+        # Competition space
+        # X bounds: [-length/2, length/2]
+        # Y bounds: [-width/2, width/2]
+        # Z bounds: [0, height]
         num_drones = 2
         self.defender_id = 0
         self.shooter_id = 1
+        self.comp_length, self.comp_width, self.comp_height = competition_dims
+
+        self.ball_id = self.p.createVisualShape(
+            shapeType=self.p.GEOM_SPHERE
+        )
+
+        self.goal_corners = np.array(
+            [
+                [-self.comp_length/2, -self.comp_width/2, 0],
+                [-self.comp_length/2, self.comp_width/2, 0],
+                [-self.comp_length/2, self.comp_width/2, self.comp_height],
+                [-self.comp_length/2, -self.comp_width/2, self.comp_height],
+            ]
+        )
 
         super().__init__(
             drone_model=drone_model,
