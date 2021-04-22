@@ -111,7 +111,7 @@ There are 2 basic template scripts in `examples/`: `fly.py` and `learn.py`
 - `fly.py` runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
 $ cd gym-pybullet-drones/examples/
-$ pytho3 fly.py                             # Try 'python3 fly.py -h' to show the script's customizable parameters
+$ python3 fly.py                             # Try 'python3 fly.py -h' to show the script's customizable parameters
 ```
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
 
