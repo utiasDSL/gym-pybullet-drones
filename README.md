@@ -384,11 +384,13 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 
 ## Future Developments
-- Aviary with symbolic [CasADi](https://web.casadi.org) dynamics for learning-based control
 - Multiple downwash contributions (see `_downwash()` in class `BaseAviary`)
-- Heterogeneous multi-robot systems (import multiple URDF in `_housekeeping()` in class `BaseAviary`)
 - Interface to and template scripts using [PyMARL](https://github.com/oxwhirl/pymarl)
 - Google [Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) examples
+
+## Ongoing Projects
+- Aviary with symbolic [CasADi](https://web.casadi.org) dynamics for learning-based control
+- Heterogeneous multi-robot systems (import multiple URDF in `_housekeeping()` in class `BaseAviary`)
 
 
 
