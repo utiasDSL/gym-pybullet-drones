@@ -390,7 +390,7 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 ## Ongoing Projects
 - Aviary with symbolic [CasADi](https://web.casadi.org) dynamics for learning-based control
-- Heterogeneous multi-robot systems (import multiple URDF in `_housekeeping()` in class `BaseAviary`)
+- Heterogeneous multi-UAV/UGV systems (import multiple URDF in `_housekeeping()` in class `BaseAviary`)
 
 
 
