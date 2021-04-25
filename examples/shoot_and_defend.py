@@ -91,8 +91,6 @@ if __name__ == "__main__":
 
     #### Create the environment with or without video capture ##
     env = ShootAndDefend(drone_model=ARGS.drone,
-                        initial_xyzs=INIT_XYZS,
-                        initial_rpys=INIT_RPYS,
                         physics=ARGS.physics,
                         neighbourhood_radius=10,
                         freq=ARGS.simulation_freq_hz,
