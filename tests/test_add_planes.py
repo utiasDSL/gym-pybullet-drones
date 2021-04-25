@@ -11,7 +11,7 @@ pb.setGravity(0,0,-10)
 planeId = pb.loadURDF("plane.urdf")
 startPos = [0,0,1]
 wall_orientation = pb.getQuaternionFromEuler([90, 0, 0])
-wall_id = pb.loadURDF("plane.urdf", basePosition=[10, 0, 0], baseOrientation=wall_orientation)
+wall_id = pb.loadURDF("plane.urdf", basePosition=[10, 0, 0], baseOrientation=wall_orientation, useFixedBase=1)
 startOrientation = pb.getQuaternionFromEuler([0,0,0])
 sphere_id = pb.loadURDF("sphere2.urdf",
     [0, 2, .5],
