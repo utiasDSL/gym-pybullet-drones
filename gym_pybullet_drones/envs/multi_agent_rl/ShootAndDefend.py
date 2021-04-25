@@ -102,6 +102,7 @@ class ShootAndDefend(BaseMultiagentAviary):
             self._defenderOutsideBox,
             self._goalScored,
             self._ballOutOfBounds,
+            self._ballStationary,
         ]
 
         super().__init__(
@@ -187,6 +188,10 @@ class ShootAndDefend(BaseMultiagentAviary):
 
     def _ballOutOfBounds(self):
         return False
+
+    def _ballStationary(self):
+        ball_vel = self._getBallState(self)[10:13]
+        return np.linalg.norm(ball_vel) < 1e-6
 
     def _computeDone(self):
         """
@@ -316,23 +321,30 @@ class ShootAndDefend(BaseMultiagentAviary):
         obs_dict = {drone_id: obs for drone_id in self.DRONE_IDS}
         return 
 
-    def _getBallObs(self):
-        ball_obs = np.zeros(12)
+    def _getBallState(self):
+        ball_state = np.zeros(20)
         if not self.ball_launched:
             shooter_state = self._getDroneStateVector(self.shooter_)
             R_gs2b = pb.getMatrixFromQuaternion(shooter_state[3:7])
             ball_pos = 1.5*R_gs2b[:, 0]*self.L + shooter_state[0:3]
-            shooter_obs = self._clipAndNormalizeState(shooter_state)
-            ball_obs[0:3] = np.hstack(
-                [shooter_obs[0:3], shooter_obs[7:10], np.zeros(3), np.zeros(3)]
-            ).reshape(12,)
+            ball_state = shooter_state
+            ball_state[0:3] = ball_pos
         else:
             ball_pos, ball_quat = pb.getBasePositionAndOrientation(self.ball_id, physicsClientId=self.CLIENT)
             ball_rpy = pb.getEulerFromQuaternion(ball_quat)
             ball_vel, ball_ang_v = pb.getBaseVelocity(self.ball_id, physicsClientId=self.CLIENT)
-            ball_obs = np.hstack(
-                ball_pos, ball_rpy, ball_vel, ball_ang_v
-            ).reshape(12,)
+            ball_state = np.hstack(
+                ball_pos, ball_quat, ball_rpy, ball_vel, ball_ang_v, np.zeros(4)
+            )
+        return ball_state
+
+    def _getBallObs(self):
+        # ball_obs = np.zeros(12)
+        ball_state = self._getBallState()
+        ball_obs_full = self._clipAndNormalizeState(ball_state)
+        ball_obs[0:3] = np.hstack(
+            [ball_obs_full[0:3], ball_obs_full[7:10], np.zeros(3), np.zeros(3)]
+        ).reshape(12,)
         return ball_obs
 
     def _launchBall(self):
