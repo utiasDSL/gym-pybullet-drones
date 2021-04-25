@@ -97,6 +97,12 @@ class ShootAndDefend(BaseMultiagentAviary):
         )
 
         self.ball_launched = False
+        self.done_funcs = [
+            self._shooterOutsideBox,
+            self._defenderOutsideBox,
+            self._goalScored,
+            self._ballOutOfBounds,
+        ]
 
         super().__init__(
             drone_model=drone_model,
@@ -170,6 +176,18 @@ class ShootAndDefend(BaseMultiagentAviary):
 
     ################################################################################
     
+    def _shooterOutsideBox(self):
+        return False
+
+    def _defenderOutsideBox(self):
+        return False
+
+    def _goalScored(self):
+        return False
+
+    def _ballOutOfBounds(self):
+        return False
+
     def _computeDone(self):
         """
         Computes the current done value(s).
@@ -181,8 +199,9 @@ class ShootAndDefend(BaseMultiagentAviary):
             one additional boolean value for key "__all__".
 
         """
-        bool_val = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else False
-        done = {i: bool_val for i in range(self.NUM_DRONES)}
+        sim_done = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else False
+        dones = [f() for f in self.done_funcs]
+        done = {i: sim_done or any(dones) for i in range(self.NUM_DRONES)}
         done["__all__"] = True if True in done.values() else False
         return done
 
