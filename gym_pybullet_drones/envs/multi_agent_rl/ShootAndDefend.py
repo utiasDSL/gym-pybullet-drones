@@ -2,6 +2,8 @@ import math
 import numpy as np
 from gym import spaces
 from ray.rllib.env.multi_agent_env import MultiAgentEnv, ENV_STATE
+import pybullet as pb
+import pybullet_data
 
 from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
 
@@ -82,11 +84,8 @@ class ShootAndDefend(BaseMultiagentAviary):
         num_drones = 2
         self.defender_id = 0
         self.shooter_id = 1
+        self.ball_id = -1
         self.comp_length, self.comp_width, self.comp_height = competition_dims
-
-        self.ball_id = self.p.createVisualShape(
-            shapeType=self.p.GEOM_SPHERE
-        )
 
         self.goal_corners = np.array(
             [
@@ -96,6 +95,8 @@ class ShootAndDefend(BaseMultiagentAviary):
                 [-self.comp_length/2, -self.comp_width/2, self.comp_height],
             ]
         )
+
+        self.ball_launched = False
 
         super().__init__(
             drone_model=drone_model,
@@ -232,16 +233,6 @@ class ShootAndDefend(BaseMultiagentAviary):
         clipped_vel_xy = np.clip(state[10:12], -MAX_LIN_VEL_XY, MAX_LIN_VEL_XY)
         clipped_vel_z = np.clip(state[12], -MAX_LIN_VEL_Z, MAX_LIN_VEL_Z)
 
-        if self.GUI:
-            self._clipAndNormalizeStateWarning(
-                state,
-                clipped_pos_xy,
-                clipped_pos_z,
-                clipped_rp,
-                clipped_vel_xy,
-                clipped_vel_z
-            )
-
         normalized_pos_xy = clipped_pos_xy / MAX_XY
         normalized_pos_z = clipped_pos_z / MAX_Z
         normalized_rp = clipped_rp / MAX_PITCH_ROLL
@@ -293,3 +284,56 @@ class ShootAndDefend(BaseMultiagentAviary):
             print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped xy velocity [{:.2f} {:.2f}]".format(state[10], state[11]))
         if not(clipped_vel_z == np.array(state[12])).all():
             print("[WARNING] it", self.step_counter, "in FlockAviary._clipAndNormalizeState(), clipped z velocity [{:.2f}]".format(state[12]))
+
+    def _computeObs(self):
+        """
+        Kinematic states for each drone and the ball.
+        """
+        obs_12 = np.zeros((self.NUM_DRONES + 1,12))
+        for i in range(self.NUM_DRONES):
+            obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+            obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
+        obs[-1, :] = self._getBallObs()
+        obs_dict = {drone_id: obs for drone_id in self.DRONE_IDS}
+        return 
+
+    def _getBallObs(self):
+        ball_obs = np.zeros(12)
+        if not self.ball_launched:
+            shooter_state = self._getDroneStateVector(self.shooter_)
+            R_gs2b = pb.getMatrixFromQuaternion(shooter_state[3:7])
+            ball_pos = 1.5*R_gs2b[:, 0]*self.L + shooter_state[0:3]
+            shooter_obs = self._clipAndNormalizeState(shooter_state)
+            ball_obs[0:3] = np.hstack(
+                [shooter_obs[0:3], shooter_obs[7:10], np.zeros(3), np.zeros(3)]
+            ).reshape(12,)
+        else:
+            ball_pos, ball_quat = pb.getBasePositionAndOrientation(self.ball_id, physicsClientId=self.CLIENT)
+            ball_rpy = pb.getEulerFromQuaternion(ball_quat)
+            ball_vel, ball_ang_v = pb.getBaseVelocity(self.ball_id, physicsClientId=self.CLIENT)
+            ball_obs = np.hstack(
+                ball_pos, ball_rpy, ball_vel, ball_ang_v
+            ).reshape(12,)
+        return ball_obs
+
+    def _launchBall(self):
+        R_gs2b = pb.getMatrixFromQuaternion(shooter_state[3:7])
+        ball_pos = 1.5*R_gs2b[:, 0]*self.L + shooter_state[0:3]
+        self.ball_id = pb.loadURDF("sphere2.urdf",
+            ball_pos,
+            pb.getQuaternionFromEuler([0,0,0]),
+            globalScaling=0.0625,
+            physicsClientId=self.CLIENT
+        )
+        pb.changeDynamics(self.ball_id, -1, mass=0.1)
+        shooter_vel, _ = pb.getBaseVelocity(self.shooter_id, physicsClient=self.CLIENT)
+        ball_force_unit = np.linalg.norm(shooter_vel)
+        ball_force = 50*force_unit
+        pb.applyExternalForce(
+            self.ball_id,
+            -1,
+            forceObj=ball_force,
+            posObj=[0, 0, 0],
+            flags=pb.LINK_FRAME,
+            physicsClientId=self.CLIENT
+        )
