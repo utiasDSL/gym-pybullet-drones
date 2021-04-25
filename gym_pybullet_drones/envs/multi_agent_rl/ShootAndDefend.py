@@ -140,7 +140,7 @@ class ShootAndDefend(BaseMultiagentAviary):
         defender_action_size = 4
         shooter_action_size = 5
         shooter_action_space = spaces.Box(
-            low=[-1, -1, -1, -1, 0],
+            low=np.array([-1, -1, -1, -1, 0]),
             high=np.ones(shooter_action_size),
             dtype=np.float32
         )
@@ -190,7 +190,7 @@ class ShootAndDefend(BaseMultiagentAviary):
         return False
 
     def _ballStationary(self):
-        ball_vel = self._getBallState(self)[10:13]
+        ball_vel = self._getBallState()[10:13]
         return np.linalg.norm(ball_vel) < 1e-6
 
     def _computeDone(self):
@@ -317,15 +317,16 @@ class ShootAndDefend(BaseMultiagentAviary):
         for i in range(self.NUM_DRONES):
             obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
             obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
-        obs[-1, :] = self._getBallObs()
-        obs_dict = {drone_id: obs for drone_id in self.DRONE_IDS}
-        return 
+        obs_12[-1, :] = self._getBallObs()
+        print("drone IDs:", self.DRONE_IDS)
+        obs_dict = {i: obs_12 for i in range(self.NUM_DRONES)}
+        return obs_dict
 
     def _getBallState(self):
         ball_state = np.zeros(20)
         if not self.ball_launched:
-            shooter_state = self._getDroneStateVector(self.shooter_)
-            R_gs2b = pb.getMatrixFromQuaternion(shooter_state[3:7])
+            shooter_state = self._getDroneStateVector(self.shooter_id)
+            R_gs2b = np.array(pb.getMatrixFromQuaternion(shooter_state[3:7])).reshape((3,3))
             ball_pos = 1.5*R_gs2b[:, 0]*self.L + shooter_state[0:3]
             ball_state = shooter_state
             ball_state[0:3] = ball_pos
@@ -339,10 +340,10 @@ class ShootAndDefend(BaseMultiagentAviary):
         return ball_state
 
     def _getBallObs(self):
-        # ball_obs = np.zeros(12)
+        ball_obs = np.zeros(12)
         ball_state = self._getBallState()
         ball_obs_full = self._clipAndNormalizeState(ball_state)
-        ball_obs[0:3] = np.hstack(
+        ball_obs = np.hstack(
             [ball_obs_full[0:3], ball_obs_full[7:10], np.zeros(3), np.zeros(3)]
         ).reshape(12,)
         return ball_obs

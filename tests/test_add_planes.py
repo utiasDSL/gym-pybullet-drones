@@ -1,5 +1,6 @@
 # Adds a several planes to the environment
 
+import numpy as np
 import pybullet as pb
 import time
 import pybullet_data
@@ -10,8 +11,8 @@ pb.setAdditionalSearchPath(pybullet_data.getDataPath()) #optionally
 pb.setGravity(0,0,-10)
 planeId = pb.loadURDF("plane.urdf")
 startPos = [0,0,1]
-wall_orientation = pb.getQuaternionFromEuler([90, 0, 0])
-wall_id = pb.loadURDF("plane.urdf", basePosition=[10, 0, 0], baseOrientation=wall_orientation, useFixedBase=1)
+wall_orientation = pb.getQuaternionFromEuler([np.pi/2, 0, 0])
+wall_id = pb.loadURDF("plane.urdf", basePosition=[0, 20, 0], baseOrientation=wall_orientation)
 startOrientation = pb.getQuaternionFromEuler([0,0,0])
 sphere_id = pb.loadURDF("sphere2.urdf",
     [0, 2, .5],

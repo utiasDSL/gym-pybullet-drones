@@ -907,7 +907,7 @@ class BaseAviary(gym.Env):
 
         """
         if isinstance(action, collections.Mapping):
-            for k, v in action.items(): 
+            for k, v in action.items():
                 res_v = np.resize(v, (1, 4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
                 self.last_action[int(k), :] = res_v
         else: 
