@@ -90,14 +90,14 @@ if __name__ == "__main__":
     # wp_counters = np.array([0 for i in range(num_drones)])
 
     #### Create the environment with or without video capture ##
-    env = ShootAndDefend(drone_model=ARGS.drone,
-                        physics=ARGS.physics,
-                        neighbourhood_radius=10,
-                        freq=ARGS.simulation_freq_hz,
-                        aggregate_phy_steps=AGGR_PHY_STEPS,
-                        gui=ARGS.gui,
-                        record=ARGS.record_video,
-                        )
+    env = ShootAndDefend(
+        drone_model=ARGS.drone,
+        neighbourhood_radius=10,
+        freq=ARGS.simulation_freq_hz,
+        aggregate_phy_steps=AGGR_PHY_STEPS,
+        gui=ARGS.gui,
+        record=ARGS.record_video,
+    )
 
     #### Obtain the PyBullet Client ID from the environment ####
     PYB_CLIENT = env.getPyBulletClient()
@@ -116,7 +116,11 @@ if __name__ == "__main__":
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
     # Action of [0, 0, 0, 0] puts the drone into a hover position
-    action = {str(i): np.array([0,0,0,0]) for i in range(num_drones)}
+    action = {
+        0: np.array([0,0,0,0]),
+        1: np.array([0,0,0,0, 0]),
+    }
+    done = False
     START = time.time()
     for i in range(0, int(ARGS.duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
@@ -126,7 +130,7 @@ if __name__ == "__main__":
         #### Step the simulation ###################################
         obs, reward, done, info = env.step(action)
 
-        print("Obs out of environment:", obs)
+        # print("Obs out of environment:", obs)
         #### Compute control at the desired frequency ##############
         if i % CTRL_EVERY_N_STEPS == 0:
             #### Compute control for the current way point #############
@@ -148,13 +152,17 @@ if __name__ == "__main__":
         if ARGS.gui:
             sync(i, START, env.TIMESTEP)
 
+        if done["__all__"]:
+            print("Sim terminated")
+            break
+
     #### Close the environment #################################
     env.close()
 
     #### Save the simulation results ###########################
-    logger.save()
-    logger.save_as_csv("pid") # Optional CSV save
+    # logger.save()
+    # logger.save_as_csv("pid") # Optional CSV save
 
     #### Plot the simulation results ###########################
-    if ARGS.plot:
-        logger.plot()
+    # if ARGS.plot:
+    #     logger.plot()

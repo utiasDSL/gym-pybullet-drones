@@ -69,51 +69,38 @@ class ShootAndDefend(BaseMultiagentAviary):
         self.shooter_id = 1
         self.ball_id = -1
         
-        # # Clockwise
-        # self.field_corners = [
-        #     [-1, 2, 0.0],
-        #     [1, 2, 0.0],
-        #     [1, -2, 0.0],
-        #     [-1, -2, 0.0],
-        # ]
-
-        # self.defender_box_corners = [
-        #     [-0.75, 2, 0.0],
-        #     [0.75, 2, 0.0],
-        #     [0.75, 0.5, 0.0],
-        #     [-0.75, 0.5, 0.0],
-        # ]
-
-        # self.shooter_box_corners = [
-        #     [-0.75, -2, 0.0],
-        #     [0.75, -2, 0.0],
-        #     [0.75, -0.5, 0.0],
-        #     [-0.75, -0.5, 0.0],
-        # ]
-
         self.field_box = spaces.Box(
-            high=[1.0, 2.0, 3],
-            low=[-1.0, -2.0, 0.0],
+            high=np.array([1.0, 2.0, 3]),
+            low=np.array([-1.0, -2.0, 0.0]),
             dtype=np.float32
         )
 
         self.defender_box = spaces.Box(
-            high=[0.75, 2.0, 3],
-            low=[-0.75, 0.5, 0.0],
+            high=np.array([0.75, 2.0, 3]),
+            low=np.array([-0.75, 0.5, 0.0]),
             dtype=np.float32
         )
 
         self.shooter_box = spaces.Box(
-            high=[0.75, -0.5, 3],
-            low=[-0.75, -2.0, 0.0],
+            high=np.array([0.75, -0.5, 3]),
+            low=np.array([-0.75, -2.0, 0.0]),
             dtype=np.float32
         )
 
         self.goal_box = spaces.Box(
-            high=[0.6, 5.0, 2],
-            low=[-0.6, 2.0, 0],
+            high=np.array([0.6, 5.0, 2]),
+            low=np.array([-0.6, 2.0, 0]),
             dtype=np.float32
         )
+
+        self.rpy_box = spaces.Box(
+            high=np.array([np.pi/3, np.pi/3, np.pi]),
+            low=np.array([-np.pi/3, -np.pi/3, -np.pi]),
+            dtype=np.float32
+        )
+
+        defender_pos = self.defender_box.sample()
+        shooter_pos = self.shooter_box.sample()
 
         self.ball_launched = False
         self.done_funcs = [
@@ -130,8 +117,8 @@ class ShootAndDefend(BaseMultiagentAviary):
             drone_model=drone_model,
             num_drones=num_drones,
             neighbourhood_radius=neighbourhood_radius,
-            initial_xyzs=initial_xyzs,
-            initial_rpys=initial_rpys,
+            initial_xyzs=np.vstack([defender_pos, shooter_pos]),
+            initial_rpys=np.vstack([self.rpy_box.sample(), self.rpy_box.sample()]),
             physics=Physics.PYB,
             freq=freq,
             aggregate_phy_steps=aggregate_phy_steps,
@@ -202,26 +189,42 @@ class ShootAndDefend(BaseMultiagentAviary):
         super(ShootAndDefend, self).reset()
 
     def _preprocessAction(self, actions):
-        if action[self.shooter_id][4] > 0:
+        if actions[self.shooter_id][4] > 0:
             self._launchBall()
         movement_actions = {k: v[0:4] for k, v in actions.items()}
-        super()._preprocessAction(movement_actions)
+        return super()._preprocessAction(movement_actions)
 
     def _shooterOutsideBox(self):
-        return not self.shooter_box.contains(self.pos[self.shooter_id])
+        ret_val = not self.shooter_box.contains(self.pos[self.shooter_id])
+        if ret_val:
+            print("Shooter outside box!")
+        return ret_val
 
     def _defenderOutsideBox(self):
-        return not self.defender_box.contains(self.pos[self.defender_id])
+        ret_val = not self.defender_box.contains(self.pos[self.defender_id])
+        if ret_val:
+            print("Defender outside box!")
+        return ret_val
 
     def _goalScored(self):
-        return self.goal_box.contains(self.getBallState()[0:3])
+        ret_val = self.goal_box.contains(self._getBallState()[0:3])
+        if ret_val:
+            print("Goal scored!")
+        return ret_val
 
     def _ballOutOfBounds(self):
-        return False
+        ball_pos = self._getBallState()[0:3]
+        ret_val = not self.field_box.contains(ball_pos) and not self._goalScored()
+        if ret_val:
+            print("Ball out of bounds!")
+        return ret_val
 
     def _ballStationary(self):
         ball_vel = self._getBallState()[10:13]
-        return np.linalg.norm(ball_vel) < 1e-6
+        ret_val = np.linalg.norm(ball_vel) < 1e-6
+        if ret_val:
+            print("Ball stationary!")
+        return ret_val
 
     def _shooterCrashed(self):
         return self.pos[self.shooter_id][2] <= 1e-6
