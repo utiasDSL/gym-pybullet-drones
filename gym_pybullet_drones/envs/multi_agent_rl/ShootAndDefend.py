@@ -60,10 +60,6 @@ class ShootAndDefend(BaseMultiagentAviary):
             The type of observation space (kinematic information or vision)
         """
 
-        # Competition space
-        # X bounds: [-length/2, length/2]
-        # Y bounds: [-width/2, width/2]
-        # Z bounds: [0, height]
         num_drones = 2
         self.defender_id = 0
         self.shooter_id = 1
@@ -177,10 +173,24 @@ class ShootAndDefend(BaseMultiagentAviary):
 
         """
         rewards = {}
-        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        rewards[0] = -1 * np.linalg.norm(np.array([0, 0, 1]) - states[0, 0:3])**2
-        for i in range(1, self.NUM_DRONES):
-            rewards[i] = -1 * np.linalg.norm(states[i-1, 2] - states[i, 2])**2
+        shooter_rewards = 1*self._defenderOutsideBox() + \
+            1*self._goalScored() + \
+            1*self._defenderCrashed() + \
+            -1*self._shooterCrashed() + \
+            -1*self._shooterOutsideBox() + \
+            -1*self._ballOutOfBounds() + \
+            -1*self._ballStationary()
+
+        defender_rewards = 1*self._shooterOutsideBox() + \
+            1*self._shooterCrashed + \
+            -1*self._goalScored() + \
+            -1*self._defenderCrashed() + \
+            -1*self._defenderOutsideBox() + \
+            1*self._ballOutOfBounds() + \
+            1*self._ballStationary()
+
+        rewards[self.shooter_id] = shooter_rewards
+        rewards[self.defender_id] = defender_rewards
         return rewards
 
     ################################################################################
@@ -221,7 +231,7 @@ class ShootAndDefend(BaseMultiagentAviary):
 
     def _ballStationary(self):
         ball_vel = self._getBallState()[10:13]
-        ret_val = np.linalg.norm(ball_vel) < 1e-6
+        ret_val = (np.linalg.norm(ball_vel) < 1e-6) and self.ball_launched
         if ret_val:
             print("Ball stationary!")
         return ret_val
