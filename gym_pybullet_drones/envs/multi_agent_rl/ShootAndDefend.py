@@ -176,16 +176,16 @@ class ShootAndDefend(BaseMultiagentAviary):
         shooter_rewards = 1*self._defenderOutsideBox() + \
             5*self._goalScored() + \
             1*self._defenderCrashed() + \
-            -2*self._shooterCrashed() + \
-            -2*self._shooterOutsideBox() + \
-            -1*self._ballOutOfBounds() + \
+            -10*self._shooterCrashed() + \
+            -10*self._shooterOutsideBox() + \
+            -3*self._ballOutOfBounds() + \
             -1*self._ballStationary()
 
         defender_rewards = 1*self._shooterOutsideBox() + \
             1*self._shooterCrashed + \
             -5*self._goalScored() + \
-            -1*self._defenderCrashed() + \
-            -1*self._defenderOutsideBox() + \
+            -10*self._defenderCrashed() + \
+            -10*self._defenderOutsideBox() + \
             5*self._ballOutOfBounds() + \
             5*self._ballStationary()
 
