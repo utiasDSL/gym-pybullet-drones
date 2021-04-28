@@ -174,20 +174,20 @@ class ShootAndDefend(BaseMultiagentAviary):
         """
         rewards = {}
         shooter_rewards = 1*self._defenderOutsideBox() + \
-            1*self._goalScored() + \
+            5*self._goalScored() + \
             1*self._defenderCrashed() + \
-            -1*self._shooterCrashed() + \
-            -1*self._shooterOutsideBox() + \
+            -2*self._shooterCrashed() + \
+            -2*self._shooterOutsideBox() + \
             -1*self._ballOutOfBounds() + \
             -1*self._ballStationary()
 
         defender_rewards = 1*self._shooterOutsideBox() + \
             1*self._shooterCrashed + \
-            -1*self._goalScored() + \
+            -5*self._goalScored() + \
             -1*self._defenderCrashed() + \
             -1*self._defenderOutsideBox() + \
-            1*self._ballOutOfBounds() + \
-            1*self._ballStationary()
+            5*self._ballOutOfBounds() + \
+            5*self._ballStationary()
 
         rewards[self.shooter_id] = shooter_rewards
         rewards[self.defender_id] = defender_rewards
@@ -196,10 +196,17 @@ class ShootAndDefend(BaseMultiagentAviary):
     ################################################################################
     
     def reset(self):
+        defender_pos = self.defender_box.sample()
+        shooter_pos = self.shooter_box.sample()
+        defender_rpy = self.rpy_box.sample()
+        shooter_rpy = self.rpy_box.sample()
+        self.ball_launched = False
+        self.INIT_XYZS = np.vstack([defender_pos, shooter_pos])
+        self.INIT_RPYS = np.vstack([defender_rpy, shooter_rpy]),
         super(ShootAndDefend, self).reset()
 
     def _preprocessAction(self, actions):
-        if actions[self.shooter_id][4] > 0:
+        if actions[self.shooter_id][4] > 0.5:
             self._launchBall()
         movement_actions = {k: v[0:4] for k, v in actions.items()}
         return super()._preprocessAction(movement_actions)
@@ -398,6 +405,8 @@ class ShootAndDefend(BaseMultiagentAviary):
         return ball_obs
 
     def _launchBall(self):
+        if self.ball_launched:
+            return
         R_gs2b = pb.getMatrixFromQuaternion(shooter_state[3:7])
         ball_pos = 1.5*R_gs2b[:, 0]*self.L + shooter_state[0:3]
         self.ball_id = pb.loadURDF("sphere2.urdf",
@@ -418,3 +427,4 @@ class ShootAndDefend(BaseMultiagentAviary):
             flags=pb.LINK_FRAME,
             physicsClientId=self.CLIENT
         )
+        self.ball_launched = True
