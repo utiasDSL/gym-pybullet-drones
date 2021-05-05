@@ -73,10 +73,7 @@ class TakeoffAviary(BaseSingleAgentAviary):
 
         """
         state = self._getDroneStateVector(0)
-        if state[2] < 0.02:
-            return -5
-        else:
-            return -1 / (10*state[2])
+        return state[2]/10.
 
     ################################################################################
     
@@ -89,7 +86,8 @@ class TakeoffAviary(BaseSingleAgentAviary):
             Whether the current episode is done.
 
         """
-        if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC:
+        state = self._getDroneStateVector(0)
+        if (self.step_counter/self.SIM_FREQ > (self.EPISODE_LEN_SEC)) or (state[2] < 0.05):
             return True
         else:
             return False
