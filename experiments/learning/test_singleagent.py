@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
-    parser.add_argument('--exp',                           type=str,            help='Help (default: ..)', metavar='')
+    parser.add_argument('--exp',                           type=str,            help='The experiment folder written as ./results/save-<env>-<algo>-<obs>-<act>-<time_date>', metavar='')
     ARGS = parser.parse_args()
 
     #### Load the model from file ##############################
