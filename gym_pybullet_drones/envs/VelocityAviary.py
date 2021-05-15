@@ -23,7 +23,11 @@ class VelocityAviary(BaseAviary):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True
+                 user_debug_gui=True,
+                 goal_xyz= None,
+                 collision_point = None,
+                 protected_radius=None,
+                 goal_radius = None, 
                  ):
         """Initialization of an aviary environment for or high-level planning.
 
@@ -72,10 +76,14 @@ class VelocityAviary(BaseAviary):
                          gui=gui,
                          record=record,
                          obstacles=obstacles,
-                         user_debug_gui=user_debug_gui
+                         user_debug_gui=user_debug_gui,                 
+                         goal_xyz= goal_xyz,
+                         collision_point = collision_point,
+                         protected_radius= protected_radius,
+                         goal_radius = goal_radius, 
                          )
         #### Set a limit on the maximum target speed ###############
-        self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
+        self.SPEED_LIMIT = 0.05*self.MAX_SPEED_KMH * (1000/3600)
 
     ################################################################################
 
@@ -84,18 +92,21 @@ class VelocityAviary(BaseAviary):
 
         Returns
         -------
-        dict[str, ndarray]
-            A Dict of Box(4,) with NUM_DRONES entries,
-            indexed by drone Id in string format.
+        ndarray
+            A Box(4,) where the entry is a numpy array
 
         """
         #### Action vector ######### X       Y       Z   fract. of MAX_SPEED_KMH
         act_lower_bound = np.array([-1,     -1,     -1,                        0])
         act_upper_bound = np.array([ 1,      1,      1,                        1])
-        return spaces.Dict({str(i): spaces.Box(low=act_lower_bound,
-                                               high=act_upper_bound,
-                                               dtype=np.float32
-                                               ) for i in range(self.NUM_DRONES)})
+        #return spaces.Dict({str(i): spaces.Box(low=act_lower_bound,
+        #                                       high=act_upper_bound,
+        #                                       dtype=np.float32
+        #                                       ) for i in range(self.NUM_DRONES)})
+
+        return spaces.Box(low=act_lower_bound,
+                          high=act_upper_bound,
+                          dtype=np.float32)
     
     ################################################################################
 
@@ -104,38 +115,68 @@ class VelocityAviary(BaseAviary):
 
         Returns
         -------
-        dict[str, dict[str, ndarray]]
-            A Dict with NUM_DRONES entries indexed by Id in string format,
-            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+        ndarray
+            A box of shape Box{6+7*NUM_INTRUDERS,}
 
         """
+
+
+
+
         #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ       P0            P1            P2            P3
-        obs_lower_bound = np.array([-np.inf, -np.inf, 0.,     -1., -1., -1., -1., -np.pi, -np.pi, -np.pi, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,           0.,           0.,           0.])
-        obs_upper_bound = np.array([np.inf,  np.inf,  np.inf, 1.,  1.,  1.,  1.,  np.pi,  np.pi,  np.pi,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM])
-        return spaces.Dict({str(i): spaces.Dict({"state": spaces.Box(low=obs_lower_bound,
-                                                                     high=obs_upper_bound,
-                                                                     dtype=np.float32
-                                                                     ),
-                                                 "neighbors": spaces.MultiBinary(self.NUM_DRONES)
-                                                 }) for i in range(self.NUM_DRONES)})
+        #obs_lower_bound = np.array([-np.inf, -np.inf, 0.,     -1., -1., -1., -1., -np.pi, -np.pi, -np.pi, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,           0.,           0.,           0.])
+        #obs_upper_bound = np.array([np.inf,  np.inf,  np.inf, 1.,  1.,  1.,  1.,  np.pi,  np.pi,  np.pi,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM])
+        #return spaces.Dict({str(i): spaces.Dict({"state": spaces.Box(low=obs_lower_bound,
+        #                                                             high=obs_upper_bound,
+        #                                                             dtype=np.float32
+        #                                                             ),
+        #                                         "neighbors": spaces.MultiBinary(self.NUM_DRONES)
+        #                                         }) for i in range(self.NUM_DRONES)})
+
+
+        #Hard coded for only 1 intruder 
+
+
+        #observation vector           x         y     z         vx      vy       vz       relx    rely     relz     relvx    relvy    relvx  distance ownship to intruder     dist2goal
+        obs_lower_bound = np.array([-np.inf, -np.inf, 0.,   -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,                               0.])
+        obs_upper_bound = np.array([np.inf, np.inf, np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf, np.inf,                           np.inf])
+
+        return spaces.Box(low=obs_lower_bound,
+                          high=obs_upper_bound,
+                          dtype=np.float32
+                          )
 
     ################################################################################
 
     def _computeObs(self):
         """Returns the current observation of the environment.
 
-        For the value of key "state", see the implementation of `_getDroneStateVector()`,
-        the value of key "neighbors" is the drone's own row of the adjacency matrix.
+        uses the ownship pos and velocities, relative positions and velocities wrt to the intruder and 
+        distance2intruder as well as distance2goal
+
+        TODO : Implement for multiple two intruders
 
         Returns
         -------
-        dict[str, dict[str, ndarray]]
-            A Dict with NUM_DRONES entries indexed by Id in string format,
-            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+            ndarray of size 6 + 8*NUM_DRONES
 
         """
-        adjacency_mat = self._getAdjacencyMatrix()
-        return {str(i): {"state": self._getDroneStateVector(i), "neighbors": adjacency_mat[i, :]} for i in range(self.NUM_DRONES)}
+
+
+
+
+        rel_pos = self.pos[1,:]-self.pos[0,:]
+        rel_vel = self.vel[1,:]-self.vel[0,:]
+        doi = np.linalg.norm(rel_pos)
+        d2g = np.linalg.norm(self.GOAL_XYZ-self.pos[0,:])
+
+        #obs_vector = [ownship[0],ownship[1],ownship[2],ownship[10],ownship[11],ownship[12],rel_pos[0],rel_pos[0],rel_pos[1],rel_pos[2],rel_vel[0],rel_vel[1],rel_vel[2]]
+
+        obs_vector = np.hstack([self.pos[0,:],self.vel[0,:],rel_pos,rel_vel,doi,d2g])
+        return obs_vector.reshape(14)
+
+        #adjacency_mat = self._getAdjacencyMatrix()
+        #return {str(i): {"state": self._getDroneStateVector(i), "neighbors": adjacency_mat[i, :]} for i in range(self.NUM_DRONES)}
 
     ################################################################################
 
@@ -149,7 +190,7 @@ class VelocityAviary(BaseAviary):
 
         Parameters
         ----------
-        action : dict[str, ndarray]
+        action : ndarray
             The desired velocity input for each drone, to be translated into RPMs.
 
         Returns
@@ -159,8 +200,22 @@ class VelocityAviary(BaseAviary):
             commanded to the 4 motors of each drone.
 
         """
+
+        #TODO - Retreive the duration in self.
+        
+        INIT_VXVYVZ = ((self.GOAL_XYZ - self.INIT_XYZS)/(10)) / (np.linalg.norm(self.GOAL_XYZ - self.INIT_XYZS)/(10))
+        INIT_VXVYVZ = np.hstack((INIT_VXVYVZ,0.99*np.ones((2,1))))
+
+        #Keep only the intruder
+        V_INTRUDER = np.delete(INIT_VXVYVZ,0,0)
+
+        #Build action array : variable for the ownship (0th row) and fixed for the intruder (1 and onwards)
+        action = np.vstack((action,V_INTRUDER))
+
         rpm = np.zeros((self.NUM_DRONES, 4))
-        for k, v in action.items():
+
+
+        for k, v in enumerate(action):
             #### Get the current state of the drone  ###################
             state = self._getDroneStateVector(int(k))
             #### Normalize the first 3 components of the target velocity
@@ -185,7 +240,8 @@ class VelocityAviary(BaseAviary):
     def _computeReward(self):
         """Computes the current reward value(s).
 
-        Unused as this subclass is not meant for reinforcement learning.
+        Adds reward by evaluating the inverse of the distance to the goal 
+        and substract rewards by the inverse of the distance to the intruder
 
         Returns
         -------
@@ -193,22 +249,60 @@ class VelocityAviary(BaseAviary):
             Dummy value.
 
         """
-        return -1
+        
+        rel_pos = self.pos[1,:]-self.pos[0,:]
+        doi = np.linalg.norm(rel_pos)**2
+        d2g = np.linalg.norm(self.GOAL_XYZ-self.pos[0,:])**2
+
+        reward = 5/d2g #- 1/doi
+
+        return reward 
 
     ################################################################################
     
     def _computeDone(self):
         """Computes the current done value(s).
 
-        Unused as this subclass is not meant for reinforcement learning.
+        Checks if the ownship and the intruder is within the protected radius.
+        Also checks if the ownship reached the goal
 
         Returns
         -------
         bool
-            Dummy value.
+            Whether the current episode is done.
 
         """
-        return False
+
+        #Checks for a collision
+        for j in range(self.NUM_DRONES):
+            ownship  = self._getDroneStateVector(int(0))
+            intruder = self._getDroneStateVector(int(j))
+        
+            #Don't compute the distance between the ownship and itself
+            if j==0:
+                pass
+            elif np.linalg.norm(ownship[0:3]-intruder[0:3])<self.PROTECTED_RADIUS:
+                return True
+
+
+        #Check if the goal has been reached
+        if np.linalg.norm(ownship[0:3]-self.GOAL_XYZ)<self.GOAL_RADIUS:
+            return True
+        
+        #Check if the ownship is on the ground
+        if ownship[2]<0.1:
+            return True
+
+
+        #Check if the ownship is outside the domain
+        if np.linalg.norm(ownship[0:3]-self.GOAL_XYZ) > 5:
+            return True
+
+        #Check for the length of the simulation
+        if self.step_counter/self.SIM_FREQ > 15:
+            return True
+        else:
+            return False
 
     ################################################################################
     

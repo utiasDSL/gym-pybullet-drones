@@ -65,7 +65,11 @@ class BaseAviary(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 dynamics_attributes=False
+                 dynamics_attributes=False,
+                 goal_xyz= None,
+                 collision_point = None,
+                 protected_radius=None,
+                 goal_radius = None, 
                  ):
         """Initialization of a generic aviary environment.
 
@@ -119,6 +123,10 @@ class BaseAviary(gym.Env):
         self.OBSTACLES = obstacles
         self.USER_DEBUG = user_debug_gui
         self.URDF = self.DRONE_MODEL.value + ".urdf"
+        self.GOAL_XYZ = goal_xyz
+        self.COLLISION_POINT = collision_point
+        self.PROTECTED_RADIUS = protected_radius
+        self.GOAL_RADIUS = goal_radius
         #### Load the drone properties from the .urdf file #########
         self.M, \
         self.L, \
@@ -460,7 +468,7 @@ class BaseAviary(gym.Env):
         self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES)
         self.Y_AX = -1*np.ones(self.NUM_DRONES)
-        self.Z_AX = -1*np.ones(self.NUM_DRONES);
+        self.Z_AX = -1*np.ones(self.NUM_DRONES)
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES)
         self.USE_GUI_RPM=False
         self.last_input_switch = 0
@@ -912,8 +920,9 @@ class BaseAviary(gym.Env):
                 self.last_action[int(k), :] = res_v
         else: 
             res_action = np.resize(action, (1, 4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
-            self.last_action = np.reshape(res_action, (self.NUM_DRONES, 4))
-    
+            #self.last_action = np.reshape(res_action, (self.NUM_DRONES, 4))
+            self.last_action = res_action
+
     ################################################################################
 
     def _showDroneLocalAxes(self,

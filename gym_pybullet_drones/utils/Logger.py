@@ -208,7 +208,7 @@ class Logger(object):
         """
         #### Loop over colors and line styles ######################
         plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) + cycler('linestyle', ['-', '--', ':', '-.'])))
-        fig, axs = plt.subplots(10, 2)
+        fig, axs = plt.subplots(11, 2)
         t = np.arange(0, self.timestamps.shape[1]/self.LOGGING_FREQ_HZ, 1/self.LOGGING_FREQ_HZ)
 
         #### Column ################################################
@@ -354,8 +354,32 @@ class Logger(object):
         else:
             axs[row, col].set_ylabel('RPM3')
 
+        #### Doi ##################################################
+        
+        
+        #Create the Doi vector (Distance ownship to the intruder)
+        Doi = np.empty((self.NUM_DRONES,t.size))
+        for j in range(self.NUM_DRONES):
+            for i in range(t.size):
+                Doi[j,i] =  np.linalg.norm(self.states[0,0:3,i]-self.states[j,0:3,i])
+
+        row = 10
+
+        col=0
+        for j in range(self.NUM_DRONES):
+            axs[row, col].plot(t, Doi[j, :], label="drone_"+str(j))
+        axs[row, col].set_xlabel('time')
+        axs[row, col].set_ylabel('Doi (m)')
+
+        col=1
+        for j in range(self.NUM_DRONES):
+            axs[row, col].plot(t, Doi[j, :], label="drone_"+str(j))
+        axs[row, col].set_xlabel('time')
+        axs[row, col].set_ylabel('Doi (m)')
+
+
         #### Drawing options #######################################
-        for i in range (10):
+        for i in range (11):
             for j in range (2):
                 axs[i, j].grid(True)
                 axs[i, j].legend(loc='upper right',
