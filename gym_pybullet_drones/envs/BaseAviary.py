@@ -6,8 +6,8 @@ from datetime import datetime
 from enum import Enum
 import xml.etree.ElementTree as etxml
 from PIL import Image
-import pkgutil
-egl = pkgutil.get_loader('eglRenderer')
+# import pkgutil
+# egl = pkgutil.get_loader('eglRenderer')
 import numpy as np
 import pybullet as p
 import pybullet_data
