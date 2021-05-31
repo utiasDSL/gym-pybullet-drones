@@ -14,6 +14,8 @@ This repository's `master` branch is actively developed, please `git pull` frequ
 
 - Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
 
+- To better understand how the PyBullet back-end works, refer to its [Quickstart Guide](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.2ye70wns7io3)
+
 - Suggestions and corrections are very welcome in the form of [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) and [pull requests](https://github.com/utiasDSL/gym-pybullet-drones/pulls), respectively
 
 
