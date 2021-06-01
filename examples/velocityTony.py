@@ -36,8 +36,10 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.envs.VelocityAviary import VelocityAviary
 
 
-from stable_baselines3 import A2C
-from stable_baselines3.a2c import MlpPolicy
+from stable_baselines3 import TD3 #PPO #A2C, TD3
+from stable_baselines3.ppo import MlpPolicy
+#from stable_baselines3.a2c import MlpPolicy
+from stable_baselines3.td3 import MlpPolicy
 from stable_baselines3.common.env_checker import check_env
 import ray
 from ray.tune import register_env
@@ -63,17 +65,17 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #############################
     INIT_XYZS = np.array([
-                          [ -2, 0, 2],
-                          [rand.randint(0,5), rand.randint(-5,5), rand.randint(0,5)],
+                          [ -3, 0, 3],
+                          [[rand.uniform(1,5), rand.uniform(-2,2), rand.uniform(1,5)]],
                           ])
 
     INIT_RPYS = np.array([
                           [0, 0, 0],
-                          [0, 0, np.pi],
+                          [0, 0, 0],
                           ])
 
-    GOAL_XYZ = np.array([0,rand.randint(-2,2),rand.randint(2,4)])
-    COLLISION_POINT = np.array([0,0,10])
+    GOAL_XYZ = np.array([0,0,3])#[0,rand.randint(-2,2),rand.randint(2,4)])
+    COLLISION_POINT = np.array([0,0,3])
     protected_radius = 1
     
 
@@ -86,7 +88,7 @@ if __name__ == "__main__":
                          initial_xyzs=INIT_XYZS,
                          initial_rpys=INIT_RPYS,
                          physics=Physics.PYB,
-                         neighbourhood_radius=3,
+                         neighbourhood_radius=5,
                          freq=ARGS.simulation_freq_hz,
                          aggregate_phy_steps=AGGR_PHY_STEPS,
                          gui=ARGS.gui,
@@ -123,16 +125,19 @@ if __name__ == "__main__":
     START = time.time()
 
     #Start the model learning
-    model = A2C(MlpPolicy,
+    #policy_kwargs = dict(net_arch=[dict(pi=[256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256, 256], vf=[256, 256, 256, 256, 256, 256,256, 256, 256, 256, 256, 256])])
+    model = TD3(MlpPolicy,
                 env,
                 verbose=1,
-                tensorboard_log="./a2c_drone_tensorboard/"
+                tensorboard_log="./td3_drone_tensorboard/",
+                #policy_kwargs=policy_kwargs
                 )
 
-    #model = A2C.load("A2C", env=env)
-    model.learn(total_timesteps=100000) # Typically not enough
-    model.save("A2C")
-    model = A2C.load("A2C", env=env)
+    #Deeper NN 
+    model = TD3.load("TD3", env=env) 
+    #model.learn(total_timesteps=4e5) # Typically not enough
+    #model.save("TD3")
+    #model = TD3.load("TD3", env=env)
 
     logger = Logger(logging_freq_hz=int(env.SIM_FREQ/env.AGGR_PHY_STEPS),
                     num_drones=ARGS.num_drones
@@ -154,10 +159,10 @@ if __name__ == "__main__":
                        )
         if i%env.SIM_FREQ == 0:
             env.render()
-            print(done)
+            print(f"Episode is done: {done}")
         sync(i, start, env.TIMESTEP)
-        #if done:
-        #    obs = env.reset()
+        if done:
+            obs = env.reset()
     env.close()
     logger.plot()
 

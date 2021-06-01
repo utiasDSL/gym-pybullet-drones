@@ -83,7 +83,7 @@ class VelocityAviary(BaseAviary):
                          goal_radius = goal_radius, 
                          )
         #### Set a limit on the maximum target speed ###############
-        self.SPEED_LIMIT = 0.05*self.MAX_SPEED_KMH * (1000/3600)
+        self.SPEED_LIMIT = 0.03*self.MAX_SPEED_KMH * (1000/3600)
 
     ################################################################################
 
@@ -138,8 +138,8 @@ class VelocityAviary(BaseAviary):
 
 
         #observation vector           x         y     z         vx      vy       vz       relx    rely     relz     relvx    relvy    relvx  distance ownship to intruder     dist2goal
-        obs_lower_bound = np.array([-np.inf, -np.inf, 0.,   -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,                               0.])
-        obs_upper_bound = np.array([np.inf, np.inf, np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf, np.inf,                           np.inf])
+        obs_lower_bound = np.array([-10.,       -10.,   0.,   -10,       -10,     -10,    -10,       -10,      -10,   -10,       -10,      -10,    0.,                               0.])
+        obs_upper_bound = np.array([ 10.,        10.,   20.,   10,        10,      10,     10,        10,       10,    10,        10,       10,    20,                              20])
 
         return spaces.Box(low=obs_lower_bound,
                           high=obs_upper_bound,
@@ -203,15 +203,30 @@ class VelocityAviary(BaseAviary):
 
         #TODO - Retreive the duration in self.
         
-        INIT_VXVYVZ = ((self.GOAL_XYZ - self.INIT_XYZS)/(10)) / (np.linalg.norm(self.GOAL_XYZ - self.INIT_XYZS)/(10))
-        INIT_VXVYVZ = np.hstack((INIT_VXVYVZ,0.99*np.ones((2,1))))
+        INIT_VXVYVZ = (self.COLLISION_POINT - self.INIT_XYZS)/10 #/ np.linalg.norm(self.GOAL_XYZ - self.INIT_XYZS)
 
-        #Keep only the intruder
-        V_INTRUDER = np.delete(INIT_VXVYVZ,0,0)
+        speed_ratio = np.empty([self.NUM_DRONES,1])
+        for i in range(self.NUM_DRONES):
+            speed_ratio[i] =np.linalg.norm(INIT_VXVYVZ[i])/self.SPEED_LIMIT
+        
 
-        #Build action array : variable for the ownship (0th row) and fixed for the intruder (1 and onwards)
-        action = np.vstack((action,V_INTRUDER))
+        INIT_VXVYVZ = np.hstack((INIT_VXVYVZ,speed_ratio))
 
+        adjency_mat = self._getAdjacencyMatrix()
+
+        
+        #Picks the action from the RL agent if the intruder is within the neighborhood of the ownship
+        if int(adjency_mat[0][1])>0 and self.collision_detector() :
+            #Keep only the intruder
+            V_INTRUDER = np.delete(INIT_VXVYVZ,0,0)
+            #Build action array : variable for the ownship (0th row) and fixed for the intruder (1 and onwards)
+            action = np.vstack((action,V_INTRUDER))
+
+        #Deterministic if the ownship is outside the neighborhood radius
+        else:
+            action = np.hstack((np.vstack((self.vel[0],self.vel[1])),speed_ratio))
+        
+        #action = INIT_VXVYVZ
         rpm = np.zeros((self.NUM_DRONES, 4))
 
 
@@ -245,18 +260,47 @@ class VelocityAviary(BaseAviary):
 
         Returns
         -------
-        int
-            Dummy value.
+        Float
+            Computed Reward.
 
         """
         
-        rel_pos = self.pos[1,:]-self.pos[0,:]
-        doi = np.linalg.norm(rel_pos)**2
-        d2g = np.linalg.norm(self.GOAL_XYZ-self.pos[0,:])**2
+        adjency_mat = self._getAdjacencyMatrix()
+        
+        if np.linalg.norm(self.pos[0]-self.pos[1])< (1.4 * self.PROTECTED_RADIUS):
+            bInside = -5
+        else:
+            bInside = 0
 
-        reward = 5/d2g #- 1/doi
 
-        return reward 
+        if int(adjency_mat[0][1])>0: #and self.collision_detector() :
+
+            rel_pos = self.pos[1,:]-self.pos[0,:]
+            doi = np.linalg.norm(rel_pos)
+            d2g = np.linalg.norm(self.GOAL_XYZ-self.pos[0,:])
+
+
+            if np.dot(self.vel[0,1:3],self.vel[1,1:3])<-1e-2:
+                incentive = 5
+            elif np.dot(self.vel[0,1:3],self.vel[1,1:3])>1e-2:
+                incentive = -5
+            else:
+                incentive = 0
+
+
+            dir_vector = (self.GOAL_XYZ-self.INIT_XYZS[0,:])/np.linalg.norm(self.GOAL_XYZ-self.INIT_XYZS[0,:])
+
+            d = np.linalg.norm(np.cross((self.INIT_XYZS[0,:]-self.pos[0,:]),dir_vector))/np.linalg.norm(dir_vector)
+
+            reward = - np.abs(self.rpy[0, 2]) + incentive + 15*np.dot(dir_vector,self.vel[0]) + bInside - d #+ bInside #+ 5/d2g #- 1/doi  # - d + 2*doi #- 10*np.linalg.norm(self.vel[0,:]-np.array([1,0,0]))#+ 10/d2g #- 1 /doi
+            #np.dot(self.vel[0,:]/np.linalg.norm(self.vel[0,:]),dir_vector) - 1/doi - np.abs(self.rpy[0, 2]) + -10*(self.pos[0,2]-2)**2 + 10
+
+            precision = 4
+            print(f"TotalReward {reward:.{precision}} \t d {10*d:.{precision}} \t yaw {np.abs(self.rpy[0, 2]):.{precision}} \t Incentive {incentive} \tProj: {15*np.dot(dir_vector,self.vel[0]):.{precision}} \t VelOwnY {self.vel[0,1]:.{precision}} \t VelOwnY {self.vel[0,2]:.{precision}}  \t VelIntY{self.vel[1,1]:.{precision}} \t  VelIntZ{self.vel[1,2]:.{precision}}")
+            return reward 
+
+        else:
+            return 0
 
     ################################################################################
     
@@ -282,24 +326,33 @@ class VelocityAviary(BaseAviary):
             if j==0:
                 pass
             elif np.linalg.norm(ownship[0:3]-intruder[0:3])<self.PROTECTED_RADIUS:
+                print('Crash')
                 return True
 
 
-        #Check if the goal has been reached
+        ##Check if the goal has been reached
         if np.linalg.norm(ownship[0:3]-self.GOAL_XYZ)<self.GOAL_RADIUS:
+            print('Goal!')
             return True
         
         #Check if the ownship is on the ground
         if ownship[2]<0.1:
+            print('Hit the ground')
             return True
 
 
         #Check if the ownship is outside the domain
-        if np.linalg.norm(ownship[0:3]-self.GOAL_XYZ) > 5:
+        if np.linalg.norm(ownship[0:3]-self.GOAL_XYZ) > 15:
+            print('Outside the domain')
             return True
+
+        #Never go backwards
+        #if self.vel[0,0]<0:
+        #    return True
 
         #Check for the length of the simulation
         if self.step_counter/self.SIM_FREQ > 15:
+            print('Times up!')
             return True
         else:
             return False
@@ -318,3 +371,49 @@ class VelocityAviary(BaseAviary):
 
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+
+################################################################################
+    def collision_detector(self):
+
+        '''Computes if the ownship will collide with the intruder
+
+        Returns
+        -------
+        bool 
+
+        '''
+
+        #Extract the states for the ownship and intruder
+        x1 = self.pos[0,:]
+        x2 = self.pos[1,:]
+        v1 = self.vel[0,:]
+        v2 = self.vel[1,:]
+
+        #Compute the cone opening angle
+        d_oi = np.linalg.norm(x2-x1)
+        rpz = self.PROTECTED_RADIUS
+        d_vo =(d_oi ** 2 - rpz ** 2) / d_oi
+        r_vo = rpz*np.sqrt(d_oi**2-rpz**2)/d_oi
+        alpha_vo = np.arctan(r_vo/d_vo)
+        Doi = x2-x1
+
+        delta_x = x2[0]-x1[0]
+        delta_y = x2[1]-x1[1]
+        delta_z = x2[2]-x1[2] 
+
+        xy_norm=np.sqrt(delta_x ** 2 + delta_y ** 2)
+
+        theta = np.arctan(-delta_z/xy_norm) # because you align thumb with y
+        psi = np.arctan(delta_y/delta_x)
+
+        Dvo = d_vo*np.array([np.cos(theta)*np.cos(psi),np.cos(theta)*np.sin(psi),-np.sin(theta)]) 
+
+        ctheta = np.dot(v1-v2,Dvo)/(np.linalg.norm(v1-v2)*d_vo)
+        if np.abs(ctheta)> np.abs(alpha_vo) and (np.dot(v2,Dvo)<0):
+            return True
+        else:
+            #print('Oh noooo!!')
+            return False
+
+
+################################################################################

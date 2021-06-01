@@ -12,6 +12,7 @@ import numpy as np
 import pybullet as p
 import pybullet_data
 import gym
+import random as rand
 
 class DroneModel(Enum):
     """Drone models enumeration class."""
@@ -475,6 +476,11 @@ class BaseAviary(gym.Env):
         self.last_action = -1*np.ones((self.NUM_DRONES, 4))
         self.last_clipped_action = np.zeros((self.NUM_DRONES, 4))
         self.gui_input = np.zeros(4)
+        self.GOAL_XYZ = np.array([5,0,3])#[0,rand.randint(-2,2),rand.randint(2,4)])
+        self.INIT_XYZS = np.array([
+                          [ -3, 0, 3],
+                          [rand.uniform(1,5), rand.uniform(-2,2), rand.uniform(1,5)],
+                          ])
         #### Initialize the drones kinemaatic information ##########
         self.pos = np.zeros((self.NUM_DRONES, 3))
         self.quat = np.zeros((self.NUM_DRONES, 4))
@@ -505,7 +511,33 @@ class BaseAviary(gym.Env):
             # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES:
             self._addObstacles()
-    
+
+
+        ########### Give the initial velocities for the drone and ownship #################
+
+        
+        SPEED_LIMIT = 0.5*self.MAX_SPEED_KMH * (1000/3600)
+
+        INIT_VXVYVZ = (self.COLLISION_POINT - self.INIT_XYZS)/10 #/ np.linalg.norm(self.GOAL_XYZ - self.INIT_XYZS)
+
+        speed_ratio = np.empty([self.NUM_DRONES,1])
+        for i in range(self.NUM_DRONES):
+            speed_ratio[i] =np.linalg.norm(INIT_VXVYVZ[i])/SPEED_LIMIT
+        
+
+        INIT_VXVYVZ = np.hstack((INIT_VXVYVZ,speed_ratio))
+
+        
+        p.resetBaseVelocity(self.DRONE_IDS[0],
+                    [INIT_VXVYVZ[0,0], INIT_VXVYVZ[0,1], INIT_VXVYVZ[0,2]],
+                    physicsClientId=self.CLIENT
+                    )
+
+        p.resetBaseVelocity(self.DRONE_IDS[1],
+                    [INIT_VXVYVZ[1,0], INIT_VXVYVZ[1,1], INIT_VXVYVZ[1,2]],
+                    physicsClientId=self.CLIENT
+                    )
+        
     ################################################################################
 
     def _updateAndStoreKinematicInformation(self):

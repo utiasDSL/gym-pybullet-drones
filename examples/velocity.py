@@ -52,10 +52,10 @@ if __name__ == "__main__":
 
     #### Initialize the simulation #############################
     INIT_XYZS = np.array([
-                          [ 0, 0, .1],
-                          [.3, 0, .1],
-                          [.6, 0, .1],
-                          [0.9, 0, .1]
+                          [ 0, 0, 1],
+                          [.3, 0, 1],
+                          [.6, 0, 1],
+                          [0.9, 0, 1]
                           ])
     INIT_RPYS = np.array([
                           [0, 0, 0],
@@ -93,10 +93,10 @@ if __name__ == "__main__":
     #### Initialize the velocity target ########################
     TARGET_VEL = np.zeros((4,NUM_WP,4))
     for i in range(NUM_WP):
-        TARGET_VEL[0, i, :] = [-0.5, 1, 0, 0.99] if i < (NUM_WP/8) else [0.5, -1, 0, 0.99]
-        TARGET_VEL[1, i, :] = [0, 1, 0, 0.99] if i < (NUM_WP/8+NUM_WP/6) else [0, -1, 0, 0.99]
-        TARGET_VEL[2, i, :] = [0.2, 1, 0.2, 0.99] if i < (NUM_WP/8+2*NUM_WP/6) else [-0.2, -1, -0.2, 0.99]
-        TARGET_VEL[3, i, :] = [0, 1, 0.5, 0.99] if i < (NUM_WP/8+3*NUM_WP/6) else [0, -1, -0.5, 0.99]
+        TARGET_VEL[0, i, :] = [1, 1, 0, 0.99]       #if i < (NUM_WP/8) else [3.6, -1, 0, 0.99]
+        TARGET_VEL[1, i, :] = [0, 1, 0, 0.99]       #if i < (NUM_WP/8+NUM_WP/6) else [0, -1, 0, 0.99]
+        TARGET_VEL[2, i, :] = [0.2, 1, 0.2, 0.99]   #if i < (NUM_WP/8+2*NUM_WP/6) else [-0.2, -1, -0.2, 0.99]
+        TARGET_VEL[3, i, :] = [0, 1, 0.5, 0.99]     #if i < (NUM_WP/8+3*NUM_WP/6) else [0, -1, -0.5, 0.99]
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=int(ARGS.simulation_freq_hz/AGGR_PHY_STEPS),
@@ -146,6 +146,6 @@ if __name__ == "__main__":
     env.close()
 
     #### Plot the simulation results ###########################
-    logger.save_as_csv("vel") # Optional CSV save
+    #logger.save_as_csv("vel") # Optional CSV save
     if ARGS.plot:
         logger.plot()
