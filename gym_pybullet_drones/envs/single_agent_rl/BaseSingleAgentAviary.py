@@ -185,6 +185,7 @@ class BaseSingleAgentAviary(BaseAviary):
             print("[ERROR] in BaseSingleAgentAviary._actionSpace()")
             exit()
         return spaces.Box(low=-1*np.ones(size),
+        # return spaces.Box(low=np.zeros(size),  # Alternative action space, see PR #32
                           high=np.ones(size),
                           dtype=np.float32
                           )
