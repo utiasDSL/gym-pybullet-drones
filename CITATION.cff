@@ -20,10 +20,10 @@ preferred-citation:
     orcid: "https://orcid.org/0000-0003-4012-4668"
   doi: "" # TBD
   journal: "2021 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)"
+  year: 2021
   month: "" # TBD
   start: 1 # First page number
   end: 8 # Last page number
   title: "Learning to Fly---a Gym Environment with PyBullet Physics for Reinforcement Learning of Multi-agent Quadcopter Control"
   issue: "" # TBD
   volume: "" # TBD
-  year: 2021
