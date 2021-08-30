@@ -1,0 +1,16 @@
+cff-version: 1.2.0
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "LastName"
+    given-names: "FirstName"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+  doi: "10.0000/00000"
+  journal: "Journal Title"
+  month: 9
+  start: 1 # First page number
+  end: 10 # Last page number
+  title: "Title"
+  issue: 1
+  volume: 1
+  year: 2021
