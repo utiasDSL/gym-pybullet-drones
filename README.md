@@ -36,7 +36,6 @@ This repository's `master` branch is actively developed, please `git pull` frequ
 |             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
 |          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) interface* | **Yes** | No | **Yes**                                             |
 | *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) interface* | **Yes** | No | No                           |
-| *[PyMARL](https://github.com/oxwhirl/pymarl) integration* | *WIP*  | No                                   | No                                   |
 
 
 
@@ -385,14 +384,11 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 
 
-## Future Developments
+## Desiderata/WIP
 - Template scripts using [PyMARL](https://github.com/oxwhirl/pymarl)
 - Google [Colaboratory](https://colab.research.google.com/notebooks/intro.ipynb) example
 - Alternative multi-contribution downwash effect
 
-## Ongoing Projects
-- Symbolic [CasADi](https://web.casadi.org) dynamic model for learning-based control
-- Environments for heterogeneous multi-UAV/UGV systems 
 
 
 
