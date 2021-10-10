@@ -11,6 +11,7 @@ To run the script, type in a terminal:
 Notes
 -----
 Check Ray's status at:
+
     http://127.0.0.1:8265
 
 """

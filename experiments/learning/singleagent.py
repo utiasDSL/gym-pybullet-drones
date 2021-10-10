@@ -11,8 +11,11 @@ To run the script, type in a terminal:
 Notes
 -----
 Use:
+
     $ tensorboard --logdir ./results/save-<env>-<algo>-<obs>-<act>-<time-date>/tb/
-to see the tensorboard results at:
+
+To check the tensorboard results at:
+
     http://localhost:6006/
 
 """
