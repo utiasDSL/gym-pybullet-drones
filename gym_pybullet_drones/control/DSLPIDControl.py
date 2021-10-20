@@ -9,7 +9,8 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
 class DSLPIDControl(BaseControl):
     """PID control class for Crazyflies.
 
-    Based on work conducted at UTIAS' DSL by SiQi Zhou and James Xu.
+    Based on work conducted at UTIAS' DSL. Contributors: SiQi Zhou, James Xu, 
+    Tracy Du, Mario Vukosavljev, Calvin Ngan, and Jingyuan Hou.
 
     """
 
