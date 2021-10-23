@@ -318,7 +318,7 @@ Check the implementations of `_drag()`, `_groundEffect()`, and `_downwash()` in 
 
 ## RGB, Depth, and Segmentation Views
 
-<img src="files/readme_images/rgb.gif" alt="rgb view" width="270"> <img src="files/readme_images/dep.gif" alt="depth view" width="270"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="270">
+<img src="files/readme_images/rgb.gif" alt="rgb view" width="260"> <img src="files/readme_images/dep.gif" alt="depth view" width="260"> <img src="files/readme_images/seg.gif" alt="segmentation view" width="260">
 
 
 
