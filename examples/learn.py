@@ -53,16 +53,17 @@ if __name__ == "__main__":
                     env,
                     verbose=1
                     )
-        model.learn(total_timesteps=1000) # e.g. 500000
+        model.learn(total_timesteps=10000) # Typically not enough
     else:
         ray.shutdown()
         ray.init(ignore_reinit_error=True)
         register_env("takeoff-aviary-v0", lambda _: TakeoffAviary())
         config = ppo.DEFAULT_CONFIG.copy()
         config["num_workers"] = 2
+        config["framework"] = "torch"
         config["env"] = "takeoff-aviary-v0"
         agent = ppo.PPOTrainer(config)
-        for i in range(10): # e.g. 100
+        for i in range(3): # Typically not enough
             results = agent.train()
             print("[INFO] {:d}: episode_reward max {:f} min {:f} mean {:f}".format(i,
                                                                                    results["episode_reward_max"],
@@ -71,7 +72,6 @@ if __name__ == "__main__":
                                                                                    )
                   )
         policy = agent.get_policy()
-        print(policy.model.base_model.summary())
         ray.shutdown()
 
     #### Show (and record a video of) the model's performance ##

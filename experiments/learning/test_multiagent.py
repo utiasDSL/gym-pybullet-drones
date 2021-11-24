@@ -6,7 +6,7 @@ Example
 -------
 To run the script, type in a terminal:
 
-    $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<date>
+    $ python test_multiagent.py --exp ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<time_date>
 
 """
 import os
@@ -98,10 +98,12 @@ class FillInActions(DefaultCallbacks):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space( 
-                                                                 Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 # Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 Box(-1, 1, (ACTION_VEC_SIZE,), np.float32) # Bounded
                                                                  )
         _, opponent_batch = original_batches[other_id]
-        opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]])
+        # opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]) # Unbounded
+        opponent_actions = np.array([action_encoder.transform(np.clip(a, -1, 1)) for a in opponent_batch[SampleBatch.ACTIONS]]) # Bounded
         to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
 
 ############################################################
@@ -125,7 +127,7 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    parser.add_argument('--exp',    type=str,       help='Help (default: ..)', metavar='')
+    parser.add_argument('--exp',    type=str,       help='The experiment folder written as ./results/save-<env>-<num_drones>-<algo>-<obs>-<act>-<time_date>', metavar='')
     ARGS = parser.parse_args()
 
     #### Parameters to recreate the environment ################
@@ -137,6 +139,8 @@ if __name__ == "__main__":
         ACT = ActionType.DYN
     elif ARGS.exp.split("-")[5] == 'pid':
         ACT = ActionType.PID
+    elif ARGS.exp.split("-")[5] == 'vel':
+        ACT = ActionType.VEL
     elif ARGS.exp.split("-")[5] == 'one_d_rpm':
         ACT = ActionType.ONE_D_RPM
     elif ARGS.exp.split("-")[5] == 'one_d_dyn':
@@ -155,7 +159,7 @@ if __name__ == "__main__":
         exit()
     if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         ACTION_VEC_SIZE = 1
-    elif ACT in [ActionType.RPM, ActionType.DYN]:
+    elif ACT in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
         ACTION_VEC_SIZE = 4
     elif ACT == ActionType.PID:
         ACTION_VEC_SIZE = 3
@@ -289,7 +293,7 @@ if __name__ == "__main__":
                                 obs=OBS,
                                 act=ACT,
                                 gui=True,
-                                record=True
+                                record=False
                                 )
     else:
         print("[ERROR] environment not yet implemented")
@@ -302,7 +306,7 @@ if __name__ == "__main__":
                     )
     if ACT in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         action = {i: np.array([0]) for i in range(NUM_DRONES)}
-    elif ACT in [ActionType.RPM, ActionType.DYN]:
+    elif ACT in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
         action = {i: np.array([0, 0, 0, 0]) for i in range(NUM_DRONES)}
     elif ACT==ActionType.PID:
          action = {i: np.array([0, 0, 0]) for i in range(NUM_DRONES)}
@@ -312,11 +316,9 @@ if __name__ == "__main__":
     start = time.time()
     for i in range(6*int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS)): # Up to 6''
         #### Deploy the policies ###################################
-        # print("Debug Obs", obs)
         temp = {}
-        temp[0] = policy0.compute_single_action(np.hstack([obs[0], obs[1], action[1]]))
-        temp[1] = policy1.compute_single_action(np.hstack([obs[1], obs[0], action[0]]))
-        # print("Debug Act", temp)
+        temp[0] = policy0.compute_single_action(np.hstack([action[1], obs[1], obs[0]])) # Counterintuitive order, check params.json
+        temp[1] = policy1.compute_single_action(np.hstack([action[0], obs[0], obs[1]]))
         action = {0: temp[0][0], 1: temp[1][0]}
         obs, reward, done, info = test_env.step(action)
         test_env.render()
@@ -330,6 +332,7 @@ if __name__ == "__main__":
         sync(np.floor(i*test_env.AGGR_PHY_STEPS), start, test_env.TIMESTEP)
         # if done["__all__"]: obs = test_env.reset() # OPTIONAL EPISODE HALT
     test_env.close()
+    logger.save_as_csv("ma") # Optional CSV save
     logger.plot()
 
     #### Shut down Ray #########################################

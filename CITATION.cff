@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Panerati"
+    given-names: "Jacopo"
+    orcid: "https://orcid.org/0000-0003-2994-5422"
+  - family-names: "Zheng"
+    given-names: "Hehui"
+    orcid: "https://orcid.org/0000-0002-4977-0220"
+  - family-names: "Zhou"
+    given-names: "SiQi"
+  - family-names: "Xu"
+    given-names: "James"
+  - family-names: "Prorok"
+    given-names: "Amanda"
+    orcid: "https://orcid.org/0000-0001-7313-5983"
+  - family-names: "Schoellig"
+    given-names: "Angela P."
+    orcid: "https://orcid.org/0000-0003-4012-4668"
+  doi: "10.0000/00000"
+  journal: "2021 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)"
+  month: 1
+  start: 1 # First page number
+  end: 8 # Last page number
+  title: "Learning to Fly---a Gym Environment with PyBullet Physics for Reinforcement Learning of Multi-agent Quadcopter Control"
+  issue: 1
+  volume: 1
+  year: 2021

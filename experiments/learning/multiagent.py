@@ -11,6 +11,7 @@ To run the script, type in a terminal:
 Notes
 -----
 Check Ray's status at:
+
     http://127.0.0.1:8265
 
 """
@@ -18,6 +19,7 @@ import os
 import time
 import argparse
 from datetime import datetime
+from sys import platform
 import subprocess
 import pdb
 import math
@@ -110,10 +112,12 @@ class FillInActions(DefaultCallbacks):
         to_update = postprocessed_batch[SampleBatch.CUR_OBS]
         other_id = 1 if agent_id == 0 else 0
         action_encoder = ModelCatalog.get_preprocessor_for_space( 
-                                                                 Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 # Box(-np.inf, np.inf, (ACTION_VEC_SIZE,), np.float32) # Unbounded
+                                                                 Box(-1, 1, (ACTION_VEC_SIZE,), np.float32) # Bounded
                                                                  )
         _, opponent_batch = original_batches[other_id]
-        opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]])
+        # opponent_actions = np.array([action_encoder.transform(a) for a in opponent_batch[SampleBatch.ACTIONS]]) # Unbounded
+        opponent_actions = np.array([action_encoder.transform(np.clip(a, -1, 1)) for a in opponent_batch[SampleBatch.ACTIONS]]) # Bounded
         to_update[:, -ACTION_VEC_SIZE:] = opponent_actions
 
 ############################################################
@@ -137,12 +141,12 @@ if __name__ == "__main__":
 
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Multi-agent reinforcement learning experiments script')
-    parser.add_argument('--num_drones',  default=2,            type=int,                                                                 help='Number of drones (default: 2)', metavar='')
-    parser.add_argument('--env',         default='flock',      type=str,             choices=['leaderfollower', 'flock', 'meetup'],      help='Help (default: ..)', metavar='')
-    parser.add_argument('--obs',         default='kin',        type=ObservationType,                                                     help='Help (default: ..)', metavar='')
-    parser.add_argument('--act',         default='one_d_rpm',  type=ActionType,                                                          help='Help (default: ..)', metavar='')
-    parser.add_argument('--algo',        default='cc',         type=str,             choices=['cc'],                                     help='Help (default: ..)', metavar='')
-    parser.add_argument('--workers',     default=0,            type=int,                                                                 help='Help (default: ..)', metavar='')        
+    parser.add_argument('--num_drones',  default=2,                 type=int,                                                                 help='Number of drones (default: 2)', metavar='')
+    parser.add_argument('--env',         default='leaderfollower',  type=str,             choices=['leaderfollower', 'flock', 'meetup'],      help='Task (default: leaderfollower)', metavar='')
+    parser.add_argument('--obs',         default='kin',             type=ObservationType,                                                     help='Observation space (default: kin)', metavar='')
+    parser.add_argument('--act',         default='one_d_rpm',       type=ActionType,                                                          help='Action space (default: one_d_rpm)', metavar='')
+    parser.add_argument('--algo',        default='cc',              type=str,             choices=['cc'],                                     help='MARL approach (default: cc)', metavar='')
+    parser.add_argument('--workers',     default=0,                 type=int,                                                                 help='Number of RLlib workers (default: 0)', metavar='')        
     ARGS = parser.parse_args()
 
     #### Save directory ########################################
@@ -151,9 +155,10 @@ if __name__ == "__main__":
         os.makedirs(filename+'/')
 
     #### Print out current git commit hash #####################
-    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
-    with open(filename+'/git_commit.txt', 'w+') as f:
-        f.write(str(git_commit))
+    if platform == "linux" or platform == "darwin":
+        git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
+        with open(filename+'/git_commit.txt', 'w+') as f:
+            f.write(str(git_commit))
 
     #### Constants, and errors #################################
     if ARGS.obs==ObservationType.KIN:
@@ -166,7 +171,7 @@ if __name__ == "__main__":
         exit()
     if ARGS.act in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
         ACTION_VEC_SIZE = 1
-    elif ARGS.act in [ActionType.RPM, ActionType.DYN]:
+    elif ARGS.act in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
         ACTION_VEC_SIZE = 4
     elif ARGS.act == ActionType.PID:
         ACTION_VEC_SIZE = 3
@@ -275,7 +280,7 @@ if __name__ == "__main__":
 
     #### Ray Tune stopping conditions ##########################
     stop = {
-        "timesteps_total": 100, # 8000,
+        "timesteps_total": 120000, # 100000 ~= 10'
         # "episode_reward_mean": 0,
         # "training_iteration": 0,
     }

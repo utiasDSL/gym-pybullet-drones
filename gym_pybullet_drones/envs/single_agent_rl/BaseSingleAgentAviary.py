@@ -11,13 +11,13 @@ from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 
-from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-
 class ActionType(Enum):
     """Action type enumeration class."""
     RPM = "rpm"                 # RPMS
     DYN = "dyn"                 # Desired thrust and torques
     PID = "pid"                 # PID control
+    VEL = "vel"                 # Velocity input (using PID control)
+    TUN = "tun"                 # Tune the coefficients of a PID controller
     ONE_D_RPM = "one_d_rpm"     # 1D (identical input to all motors) with RPMs
     ONE_D_DYN = "one_d_dyn"     # 1D (identical input to all motors) with desired thrust and torques
     ONE_D_PID = "one_d_pid"     # 1D (identical input to all motors) with PID control
@@ -76,7 +76,7 @@ class BaseSingleAgentAviary(BaseAviary):
         obs : ObservationType, optional
             The type of observation space (kinematic information or vision)
         act : ActionType, optional
-            The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
+            The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
         vision_attributes = True if obs == ObservationType.RGB else False
@@ -85,12 +85,28 @@ class BaseSingleAgentAviary(BaseAviary):
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
         #### Create integrated controllers #########################
-        if act in [ActionType.PID, ActionType.ONE_D_PID]:
+        if act in [ActionType.PID, ActionType.VEL, ActionType.TUN, ActionType.ONE_D_PID]:
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
             if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
-                self.ctrl = [DSLPIDControl(CtrlAviary(drone_model=DroneModel.CF2X))]
+                self.ctrl = DSLPIDControl(drone_model=DroneModel.CF2X)
+                if act == ActionType.TUN:
+                    self.TUNED_P_POS = np.array([.4, .4, 1.25])
+                    self.TUNED_I_POS = np.array([.05, .05, .05])
+                    self.TUNED_D_POS = np.array([.2, .2, .5])
+                    self.TUNED_P_ATT = np.array([70000., 70000., 60000.])
+                    self.TUNED_I_ATT = np.array([.0, .0, 500.])
+                    self.TUNED_D_ATT = np.array([20000., 20000., 12000.])
             elif drone_model == DroneModel.HB:
-                self.ctrl = [SimplePIDControl(CtrlAviary(drone_model=DroneModel.HB))]
+                self.ctrl = SimplePIDControl(drone_model=DroneModel.HB)
+                if act == ActionType.TUN:
+                    self.TUNED_P_POS = np.array([.1, .1, .2])
+                    self.TUNED_I_POS = np.array([.0001, .0001, .0001])
+                    self.TUNED_D_POS = np.array([.3, .3, .4])
+                    self.TUNED_P_ATT = np.array([.3, .3, .05])
+                    self.TUNED_I_ATT = np.array([.0001, .0001, .0001])
+                    self.TUNED_D_ATT = np.array([.3, .3, .5])
+            else:
+                print("[ERROR] in BaseSingleAgentAviary.__init()__, no controller is available for the specified drone_model")
         super().__init__(drone_model=drone_model,
                          num_drones=1,
                          initial_xyzs=initial_xyzs,
@@ -105,6 +121,13 @@ class BaseSingleAgentAviary(BaseAviary):
                          vision_attributes=vision_attributes,
                          dynamics_attributes=dynamics_attributes
                          )
+        #### Set a limit on the maximum target speed ###############
+        if act == ActionType.VEL:
+            self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
+        #### Try _trajectoryTrackingRPMs exists IFF ActionType.TUN #
+        if act == ActionType.TUN and not (hasattr(self.__class__, '_trajectoryTrackingRPMs') and callable(getattr(self.__class__, '_trajectoryTrackingRPMs'))):
+                print("[ERROR] in BaseSingleAgentAviary.__init__(), ActionType.TUN requires an implementation of _trajectoryTrackingRPMs in the instantiated subclass")
+                exit()
 
     ################################################################################
 
@@ -147,19 +170,22 @@ class BaseSingleAgentAviary(BaseAviary):
         Returns
         -------
         ndarray
-            A Box() of size 1, 3, or 3, depending on the action type.
+            A Box() of size 1, 3, 4, or 6 depending on the action type.
 
         """
-        if self.ACT_TYPE == ActionType.RPM or self.ACT_TYPE == ActionType.DYN:
+        if self.ACT_TYPE == ActionType.TUN:
+            size = 6
+        elif self.ACT_TYPE in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
             size = 4
         elif self.ACT_TYPE == ActionType.PID:
             size = 3
         elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
-            size = 1   
+            size = 1
         else:
             print("[ERROR] in BaseSingleAgentAviary._actionSpace()")
             exit()
         return spaces.Box(low=-1*np.ones(size),
+        # return spaces.Box(low=np.zeros(size),  # Alternative action space, see PR #32
                           high=np.ones(size),
                           dtype=np.float32
                           )
@@ -172,9 +198,9 @@ class BaseSingleAgentAviary(BaseAviary):
         """Pre-processes the action passed to `.step()` into motors' RPMs.
 
         Parameter `action` is processed differenly for each of the different
-        action types: `action` can be of length 1, 3, or 4, and represent 
-        RPMs, desired thrust and torques, or the next target position to reach 
-        using PID control.
+        action types: `action` can be of length 1, 3, 4, or 6 and represent 
+        RPMs, desired thrust and torques, the next target position to reach 
+        using PID control, a desired velocity vector, new PID coefficients, etc.
 
         Parameters
         ----------
@@ -188,7 +214,16 @@ class BaseSingleAgentAviary(BaseAviary):
             commanded to the 4 motors of each drone.
 
         """
-        if self.ACT_TYPE == ActionType.RPM:
+        if self.ACT_TYPE == ActionType.TUN:
+            self.ctrl.setPIDCoefficients(p_coeff_pos=(action[0]+1)*self.TUNED_P_POS,
+                                         i_coeff_pos=(action[1]+1)*self.TUNED_I_POS,
+                                         d_coeff_pos=(action[2]+1)*self.TUNED_D_POS,
+                                         p_coeff_att=(action[3]+1)*self.TUNED_P_ATT,
+                                         i_coeff_att=(action[4]+1)*self.TUNED_I_ATT,
+                                         d_coeff_att=(action[5]+1)*self.TUNED_D_ATT
+                                         )
+            return self._trajectoryTrackingRPMs() 
+        elif self.ACT_TYPE == ActionType.RPM:
             return np.array(self.HOVER_RPM * (1+0.05*action))
         elif self.ACT_TYPE == ActionType.DYN:
             return nnlsRPM(thrust=(self.GRAVITY*(action[0]+1)),
@@ -206,13 +241,29 @@ class BaseSingleAgentAviary(BaseAviary):
                            )
         elif self.ACT_TYPE == ActionType.PID: 
             state = self._getDroneStateVector(0)
-            rpm, _, _ = self.ctrl[0].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
-                                                    cur_pos=state[0:3],
-                                                    cur_quat=state[3:7],
-                                                    cur_vel=state[10:13],
-                                                    cur_ang_vel=state[13:16],
-                                                    target_pos=state[0:3]+0.1*action
-                                                    )
+            rpm, _, _ = self.ctrl.computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+                                                 cur_pos=state[0:3],
+                                                 cur_quat=state[3:7],
+                                                 cur_vel=state[10:13],
+                                                 cur_ang_vel=state[13:16],
+                                                 target_pos=state[0:3]+0.1*action
+                                                 )
+            return rpm
+        elif self.ACT_TYPE == ActionType.VEL:
+            state = self._getDroneStateVector(0)
+            if np.linalg.norm(action[0:3]) != 0:
+                v_unit_vector = action[0:3] / np.linalg.norm(action[0:3])
+            else:
+                v_unit_vector = np.zeros(3)
+            rpm, _, _ = self.ctrl.computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+                                                 cur_pos=state[0:3],
+                                                 cur_quat=state[3:7],
+                                                 cur_vel=state[10:13],
+                                                 cur_ang_vel=state[13:16],
+                                                 target_pos=state[0:3], # same as the current position
+                                                 target_rpy=np.array([0,0,state[9]]), # keep current yaw
+                                                 target_vel=self.SPEED_LIMIT * np.abs(action[3]) * v_unit_vector # target the desired velocity vector
+                                                 )
             return rpm
         elif self.ACT_TYPE == ActionType.ONE_D_RPM:
             return np.repeat(self.HOVER_RPM * (1+0.05*action), 4)
@@ -232,13 +283,13 @@ class BaseSingleAgentAviary(BaseAviary):
                            )
         elif self.ACT_TYPE == ActionType.ONE_D_PID:
             state = self._getDroneStateVector(0)
-            rpm, _, _ = self.ctrl[0].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
-                                                    cur_pos=state[0:3],
-                                                    cur_quat=state[3:7],
-                                                    cur_vel=state[10:13],
-                                                    cur_ang_vel=state[13:16],
-                                                    target_pos=state[0:3]+0.1*np.array([0,0,action[0]])
-                                                    )
+            rpm, _, _ = self.ctrl.computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+                                                 cur_pos=state[0:3],
+                                                 cur_quat=state[3:7],
+                                                 cur_vel=state[10:13],
+                                                 cur_ang_vel=state[13:16],
+                                                 target_pos=state[0:3]+0.1*np.array([0,0,action[0]])
+                                                 )
             return rpm
         else:
             print("[ERROR] in BaseSingleAgentAviary._preprocessAction()")

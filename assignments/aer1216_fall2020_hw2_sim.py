@@ -24,7 +24,7 @@ from gym_pybullet_drones.utils.utils import sync
 from gym_pybullet_drones.envs.BaseAviary import DroneModel
 from aer1216_fall2020_hw2_ctrl import HW2Control
 
-DURATION = 30
+DURATION = 10
 """int: The duration of the simulation in seconds."""
 GUI = True
 """bool: Whether to use PyBullet graphical interface."""
@@ -92,7 +92,7 @@ if __name__ == "__main__":
     TARGET_ACCELERATION = np.zeros([DURATION * ENV.SIM_FREQ, 3])
 
     #### Derive the target trajectory to obtain target velocities and accelerations
-    TARGET_VELOCITY[1:, :] = (TARGET_POSITION[1:, :] - TARGET_POSITION[0:-1, :])/ENV.SIM_FREQ
+    TARGET_VELOCITY[1:, :] = (TARGET_POSITION[1:, :] - TARGET_POSITION[0:-1, :]) / ENV.SIM_FREQ
     TARGET_ACCELERATION[1:, :] = (TARGET_VELOCITY[1:, :] - TARGET_VELOCITY[0:-1, :]) / ENV.SIM_FREQ
 
     #### Run the simulation ####################################

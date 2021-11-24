@@ -6,8 +6,8 @@ from datetime import datetime
 from enum import Enum
 import xml.etree.ElementTree as etxml
 from PIL import Image
-import pkgutil
-egl = pkgutil.get_loader('eglRenderer')
+# import pkgutil
+# egl = pkgutil.get_loader('eglRenderer')
 import numpy as np
 import pybullet as p
 import pybullet_data
@@ -144,7 +144,10 @@ class BaseAviary(gym.Env):
         self.HOVER_RPM = np.sqrt(self.GRAVITY / (4*self.KF))
         self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY) / (4*self.KF))
         self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
-        self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
+        if self.DRONE_MODEL == DroneModel.CF2X:
+            self.MAX_XY_TORQUE = (2*self.L*self.KF*self.MAX_RPM**2)/np.sqrt(2)
+        elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]:
+            self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
         self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
         self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt((15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST)
         #### Create attributes for vision tasks ####################
@@ -166,7 +169,7 @@ class BaseAviary(gym.Env):
         self.DYNAMICS_ATTR = dynamics_attributes
         if self.DYNAMICS_ATTR:
             if self.DRONE_MODEL == DroneModel.CF2X:
-                self.A = np.array([ [1, 1, 1, 1], [.5, .5, -.5, -.5], [-.5, .5, .5, -.5], [-1, 1, -1, 1] ])
+                self.A = np.array([ [1, 1, 1, 1], [1/np.sqrt(2), 1/np.sqrt(2), -1/np.sqrt(2), -1/np.sqrt(2)], [-1/np.sqrt(2), 1/np.sqrt(2), 1/np.sqrt(2), -1/np.sqrt(2)], [-1, 1, -1, 1] ])
             elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]:
                 self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
             self.INV_A = np.linalg.inv(self.A)
@@ -366,8 +369,7 @@ class BaseAviary(gym.Env):
             if self.PHYSICS != Physics.DYN:
                 p.stepSimulation(physicsClientId=self.CLIENT)
             #### Save the last applied action (e.g. to compute drag) ###
-            if self.PHYSICS in [Physics.PYB_DRAG, Physics.PYB_GND_DRAG_DW]:
-                self.last_clipped_action = clipped_action
+            self.last_clipped_action = clipped_action
         #### Update and store the drones kinematic information #####
         self._updateAndStoreKinematicInformation()
         #### Prepare the return values #############################
@@ -458,7 +460,7 @@ class BaseAviary(gym.Env):
         self.first_render_call = True
         self.X_AX = -1*np.ones(self.NUM_DRONES)
         self.Y_AX = -1*np.ones(self.NUM_DRONES)
-        self.Z_AX = -1*np.ones(self.NUM_DRONES);
+        self.Z_AX = -1*np.ones(self.NUM_DRONES)
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES)
         self.USE_GUI_RPM=False
         self.last_input_switch = 0
@@ -483,6 +485,7 @@ class BaseAviary(gym.Env):
         self.DRONE_IDS = np.array([p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../assets/"+self.URDF,
                                               self.INIT_XYZS[i,:],
                                               p.getQuaternionFromEuler(self.INIT_RPYS[i,:]),
+                                              flags = p.URDF_USE_INERTIA_FROM_FILE,
                                               physicsClientId=self.CLIENT
                                               ) for i in range(self.NUM_DRONES)])
         for i in range(self.NUM_DRONES):
@@ -550,7 +553,7 @@ class BaseAviary(gym.Env):
 
         """
         state = np.hstack([self.pos[nth_drone, :], self.quat[nth_drone, :], self.rpy[nth_drone, :],
-                           self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_action[nth_drone, :]])
+                           self.vel[nth_drone, :], self.ang_v[nth_drone, :], self.last_clipped_action[nth_drone, :]])
         return state.reshape(20,)
 
     ################################################################################

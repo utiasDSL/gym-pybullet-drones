@@ -21,7 +21,9 @@ class HW1Control():
 
     ################################################################################
 
-    def __init__(self, env: BaseAviary):
+    def __init__(self,
+                 env: BaseAviary
+                 ):
         """ Initialization of class HW1Control.
 
         Parameters

@@ -9,24 +9,28 @@ from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
 class DSLPIDControl(BaseControl):
     """PID control class for Crazyflies.
 
-    Based on work conducted at UTIAS' DSL by SiQi Zhou and James Xu.
+    Based on work conducted at UTIAS' DSL. Contributors: SiQi Zhou, James Xu, 
+    Tracy Du, Mario Vukosavljev, Calvin Ngan, and Jingyuan Hou.
 
     """
 
     ################################################################################
 
     def __init__(self,
-                 env: BaseAviary
+                 drone_model: DroneModel,
+                 g: float=9.8
                  ):
-        """DSL PID control initialization.
+        """Common control classes __init__ method.
 
         Parameters
         ----------
-        env : BaseAviary
-            The simulation environment to control.
+        drone_model : DroneModel
+            The type of drone to control (detailed in an .urdf file in folder `assets`).
+        g : float, optional
+            The gravitational acceleration in m/s^2.
 
         """
-        super().__init__(env=env)
+        super().__init__(drone_model=drone_model, g=g)
         if self.DRONE_MODEL != DroneModel.CF2X and self.DRONE_MODEL != DroneModel.CF2P:
             print("[ERROR] in DSLPIDControl.__init__(), DSLPIDControl requires DroneModel.CF2X or DroneModel.CF2P")
             exit()
@@ -246,8 +250,10 @@ class DSLPIDControl(BaseControl):
     
     ################################################################################
 
-    def _one23DInterface(thrust):
-        """Utility function interfacing 1, 2, or 3D use cases.
+    def _one23DInterface(self,
+                         thrust
+                         ):
+        """Utility function interfacing 1, 2, or 3D thrust input use cases.
 
         Parameters
         ----------

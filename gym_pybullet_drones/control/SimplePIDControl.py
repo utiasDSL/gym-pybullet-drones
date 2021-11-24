@@ -16,19 +16,22 @@ class SimplePIDControl(BaseControl):
     ################################################################################
 
     def __init__(self,
-                 env: BaseAviary
+                 drone_model: DroneModel,
+                 g: float=9.8
                  ):
-        """Simple PID control (without yaw control) initialization.
+        """Common control classes __init__ method.
 
         Parameters
         ----------
-        env : BaseAviary
-            The simulation environment to control.
+        drone_model : DroneModel
+            The type of drone to control (detailed in an .urdf file in folder `assets`).
+        g : float, optional
+            The gravitational acceleration in m/s^2.
 
         """
-        super().__init__(env=env)
+        super().__init__(drone_model=drone_model, g=g)
         if self.DRONE_MODEL != DroneModel.HB:
-            print("[ERROR] in SimplePIDControl.__init__(), DSLPIDControl requires DroneModel.HB")
+            print("[ERROR] in SimplePIDControl.__init__(), SimplePIDControl requires DroneModel.HB")
             exit()
         self.P_COEFF_FOR = np.array([.1, .1, .2])
         self.I_COEFF_FOR = np.array([.0001, .0001, .0001])
@@ -37,12 +40,15 @@ class SimplePIDControl(BaseControl):
         self.I_COEFF_TOR = np.array([.0001, .0001, .0001])
         self.D_COEFF_TOR = np.array([.3, .3, .5])
         self.MAX_ROLL_PITCH = np.pi/6
-        self.MAX_THRUST = env.MAX_THRUST
-        self.MAX_XY_TORQUE = env.MAX_XY_TORQUE
-        self.MAX_Z_TORQUE = env.MAX_Z_TORQUE
+        self.L = self._getURDFParameter('arm')
+        self.THRUST2WEIGHT_RATIO = self._getURDFParameter('thrust2weight')
+        self.MAX_RPM = np.sqrt((self.THRUST2WEIGHT_RATIO*self.GRAVITY) / (4*self.KF))
+        self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
+        self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
+        self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
         self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
         self.INV_A = np.linalg.inv(self.A)
-        self.B_COEFF = np.array([1/self.KF, 1/(self.KF*env.L), 1/(self.KF*env.L), 1/self.KM])
+        self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
         self.reset()
 
     ################################################################################

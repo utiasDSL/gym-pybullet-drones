@@ -1,6 +1,7 @@
 # TODOs 
 TODOs.md
 examples/debug.py
+examples/test.py
 
 # NumPy saves and videos
 files/logs/*.npy

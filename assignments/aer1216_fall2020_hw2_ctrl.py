@@ -11,7 +11,7 @@ To run the simulation, type in a terminal:
 Notes
 -----
 To-dos
-    Search for work "Objective" this file (there are 4 occurrences)
+    Search for word "Objective" this file (there are 4 occurrences)
     Fill appropriate values in the 3 by 3 matrix self.matrix_u2rpm.
     Compute u_1 for the linear controller and the second nonlinear one
     Compute u_2

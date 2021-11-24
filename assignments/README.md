@@ -5,13 +5,11 @@ Quadcopter control exercises for University of Toronto's Fall 2020 course *AER12
 
 The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
 
-> Note: if your default `python` is 2.7, in the following, replace `pip` with `pip3` and `python` with `python3`
-
 ### Requirements
 In a terminal, type
 ```
-pip install --upgrade numpy Pillow matplotlib cycler 
-pip install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
+pip3 install --upgrade numpy Pillow matplotlib cycler 
+pip3 install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
 ```
 On *macOS*
 ```
@@ -25,17 +23,17 @@ $ sudo apt install ffmpeg
 ### Installation
 In a terminal, type
 ```
-$ wget https://github.com/JacopoPan/gym-pybullet-drones/archive/v0.5.2.zip
+$ wget https://github.com/utiasDSL/gym-pybullet-drones/archive/v0.5.2.zip
 $ unzip v0.5.2.zip
 $ cd gym-pybullet-drones-0.5.2/
-$ pip install -e .
+$ pip3 install -e .
 ```
 
 ### Use
 In a terminal, type
 ```
 $ cd assignments/
-$ python aer1216_fall2020_hw1_sim.py        # e.g., for hw1
+$ python3 aer1216_fall2020_hw1_sim.py        # e.g., for hw1
 ```
 
 ### Troubleshooting
@@ -59,7 +57,7 @@ Download a Python IDE
 ### Installation
 
 Download the code
-- Go to https://github.com/JacopoPan/gym-pybullet-drones/releases
+- Go to https://github.com/utiasDSL/gym-pybullet-drones/releases
 - Under "Releases" -> `v0.5.2`, click on "Assets" and download the source code (zip or tar.gz)
 
 <img src="../files/readme_images/assignment_img1.png" alt="source code" width="800">
