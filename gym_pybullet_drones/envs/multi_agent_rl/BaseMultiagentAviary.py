@@ -9,6 +9,7 @@ from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import Actio
 from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
+import pybullet as p
 
 class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
     """Base multi-agent environment class for reinforcement learning."""
