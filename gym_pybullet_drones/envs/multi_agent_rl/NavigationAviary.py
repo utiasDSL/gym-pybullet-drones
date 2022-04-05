@@ -21,6 +21,7 @@ class NavigationAviary(BaseMultiagentAviary):
         aggregate_phy_steps: int=1,
         gui=False,
         record=False, 
+        record_path=None,
         obs: ObservationType=ObservationType.KIN,
         act: ActionType=ActionType.RPM,
         goal_reset: int=2,):
@@ -35,14 +36,14 @@ class NavigationAviary(BaseMultiagentAviary):
                          freq=freq,
                          aggregate_phy_steps=aggregate_phy_steps,
                          gui=gui,
-                         record=record, 
+                         record=record, record_path=record_path,
                          obs=obs,
                          act=act)
         self.goal_reset = goal_reset
 
     def _observationSpace(self):
         joint_obs_space = super()._observationSpace()
-        goal_high   = np.array([np.inf]*3)
+        goal_high   = np.ones(3, dtype=np.float32)
         goal_low    = -goal_high
         def aug_obs_space(obs_space):
             assert isinstance(obs_space, Box)
@@ -99,15 +100,15 @@ class NavigationAviary(BaseMultiagentAviary):
 
     def _computeReward(self):
         distance = np.linalg.norm(self.pos - self.goals, axis=1)
-        distance_reduction = self.distance - distance # normalize
-        reward = {i: distance_reduction[i]
-            for i in range(self.NUM_DRONES)}
-        # reward = {i: -distance[i]**2 for i in range(self.NUM_DRONES)}
-        self.distance = distance
+        distance_reduction = (self.distance - distance)/self.distance_max # normalize
         success = self.success | (distance < 0.1)
-        reward += success & ~self.success
+
+        reward = distance_reduction + (success & ~self.success)
+        
+        self.distance = distance
         self.success = success
-        return reward - 0.01
+
+        return {i: reward[i] for i in range(self.NUM_DRONES)}
     
     def _computeDone(self):
         bool_val = True if self.step_counter/self.SIM_FREQ >= self.EPISODE_LEN_SEC else False

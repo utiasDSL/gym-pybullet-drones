@@ -27,6 +27,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                  aggregate_phy_steps: int=1,
                  gui=False,
                  record=False, 
+                 record_path=None,
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM
                  ):
@@ -95,7 +96,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                          freq=freq,
                          aggregate_phy_steps=aggregate_phy_steps,
                          gui=gui,
-                         record=record, 
+                         record=record, record_path=record_path,
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
@@ -157,8 +158,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
             size = 1
         else:
-            print("[ERROR] in BaseMultiagentAviary._actionSpace()")
-            exit()
+            raise ValueError(f"Action type {self.ACT_TYPE} not supported.")
         return spaces.Dict({i: spaces.Box(low=-1*np.ones(size),
                                           high=np.ones(size),
                                           dtype=np.float32
@@ -289,9 +289,10 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             ############################################################
             #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
             #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ       P0            P1            P2            P3
-            obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
-            obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])          
-            return spaces.Dict({i: spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+            dtype = np.float32
+            obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1], dtype)
+            obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1], dtype)          
+            return spaces.Dict({i: spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=dtype)
                 for i in range(self.NUM_DRONES)})
             ############################################################
             #### OBS SPACE OF SIZE 12

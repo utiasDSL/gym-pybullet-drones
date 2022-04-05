@@ -44,6 +44,8 @@ class ImageType(Enum):
 
 ################################################################################
 
+RECORD_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/"
+
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
 
@@ -62,11 +64,13 @@ class BaseAviary(gym.Env):
                  aggregate_phy_steps: int=1,
                  gui=False,
                  record=False,
+                 record_path=None,
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
                  dynamics_attributes=False,
-                 camera_config={}
+                 camera_config={},
+                 verbose=False,
                  ):
         """Initialization of a generic aviary environment.
 
@@ -116,6 +120,7 @@ class BaseAviary(gym.Env):
         self.DRONE_MODEL = drone_model
         self.GUI = gui
         self.RECORD = record
+        self.RECORD_PATH = record_path or RECORD_PATH
         self.PHYSICS = physics
         self.OBSTACLES = obstacles
         self.USER_DEBUG = user_debug_gui
@@ -138,8 +143,9 @@ class BaseAviary(gym.Env):
         self.DW_COEFF_1, \
         self.DW_COEFF_2, \
         self.DW_COEFF_3 = self._parseURDFParameters()
-        print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
-            self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3))
+        if verbose:
+            print("[INFO] BaseAviary.__init__() loaded parameters from the drone's .urdf:\n[INFO] m {:f}, L {:f},\n[INFO] ixx {:f}, iyy {:f}, izz {:f},\n[INFO] kf {:f}, km {:f},\n[INFO] t2w {:f}, max_speed_kmh {:f},\n[INFO] gnd_eff_coeff {:f}, prop_radius {:f},\n[INFO] drag_xy_coeff {:f}, drag_z_coeff {:f},\n[INFO] dw_coeff_1 {:f}, dw_coeff_2 {:f}, dw_coeff_3 {:f}".format(
+                self.M, self.L, self.J[0,0], self.J[1,1], self.J[2,2], self.KF, self.KM, self.THRUST2WEIGHT_RATIO, self.MAX_SPEED_KMH, self.GND_EFF_COEFF, self.PROP_RADIUS, self.DRAG_COEFF[0], self.DRAG_COEFF[2], self.DW_COEFF_1, self.DW_COEFF_2, self.DW_COEFF_3))
         #### Compute constants #####################################
         self.GRAVITY = self.G*self.M
         self.HOVER_RPM = np.sqrt(self.GRAVITY / (4*self.KF))
@@ -164,7 +170,7 @@ class BaseAviary(gym.Env):
                 print("[ERROR] in BaseAviary.__init__(), aggregate_phy_steps incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
             if self.RECORD:
-                self.ONBOARD_IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/onboard-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"
+                self.ONBOARD_IMG_PATH = os.path.join(self.RECORD_PATH, "onboard-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
                 os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         #### Create attributes for dynamics control inputs #########
         self.DYNAMICS_ATTR = dynamics_attributes
@@ -204,8 +210,8 @@ class BaseAviary(gym.Env):
             # if platform == "linux": p.setAdditionalSearchPath(pybullet_data.getDataPath()); plugin = p.loadPlugin(egl.get_filename(), "_eglRendererPlugin"); print("plugin=", plugin)
             if self.RECORD:
                 #### Set the camera parameters to save frames in DIRECT mode
-                self.VID_WIDTH=int(640)
-                self.VID_HEIGHT=int(480)
+                self.VID_WIDTH=int(800)
+                self.VID_HEIGHT=int(600)
                 self.FRAME_PER_SEC = 24
                 self.CAPTURE_FREQ = int(self.SIM_FREQ/self.FRAME_PER_SEC)
                 self.CAM_VIEW = p.computeViewMatrixFromYawPitchRoll(distance=3,
@@ -308,7 +314,8 @@ class BaseAviary(gym.Env):
                                                      flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
                                                      physicsClientId=self.CLIENT
                                                      )
-            (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA') \
+                .save(os.path.join(self.IMG_PATH, "frame_"+str(self.FRAME_NUM)+".png"))
             #### Save the depth or segmentation view instead #######
             # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8')
             # (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
@@ -530,8 +537,9 @@ class BaseAviary(gym.Env):
                                                 )
         if self.RECORD and not self.GUI:
             self.FRAME_NUM = 0
-            self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"
-            os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
+            time_str = datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+            self.IMG_PATH = os.path.join(self.RECORD_PATH, "video-"+time_str)
+            os.makedirs(self.IMG_PATH, exist_ok=True)
     
     ################################################################################
 
