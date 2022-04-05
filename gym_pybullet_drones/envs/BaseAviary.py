@@ -65,7 +65,8 @@ class BaseAviary(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 dynamics_attributes=False
+                 dynamics_attributes=False,
+                 camera_config={}
                  ):
         """Initialization of a generic aviary environment.
 
@@ -153,7 +154,7 @@ class BaseAviary(gym.Env):
         #### Create attributes for vision tasks ####################
         self.VISION_ATTR = vision_attributes
         if self.VISION_ATTR:
-            self.IMG_RES = np.array([64, 48])
+            self.IMG_RES = camera_config.get("res", (64, 48))
             self.IMG_FRAME_PER_SEC = 24
             self.IMG_CAPTURE_FREQ = int(self.SIM_FREQ/self.IMG_FRAME_PER_SEC)
             self.rgb = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4)))
@@ -215,7 +216,7 @@ class BaseAviary(gym.Env):
                                                                     upAxisIndex=2,
                                                                     physicsClientId=self.CLIENT
                                                                     )
-                self.CAM_PRO = p.computeProjectionMatrixFOV(fov=60.0,
+                self.CAM_PRO = p.computeProjectionMatrixFOV(fov=60,
                                                             aspect=self.VID_WIDTH/self.VID_HEIGHT,
                                                             nearVal=0.1,
                                                             farVal=1000.0
@@ -593,7 +594,7 @@ class BaseAviary(gym.Env):
                                              cameraUpVector=[0, 0, 1],
                                              physicsClientId=self.CLIENT
                                              )
-        DRONE_CAM_PRO =  p.computeProjectionMatrixFOV(fov=60.0,
+        DRONE_CAM_PRO =  p.computeProjectionMatrixFOV(fov=self.FOV,
                                                       aspect=1.0,
                                                       nearVal=self.L,
                                                       farVal=1000.0
