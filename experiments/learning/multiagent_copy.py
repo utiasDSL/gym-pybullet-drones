@@ -18,7 +18,7 @@ from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary
 from gym_pybullet_drones.envs.multi_agent_rl.NavigationAviary import NavigationAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 
-AGGR_PHY_STEPS = 2
+AGGR_PHY_STEPS = 5
 ENV_CLS = {
     "flock": FlockAviary,
     "leaderfollower": LeaderFollowerAviary,
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     parser.add_argument('--num_drones', default=2, type=int, help='Number of drones (default: 2)', metavar='')
     parser.add_argument('--env', default='leaderfollower',  type=str, choices=list(ENV_CLS.keys()), help='Task (default: leaderfollower)', metavar='')
     parser.add_argument('--obs', default='kin',             type=ObservationType, help='Observation space (default: kin)', metavar='')
-    parser.add_argument('--act', default='one_d_rpm',       type=ActionType, help='Action space (default: one_d_rpm)', metavar='')
+    parser.add_argument('--act', default='vel',       type=ActionType, help='Action space (default: one_d_rpm)', metavar='')
     parser.add_argument('--algo', default='ppo',            type=str, choices=list(ALGOTIRHM_CLASS.keys()), help='MARL approach (default: cc)', metavar='')
     parser.add_argument('--workers', default=0,             type=int, help='Number of RLlib workers (default: 0)', metavar='')        
     ARGS = parser.parse_args()
@@ -85,10 +85,10 @@ if __name__ == "__main__":
     if ARGS.algo == "ppo":
         config.update({
             "lambda": 0.95,
-            "kl_coeff": tune.grid_search([0.2, 0.6, 1.0]), 
-            "train_batch_size": 120000,
-            "num_sgd_iter": 10,
-            "sgd_minibatch_size": 8192,
+            "kl_coeff": 0.5, 
+            "train_batch_size": tune.grid_search([120000, 8192]),
+            "num_sgd_iter": tune.grid_search([5,  15]),
+            "sgd_minibatch_size": tune.grid_search([8192, 1024]),
             "entropy_coeff": 0.01,
             "clip_param": 0.2,
             "grad_clip": 0.5,

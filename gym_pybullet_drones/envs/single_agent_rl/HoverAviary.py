@@ -62,7 +62,22 @@ class HoverAviary(BaseSingleAgentAviary):
                          )
 
     ################################################################################
-    
+    def reset(self):
+        self.goal = np.random.random(3)
+        self.success = False
+        self.distance = self.distance_max = np.linalg.norm(self.goal - self.INIT_XYZS[0])
+        return super().reset()
+
+    def _computeObs(self):
+        obs = np.concatenate([super()._computeObs(), (self.goal-self.pos[0]) / np.array([15, 15, 5])])
+        return obs
+
+    def _observationSpace(self):
+        obs_space = super()._observationSpace()
+        low = np.concatenate([obs_space.low, [0, 0, 0]])
+        high = np.concatenate([obs_space.high, [1, 1, 1]])
+        return spaces.Box(low, high, dtype=obs_space.dtype)
+
     def _computeReward(self):
         """Computes the current reward value.
 
@@ -72,8 +87,14 @@ class HoverAviary(BaseSingleAgentAviary):
             The reward.
 
         """
-        state = self._getDroneStateVector(0)
-        return -1 * np.linalg.norm(np.array([0, 0, 1])-state[0:3])**2
+        pos = self.pos[0]
+        distance = np.linalg.norm(self.goal-pos)
+        reward = (self.distance-distance) / self.distance_max
+        self.distance = distance
+        success = distance < 0.1
+        reward += success and not self.success
+        self.success = success
+        return reward
 
     ################################################################################
     

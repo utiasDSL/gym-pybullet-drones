@@ -24,7 +24,6 @@ class NavigationAviary(BaseMultiagentAviary):
         record_path=None,
         obs: ObservationType=ObservationType.KIN,
         act: ActionType=ActionType.RPM,
-        goal_reset: int=2,
         episode_len_sec=5,
         ):
 
@@ -42,75 +41,23 @@ class NavigationAviary(BaseMultiagentAviary):
                          obs=obs,
                          act=act,
                          episode_len_sec=episode_len_sec)
-        self.goal_reset = goal_reset
 
     def _observationSpace(self):
-        joint_obs_space = super()._observationSpace()
-        goal_high   = np.ones(3, dtype=np.float32)
-        goal_low    = -goal_high
-        def aug_obs_space(obs_space):
-            assert isinstance(obs_space, Box)
-            low = np.concatenate([obs_space.low, goal_low])
-            high = np.concatenate([obs_space.high, goal_high])
-            return Box(low, high, dtype=obs_space.dtype)
-        joint_obs_space = Dict({
-            i: aug_obs_space(joint_obs_space[i]) for i in range(self.NUM_DRONES)})
-        return joint_obs_space
-
-    def _setGoals(self, from_pos):
-        self.goals = from_pos + 0.4 * uniform(-1, 1, (self.NUM_DRONES, 3)) 
-        self.goals = np.clip(self.goals, MIN_XYZ, MAX_XYZ)
-        self.success = np.zeros(self.NUM_DRONES, bool)
-        self.distance_max = self.distance = np.linalg.norm(from_pos - self.goals, axis=1)      
+        if self.OBS_TYPE == ObservationType.RGBD:
+            img_shape = (self.IMG_RES[1], self.IMG_RES[0], 4)
+            return Dict({i: Box(low=0, high=255, shape=img_shape, dtype=np.uint8) for i in range(self.NUM_DRONES)})
+        else: raise ValueError     
 
     def reset(self):
-        self._setGoals(self.INIT_XYZS)
-        self.goal_reached = 0
         obs = super().reset()
-
-        if self.debug: 
-            for i in range(self.NUM_DRONES):
-                vshape_id = p.createVisualShape(p.GEOM_SPHERE, radius=0.03, rgbaColor=[1., 0., 0., 1.])
-                p.createMultiBody(baseMass=0, baseVisualShapeIndex=vshape_id, basePosition=self.goals[i]) 
-            p.removeAllUserDebugItems()
-            self.line_ids = [p.addUserDebugLine(pos, goal, [1., 0., 0.], lineWidth=2.) for pos, goal in zip(self.pos, self.goals)]
-
         return obs
     
     def step(self, actions):
         results = super().step(actions)
-        if self.debug:
-            for pos, goal, line_id in zip(self.pos, self.goals, self.line_ids):
-                p.addUserDebugLine(pos, goal, [1., 0., 0.], lineWidth=2., replaceItemUniqueId=line_id)
-        if self.success.all() and self.goal_reached < self.goal_reset:
-            self.goal_reached += 1
-            self._setGoals(self.goals)
-            for i in range(self.NUM_DRONES):
-                vshape_id = p.createVisualShape(p.GEOM_SPHERE, radius=0.03, rgbaColor=[1., 0., 0., 1.])
-                p.createMultiBody(baseMass=0, baseVisualShapeIndex=vshape_id, basePosition=self.goals[i]) 
         return results
-        
-    def _computeObs(self):
-        if self.OBS_TYPE == ObservationType.KIN:
-            obs = {
-                i: self._clipAndNormalizeState(np.concatenate([self._getDroneStateVector(i), self.goals[i]-self.pos[i]])) 
-                for i in range(self.NUM_DRONES)
-            }
-        else: 
-            raise ValueError
-        return obs
 
     def _computeReward(self):
-        distance = np.linalg.norm(self.pos - self.goals, axis=1)
-        distance_reduction = (self.distance - distance)/self.distance_max # normalize
-        success = self.success | (distance < 0.1)
-
-        reward = distance_reduction + (success & ~self.success)
-        
-        self.distance = distance
-        self.success = success
-
-        return {i: reward[i] for i in range(self.NUM_DRONES)}
+        return {i: 0 for i in range(self.NUM_DRONES)}
     
     def _computeInfo(self):
         return {i: {"goal_reached":self.goal_reached} for i in range(self.NUM_DRONES)}

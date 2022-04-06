@@ -29,7 +29,8 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                  record=False, 
                  record_path=None,
                  obs: ObservationType=ObservationType.KIN,
-                 act: ActionType=ActionType.RPM
+                 act: ActionType=ActionType.RPM,
+                 episode_len_sec=5,
                  ):
         """Initialization of a generic multi-agent RL environment.
 
@@ -77,7 +78,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
-        self.EPISODE_LEN_SEC = 5
+        self.EPISODE_LEN_SEC = episode_len_sec
         #### Create integrated controllers #########################
         if act in [ActionType.PID, ActionType.VEL, ActionType.ONE_D_PID]:
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -361,3 +362,9 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
 
         """
         raise NotImplementedError
+    
+    def _computeDone(self):
+        bool_val = True if self.step_counter/self.SIM_FREQ >= self.EPISODE_LEN_SEC else False
+        done = {i: bool_val for i in range(self.NUM_DRONES)}
+        done["__all__"] = True if True in done.values() else False
+        return done

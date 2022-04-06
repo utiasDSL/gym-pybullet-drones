@@ -28,7 +28,8 @@ class ObservationType(Enum):
     """Observation type enumeration class."""
     KIN = "kin"     # Kinematic information (pose, linear and angular velocities)
     RGB = "rgb"     # RGB camera capture in each drone's POV
-
+    RGBD = "rgbd"
+    
 ################################################################################
 
 class BaseSingleAgentAviary(BaseAviary):
@@ -83,7 +84,7 @@ class BaseSingleAgentAviary(BaseAviary):
         dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
-        self.EPISODE_LEN_SEC = 5
+        self.EPISODE_LEN_SEC = 10
         #### Create integrated controllers #########################
         if act in [ActionType.PID, ActionType.VEL, ActionType.TUN, ActionType.ONE_D_PID]:
             os.environ['KMP_DUPLICATE_LIB_OK']='True'

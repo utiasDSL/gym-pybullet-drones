@@ -161,6 +161,7 @@ class BaseAviary(gym.Env):
         self.VISION_ATTR = vision_attributes
         if self.VISION_ATTR:
             self.IMG_RES = camera_config.get("res", (64, 48))
+            self.FOV = camera_config.get("fov", 90)
             self.IMG_FRAME_PER_SEC = 24
             self.IMG_CAPTURE_FREQ = int(self.SIM_FREQ/self.IMG_FRAME_PER_SEC)
             self.rgb = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4)))
