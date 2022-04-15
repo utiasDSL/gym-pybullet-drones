@@ -70,7 +70,7 @@ Simulation **speed-up with respect to the wall-clock** when using
 
 
 ## Requirements and Installation
-The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested on *macOS 11*, *Ubuntu 18.04*
+The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested with *Python 3.8* on *macOS 12*, *Ubuntu 20.04*
 
 
 
@@ -78,10 +78,7 @@ The repo was written using *Python 3.7* with [`conda`](https://github.com/Jacopo
 ### On *macOS* and *Ubuntu*
 Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
-```
-pip3 install --upgrade numpy Pillow matplotlib cycler 
-pip3 install --upgrade gym pybullet stable_baselines3 'ray[rllib]'
-```
+
 Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
 ```
 $ brew install ffmpeg
@@ -93,6 +90,9 @@ $ sudo apt install ffmpeg
 The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
 and can be installed with `pip install --editable`
 ```
+$ conda create -n drones python=3.8
+$ conda activate drones
+$ pip install --upgrade pip
 $ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
 $ pip3 install -e .
