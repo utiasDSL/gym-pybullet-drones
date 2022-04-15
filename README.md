@@ -92,7 +92,7 @@ and can be installed with `pip install --editable`
 ```
 $ conda create -n drones python=3.8
 $ conda activate drones
-$ pip install --upgrade pip
+$ pip3 install --upgrade pip
 $ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
 $ cd gym-pybullet-drones/
 $ pip3 install -e .
