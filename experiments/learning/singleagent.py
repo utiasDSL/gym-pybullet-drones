@@ -51,9 +51,9 @@ from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGa
 from gym_pybullet_drones.envs.single_agent_rl.TuneAviary import TuneAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 
-AGGREGATE_PHY_STEPS = 5
+AGGREGATE_PHY_STEPS = 1
 
-EPISODE_REWARD_THRESHOLD = 1.5 # Upperbound: rewards are always negative, but non-zero
+EPISODE_REWARD_THRESHOLD = 2 # Upperbound: rewards are always negative, but non-zero
 """float: Reward threshold to halt the script."""
 
 if __name__ == "__main__":
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     ARGS = parser.parse_args()
 
     #### Save directory ########################################
-    n_steps = 8192
+    n_steps = 2048
     batch_size = n_steps//32
     filename = os.path.dirname(os.path.abspath(__file__))\
         +'/results/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.obs.value+'-'+ARGS.act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")\
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     
     #### On-policy algorithms ##################################
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
-                           net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]
+                           net_arch=[256, 256, dict(vf=[256, 128], pi=[256, 128])]
                            ) # or None
     if ARGS.algo == 'a2c':
         model = A2C(a2cppoMlpPolicy,
@@ -253,7 +253,7 @@ if __name__ == "__main__":
                                  deterministic=True,
                                  render=False
                                  )
-    model.learn(total_timesteps=1000000, #int(1e12),
+    model.learn(total_timesteps=10000000, #int(1e12),
                 callback=eval_callback,
                 log_interval=100,
                 )

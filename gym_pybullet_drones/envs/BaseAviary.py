@@ -44,6 +44,25 @@ class ImageType(Enum):
 
 ################################################################################
 
+class ActionType(Enum):
+    """Action type enumeration class."""
+    RPM = "rpm"                 # RPMS
+    DYN = "dyn"                 # Desired thrust and torques
+    PID = "pid"                 # PID control
+    VEL = "vel"                 # Velocity input (using PID control)
+    TUN = "tun"                 # Tune the coefficients of a PID controller
+    ONE_D_RPM = "one_d_rpm"     # 1D (identical input to all motors) with RPMs
+    ONE_D_DYN = "one_d_dyn"     # 1D (identical input to all motors) with desired thrust and torques
+    ONE_D_PID = "one_d_pid"     # 1D (identical input to all motors) with PID control
+
+################################################################################
+
+class ObservationType(Enum):
+    """Observation type enumeration class."""
+    KIN = "kin"     # Kinematic information (pose, linear and angular velocities)
+    RGB = "rgb"     # RGB camera capture in each drone's POV
+    RGBD = "rgbd"
+
 RECORD_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/"
 
 class BaseAviary(gym.Env):
@@ -64,7 +83,6 @@ class BaseAviary(gym.Env):
                  aggregate_phy_steps: int=1,
                  gui=False,
                  record=False,
-                 record_path=None,
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
@@ -120,7 +138,7 @@ class BaseAviary(gym.Env):
         self.DRONE_MODEL = drone_model
         self.GUI = gui
         self.RECORD = record
-        self.RECORD_PATH = record_path or RECORD_PATH
+        self.RECORD_PATH = RECORD_PATH
         self.PHYSICS = physics
         self.OBSTACLES = obstacles
         self.USER_DEBUG = user_debug_gui
@@ -277,9 +295,7 @@ class BaseAviary(gym.Env):
     
     ################################################################################
 
-    def step(self,
-             action
-             ):
+    def step(self, action):
         """Advances the environment by one simulation step.
 
         Parameters

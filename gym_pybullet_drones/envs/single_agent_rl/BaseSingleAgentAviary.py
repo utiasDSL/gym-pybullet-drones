@@ -6,29 +6,10 @@ from gym import spaces
 import pybullet as p
 import pybullet_data
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, ImageType, BaseAviary
+from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, ImageType, ActionType, ObservationType, BaseAviary
 from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
-
-class ActionType(Enum):
-    """Action type enumeration class."""
-    RPM = "rpm"                 # RPMS
-    DYN = "dyn"                 # Desired thrust and torques
-    PID = "pid"                 # PID control
-    VEL = "vel"                 # Velocity input (using PID control)
-    TUN = "tun"                 # Tune the coefficients of a PID controller
-    ONE_D_RPM = "one_d_rpm"     # 1D (identical input to all motors) with RPMs
-    ONE_D_DYN = "one_d_dyn"     # 1D (identical input to all motors) with desired thrust and torques
-    ONE_D_PID = "one_d_pid"     # 1D (identical input to all motors) with PID control
-
-################################################################################
-
-class ObservationType(Enum):
-    """Observation type enumeration class."""
-    KIN = "kin"     # Kinematic information (pose, linear and angular velocities)
-    RGB = "rgb"     # RGB camera capture in each drone's POV
-    RGBD = "rgbd"
     
 ################################################################################
 
@@ -84,7 +65,7 @@ class BaseSingleAgentAviary(BaseAviary):
         dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
-        self.EPISODE_LEN_SEC = 10
+        self.EPISODE_LEN_SEC = 5
         #### Create integrated controllers #########################
         if act in [ActionType.PID, ActionType.VEL, ActionType.TUN, ActionType.ONE_D_PID]:
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
@@ -120,7 +101,7 @@ class BaseSingleAgentAviary(BaseAviary):
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
-                         dynamics_attributes=dynamics_attributes
+                         dynamics_attributes=dynamics_attributes,
                          )
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:

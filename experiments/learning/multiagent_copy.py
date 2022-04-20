@@ -86,10 +86,10 @@ if __name__ == "__main__":
         config.update({
             "lambda": 0.95,
             "kl_coeff": 0.5, 
-            "train_batch_size": tune.grid_search([120000, 8192]),
-            "num_sgd_iter": tune.grid_search([5,  15]),
-            "sgd_minibatch_size": tune.grid_search([8192, 1024]),
-            "entropy_coeff": 0.01,
+            "train_batch_size": tune.grid_search([65536, 4096]) ,
+            "num_sgd_iter": tune.grid_search([5, 15]),
+            "sgd_minibatch_size": tune.grid_search([256, 4096]),
+            "entropy_coeff": tune.grid_search([0, 0.01]),
             "clip_param": 0.2,
             "grad_clip": 0.5,
             "framework": "torch",})

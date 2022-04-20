@@ -26,8 +26,6 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                  freq: int=240,
                  aggregate_phy_steps: int=1,
                  gui=False,
-                 record=False, 
-                 record_path=None,
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM,
                  episode_len_sec=5,
@@ -97,7 +95,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                          freq=freq,
                          aggregate_phy_steps=aggregate_phy_steps,
                          gui=gui,
-                         record=record, record_path=record_path,
+                         record=False,
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
@@ -107,7 +105,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
 
-    ################################################################################
+        self.cameras = [Camera()]
 
     def _addObstacles(self):
         """Add obstacles to the environment.
@@ -116,29 +114,27 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         Overrides BaseAviary's method.
 
         """
-        if self.OBS_TYPE == ObservationType.RGB:
-            p.loadURDF("block.urdf",
-                       [1, 0, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-            p.loadURDF("cube_small.urdf",
-                       [0, 1, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-            p.loadURDF("duck_vhacd.urdf",
-                       [-1, 0, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-            p.loadURDF("teddy_vhacd.urdf",
-                       [0, -1, .1],
-                       p.getQuaternionFromEuler([0, 0, 0]),
-                       physicsClientId=self.CLIENT
-                       )
-        else:
-            pass
+        p.loadURDF("block.urdf",
+                    [1, 0, .1],
+                    p.getQuaternionFromEuler([0, 0, 0]),
+                    physicsClientId=self.CLIENT
+                    )
+        p.loadURDF("cube_small.urdf",
+                    [0, 1, .1],
+                    p.getQuaternionFromEuler([0, 0, 0]),
+                    physicsClientId=self.CLIENT
+                    )
+        p.loadURDF("duck_vhacd.urdf",
+                    [-1, 0, .1],
+                    p.getQuaternionFromEuler([0, 0, 0]),
+                    physicsClientId=self.CLIENT
+                    )
+        p.loadURDF("teddy_vhacd.urdf",
+                    [0, -1, .1],
+                    p.getQuaternionFromEuler([0, 0, 0]),
+                    physicsClientId=self.CLIENT
+                    )
+        
 
     ################################################################################
 
@@ -167,9 +163,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
 
     ################################################################################
 
-    def _preprocessAction(self,
-                          action
-                          ):
+    def _preprocessAction(self, action):
         """Pre-processes the action passed to `.step()` into motors' RPMs.
 
         Parameter `action` is processed differenly for each of the different
@@ -184,9 +178,8 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
 
         Parameters
         ----------
-        action : dict[str, ndarray]
+        action : dict[int, ndarray]
             The input action for each drone, to be translated into RPMs.
-
         Returns
         -------
         ndarray
@@ -265,8 +258,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                                                         )
                 rpm[int(k),:] = rpm
             else:
-                print("[ERROR] in BaseMultiagentAviary._preprocessAction()")
-                exit()
+                raise NotImplementedError(self.ACT_TYPE)
         return rpm
 
     ################################################################################
@@ -303,7 +295,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             #                                   ) for i in range(self.NUM_DRONES)})
             ############################################################
         else:
-            print("[ERROR] in BaseMultiagentAviary._observationSpace()")
+            raise NotImplementedError(self.OBS_TYPE)
     
     ################################################################################
 
@@ -320,16 +312,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         if self.OBS_TYPE == ObservationType.RGB:
             if self.step_counter%self.IMG_CAPTURE_FREQ == 0: 
                 for i in range(self.NUM_DRONES):
-                    self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i,
-                                                                                 segmentation=False
-                                                                                 )
-                    #### Printing observation to PNG frames example ############
-                    if self.RECORD:
-                        self._exportImage(img_type=ImageType.RGB,
-                                          img_input=self.rgb[i],
-                                          path=self.ONBOARD_IMG_PATH+"drone_"+str(i),
-                                          frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ)
-                                          )
+                    self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i, segmentation=False)
             return {i: self.rgb[i] for i in range(self.NUM_DRONES)}
         elif self.OBS_TYPE == ObservationType.KIN: 
             ############################################################
@@ -344,16 +327,12 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             return {i: obs_12[i, :] for i in range(self.NUM_DRONES)}
             ############################################################
         else:
-            print("[ERROR] in BaseMultiagentAviary._computeObs()")
+            raise NotImplementedError(self.OBS_TYPE)
 
     ################################################################################
 
-    def _clipAndNormalizeState(self,
-                               state
-                               ):
+    def _clipAndNormalizeState(self, state):
         """Normalizes a drone's state to the [-1,1] range.
-
-        Must be implemented in a subclass.
 
         Parameters
         ----------
@@ -361,10 +340,92 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             Array containing the non-normalized state of a single drone.
 
         """
-        raise NotImplementedError
+        MAX_LIN_VEL_XY = 3 
+        MAX_LIN_VEL_Z = 1
+
+        MAX_XY = MAX_LIN_VEL_XY*self.EPISODE_LEN_SEC
+        MAX_Z = MAX_LIN_VEL_Z*self.EPISODE_LEN_SEC
+
+        MAX_PITCH_ROLL = np.pi # Full range
+
+        clipped_pos_xy = np.clip(state[0:2], -MAX_XY, MAX_XY)
+        clipped_pos_z = np.clip(state[2], 0, MAX_Z)
+        clipped_rp = np.clip(state[7:9], -MAX_PITCH_ROLL, MAX_PITCH_ROLL)
+        clipped_vel_xy = np.clip(state[10:12], -MAX_LIN_VEL_XY, MAX_LIN_VEL_XY)
+        clipped_vel_z = np.clip(state[12], -MAX_LIN_VEL_Z, MAX_LIN_VEL_Z)
+
+        normalized_pos_xy = clipped_pos_xy / MAX_XY
+        normalized_pos_z = clipped_pos_z / MAX_Z
+        normalized_rp = clipped_rp / MAX_PITCH_ROLL
+        normalized_y = state[9] / np.pi # No reason to clip
+        normalized_vel_xy = clipped_vel_xy / MAX_LIN_VEL_XY
+        normalized_vel_z = clipped_vel_z / MAX_LIN_VEL_XY
+        normalized_ang_vel = state[13:16]/np.linalg.norm(state[13:16]) if np.linalg.norm(state[13:16]) != 0 else state[13:16]
+
+        norm_and_clipped = np.hstack([normalized_pos_xy,
+                                      normalized_pos_z,
+                                      state[3:7],
+                                      normalized_rp,
+                                      normalized_y,
+                                      normalized_vel_xy,
+                                      normalized_vel_z,
+                                      normalized_ang_vel,
+                                      state[16:20]
+                                      ]).reshape(20,)
+
+        return norm_and_clipped
     
+    def _computeReward(self):
+        return {i:0 for i in range(self.NUM_DRONES)}
+
     def _computeDone(self):
         bool_val = True if self.step_counter/self.SIM_FREQ >= self.EPISODE_LEN_SEC else False
         done = {i: bool_val for i in range(self.NUM_DRONES)}
         done["__all__"] = True if True in done.values() else False
         return done
+    
+    def _computeInfo(self):
+        return {i:{} for i in range(self.NUM_DRONES)}
+
+    def add_camera(self, camera):
+        self.cameras.append(camera)
+
+    def render(self, *args, **kwargs):
+        images = {cam.name: cam._get_image(self.CLIENT) for cam in self.cameras}
+        return images
+    
+class Camera:
+    CAMERA_COUNT = 0
+    def __init__(self, 
+        width=640, height=480, fov=60,
+        eye_pos=[-1, -1, 1], target_pos=[0, 0, 0], up=[0, 0, 1], name=None):
+        if name is None:
+            name = f"cam_{Camera.CAMERA_COUNT}"
+            Camera.CAMERA_COUNT += 1
+        self.name = name
+        self.width = width
+        self.height = height
+        self.fov = fov
+        self.view_matrix = p.computeViewMatrix(
+            cameraEyePosition=eye_pos,
+            cameraTargetPosition=target_pos,
+            cameraUpVector=up
+        )
+        self.projection_matrix = p.computeProjectionMatrixFOV(
+            fov=fov,
+            aspect=width/height,
+            nearVal=0.1,
+            farVal=1000.
+        )
+
+    def _get_image(self, client):
+        w, h, rgb, dep, seg = p.getCameraImage(
+            width=self.width, height=self.height,
+            shadow=1,
+            viewMatrix=self.view_matrix,
+            projectionMatrix=self.projection_matrix,
+            renderer=p.ER_TINY_RENDERER,
+            flags=p.ER_NO_SEGMENTATION_MASK,
+            physicsClientId=client
+        )
+        return rgb

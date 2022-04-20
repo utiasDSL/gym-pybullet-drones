@@ -91,7 +91,7 @@ class HoverAviary(BaseSingleAgentAviary):
         distance = np.linalg.norm(self.goal-pos)
         reward = (self.distance-distance) / self.distance_max
         self.distance = distance
-        success = distance < 0.1
+        success = self.success or distance < 0.1
         reward += success and not self.success
         self.success = success
         return reward
