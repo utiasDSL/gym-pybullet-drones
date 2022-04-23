@@ -86,6 +86,7 @@ $ brew install ffmpeg
 On *Ubuntu*
 ```bash
 $ sudo apt install ffmpeg
+```
 
 *macOS* with Apple Silicon (like the M1 Air) can only install grpc with a minimum Python version of 3.9 and these two environment variables set:
 ```bash
@@ -93,11 +94,10 @@ $ export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
 $ export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
 ```
 
-```
 The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
 and can be installed with `pip install --editable`
 ```
-$ conda create -n drones python=3.9
+$ conda create -n drones python=3.8 # or 3.9 on Apple Silicon, see the comment on grpc above
 $ conda activate drones
 $ pip3 install --upgrade pip
 $ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
