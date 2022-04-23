@@ -80,17 +80,24 @@ Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](http
 [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
 
 Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
-```
+```bash
 $ brew install ffmpeg
 ```
 On *Ubuntu*
-```
+```bash
 $ sudo apt install ffmpeg
+
+*macOS* with Apple Silicon (like the M1 Air) can only install grpc with a minimum Python version of 3.9 and these two environment variables set:
+```bash
+$ export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+$ export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+```
+
 ```
 The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
 and can be installed with `pip install --editable`
 ```
-$ conda create -n drones python=3.8
+$ conda create -n drones python=3.9
 $ conda activate drones
 $ pip3 install --upgrade pip
 $ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
