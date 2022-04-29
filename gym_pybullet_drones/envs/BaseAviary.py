@@ -54,6 +54,7 @@ class ActionType(Enum):
     ONE_D_RPM = "one_d_rpm"     # 1D (identical input to all motors) with RPMs
     ONE_D_DYN = "one_d_dyn"     # 1D (identical input to all motors) with desired thrust and torques
     ONE_D_PID = "one_d_pid"     # 1D (identical input to all motors) with PID control
+    
 
 ################################################################################
 
@@ -177,11 +178,11 @@ class BaseAviary(gym.Env):
         self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt((15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST)
         #### Create attributes for vision tasks ####################
         self.VISION_ATTR = vision_attributes
+        self.IMG_RES = camera_config.get("res", (64, 48))
+        self.FOV = camera_config.get("fov", 90)
+        self.IMG_FRAME_PER_SEC = 24
+        self.IMG_CAPTURE_FREQ = int(self.SIM_FREQ/self.IMG_FRAME_PER_SEC)
         if self.VISION_ATTR:
-            self.IMG_RES = camera_config.get("res", (64, 48))
-            self.FOV = camera_config.get("fov", 90)
-            self.IMG_FRAME_PER_SEC = 24
-            self.IMG_CAPTURE_FREQ = int(self.SIM_FREQ/self.IMG_FRAME_PER_SEC)
             self.rgb = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4)))
             self.dep = np.ones(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
             self.seg = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
