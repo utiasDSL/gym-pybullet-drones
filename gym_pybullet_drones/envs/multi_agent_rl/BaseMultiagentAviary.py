@@ -75,7 +75,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         vision_attributes = True if obs == ObservationType.RGB else False
         dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
         self.OBS_TYPE = obs
-        self.ACT_TYPE = act
+        self.ACT_TYPE = ActionType(act)
         self.EPISODE_LEN_SEC = episode_len_sec
         #### Create integrated controllers #########################
         if act in [ActionType.PID, ActionType.VEL, ActionType.ONE_D_PID]:
@@ -104,7 +104,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
-
+        self.MAX_STEPS = self.EPISODE_LEN_SEC * self.SIM_FREQ
         self.cameras = [Camera()]
 
     def _addObstacles(self):
@@ -379,7 +379,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         return {i:0 for i in range(self.NUM_DRONES)}
 
     def _computeDone(self):
-        bool_val = True if self.step_counter/self.SIM_FREQ >= self.EPISODE_LEN_SEC else False
+        bool_val = True if self.step_counter > self.MAX_STEPS else False
         done = {i: bool_val for i in range(self.NUM_DRONES)}
         done["__all__"] = True if True in done.values() else False
         return done
@@ -391,14 +391,14 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         self.cameras.append(camera)
 
     def render(self, *args, **kwargs):
-        images = {cam.name: cam._get_image(self.CLIENT) for cam in self.cameras}
+        images = [cam._get_image(self.CLIENT) for cam in self.cameras]
         return images
     
 class Camera:
     CAMERA_COUNT = 0
     def __init__(self, 
         width=640, height=480, fov=60,
-        eye_pos=[-1, -1, 1], target_pos=[0, 0, 0], up=[0, 0, 1], name=None):
+        eye_pos=[-1.5, -1.5, 1.5], target_pos=[0, 0, 0.2], up=[0, 0, 1], name=None):
         if name is None:
             name = f"cam_{Camera.CAMERA_COUNT}"
             Camera.CAMERA_COUNT += 1
