@@ -379,6 +379,7 @@ With ROS2 installed (on either macOS or Ubuntu, edit `ros2_and_pkg_setups.(zsh/b
 ```
 $ cd gym-pybullet-drones/ros2/
 $ source ros2_and_pkg_setups.zsh            # On macOS, on Ubuntu use $ source ros2_and_pkg_setups.bash
+                                            # Note that the second line in the script will throw an error (until you run calcon) that you can ignore
 $ colcon build --packages-select ros2_gym_pybullet_drones
 $ source ros2_and_pkg_setups.zsh            # On macOS, on Ubuntu use $ source ros2_and_pkg_setups.bash
 $ ros2 run ros2_gym_pybullet_drones aviary_wrapper
