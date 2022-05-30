@@ -398,7 +398,7 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 - Publish to [PyPI](https://realpython.com/pypi-publish-python-package/)
 - [Colab](https://colab.research.google.com/notebooks/intro.ipynb) examples
 - Test and update ROS 2 instrucitons for [Humble Hawksbill](https://docs.ros.org/en/foxy/Releases/Release-Humble-Hawksbill.html)
-- Create a list of FAQs from [Issues tagged as questions]([https://github.com/utiasDSL/gym-pybullet-drones/issues](https://github.com/utiasDSL/gym-pybullet-drones/issues?q=is%3Aissue+is%3Aopen+label%3Aquestion))
+- Create a list of FAQs from [Issues tagged as questions](https://github.com/utiasDSL/gym-pybullet-drones/issues?q=is%3Aissue+is%3Aopen+label%3Aquestion)
 
 
 
