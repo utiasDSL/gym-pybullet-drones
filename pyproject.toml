@@ -13,7 +13,7 @@ matplotlib = "^3.5"
 cycler = "^0.10"
 gym = "^0.21"
 pybullet = "^3.2"
-ray = "^1.8"
+ray = "1.9"
 stable-baselines3 = "^1.5"
 scipy = "^1.8"
 
