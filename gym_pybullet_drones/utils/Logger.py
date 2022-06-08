@@ -1,5 +1,4 @@
 import os
-import time
 from datetime import datetime
 from cycler import cycler
 import numpy as np

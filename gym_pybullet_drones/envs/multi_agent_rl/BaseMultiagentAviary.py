@@ -1,11 +1,11 @@
 import os
-from datetime import datetime
 import numpy as np
 import pybullet as p
 from gym import spaces
-from ray.rllib.env.multi_agent_env import MultiAgentEnv, ENV_STATE
+from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.BaseAviary import BaseAviary
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl

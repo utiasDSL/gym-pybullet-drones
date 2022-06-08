@@ -1,12 +1,8 @@
 import os
-import math
 import numpy as np
-import pybullet as p
-from enum import Enum
 import xml.etree.ElementTree as etxml
-from scipy.spatial.transform import Rotation
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
+from gym_pybullet_drones.utils.enums import DroneModel
 
 class BaseControl(object):
     """Base class for control.

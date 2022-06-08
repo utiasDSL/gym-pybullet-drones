@@ -1,9 +1,8 @@
-import math
 import numpy as np
 import pybullet as p
 
 from gym_pybullet_drones.control.BaseControl import BaseControl
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, BaseAviary
+from gym_pybullet_drones.utils.enums import DroneModel
 from gym_pybullet_drones.utils.utils import nnlsRPM
 
 class SimplePIDControl(BaseControl):

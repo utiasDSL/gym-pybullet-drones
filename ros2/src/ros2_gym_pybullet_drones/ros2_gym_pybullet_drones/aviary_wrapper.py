@@ -13,7 +13,7 @@ import numpy as np
 from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 
 class AviaryWrapper(Node):
