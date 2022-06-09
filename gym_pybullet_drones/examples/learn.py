@@ -31,12 +31,11 @@ from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
-if __name__ == "__main__":
+DEFAULT_RLLIB = False
+DEFAULT_GUI = True
+DEFAULT_OUTPUT_FOLDER = 'results'
 
-    #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
-    parser.add_argument('--rllib',      default=False,        type=str2bool,       help='Whether to use RLlib PPO in place of stable-baselines A2C (default: False)', metavar='')
-    ARGS = parser.parse_args()
+def run(rllib=DEFAULT_RLLIB,output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True):
 
     #### Check the environment's spaces ########################
     env = gym.make("takeoff-aviary-v0")
@@ -48,7 +47,7 @@ if __name__ == "__main__":
               )
 
     #### Train the model #######################################
-    if not ARGS.rllib:
+    if not rllib:
         model = A2C(MlpPolicy,
                     env,
                     verbose=1
@@ -75,16 +74,17 @@ if __name__ == "__main__":
         ray.shutdown()
 
     #### Show (and record a video of) the model's performance ##
-    env = TakeoffAviary(gui=True,
+    env = TakeoffAviary(gui=gui,
                         record=False
                         )
     logger = Logger(logging_freq_hz=int(env.SIM_FREQ/env.AGGR_PHY_STEPS),
-                    num_drones=1
+                    num_drones=1,
+                    output_folder=output_folder
                     )
     obs = env.reset()
     start = time.time()
     for i in range(3*env.SIM_FREQ):
-        if not ARGS.rllib:
+        if not rllib:
             action, _states = model.predict(obs,
                                             deterministic=True
                                             )
@@ -103,4 +103,16 @@ if __name__ == "__main__":
         if done:
             obs = env.reset()
     env.close()
-    logger.plot()
+
+    if plot:
+        logger.plot()
+
+if __name__ == "__main__":
+    #### Define and parse (optional) arguments for the script ##
+    parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
+    parser.add_argument('--rllib',      default=DEFAULT_RLLIB,        type=str2bool,       help='Whether to use RLlib PPO in place of stable-baselines A2C (default: False)', metavar='')
+    parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    ARGS = parser.parse_args()
+
+    run(**vars(ARGS))
