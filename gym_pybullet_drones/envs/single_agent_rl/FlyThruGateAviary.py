@@ -1,6 +1,7 @@
 import os
 import numpy as np
 import pybullet as p
+import pkg_resources
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType, BaseSingleAgentAviary
@@ -72,7 +73,7 @@ class FlyThruGateAviary(BaseSingleAgentAviary):
 
         """
         super()._addObstacles()
-        p.loadURDF(os.path.dirname(os.path.abspath(__file__))+"/../../assets/architrave.urdf",
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/architrave.urdf'),
                    [0, -1, .55],
                    p.getQuaternionFromEuler([0, 0, 0]),
                    physicsClientId=self.CLIENT

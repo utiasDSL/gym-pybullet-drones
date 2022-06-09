@@ -18,7 +18,7 @@ setuptools.setup(name='gym_pybullet_drones',
         'stable_baselines3',
         'ray[rllib]'
         ],
-    packages=setuptools.find_packages(where="gym_pybullet_drones")
+    packages=setuptools.find_packages(where="gym_pybullet_drones"),
     package_dir={'':'gym_pybullet_drones'},
     package_data={'gym_pybullet_drones': ['assets/*.*']},
     long_description=long_description,

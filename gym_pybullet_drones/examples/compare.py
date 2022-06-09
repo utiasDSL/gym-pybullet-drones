@@ -19,6 +19,7 @@ import time
 import argparse
 import pickle
 import numpy as np
+import pkg_resources
 
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
@@ -29,7 +30,7 @@ from gym_pybullet_drones.utils.Logger import Logger
 DEFAULT_PHYICS = Physics('pyb')
 DEFAULT_GUI = False
 DEFAULT_RECORD_VIDEO = False
-DEFAULT_TRACE_FILE = os.path.dirname(os.path.abspath(__file__))+"/../assets/example_trace.pkl"
+DEFAULT_TRACE_FILE = pkg_resources.resource_filename('gym_pybullet_drones', 'assets/example_trace.pkl')
 DEFAULT_OUTPUT_FOLDER = 'results'
 
 def run(
