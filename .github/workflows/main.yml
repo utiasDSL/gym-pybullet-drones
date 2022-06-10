@@ -34,7 +34,7 @@ jobs:
       # You may pin to the exact commit or the version.
       # uses: pypa/gh-action-pypi-publish@717ba43cfbb0387f6ce311b169a825772f54d295
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-      uses: pypa/gh-action-pypi-publish@release/v1.5.0
+      uses: pypa/gh-action-pypi-publish@release/v1
       with:
         # PyPI user
         user: __token__
