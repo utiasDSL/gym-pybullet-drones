@@ -15,7 +15,8 @@ setuptools.setup(name='gym_pybullet_drones',
         'gym',
         'pybullet',
         'stable_baselines3',
-        'ray[rllib]'
+        'ray[rllib]',
+        'tensorboard'
         ],
     packages=setuptools.find_packages(where="gym_pybullet_drones"),
     package_dir={'':'gym_pybullet_drones'},
