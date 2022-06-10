@@ -13,8 +13,6 @@ Notes
 The comparison is along a 2D trajectory in the X-Z plane, between x == +1 and -1.
 
 """
-from filecmp import DEFAULT_IGNORES
-import os
 import time
 import argparse
 import pickle

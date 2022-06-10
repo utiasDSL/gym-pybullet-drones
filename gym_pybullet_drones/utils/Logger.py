@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from telnetlib import OUTMRK
 from cycler import cycler
 import numpy as np
 import matplotlib.pyplot as plt

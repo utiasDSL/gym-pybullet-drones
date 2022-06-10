@@ -1,5 +1,4 @@
 import setuptools
-from gym_pybullet_drones import *
 
 # read the contents of your README file
 from pathlib import Path
