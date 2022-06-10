@@ -258,4 +258,4 @@ if __name__ == "__main__":
     #### Print training progression ############################
     with np.load(filename+'/evaluations.npz') as data:
         for j in range(data['timesteps'].shape[0]):
-            print(str(data['timesteps'][j])+","+str(data['results'][j][0][0]))
+            print(str(data['timesteps'][j])+","+str(data['results'][j][0]))

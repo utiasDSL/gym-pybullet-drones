@@ -19,7 +19,7 @@ class Logger(object):
 
     def __init__(self,
                  logging_freq_hz: int,
-                 output_folder: str,
+                 output_folder: str="results",
                  num_drones: int=1,
                  duration_sec: int=0,
                  ):
