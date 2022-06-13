@@ -4,6 +4,7 @@ version = "1.0.0"
 description = "PyBullet Gym environments for single and multi-agent reinforcement learning of quadcopter control"
 authors = ["Jacopo Panerati <jacopo.panerati@utoronto.ca>"]
 license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -13,7 +14,7 @@ matplotlib = "^3.5"
 cycler = "^0.10"
 gym = "^0.21"
 pybullet = "^3.2"
-ray = "1.9"
+"ray[rllib]" = "1.9"
 stable-baselines3 = "^1.5"
 scipy = "^1.8"
 tensorboard = "^2.9"
