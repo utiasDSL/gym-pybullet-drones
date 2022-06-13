@@ -92,7 +92,7 @@ class BaseAviary(gym.Env):
         self.OBSTACLES = obstacles
         self.USER_DEBUG = user_debug_gui
         self.URDF = self.DRONE_MODEL.value + ".urdf"
-        self.OUTPUT_FOLDER = os.path.join(output_folder, 'frames')
+        self.OUTPUT_FOLDER = output_folder
         #### Load the drone properties from the .urdf file #########
         self.M, \
         self.L, \
@@ -137,7 +137,8 @@ class BaseAviary(gym.Env):
                 print("[ERROR] in BaseAviary.__init__(), aggregate_phy_steps incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
             if self.RECORD:
-                self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+                # TODO: This doesn't appear to work in general 
+                self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
                 os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         #### Create attributes for dynamics control inputs #########
         self.DYNAMICS_ATTR = dynamics_attributes
@@ -281,7 +282,7 @@ class BaseAviary(gym.Env):
                                                      flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
                                                      physicsClientId=self.CLIENT
                                                      )
-            (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(os.path.join(self.IMG_PATH, "frame_"+str(self.FRAME_NUM)+".png"))
             #### Save the depth or segmentation view instead #######
             # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8')
             # (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
@@ -499,12 +500,12 @@ class BaseAviary(gym.Env):
         """
         if self.RECORD and self.GUI:
             self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4,
-                                                fileName=os.path.join(self.OUTPUT_FOLDER, datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), ".mp4"),
+                                                fileName=os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), "output.mp4"),
                                                 physicsClientId=self.CLIENT
                                                 )
         if self.RECORD and not self.GUI:
             self.FRAME_NUM = 0
-            self.IMG_PATH = os.path.join(self.OUTPUT_FOLDER, datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+            self.IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), '')
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
     
     ################################################################################
@@ -611,7 +612,7 @@ class BaseAviary(gym.Env):
 
         """
         if img_type == ImageType.RGB:
-            (Image.fromarray(img_input.astype('uint8'), 'RGBA')).save(path+"frame_"+str(frame_num)+".png")
+            (Image.fromarray(img_input.astype('uint8'), 'RGBA')).save(os.path.join(path,"frame_"+str(frame_num)+".png"))
         elif img_type == ImageType.DEP:
             temp = ((img_input-np.min(img_input)) * 255 / (np.max(img_input)-np.min(img_input))).astype('uint8')
         elif img_type == ImageType.SEG:
@@ -622,7 +623,7 @@ class BaseAviary(gym.Env):
             print("[ERROR] in BaseAviary._exportImage(), unknown ImageType")
             exit()
         if img_type != ImageType.RGB:
-            (Image.fromarray(temp)).save(path+"frame_"+str(frame_num)+".png")
+            (Image.fromarray(temp)).save(os.path.join(path,"frame_"+str(frame_num)+".png"))
 
     ################################################################################
 
