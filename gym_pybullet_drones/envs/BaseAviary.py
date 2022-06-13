@@ -37,7 +37,8 @@ class BaseAviary(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 dynamics_attributes=False
+                 dynamics_attributes=False,
+                 output_folder='results'
                  ):
         """Initialization of a generic aviary environment.
 
@@ -91,6 +92,7 @@ class BaseAviary(gym.Env):
         self.OBSTACLES = obstacles
         self.USER_DEBUG = user_debug_gui
         self.URDF = self.DRONE_MODEL.value + ".urdf"
+        self.OUTPUT_FOLDER = os.path.join(output_folder, 'frames')
         #### Load the drone properties from the .urdf file #########
         self.M, \
         self.L, \
@@ -135,7 +137,7 @@ class BaseAviary(gym.Env):
                 print("[ERROR] in BaseAviary.__init__(), aggregate_phy_steps incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
             if self.RECORD:
-                self.ONBOARD_IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/onboard-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"
+                self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
                 os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         #### Create attributes for dynamics control inputs #########
         self.DYNAMICS_ATTR = dynamics_attributes
@@ -497,12 +499,12 @@ class BaseAviary(gym.Env):
         """
         if self.RECORD and self.GUI:
             self.VIDEO_ID = p.startStateLogging(loggingType=p.STATE_LOGGING_VIDEO_MP4,
-                                                fileName=os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".mp4",
+                                                fileName=os.path.join(self.OUTPUT_FOLDER, datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), ".mp4"),
                                                 physicsClientId=self.CLIENT
                                                 )
         if self.RECORD and not self.GUI:
             self.FRAME_NUM = 0
-            self.IMG_PATH = os.path.dirname(os.path.abspath(__file__))+"/../../files/videos/video-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+"/"
+            self.IMG_PATH = os.path.join(self.OUTPUT_FOLDER, datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
             os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
     
     ################################################################################

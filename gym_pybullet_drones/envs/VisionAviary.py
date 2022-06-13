@@ -22,7 +22,8 @@ class VisionAviary(BaseAviary):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True
+                 user_debug_gui=True,
+                 output_folder='results'
                  ):
         """Initialization of an aviary environment for control applications using vision.
 
@@ -69,7 +70,8 @@ class VisionAviary(BaseAviary):
                          record=record,
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui,
-                         vision_attributes=True
+                         vision_attributes=True,
+                         output_folder=output_folder
                          )
 
     

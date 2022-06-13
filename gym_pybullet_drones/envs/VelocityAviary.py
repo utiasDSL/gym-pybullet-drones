@@ -24,7 +24,8 @@ class VelocityAviary(BaseAviary):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True
+                 user_debug_gui=True,
+                 output_folder='results'
                  ):
         """Initialization of an aviary environment for or high-level planning.
 
@@ -73,7 +74,8 @@ class VelocityAviary(BaseAviary):
                          gui=gui,
                          record=record,
                          obstacles=obstacles,
-                         user_debug_gui=user_debug_gui
+                         user_debug_gui=user_debug_gui,
+                         output_folder=output_folder
                          )
         #### Set a limit on the maximum target speed ###############
         self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)

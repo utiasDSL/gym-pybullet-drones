@@ -22,7 +22,8 @@ class DynAviary(BaseAviary):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True
+                 user_debug_gui=True,
+                 output_folder='results'
                  ):
         """Initialization of an aviary controlled by desired thrust and torques.
 
@@ -69,7 +70,8 @@ class DynAviary(BaseAviary):
                          record=record,
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui,
-                         dynamics_attributes=True
+                         dynamics_attributes=True,
+                         output_folder=output_folder
                          )
 
     
