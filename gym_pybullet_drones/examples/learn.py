@@ -33,9 +33,11 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 
 DEFAULT_RLLIB = False
 DEFAULT_GUI = True
+DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_COLAB = False
 
-def run(rllib=DEFAULT_RLLIB,output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True):
+def run(rllib=DEFAULT_RLLIB,output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO):
 
     #### Check the environment's spaces ########################
     env = gym.make("takeoff-aviary-v0")
@@ -75,11 +77,12 @@ def run(rllib=DEFAULT_RLLIB,output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI
 
     #### Show (and record a video of) the model's performance ##
     env = TakeoffAviary(gui=gui,
-                        record=False
+                        record=record_video
                         )
     logger = Logger(logging_freq_hz=int(env.SIM_FREQ/env.AGGR_PHY_STEPS),
                     num_drones=1,
-                    output_folder=output_folder
+                    output_folder=output_folder,
+                    colab=colab
                     )
     obs = env.reset()
     start = time.time()
@@ -112,7 +115,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
     parser.add_argument('--rllib',      default=DEFAULT_RLLIB,        type=str2bool,       help='Whether to use RLlib PPO in place of stable-baselines A2C (default: False)', metavar='')
     parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=DEFAULT_RECORD_VIDEO,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

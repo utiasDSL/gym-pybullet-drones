@@ -45,6 +45,7 @@ DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
 DEFAULT_DURATION_SEC = 5
 DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_COLAB = False
 
 def run(
         drone=DEFAULT_DRONE,
@@ -57,7 +58,8 @@ def run(
         simulation_freq_hz=DEFAULT_SIMULATION_FREQ_HZ,
         control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
         duration_sec=DEFAULT_DURATION_SEC,
-        output_folder=DEFAULT_OUTPUT_FOLDER
+        output_folder=DEFAULT_OUTPUT_FOLDER,
+        colab=DEFAULT_COLAB
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
@@ -110,7 +112,8 @@ def run(
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=int(simulation_freq_hz/AGGR_PHY_STEPS),
                     num_drones=4,
-                    output_folder=output_folder
+                    output_folder=output_folder,
+                    colab=colab
                     )
 
     #### Run the simulation ####################################
@@ -173,7 +176,8 @@ if __name__ == "__main__":
     parser.add_argument('--simulation_freq_hz', default=DEFAULT_SIMULATION_FREQ_HZ,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=DEFAULT_CONTROL_FREQ_HZ,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
     parser.add_argument('--duration_sec',       default=DEFAULT_DURATION_SEC,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
-    parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--output_folder',      default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))

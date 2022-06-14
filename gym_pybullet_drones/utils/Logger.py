@@ -21,6 +21,7 @@ class Logger(object):
                  output_folder: str="results",
                  num_drones: int=1,
                  duration_sec: int=0,
+                 colab: bool=False,
                  ):
         """Logger class __init__ method.
 
@@ -37,6 +38,7 @@ class Logger(object):
             Used to preallocate the log arrays (improves performance).
 
         """
+        self.COLAB = colab
         self.OUTPUT_FOLDER = output_folder
         if not os.path.exists(self.OUTPUT_FOLDER):
             os.mkdir(self.OUTPUT_FOLDER)
@@ -371,4 +373,7 @@ class Logger(object):
                             wspace=0.15,
                             hspace=0.0
                             )
-        plt.show()
+        if self.COLAB: 
+            plt.savefig(os.path.join('results', 'output_figure.png'))
+        else:
+            plt.show()

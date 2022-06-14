@@ -30,6 +30,7 @@ DEFAULT_GUI = False
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_TRACE_FILE = pkg_resources.resource_filename('gym_pybullet_drones', 'assets/example_trace.pkl')
 DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_COLAB = False
 
 def run(
         physics=DEFAULT_PHYICS, 
@@ -37,7 +38,8 @@ def run(
         record_video=DEFAULT_RECORD_VIDEO, 
         trace_file=DEFAULT_TRACE_FILE, 
         output_folder=DEFAULT_OUTPUT_FOLDER,
-        plot=True
+        plot=True,
+        colab=DEFAULT_COLAB
         ):
     #### Load a trace and control reference from a .pkl file ###
     with open(trace_file, 'rb') as in_file:
@@ -68,7 +70,8 @@ def run(
     logger = Logger(logging_freq_hz=SIMULATION_FREQ_HZ,
                     num_drones=2,
                     duration_sec=DURATION_SEC,
-                    output_folder=output_folder
+                    output_folder=output_folder,
+                    colab=colab
                     )
 
     #### Initialize the controller #############################
@@ -131,6 +134,7 @@ if __name__ == "__main__":
     parser.add_argument('--record_video',   default=DEFAULT_RECORD_VIDEO,               type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--trace_file',     default=DEFAULT_TRACE_FILE, type=str,           help='Pickle file with the trace to compare to (default: "example_trace.pkl")', metavar='')
     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))
