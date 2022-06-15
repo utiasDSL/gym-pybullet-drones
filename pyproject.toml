@@ -1,10 +1,14 @@
 [tool.poetry]
 name = "gym-pybullet-drones"
-version = "1.0.0"
+version = "0.0.2"
 description = "PyBullet Gym environments for single and multi-agent reinforcement learning of quadcopter control"
 authors = ["Jacopo Panerati <jacopo.panerati@utoronto.ca>"]
 license = "MIT"
-readme = "README.md"
+readme = "pypi_description.md"
+repository = "https://github.com/utiasDSL/gym-pybullet-drones"
+packages = [
+    { include = "gym_pybullet_drones" }
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"

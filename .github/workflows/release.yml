@@ -1,0 +1,70 @@
+# This workflow will upload a Python Package using Twine when a release is created
+# For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Publish Python package to PyPi
+
+on: 
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  run_tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.8'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+    - name: Install package
+      run: |
+        pip install -e .
+    - name: Unit tests
+      run: |
+        python -m pytest tests/
+        rm -rf tmp/
+
+  deploy:
+    needs: run_tests
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.8'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install poetry
+    - name: Build package
+      run: |
+        rm -rf dist/
+        poetry build
+    - name: Publish distribution 📦 to Test PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/
+    # - name: pypi-publish
+    #   # You may pin to the exact commit or the version.
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     # PyPI user
+    #     user: __token__
+    #     # Password for your PyPI user or an access token
+    #     password: ${{ secrets.PYPI_API_TOKEN }}
+    #     # The repository URL to use
+    #     repository_url: https://github.com/utiasDSL/gym-pybullet-drones
