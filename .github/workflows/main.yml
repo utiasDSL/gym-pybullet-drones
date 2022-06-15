@@ -14,25 +14,25 @@ permissions:
   contents: read
 
 jobs:
-  run_tests:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.8'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install pytest
-    - name: Install package
-      run: |
-        pip install .
-    - name: Unit tests
-      run: |
-        python -m pytest tests/
-        rm -rf tmp/
+  # run_tests:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v3
+  #   - name: Set up Python
+  #     uses: actions/setup-python@v3
+  #     with:
+  #       python-version: '3.8'
+  #   - name: Install dependencies
+  #     run: |
+  #       python -m pip install --upgrade pip
+  #       pip install pytest
+  #   - name: Install package
+  #     run: |
+  #       pip install .
+  #   - name: Unit tests
+  #     run: |
+  #       python -m pytest tests/
+  #       rm -rf tmp/
 
   deploy:
     needs: run_tests
@@ -45,6 +45,8 @@ jobs:
     - name: Build package
       run: |
         rm -rf dist/
+        ls
+        ls ../
         poetry build
     - name: pypi-publish
       # You may pin to the exact commit or the version.
