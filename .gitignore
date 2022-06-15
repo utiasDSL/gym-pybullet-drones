@@ -7,6 +7,7 @@ examples/test.py
 files/logs/*.npy
 files/videos/*.mp4
 results/
+tmp/
 
 # Learning results
 experiments/learning/results/save-*
@@ -26,7 +27,7 @@ __pycache__/
 .Python
 build/
 develop-eggs/
-# dist/
+dist/
 downloads/
 eggs/
 .eggs/
