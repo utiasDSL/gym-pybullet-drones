@@ -116,7 +116,7 @@ Check these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet
 
 
 ## Examples
-There are 2 basic template scripts in `examples/`: `fly.py` and `learn.py`
+There are 2 basic template scripts in [`gym_pybullet_drones/examples/`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/examples): `fly.py` and `learn.py`
 
 - `fly.py` runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
@@ -137,7 +137,7 @@ $ python3 learn.py                           # Try 'python3 learn.py -h' to show
 <img src="files/readme_images/learn1.gif" alt="learning 1" width="400"> <img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
 <img src="files/readme_images/learn3.gif" alt="learning 3" width="400"> <img src="files/readme_images/learn4.gif" alt="learning 4" width="400">
 
-Other scripts in folder `examples/` are
+Other scripts in folder [`gym_pybullet_drones/examples/`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/examples) are
 
 - `downwash.py` is a flight script with only 2 drones, to test the downwash model
 ```
