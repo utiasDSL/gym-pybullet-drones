@@ -112,24 +112,32 @@ On Ubuntu and with a GPU available, optionally uncomment [line 203](https://gith
 Check these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/assignments#on-windows) written by Dr. Karime Pereida for *Windows 10*
 
 
+### On *Colab*
+Try the example scritps: 
+[`fly.py`](https://colab.research.google.com/drive/1hJlJElUuveD4U_GDGuNsX8NqDcl3jUGz?usp=sharing),
+[`learn.py`](https://colab.research.google.com/drive/1lLGAET4xx-7gGznanfGe0bQy4H7O9ScL?usp=sharing),
+[`downwash.py`](https://colab.research.google.com/drive/1Oj_RzJ5M_g4KrKFRJvcAhh62GJo78m9F?usp=sharing),
+[`compare.py`](https://colab.research.google.com/drive/1RzY6jG5F7ddknuyssI486TdMnOfq9Cjf?usp=sharing),
+[`ground_effect`](https://colab.research.google.com/drive/1BpLqPXnfk6lKiQ6YSNW74UQJ2MB4KwYJ?usp=sharing), and [`velocity`](https://colab.research.google.com/drive/1KN-fgwF3qjOCSIexHyQKBZ-rirtpt6ng?usp=sharing)
+
 
 
 
 ## Examples
 There are 2 basic template scripts in [`gym_pybullet_drones/examples/`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/examples): `fly.py` and `learn.py`
 
-- `fly.py` runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
+- `fly.py` [[try it on Colab](https://colab.research.google.com/drive/1hJlJElUuveD4U_GDGuNsX8NqDcl3jUGz?usp=sharing)] runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
 $ cd gym-pybullet-drones/examples/
 $ python3 fly.py                             # Try 'python3 fly.py -h' to show the script's customizable parameters
-```
+``` 
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
 
 <img src="files/readme_images/wp.gif" alt="sparse way points flight" width="350"> <img src="files/readme_images/wp.png" alt="control info" width="450">
 
 <img src="files/readme_images/crash.gif" alt="yaw saturation" width="350"> <img src="files/readme_images/crash.png" alt="control info" width="450">
 
-- `learn.py` is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
+- `learn.py` [[try it on Colab](https://colab.research.google.com/drive/1lLGAET4xx-7gGznanfGe0bQy4H7O9ScL?usp=sharing)] is an **RL example** to learn take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
 $ cd gym-pybullet-drones/examples/
 $ python3 learn.py                           # Try 'python3 learn.py -h' to show the script's customizable parameters
@@ -139,7 +147,7 @@ $ python3 learn.py                           # Try 'python3 learn.py -h' to show
 
 Other scripts in folder [`gym_pybullet_drones/examples/`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/examples) are
 
-- `downwash.py` is a flight script with only 2 drones, to test the downwash model
+- `downwash.py` [[try it on Colab](https://colab.research.google.com/drive/1Oj_RzJ5M_g4KrKFRJvcAhh62GJo78m9F?usp=sharing)] is a flight script with only 2 drones, to test the downwash model
 ```
 $ cd gym-pybullet-drones/examples/
 $ python3 downwash.py                        # Try 'python3 downwash.py -h' to show the script's customizable parameters
@@ -147,14 +155,12 @@ $ python3 downwash.py                        # Try 'python3 downwash.py -h' to s
 
 <img src="files/readme_images/downwash.gif" alt="downwash example" width="350"> <img src="files/readme_images/downwash.png" alt="control info" width="450">
 
-- `compare.py` which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/files/example_trace.pkl)
+- `compare.py` [[try it on Colab](https://colab.research.google.com/drive/1RzY6jG5F7ddknuyssI486TdMnOfq9Cjf?usp=sharing)] which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/files/example_trace.pkl)
 ```
 $ cd gym-pybullet-drones/examples/
 $ python3 compare.py                         # Try 'python3 compare.py -h' to show the script's customizable parameters
 ```
 <img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="350"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
-
-
 
 
 ## Experiments
