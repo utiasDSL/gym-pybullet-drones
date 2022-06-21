@@ -56,72 +56,79 @@ import shared_constants
 EPISODE_REWARD_THRESHOLD = -0 # Upperbound: rewards are always negative, but non-zero
 """float: Reward threshold to halt the script."""
 
-if __name__ == "__main__":
+DEFAULT_ENV = 'hover'
+DEFAULT_ALGO = 'ppo'
+DEFAULT_OBS = ObservationType('kin')
+DEFAULT_ACT = ActionType('one_d_rpm')
+DEFAULT_CPU = 1
+DEFAULT_STEPS = 35000
+DEFAULT_OUTPUT_FOLDER = 'results'
 
-    #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
-    parser.add_argument('--env',        default='hover',      type=str,             choices=['takeoff', 'hover', 'flythrugate', 'tune'], help='Task (default: hover)', metavar='')
-    parser.add_argument('--algo',       default='ppo',        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],        help='RL agent (default: ppo)', metavar='')
-    parser.add_argument('--obs',        default='kin',        type=ObservationType,                                                      help='Observation space (default: kin)', metavar='')
-    parser.add_argument('--act',        default='one_d_rpm',  type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
-    parser.add_argument('--cpu',        default='1',          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')        
-    ARGS = parser.parse_args()
+def run(
+    env=DEFAULT_ENV,
+    algo=DEFAULT_ALGO,
+    obs=DEFAULT_OBS,
+    act=DEFAULT_ACT,
+    cpu=DEFAULT_CPU,
+    steps=DEFAULT_STEPS,
+    output_folder=DEFAULT_OUTPUT_FOLDER
+):
 
     #### Save directory ########################################
-    filename = os.path.dirname(os.path.abspath(__file__))+'/results/save-'+ARGS.env+'-'+ARGS.algo+'-'+ARGS.obs.value+'-'+ARGS.act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+    filename = os.path.join(output_folder, 'save-'+env+'-'+algo+'-'+obs.value+'-'+act.value+'-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
 
     #### Print out current git commit hash #####################
-    if platform == "linux" or platform == "darwin":
+    if (platform == "linux" or platform == "darwin") and ('GITHUB_ACTIONS' not in os.environ.keys()):
         git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
         with open(filename+'/git_commit.txt', 'w+') as f:
             f.write(str(git_commit))
 
     #### Warning ###############################################
-    if ARGS.env == 'tune' and ARGS.act != ActionType.TUN:
+    if env == 'tune' and act != ActionType.TUN:
         print("\n\n\n[WARNING] TuneAviary is intended for use with ActionType.TUN\n\n\n")
-    if ARGS.act == ActionType.ONE_D_RPM or ARGS.act == ActionType.ONE_D_DYN or ARGS.act == ActionType.ONE_D_PID:
+    if act == ActionType.ONE_D_RPM or act == ActionType.ONE_D_DYN or act == ActionType.ONE_D_PID:
         print("\n\n\n[WARNING] Simplified 1D problem for debugging purposes\n\n\n")
     #### Errors ################################################
-        if not ARGS.env in ['takeoff', 'hover']: 
+        if not env in ['takeoff', 'hover']: 
             print("[ERROR] 1D action space is only compatible with Takeoff and HoverAviary")
             exit()
-    if ARGS.act == ActionType.TUN and ARGS.env != 'tune' :
+    if act == ActionType.TUN and env != 'tune' :
         print("[ERROR] ActionType.TUN is only compatible with TuneAviary")
         exit()
-    if ARGS.algo in ['sac', 'td3', 'ddpg'] and ARGS.cpu!=1: 
+    if algo in ['sac', 'td3', 'ddpg'] and cpu!=1: 
         print("[ERROR] The selected algorithm does not support multiple environments")
         exit()
 
     #### Uncomment to debug slurm scripts ######################
     # exit()
 
-    env_name = ARGS.env+"-aviary-v0"
-    sa_env_kwargs = dict(aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act)
-    # train_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=ARGS.obs, act=ARGS.act) # single environment instead of a vectorized one    
+    env_name = env+"-aviary-v0"
+    sa_env_kwargs = dict(aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act)
+    # train_env = gym.make(env_name, aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS, obs=obs, act=act) # single environment instead of a vectorized one    
     if env_name == "takeoff-aviary-v0":
         train_env = make_vec_env(TakeoffAviary,
                                  env_kwargs=sa_env_kwargs,
-                                 n_envs=ARGS.cpu,
+                                 n_envs=cpu,
                                  seed=0
                                  )
     if env_name == "hover-aviary-v0":
         train_env = make_vec_env(HoverAviary,
                                  env_kwargs=sa_env_kwargs,
-                                 n_envs=ARGS.cpu,
+                                 n_envs=cpu,
                                  seed=0
                                  )
     if env_name == "flythrugate-aviary-v0":
         train_env = make_vec_env(FlyThruGateAviary,
                                  env_kwargs=sa_env_kwargs,
-                                 n_envs=ARGS.cpu,
+                                 n_envs=cpu,
                                  seed=0
                                  )
     if env_name == "tune-aviary-v0":
         train_env = make_vec_env(TuneAviary,
                                  env_kwargs=sa_env_kwargs,
-                                 n_envs=ARGS.cpu,
+                                 n_envs=cpu,
                                  seed=0
                                  )
     print("[INFO] Action space:", train_env.action_space)
@@ -132,25 +139,25 @@ if __name__ == "__main__":
     onpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
                            net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]
                            ) # or None
-    if ARGS.algo == 'a2c':
+    if algo == 'a2c':
         model = A2C(a2cppoMlpPolicy,
                     train_env,
                     policy_kwargs=onpolicy_kwargs,
                     tensorboard_log=filename+'/tb/',
                     verbose=1
-                    ) if ARGS.obs == ObservationType.KIN else A2C(a2cppoCnnPolicy,
+                    ) if obs == ObservationType.KIN else A2C(a2cppoCnnPolicy,
                                                                   train_env,
                                                                   policy_kwargs=onpolicy_kwargs,
                                                                   tensorboard_log=filename+'/tb/',
                                                                   verbose=1
                                                                   )
-    if ARGS.algo == 'ppo':
+    if algo == 'ppo':
         model = PPO(a2cppoMlpPolicy,
                     train_env,
                     policy_kwargs=onpolicy_kwargs,
                     tensorboard_log=filename+'/tb/',
                     verbose=1
-                    ) if ARGS.obs == ObservationType.KIN else PPO(a2cppoCnnPolicy,
+                    ) if obs == ObservationType.KIN else PPO(a2cppoCnnPolicy,
                                                                   train_env,
                                                                   policy_kwargs=onpolicy_kwargs,
                                                                   tensorboard_log=filename+'/tb/',
@@ -161,37 +168,37 @@ if __name__ == "__main__":
     offpolicy_kwargs = dict(activation_fn=torch.nn.ReLU,
                             net_arch=[512, 512, 256, 128]
                             ) # or None # or dict(net_arch=dict(qf=[256, 128, 64, 32], pi=[256, 128, 64, 32]))
-    if ARGS.algo == 'sac':
+    if algo == 'sac':
         model = SAC(sacMlpPolicy,
                     train_env,
                     policy_kwargs=offpolicy_kwargs,
                     tensorboard_log=filename+'/tb/',
                     verbose=1
-                    ) if ARGS.obs==ObservationType.KIN else SAC(sacCnnPolicy,
+                    ) if obs==ObservationType.KIN else SAC(sacCnnPolicy,
                                                                 train_env,
                                                                 policy_kwargs=offpolicy_kwargs,
                                                                 tensorboard_log=filename+'/tb/',
                                                                 verbose=1
                                                                 )
-    if ARGS.algo == 'td3':
+    if algo == 'td3':
         model = TD3(td3ddpgMlpPolicy,
                     train_env,
                     policy_kwargs=offpolicy_kwargs,
                     tensorboard_log=filename+'/tb/',
                     verbose=1
-                    ) if ARGS.obs==ObservationType.KIN else TD3(td3ddpgCnnPolicy,
+                    ) if obs==ObservationType.KIN else TD3(td3ddpgCnnPolicy,
                                                                 train_env,
                                                                 policy_kwargs=offpolicy_kwargs,
                                                                 tensorboard_log=filename+'/tb/',
                                                                 verbose=1
                                                                 )
-    if ARGS.algo == 'ddpg':
+    if algo == 'ddpg':
         model = DDPG(td3ddpgMlpPolicy,
                     train_env,
                     policy_kwargs=offpolicy_kwargs,
                     tensorboard_log=filename+'/tb/',
                     verbose=1
-                    ) if ARGS.obs==ObservationType.KIN else DDPG(td3ddpgCnnPolicy,
+                    ) if obs==ObservationType.KIN else DDPG(td3ddpgCnnPolicy,
                                                                 train_env,
                                                                 policy_kwargs=offpolicy_kwargs,
                                                                 tensorboard_log=filename+'/tb/',
@@ -199,13 +206,13 @@ if __name__ == "__main__":
                                                                 )
 
     #### Create eveluation environment #########################
-    if ARGS.obs == ObservationType.KIN: 
+    if obs == ObservationType.KIN: 
         eval_env = gym.make(env_name,
                             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
-                            obs=ARGS.obs,
-                            act=ARGS.act
+                            obs=obs,
+                            act=act
                             )
-    elif ARGS.obs == ObservationType.RGB:
+    elif obs == ObservationType.RGB:
         if env_name == "takeoff-aviary-v0": 
             eval_env = make_vec_env(TakeoffAviary,
                                     env_kwargs=sa_env_kwargs,
@@ -242,11 +249,11 @@ if __name__ == "__main__":
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(2000/ARGS.cpu),
+                                 eval_freq=int(2000/cpu),
                                  deterministic=True,
                                  render=False
                                  )
-    model.learn(total_timesteps=35000, #int(1e12),
+    model.learn(total_timesteps=steps, #int(1e12),
                 callback=eval_callback,
                 log_interval=100,
                 )
@@ -258,4 +265,19 @@ if __name__ == "__main__":
     #### Print training progression ############################
     with np.load(filename+'/evaluations.npz') as data:
         for j in range(data['timesteps'].shape[0]):
-            print(str(data['timesteps'][j])+","+str(data['results'][j][0][0]))
+            print(str(data['timesteps'][j])+","+str(data['results'][j][0]))
+
+
+if __name__ == "__main__":
+    #### Define and parse (optional) arguments for the script ##
+    parser = argparse.ArgumentParser(description='Single agent reinforcement learning experiments script')
+    parser.add_argument('--env',        default=DEFAULT_ENV,      type=str,             choices=['takeoff', 'hover', 'flythrugate', 'tune'], help='Task (default: hover)', metavar='')
+    parser.add_argument('--algo',       default=DEFAULT_ALGO,        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],        help='RL agent (default: ppo)', metavar='')
+    parser.add_argument('--obs',        default=DEFAULT_OBS,        type=ObservationType,                                                      help='Observation space (default: kin)', metavar='')
+    parser.add_argument('--act',        default=DEFAULT_ACT,  type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
+    parser.add_argument('--cpu',        default=DEFAULT_CPU,          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')        
+    parser.add_argument('--steps',        default=DEFAULT_STEPS,          type=int,                                                                  help='Number of training time steps (default: 35000)', metavar='')        
+    parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    ARGS = parser.parse_args()
+
+    run(**vars(ARGS))

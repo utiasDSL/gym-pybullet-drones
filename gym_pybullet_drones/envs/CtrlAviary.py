@@ -1,7 +1,8 @@
 import numpy as np
 from gym import spaces
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.BaseAviary import BaseAviary
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
 class CtrlAviary(BaseAviary):
     """Multi-drone environment class for control applications."""
@@ -20,7 +21,8 @@ class CtrlAviary(BaseAviary):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True
+                 user_debug_gui=True,
+                 output_folder='results'
                  ):
         """Initialization of an aviary environment for control applications.
 
@@ -63,7 +65,8 @@ class CtrlAviary(BaseAviary):
                          gui=gui,
                          record=record,
                          obstacles=obstacles,
-                         user_debug_gui=user_debug_gui
+                         user_debug_gui=user_debug_gui,
+                         output_folder=output_folder
                          )
 
     ################################################################################

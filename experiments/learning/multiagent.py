@@ -48,7 +48,7 @@ from ray.rllib.models import ModelCatalog
 from ray.rllib.policy.sample_batch import SampleBatch
 from ray.rllib.env.multi_agent_env import ENV_STATE
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.multi_agent_rl.FlockAviary import FlockAviary
 from gym_pybullet_drones.envs.multi_agent_rl.LeaderFollowerAviary import LeaderFollowerAviary
 from gym_pybullet_drones.envs.multi_agent_rl.MeetupAviary import MeetupAviary

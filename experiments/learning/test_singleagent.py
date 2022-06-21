@@ -38,25 +38,24 @@ from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
 from gym_pybullet_drones.envs.single_agent_rl.FlyThruGateAviary import FlyThruGateAviary
 from gym_pybullet_drones.envs.single_agent_rl.TuneAviary import TuneAviary
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
+from gym_pybullet_drones.utils.utils import sync, str2bool
 
 import shared_constants
 
-if __name__ == "__main__":
+DEFAULT_GUI = True
+DEFAULT_PLOT = True
+DEFAULT_OUTPUT_FOLDER = 'results'
 
-    #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
-    parser.add_argument('--exp',                           type=str,            help='The experiment folder written as ./results/save-<env>-<algo>-<obs>-<act>-<time_date>', metavar='')
-    ARGS = parser.parse_args()
-
+def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FOLDER):
     #### Load the model from file ##############################
-    algo = ARGS.exp.split("-")[2]
+    algo = exp.split("-")[2]
 
-    if os.path.isfile(ARGS.exp+'/success_model.zip'):
-        path = ARGS.exp+'/success_model.zip'
-    elif os.path.isfile(ARGS.exp+'/best_model.zip'):
-        path = ARGS.exp+'/best_model.zip'
+    if os.path.isfile(exp+'/success_model.zip'):
+        path = exp+'/success_model.zip'
+    elif os.path.isfile(exp+'/best_model.zip'):
+        path = exp+'/best_model.zip'
     else:
-        print("[ERROR]: no model under the specified path", ARGS.exp)
+        print("[ERROR]: no model under the specified path", exp)
     if algo == 'a2c':
         model = A2C.load(path)
     if algo == 'ppo':
@@ -69,23 +68,23 @@ if __name__ == "__main__":
         model = DDPG.load(path)
 
     #### Parameters to recreate the environment ################
-    env_name = ARGS.exp.split("-")[1]+"-aviary-v0"
-    OBS = ObservationType.KIN if ARGS.exp.split("-")[3] == 'kin' else ObservationType.RGB
-    if ARGS.exp.split("-")[4] == 'rpm':
+    env_name = exp.split("-")[1]+"-aviary-v0"
+    OBS = ObservationType.KIN if exp.split("-")[3] == 'kin' else ObservationType.RGB
+    if exp.split("-")[4] == 'rpm':
         ACT = ActionType.RPM
-    elif ARGS.exp.split("-")[4] == 'dyn':
+    elif exp.split("-")[4] == 'dyn':
         ACT = ActionType.DYN
-    elif ARGS.exp.split("-")[4] == 'pid':
+    elif exp.split("-")[4] == 'pid':
         ACT = ActionType.PID
-    elif ARGS.exp.split("-")[4] == 'vel':
+    elif exp.split("-")[4] == 'vel':
         ACT = ActionType.VEL
-    elif ARGS.exp.split("-")[4] == 'tun':
+    elif exp.split("-")[4] == 'tun':
         ACT = ActionType.TUN
-    elif ARGS.exp.split("-")[4] == 'one_d_rpm':
+    elif exp.split("-")[4] == 'one_d_rpm':
         ACT = ActionType.ONE_D_RPM
-    elif ARGS.exp.split("-")[4] == 'one_d_dyn':
+    elif exp.split("-")[4] == 'one_d_dyn':
         ACT = ActionType.ONE_D_DYN
-    elif ARGS.exp.split("-")[4] == 'one_d_pid':
+    elif exp.split("-")[4] == 'one_d_pid':
         ACT = ActionType.ONE_D_PID
 
     #### Evaluate the model ####################################
@@ -102,14 +101,15 @@ if __name__ == "__main__":
 
     #### Show, record a video, and log the model's performance #
     test_env = gym.make(env_name,
-                        gui=True,
+                        gui=gui,
                         record=False,
                         aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
                         obs=OBS,
                         act=ACT
                         )
     logger = Logger(logging_freq_hz=int(test_env.SIM_FREQ/test_env.AGGR_PHY_STEPS),
-                    num_drones=1
+                    num_drones=1,
+                    output_folder=output_folder
                     )
     obs = test_env.reset()
     start = time.time()
@@ -129,10 +129,22 @@ if __name__ == "__main__":
         # if done: obs = test_env.reset() # OPTIONAL EPISODE HALT
     test_env.close()
     logger.save_as_csv("sa") # Optional CSV save
-    logger.plot()
+    if plot:
+        logger.plot()
 
-    # with np.load(ARGS.exp+'/evaluations.npz') as data:
+    # with np.load(exp+'/evaluations.npz') as data:
     #     print(data.files)
     #     print(data['timesteps'])
     #     print(data['results'])
     #     print(data['ep_lengths'])
+
+if __name__ == "__main__":
+    #### Define and parse (optional) arguments for the script ##
+    parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using TakeoffAviary')
+    parser.add_argument('--exp',                           type=str,            help='The experiment folder written as ./results/save-<env>-<algo>-<obs>-<act>-<time_date>', metavar='')
+    parser.add_argument('--gui',            default=DEFAULT_GUI,               type=str2bool,      help='Whether to use PyBullet GUI (default: False)', metavar='')
+    parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
+    parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    ARGS = parser.parse_args()
+
+    run(**vars(ARGS))

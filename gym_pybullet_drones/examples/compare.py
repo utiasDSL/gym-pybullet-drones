@@ -13,30 +13,36 @@ Notes
 The comparison is along a 2D trajectory in the X-Z plane, between x == +1 and -1.
 
 """
-import os
 import time
 import argparse
 import pickle
 import numpy as np
+import pkg_resources
 
 from gym_pybullet_drones.utils.utils import sync, str2bool
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
-if __name__ == "__main__":
+DEFAULT_PHYICS = Physics('pyb')
+DEFAULT_GUI = False
+DEFAULT_RECORD_VIDEO = False
+DEFAULT_TRACE_FILE = pkg_resources.resource_filename('gym_pybullet_drones', 'assets/example_trace.pkl')
+DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_COLAB = False
 
-    #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(description='Trace comparison script using CtrlAviary and DSLPIDControl')
-    parser.add_argument('--physics',        default="pyb",               type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
-    parser.add_argument('--gui',            default=False,               type=str2bool,      help='Whether to use PyBullet GUI (default: False)', metavar='')
-    parser.add_argument('--record_video',   default=False,               type=str2bool,      help='Whether to record a video (default: False)', metavar='')
-    parser.add_argument('--trace_file',     default="example_trace.pkl", type=str,           help='Pickle file with the trace to compare to (default: "example_trace.pkl")', metavar='')
-    ARGS = parser.parse_args()
-
+def run(
+        physics=DEFAULT_PHYICS, 
+        gui=DEFAULT_GUI, 
+        record_video=DEFAULT_RECORD_VIDEO, 
+        trace_file=DEFAULT_TRACE_FILE, 
+        output_folder=DEFAULT_OUTPUT_FOLDER,
+        plot=True,
+        colab=DEFAULT_COLAB
+        ):
     #### Load a trace and control reference from a .pkl file ###
-    with open(os.path.dirname(os.path.abspath(__file__))+"/../files/"+ARGS.trace_file, 'rb') as in_file:
+    with open(trace_file, 'rb') as in_file:
         TRACE_TIMESTAMPS, TRACE_DATA, TRACE_CTRL_REFERENCE, _, _, _ = pickle.load(in_file)
 
     #### Compute trace's parameters ############################
@@ -47,10 +53,10 @@ if __name__ == "__main__":
     env = CtrlAviary(drone_model=DroneModel.CF2X,
                      num_drones=1,
                      initial_xyzs=np.array([0, 0, .1]).reshape(1, 3),
-                     physics=ARGS.physics,
+                     physics=physics,
                      freq=SIMULATION_FREQ_HZ,
-                     gui=ARGS.gui,
-                     record=ARGS.record_video,
+                     gui=gui,
+                     record=record_video,
                      obstacles=False
                      )
     INITIAL_STATE = env.reset()
@@ -63,7 +69,9 @@ if __name__ == "__main__":
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=SIMULATION_FREQ_HZ,
                     num_drones=2,
-                    duration_sec=DURATION_SEC
+                    duration_sec=DURATION_SEC,
+                    output_folder=output_folder,
+                    colab=colab
                     )
 
     #### Initialize the controller #############################
@@ -105,7 +113,7 @@ if __name__ == "__main__":
             env.render()
 
         #### Sync the simulation ###################################
-        if ARGS.gui: 
+        if gui: 
             sync(i, START, env.TIMESTEP)
 
     #### Close the environment #################################
@@ -115,4 +123,18 @@ if __name__ == "__main__":
     logger.save()
 
     #### Plot the simulation results ###########################
-    logger.plot(pwm=True)
+    if plot:
+        logger.plot(pwm=True)
+
+if __name__ == "__main__":
+    #### Define and parse (optional) arguments for the script ##
+    parser = argparse.ArgumentParser(description='Trace comparison script using CtrlAviary and DSLPIDControl')
+    parser.add_argument('--physics',        default=DEFAULT_PHYICS,               type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
+    parser.add_argument('--gui',            default=DEFAULT_GUI,               type=str2bool,      help='Whether to use PyBullet GUI (default: False)', metavar='')
+    parser.add_argument('--record_video',   default=DEFAULT_RECORD_VIDEO,               type=str2bool,      help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--trace_file',     default=DEFAULT_TRACE_FILE, type=str,           help='Pickle file with the trace to compare to (default: "example_trace.pkl")', metavar='')
+    parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
+    ARGS = parser.parse_args()
+
+    run(**vars(ARGS))

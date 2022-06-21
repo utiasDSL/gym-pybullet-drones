@@ -16,61 +16,72 @@ import argparse
 import numpy as np
 
 from gym_pybullet_drones.utils.utils import sync, str2bool
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 
-if __name__ == "__main__":
+DEFAULT_DRONE = DroneModel('cf2x')
+DEFAULT_GUI = True
+DEFAULT_RECORD_VIDEO = False
+DEFAULT_SIMULATION_FREQ_HZ = 240
+DEFAULT_CONTROL_FREQ_HZ = 48
+DEFAULT_AGGREGATE = True
+DEFAULT_DURATION_SEC = 12
+DEFAULT_OUTPUT_FOLDER = 'results'
+DEFAULT_COLAB = False
 
-    #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(description='Downwash example script using CtrlAviary and DSLPIDControl')
-    parser.add_argument('--drone',              default="cf2x",     type=DroneModel,    help='Drone model (default: CF2X)', metavar='', choices=DroneModel)
-    parser.add_argument('--gui',                default=True,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
-    parser.add_argument('--record_video',       default=False,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
-    parser.add_argument('--simulation_freq_hz', default=240,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
-    parser.add_argument('--control_freq_hz',    default=48,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--aggregate',          default=True,       type=str2bool,      help='Whether to aggregate physics steps (default: False)', metavar='')
-    parser.add_argument('--duration_sec',       default=12,         type=int,           help='Duration of the simulation in seconds (default: 10)', metavar='')
-    ARGS = parser.parse_args()
-
+def run(
+        drone=DEFAULT_DRONE, 
+        gui=DEFAULT_GUI, 
+        record_video=DEFAULT_RECORD_VIDEO, 
+        simulation_freq_hz=DEFAULT_SIMULATION_FREQ_HZ, 
+        control_freq_hz=DEFAULT_CONTROL_FREQ_HZ, 
+        aggregate=DEFAULT_AGGREGATE, 
+        duration_sec=DEFAULT_DURATION_SEC,
+        output_folder=DEFAULT_OUTPUT_FOLDER,
+        plot=True,
+        colab=DEFAULT_COLAB
+    ):
     #### Initialize the simulation #############################
     INIT_XYZS = np.array([[.5, 0, 1],[-.5, 0, .5]])
-    AGGR_PHY_STEPS = int(ARGS.simulation_freq_hz/ARGS.control_freq_hz) if ARGS.aggregate else 1
-    env = CtrlAviary(drone_model=ARGS.drone,
+    AGGR_PHY_STEPS = int(simulation_freq_hz/control_freq_hz) if aggregate else 1
+    env = CtrlAviary(drone_model=drone,
                      num_drones=2,
                      initial_xyzs=INIT_XYZS,
                      physics=Physics.PYB_DW,
                      neighbourhood_radius=10,
-                     freq=ARGS.simulation_freq_hz,
+                     freq=simulation_freq_hz,
                      aggregate_phy_steps=AGGR_PHY_STEPS,
-                     gui=ARGS.gui,
-                     record=ARGS.record_video,
+                     gui=gui,
+                     record=record_video,
                      obstacles=True
                      )
 
     #### Initialize the trajectories ###########################
     PERIOD = 5
-    NUM_WP = ARGS.control_freq_hz*PERIOD
+    NUM_WP = control_freq_hz*PERIOD
     TARGET_POS = np.zeros((NUM_WP, 2))
     for i in range(NUM_WP):
         TARGET_POS[i, :] = [0.5*np.cos(2*np.pi*(i/NUM_WP)), 0]
     wp_counters = np.array([0, int(NUM_WP/2)])
 
     #### Initialize the logger #################################
-    logger = Logger(logging_freq_hz=int(ARGS.simulation_freq_hz/AGGR_PHY_STEPS),
+    logger = Logger(logging_freq_hz=int(simulation_freq_hz/AGGR_PHY_STEPS),
                     num_drones=2,
-                    duration_sec=ARGS.duration_sec
+                    duration_sec=duration_sec,
+                    output_folder=output_folder,
+                    colab=colab
                     )
 
     #### Initialize the controllers ############################
-    ctrl = [DSLPIDControl(drone_model=ARGS.drone) for i in range(2)]
+    ctrl = [DSLPIDControl(drone_model=drone) for i in range(2)]
 
     #### Run the simulation ####################################
-    CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/ARGS.control_freq_hz))
+    CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
     action = {str(i): np.array([0, 0, 0, 0]) for i in range(2)}
     START = time.time()
-    for i in range(0, int(ARGS.duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
+    for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
         #### Step the simulation ###################################
         obs, reward, done, info = env.step(action)
@@ -102,7 +113,7 @@ if __name__ == "__main__":
             env.render()
 
         #### Sync the simulation ###################################
-        if ARGS.gui:
+        if gui:
             sync(i, START, env.TIMESTEP)
 
     #### Close the environment #################################
@@ -113,4 +124,22 @@ if __name__ == "__main__":
     logger.save_as_csv("dw") # Optional CSV save
 
     #### Plot the simulation results ###########################
-    logger.plot()
+    if plot:
+        logger.plot()
+
+
+if __name__ == "__main__":
+    #### Define and parse (optional) arguments for the script ##
+    parser = argparse.ArgumentParser(description='Downwash example script using CtrlAviary and DSLPIDControl')
+    parser.add_argument('--drone',              default=DEFAULT_DRONE,     type=DroneModel,    help='Drone model (default: CF2X)', metavar='', choices=DroneModel)
+    parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
+    parser.add_argument('--record_video',       default=DEFAULT_RECORD_VIDEO,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
+    parser.add_argument('--simulation_freq_hz', default=DEFAULT_SIMULATION_FREQ_HZ,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
+    parser.add_argument('--control_freq_hz',    default=DEFAULT_CONTROL_FREQ_HZ,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
+    parser.add_argument('--aggregate',          default=DEFAULT_AGGREGATE,       type=str2bool,      help='Whether to aggregate physics steps (default: False)', metavar='')
+    parser.add_argument('--duration_sec',       default=DEFAULT_DURATION_SEC,         type=int,           help='Duration of the simulation in seconds (default: 10)', metavar='')
+    parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
+    parser.add_argument('--colab',              default=DEFAULT_COLAB, type=bool,           help='Whether example is being run by a notebook (default: "False")', metavar='')
+    ARGS = parser.parse_args()
+
+    run(**vars(ARGS))

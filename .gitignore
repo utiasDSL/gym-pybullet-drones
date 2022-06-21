@@ -6,6 +6,8 @@ examples/test.py
 # NumPy saves and videos
 files/logs/*.npy
 files/videos/*.mp4
+results/
+tmp/
 
 # Learning results
 experiments/learning/results/save-*
@@ -41,6 +43,7 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.vscode/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

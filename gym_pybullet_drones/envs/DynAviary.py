@@ -1,7 +1,8 @@
 import numpy as np
 from gym import spaces
 
-from gym_pybullet_drones.envs.BaseAviary import DroneModel, Physics, BaseAviary
+from gym_pybullet_drones.envs.BaseAviary import BaseAviary
+from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.utils.utils import nnlsRPM
 
 class DynAviary(BaseAviary):
@@ -21,7 +22,8 @@ class DynAviary(BaseAviary):
                  gui=False,
                  record=False,
                  obstacles=False,
-                 user_debug_gui=True
+                 user_debug_gui=True,
+                 output_folder='results'
                  ):
         """Initialization of an aviary controlled by desired thrust and torques.
 
@@ -68,7 +70,8 @@ class DynAviary(BaseAviary):
                          record=record,
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui,
-                         dynamics_attributes=True
+                         dynamics_attributes=True,
+                         output_folder=output_folder
                          )
 
     

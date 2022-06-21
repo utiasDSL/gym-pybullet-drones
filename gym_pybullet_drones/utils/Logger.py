@@ -1,5 +1,4 @@
 import os
-import time
 from datetime import datetime
 from cycler import cycler
 import numpy as np
@@ -19,8 +18,10 @@ class Logger(object):
 
     def __init__(self,
                  logging_freq_hz: int,
+                 output_folder: str="results",
                  num_drones: int=1,
-                 duration_sec: int=0
+                 duration_sec: int=0,
+                 colab: bool=False,
                  ):
         """Logger class __init__ method.
 
@@ -37,6 +38,10 @@ class Logger(object):
             Used to preallocate the log arrays (improves performance).
 
         """
+        self.COLAB = colab
+        self.OUTPUT_FOLDER = output_folder
+        if not os.path.exists(self.OUTPUT_FOLDER):
+            os.mkdir(self.OUTPUT_FOLDER)
         self.LOGGING_FREQ_HZ = logging_freq_hz
         self.NUM_DRONES = num_drones
         self.PREALLOCATED_ARRAYS = False if duration_sec == 0 else True
@@ -118,7 +123,7 @@ class Logger(object):
     def save(self):
         """Save the logs to file.
         """
-        with open(os.path.dirname(os.path.abspath(__file__))+"/../../files/logs/save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy", 'wb') as out_file:
+        with open(os.path.join(self.OUTPUT_FOLDER, "save-flight-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")+".npy"), 'wb') as out_file:
             np.savez(out_file, timestamps=self.timestamps, states=self.states, controls=self.controls)
 
     ################################################################################
@@ -134,7 +139,7 @@ class Logger(object):
             Added to the foldername.
 
         """
-        csv_dir = os.environ.get('HOME')+"/Desktop/save-flight-"+comment+"-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S")
+        csv_dir = os.path.join(self.OUTPUT_FOLDER, "save-flight-"+comment+"-"+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
         if not os.path.exists(csv_dir):
             os.makedirs(csv_dir+'/')
         t = np.arange(0, self.timestamps.shape[1]/self.LOGGING_FREQ_HZ, 1/self.LOGGING_FREQ_HZ)
@@ -368,4 +373,7 @@ class Logger(object):
                             wspace=0.15,
                             hspace=0.0
                             )
-        plt.show()
+        if self.COLAB: 
+            plt.savefig(os.path.join('results', 'output_figure.png'))
+        else:
+            plt.show()
