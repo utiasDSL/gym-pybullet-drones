@@ -133,20 +133,13 @@ if __name__ == "__main__":
     #### Parameters to recreate the environment ################
     NUM_DRONES = int(ARGS.exp.split("-")[2])
     OBS = ObservationType.KIN if ARGS.exp.split("-")[4] == 'kin' else ObservationType.RGB
-    if ARGS.exp.split("-")[5] == 'rpm':
-        ACT = ActionType.RPM
-    elif ARGS.exp.split("-")[5] == 'dyn':
-        ACT = ActionType.DYN
-    elif ARGS.exp.split("-")[5] == 'pid':
-        ACT = ActionType.PID
-    elif ARGS.exp.split("-")[5] == 'vel':
-        ACT = ActionType.VEL
-    elif ARGS.exp.split("-")[5] == 'one_d_rpm':
-        ACT = ActionType.ONE_D_RPM
-    elif ARGS.exp.split("-")[5] == 'one_d_dyn':
-        ACT = ActionType.ONE_D_DYN
-    elif ARGS.exp.split("-")[5] == 'one_d_pid':
-        ACT = ActionType.ONE_D_PID
+    
+    # Parse ActionType instance from file name
+    action_name = ARGS.exp.split("-")[5]
+    ACT = [action for action in ActionType if action.value == action_name]
+    if len(ACT) != 1:
+        raise AssertionError("Result file could have gotten corrupted. Extracted action type does not match any of the existing ones.")
+    ACT = ACT.pop()
 
     #### Constants, and errors #################################
     if OBS == ObservationType.KIN:

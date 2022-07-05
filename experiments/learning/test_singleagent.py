@@ -71,11 +71,12 @@ def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FO
     env_name = exp.split("-")[1]+"-aviary-v0"
     OBS = ObservationType.KIN if exp.split("-")[3] == 'kin' else ObservationType.RGB
 
-    # Parce ActionType instance from file name
+    # Parse ActionType instance from file name
     action_name = exp.split("-")[4]
     ACT = [action for action in ActionType if action.value == action_name]
-    assert len(ACT) == 1, "Result file could have gotten corrupted. Extracted action type does not match any of the existing ones."
-    ACT = ACT[0]
+    if len(ACT) != 1:
+        raise AssertionError("Result file could have gotten corrupted. Extracted action type does not match any of the existing ones.")
+    ACT = ACT.pop()
 
     #### Evaluate the model ####################################
     eval_env = gym.make(env_name,
