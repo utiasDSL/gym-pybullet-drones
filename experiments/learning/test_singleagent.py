@@ -70,22 +70,12 @@ def run(exp, gui=DEFAULT_GUI, plot=DEFAULT_PLOT, output_folder=DEFAULT_OUTPUT_FO
     #### Parameters to recreate the environment ################
     env_name = exp.split("-")[1]+"-aviary-v0"
     OBS = ObservationType.KIN if exp.split("-")[3] == 'kin' else ObservationType.RGB
-    if exp.split("-")[4] == 'rpm':
-        ACT = ActionType.RPM
-    elif exp.split("-")[4] == 'dyn':
-        ACT = ActionType.DYN
-    elif exp.split("-")[4] == 'pid':
-        ACT = ActionType.PID
-    elif exp.split("-")[4] == 'vel':
-        ACT = ActionType.VEL
-    elif exp.split("-")[4] == 'tun':
-        ACT = ActionType.TUN
-    elif exp.split("-")[4] == 'one_d_rpm':
-        ACT = ActionType.ONE_D_RPM
-    elif exp.split("-")[4] == 'one_d_dyn':
-        ACT = ActionType.ONE_D_DYN
-    elif exp.split("-")[4] == 'one_d_pid':
-        ACT = ActionType.ONE_D_PID
+
+    # Parce ActionType instance from file name
+    action_name = exp.split("-")[4]
+    ACT = [action for action in ActionType if action.value == action_name]
+    assert len(ACT) == 1, "Result file could have gotten corrupted. Extracted action type does not match any of the existing ones."
+    ACT = ACT[0]
 
     #### Evaluate the model ####################################
     eval_env = gym.make(env_name,
