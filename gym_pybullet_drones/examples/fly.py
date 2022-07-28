@@ -181,7 +181,7 @@ def run(
         for j in range(num_drones):
             logger.log(drone=j,
                        timestamp=i/env.SIM_FREQ,
-                       state= obs[str(j)]["state"],
+                       state=obs[str(j)]["state"],
                        control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
                        # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
                        )

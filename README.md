@@ -128,7 +128,7 @@ There are 2 basic template scripts in [`gym_pybullet_drones/examples/`](https://
 
 - `fly.py` [[try it on Colab](https://colab.research.google.com/drive/1hJlJElUuveD4U_GDGuNsX8NqDcl3jUGz?usp=sharing)] runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
 ```
-$ cd gym-pybullet-drones/examples/
+$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
 $ python3 fly.py                             # Try 'python3 fly.py -h' to show the script's customizable parameters
 ``` 
 > Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
@@ -139,7 +139,7 @@ $ python3 fly.py                             # Try 'python3 fly.py -h' to show t
 
 - `learn.py` [[try it on Colab](https://colab.research.google.com/drive/1lLGAET4xx-7gGznanfGe0bQy4H7O9ScL?usp=sharing)] is an **RL example** to take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
 ```
-$ cd gym-pybullet-drones/examples/
+$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
 $ python3 learn.py                           # Try 'python3 learn.py -h' to show the script's customizable parameters
 ```
 <img src="files/readme_images/learn1.gif" alt="learning 1" width="400"> <img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
@@ -149,7 +149,7 @@ Other scripts in folder [`gym_pybullet_drones/examples/`](https://github.com/uti
 
 - `downwash.py` [[try it on Colab](https://colab.research.google.com/drive/1Oj_RzJ5M_g4KrKFRJvcAhh62GJo78m9F?usp=sharing)] is a flight script with only 2 drones, to test the downwash model
 ```
-$ cd gym-pybullet-drones/examples/
+$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
 $ python3 downwash.py                        # Try 'python3 downwash.py -h' to show the script's customizable parameters
 ```
 
@@ -157,7 +157,7 @@ $ python3 downwash.py                        # Try 'python3 downwash.py -h' to s
 
 - `compare.py` [[try it on Colab](https://colab.research.google.com/drive/1RzY6jG5F7ddknuyssI486TdMnOfq9Cjf?usp=sharing)] which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/files/example_trace.pkl)
 ```
-$ cd gym-pybullet-drones/examples/
+$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
 $ python3 compare.py                         # Try 'python3 compare.py -h' to show the script's customizable parameters
 ```
 <img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="350"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
