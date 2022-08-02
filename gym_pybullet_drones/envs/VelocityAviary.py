@@ -62,7 +62,7 @@ class VelocityAviary(BaseAviary):
         if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
             self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
         elif drone_model == DroneModel.HB:
-            self.ctrl = [SimplePIDControl(drone_model=DroneModel.HB) for i in range(num_drones)]
+            raise ValueError("[ERROR] in VelocityAviary.__init__(), velocity control not supported for DroneModel.HB.")
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
