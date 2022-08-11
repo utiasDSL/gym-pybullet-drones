@@ -400,7 +400,7 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 
 
-## Desiderata/WIP/Summer 2022 Internships TODOs
+## TODOs (August 2022)
 - Test and update ROS 2 instrucitons for [Humble Hawksbill](https://docs.ros.org/en/foxy/Releases/Release-Humble-Hawksbill.html)
 - Create a list of FAQs from [Issues tagged as questions](https://github.com/utiasDSL/gym-pybullet-drones/issues?q=is%3Aissue+is%3Aopen+label%3Aquestion)
 
