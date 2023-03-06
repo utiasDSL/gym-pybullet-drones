@@ -1,4 +1,4 @@
-# gym-pybullet-drones
+# gym-pybullet-drones (v26 migration)
 
 [Simple](https://en.wikipedia.org/wiki/KISS_principle) OpenAI [Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning with quadrotors
 
