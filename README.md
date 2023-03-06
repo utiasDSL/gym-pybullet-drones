@@ -1,12 +1,9 @@
-# NOTE
-
-This repository's `master` branch is actively developed, please `git pull` frequently and feel free to open new [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) for any undesired, unexpected, or (presumably) incorrect behavior. Thanks 🙏
-
-If you are interested in safe control and the companion code of ["Safe Learning in Robotics"](https://www.annualreviews.org/doi/abs/10.1146/annurev-control-042920-020211) and ["Safe Control Gym"](https://ieeexplore.ieee.org/abstract/document/9849119/), check out [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym)
-
 # gym-pybullet-drones
 
 [Simple](https://en.wikipedia.org/wiki/KISS_principle) OpenAI [Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning with quadrotors
+
+- This repository's `master` branch is actively developed, please `git pull` frequently and feel free to open new [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) for any undesired, unexpected, or (presumably) incorrect behavior. Thanks 🙏
+- If you are interested in safe control and the companion code of ["Safe Learning in Robotics"](https://www.annualreviews.org/doi/abs/10.1146/annurev-control-042920-020211) and ["Safe Control Gym"](https://ieeexplore.ieee.org/abstract/document/9849119/), check out [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym)
 
 <img src="files/readme_images/helix.gif" alt="formation flight" width="350"> <img src="files/readme_images/helix.png" alt="control info" width="450">
 
