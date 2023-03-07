@@ -230,6 +230,11 @@ class BaseAviary(gym.Env):
         ndarray | dict[..]
             The initial observation, check the specific implementation of `_computeObs()`
             in each subclass for its format.
+            
+        TODO UPDATE TO GYM v26
+            reset() further returns info, similar to the info returned by step().
+            This is important because info can include metrics or valid action mask
+            that is used or saved in the next step.
 
         """
         p.resetSimulation(physicsClientId=self.CLIENT)
@@ -269,6 +274,10 @@ class BaseAviary(gym.Env):
         dict[..]
             Additional information as a dictionary, check the specific implementation of `_computeInfo()`
             in each subclass for its format.
+            
+        TODO UPDATE TO GYM v26
+            For users wishing to update, in most cases, replacing done with terminated and truncated=False 
+            in step() should address most issues.
 
         """
         #### Save PNG video frames if RECORD=True and GUI=False ####
