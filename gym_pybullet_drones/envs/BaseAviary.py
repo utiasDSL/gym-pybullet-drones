@@ -222,7 +222,7 @@ class BaseAviary(gym.Env):
     
     ################################################################################
 
-    def reset(self):
+    def reset(self, *, seed=None, options=None):
         """Resets the environment.
 
         Returns

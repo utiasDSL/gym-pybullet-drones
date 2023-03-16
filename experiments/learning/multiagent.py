@@ -274,7 +274,8 @@ if __name__ == "__main__":
             "pol0": (None, observer_space, action_space, {"agent_id": 0,}),
             "pol1": (None, observer_space, action_space, {"agent_id": 1,}),
         },
-        "policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1", # # Function mapping agent ids to policy ids
+        #"policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1", # # Function mapping agent ids to policy ids #ray1.9
+        "policy_mapping_fn": lambda agent_id, episode, worker: "pol"+str(agent_id), #ray2.3
         "observation_fn": central_critic_observer, # See rllib/evaluation/observation_function.py for more info
     }
 
