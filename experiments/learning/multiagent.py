@@ -39,10 +39,10 @@ from ray import tune
 from ray.tune.logger import DEFAULT_LOGGERS
 from ray.tune import register_env
 from ray.rllib.agents import ppo
-from ray.rllib.agents.ppo import PPOTrainer, PPOTFPolicy
+from ray.rllib.agents.ppo import PPOTrainer#, PPOTFPolicy
 from ray.rllib.examples.policy.random_policy import RandomPolicy
 from ray.rllib.utils.test_utils import check_learning_achieved
-from ray.rllib.agents.callbacks import DefaultCallbacks
+from ray.rllib.algorithms.callbacks import DefaultCallbacks
 from ray.rllib.models.torch.torch_modelv2 import TorchModelV2
 from ray.rllib.models import ModelCatalog
 from ray.rllib.policy.sample_batch import SampleBatch
@@ -155,10 +155,10 @@ if __name__ == "__main__":
         os.makedirs(filename+'/')
 
     #### Print out current git commit hash #####################
-    if platform == "linux" or platform == "darwin":
-        git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
-        with open(filename+'/git_commit.txt', 'w+') as f:
-            f.write(str(git_commit))
+    #if platform == "linux" or platform == "darwin":
+    #    git_commit = subprocess.check_output(["git", "describe", "--tags"]).strip()
+    #    with open(filename+'/git_commit.txt', 'w+') as f:
+    #        f.write(str(git_commit))
 
     #### Constants, and errors #################################
     if ARGS.obs==ObservationType.KIN:
@@ -274,7 +274,8 @@ if __name__ == "__main__":
             "pol0": (None, observer_space, action_space, {"agent_id": 0,}),
             "pol1": (None, observer_space, action_space, {"agent_id": 1,}),
         },
-        "policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1", # # Function mapping agent ids to policy ids
+        #"policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1", # # Function mapping agent ids to policy ids #ray1.9
+        "policy_mapping_fn": lambda agent_id, episode, worker: "pol"+str(agent_id), #ray2.3
         "observation_fn": central_critic_observer, # See rllib/evaluation/observation_function.py for more info
     }
 
