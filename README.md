@@ -187,7 +187,7 @@ For multi-agent RL problems, using [`rllib`](https://docs.ray.io/en/master/rllib
 
 ```bash
 $ cd gym-pybullet-drones/experiments/learning/
-$ python3 multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --num_workers <num_workers>
+$ python3 multiagent.py --num_drones <num_drones> --env <env> --obs <ObservationType> --act <ActionType> --algo <alg> --workers <num_workers>
 ```
 
 Run the [replay script](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/learning/test_multiagent.py) to visualize the best trained agent(s) as
