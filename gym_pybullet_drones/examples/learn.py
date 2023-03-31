@@ -18,7 +18,7 @@ It is not meant as a good/effective learning example.
 """
 import time
 import argparse
-import gym
+import gymnasium as gym
 import numpy as np
 from stable_baselines3 import A2C
 from stable_baselines3.a2c import MlpPolicy

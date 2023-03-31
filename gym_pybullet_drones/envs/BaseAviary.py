@@ -11,7 +11,7 @@ from PIL import Image
 import numpy as np
 import pybullet as p
 import pybullet_data
-import gym
+import gymnasium as gym
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 
 
@@ -357,7 +357,7 @@ class BaseAviary(gym.Env):
         self.step_counter = self.step_counter + (1 * self.AGGR_PHY_STEPS)
         #return obs, reward, done, info #ray1.9
         terminated = done #ray2.3
-        truncated = False #ray2.3
+        truncated  = {"__all__": False} #ray2.3
         return obs, reward, terminated, truncated, info #ray2.3
     
     
