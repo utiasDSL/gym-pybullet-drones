@@ -26,7 +26,7 @@ from sys import platform
 import argparse
 import subprocess
 import numpy as np
-import gym
+import gymnasium as gym
 import torch
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3.common.cmd_util import make_vec_env # Module cmd_util will be renamed to env_util https://github.com/DLR-RM/stable-baselines3/pull/197

@@ -15,7 +15,7 @@ from datetime import datetime
 import argparse
 import re
 import numpy as np
-import gym
+import gymnasium as gym
 import torch
 from stable_baselines3.common.env_checker import check_env
 from stable_baselines3 import A2C

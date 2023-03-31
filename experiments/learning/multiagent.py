@@ -27,10 +27,11 @@ import numpy as np
 import pybullet as p
 import pickle
 import matplotlib.pyplot as plt
-import gym
-from gym import error, spaces, utils
-from gym.utils import seeding
-from gym.spaces import Box, Dict
+import gymnasium as gym
+from gymnasium 
+import error, spaces, utils
+from gymnasium.utils import seeding
+from gymnasium.spaces import Box, Dict
 import torch
 import torch.nn as nn
 from ray.rllib.models.torch.fcnet import FullyConnectedNetwork
@@ -238,11 +239,17 @@ if __name__ == "__main__":
     else:
         print("[ERROR] environment not yet implemented")
         exit()
+    #observer_space = Dict({
+    #    "own_obs": temp_env.observation_space[0],
+    #    "opponent_obs": temp_env.observation_space[0],
+    #    "opponent_action": temp_env.action_space[0],
+    #})
+
     observer_space = Dict({
         "own_obs": temp_env.observation_space[0],
         "opponent_obs": temp_env.observation_space[0],
-        "opponent_action": temp_env.action_space[0],
     })
+
     action_space = temp_env.action_space[0]
 
     #### Note ##################################################
@@ -261,6 +268,7 @@ if __name__ == "__main__":
         "batch_mode": "complete_episodes",
         "callbacks": FillInActions,
         "framework": "torch",
+        "enable_connectors" : False, #ray2.3
     }
 
     #### Set up the model parameters of the trainer's config ###
@@ -274,7 +282,8 @@ if __name__ == "__main__":
             "pol0": (None, observer_space, action_space, {"agent_id": 0,}),
             "pol1": (None, observer_space, action_space, {"agent_id": 1,}),
         },
-        "policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1", # # Function mapping agent ids to policy ids
+        #"policy_mapping_fn": lambda x: "pol0" if x == 0 else "pol1", # # Function mapping agent ids to policy ids #ray1.9
+        "policy_mapping_fn": lambda agent_id, episode, worker: "pol"+str(agent_id), #ray2.3
         "observation_fn": central_critic_observer, # See rllib/evaluation/observation_function.py for more info
     }
 

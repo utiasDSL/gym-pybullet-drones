@@ -1,7 +1,8 @@
 import os
 import numpy as np
 import pybullet as p
-from gym import spaces
+from gymnasium 
+import spaces
 from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
