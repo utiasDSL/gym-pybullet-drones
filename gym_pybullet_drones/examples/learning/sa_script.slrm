@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Use as sbatch --export=env="takeoff",algo="a2c",obs="kin",act="rpm" sa_script.slrm
+
+#SBATCH --job-name=pyb_drones
+#SBATCH --output=/scratch/gobi1/jacopo/gym-pybullet-drones/experiments/learning/results/output-%N-%j.out     # For output and error, use absolute paths that exists already
+#SBATCH --error=/scratch/gobi1/jacopo/gym-pybullet-drones/experiments/learning/results/error-%N-%j.err       # %N and %j will be replaced by the host name and job id, respectively
+#SBATCH --open-mode=append
+#SBATCH --partition=cpu                              # self-explanatory, set to your preference (e.g. gpu or cpu on MaRS, p100, t4, or cpu on Vaughan)
+#SBATCH --cpus-per-task=16                           # self-explanatory, set to your preference
+#SBATCH --ntasks-per-node=1
+#SBATCH --mem=64G                                    # self-explanatory, set to your preference
+#SBATCH --gres=gpu:0                                 # NOTE: you need a GPU for CUDA support; self-explanatory, set to your preference 
+#SBATCH --nodes=1
+#SBATCH --qos=normal                                 # for "high" and "deadline" QoS, refer to https://support.vectorinstitute.ai/AboutVaughan2
+
+now=$(date +"%Y_%m_%d-%H_%M_%S")                     # current date
+
+log_file="/scratch/gobi1/jacopo/gym-pybullet-drones/experiments/learning/results/log-$env-$algo-$obs-$act-3D-$now.log"
+ 
+echo $SLURM_JOB_PARTITION >> $log_file               # log the job partition
+
+echo $SLURM_JOB_ID >> $log_file                      # log the job id
+
+export LD_LIBRARY_PATH=/pkgs/cuda-10.1/lib64:/pkgs/cudnn-10.1-v7.6.3.30/lib64${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}    # required for TensorFlow to see any GPU
+
+export PATH=/pkgs/anaconda3/bin:$PATH                # exporting the binaries of your preferred version of conda
+
+source activate /scratch/gobi1/$USER/learning/       # NOTE: set the path to your conda environment path
+
+echo $CONDA_PREFIX >> $log_file                      # log the active conda environment 
+
+python --version >> $log_file                        # log Python version
+
+# pip install --user --upgrade gym
+# pip install --user --upgrade ray[rllib]
+# pip install --user --upgrade pybullet
+# pip install --user --upgrade stable-baselines3
+
+cd /scratch/gobi1/$USER/gym-pybullet-drones/
+pip install --user --upgrade --verbose --editable .
+
+if [ "$algo" = "a2c" ] || [ "$algo" = "ppo" ]; then
+
+    python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env $env --algo $algo --obs $obs --act $act --cpu 4 >> $log_file    # the script, with its standard output appended to gym_py_drones_job.log
+
+else
+
+    python /scratch/gobi1/$USER/gym-pybullet-drones/experiments/learning/singleagent.py --env $env --algo $algo --obs $obs --act $act --cpu 1 >> $log_file    # the script, with its standard output appended to gym_py_drones_job.log
+
+fi
+
+source deactivate
