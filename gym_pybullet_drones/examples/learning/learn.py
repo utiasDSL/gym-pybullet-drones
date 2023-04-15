@@ -23,9 +23,9 @@ import numpy as np
 from stable_baselines3 import A2C
 from stable_baselines3.a2c import MlpPolicy
 from stable_baselines3.common.env_checker import check_env
-import ray
-from ray.tune import register_env
-from ray.rllib.agents import ppo
+# import ray
+# from ray.tune import register_env
+# from ray.rllib.agents import ppo
 
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.single_agent_rl.TakeoffAviary import TakeoffAviary
@@ -55,25 +55,25 @@ def run(rllib=DEFAULT_RLLIB,output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI
                     verbose=1
                     )
         model.learn(total_timesteps=10000) # Typically not enough
-    else:
-        ray.shutdown()
-        ray.init(ignore_reinit_error=True)
-        register_env("takeoff-aviary-v0", lambda _: TakeoffAviary())
-        config = ppo.DEFAULT_CONFIG.copy()
-        config["num_workers"] = 2
-        config["framework"] = "torch"
-        config["env"] = "takeoff-aviary-v0"
-        agent = ppo.PPOTrainer(config)
-        for i in range(3): # Typically not enough
-            results = agent.train()
-            print("[INFO] {:d}: episode_reward max {:f} min {:f} mean {:f}".format(i,
-                                                                                   results["episode_reward_max"],
-                                                                                   results["episode_reward_min"],
-                                                                                   results["episode_reward_mean"]
-                                                                                   )
-                  )
-        policy = agent.get_policy()
-        ray.shutdown()
+    # else:
+    #     ray.shutdown()
+    #     ray.init(ignore_reinit_error=True)
+    #     register_env("takeoff-aviary-v0", lambda _: TakeoffAviary())
+    #     config = ppo.DEFAULT_CONFIG.copy()
+    #     config["num_workers"] = 2
+    #     config["framework"] = "torch"
+    #     config["env"] = "takeoff-aviary-v0"
+    #     agent = ppo.PPOTrainer(config)
+    #     for i in range(3): # Typically not enough
+    #         results = agent.train()
+    #         print("[INFO] {:d}: episode_reward max {:f} min {:f} mean {:f}".format(i,
+    #                                                                                results["episode_reward_max"],
+    #                                                                                results["episode_reward_min"],
+    #                                                                                results["episode_reward_mean"]
+    #                                                                                )
+    #               )
+    #     policy = agent.get_policy()
+    #     ray.shutdown()
 
     #### Show (and record a video of) the model's performance ##
     env = TakeoffAviary(gui=gui,
@@ -91,8 +91,8 @@ def run(rllib=DEFAULT_RLLIB,output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI
             action, _states = model.predict(obs,
                                             deterministic=True
                                             )
-        else:
-            action, _states, _dict = policy.compute_single_action(obs)
+        # else:
+        #     action, _states, _dict = policy.compute_single_action(obs)
         obs, reward, done, info = env.step(action)
         logger.log(drone=0,
                    timestamp=i/env.SIM_FREQ,
