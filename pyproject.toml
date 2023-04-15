@@ -19,7 +19,7 @@ pytest = "^7.3"
 pybullet = "^3.2.5"
 stable-baselines3 = "^1.8.0"
 torch = "^2.0.0"
-gym = "^0.21"
+gym = "^0"
 
 [tool.poetry.dev-dependencies]
 
