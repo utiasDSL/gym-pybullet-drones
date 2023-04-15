@@ -1,26 +1,30 @@
 # gym-pybullet-drones
 
-2023 remastering
+![video](files/readme_images/helix.gif) ![control](files/readme_images/helix.png)
 
 ## Installation
 
-TBD
-
 ```sh
-tbd
+git clone https://github.com/utiasDSL/gym-pybullet-drones.git
+cd gym-pybullet-drones/
+
+conda create -n drones python=3.10
+conda activate drones
+
+pip3 install --upgrade pip
+pip3 install -e .
 ```
 
 ## Use
 
-TBD
-
 ```sh
-tbd
+cd gym_pybullet_drones/examples/
+python3 pid.py
 ```
 
 ## Citation
 
-If you wish, please cite our work [(link)](https://arxiv.org/abs/2103.02142) as
+If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142) as
 
 ```bibtex
 @INPROCEEDINGS{panerati2021learning,
@@ -30,8 +34,8 @@ If you wish, please cite our work [(link)](https://arxiv.org/abs/2103.02142) as
       year={2021},
       volume={},
       number={},
-      pages={},
-      doi={}
+      pages={7512-7519},
+      doi={10.1109/IROS51168.2021.9635857}
 }
 ```
 

@@ -12,17 +12,13 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.8"
-numpy = "^1.22"
-Pillow = "^9.0"
-matplotlib = "^3.5"
-cycler = "^0.10"
+numpy = "^1.24"
+scipy = "^1.10"
+matplotlib = "^3.7"
+pybullet = "^3.2.5"
+stable-baselines3 = "^1.8.0"
+torch = "^2.0.0"
 gym = "^0.21"
-pybullet = "^3.2"
-stable-baselines3 = "1.5.0"
-scipy = "^1.8"
-torch = "1.11.0"
-"ray[rllib]" = "1.9"
-tensorboard = "^2.9"
 
 [tool.poetry.dev-dependencies]
 
