@@ -15,7 +15,6 @@ import gymnasium as gym
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 
 
-
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
 
