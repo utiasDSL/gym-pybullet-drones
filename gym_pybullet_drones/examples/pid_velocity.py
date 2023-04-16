@@ -6,7 +6,7 @@ Example
 -------
 In a terminal, run as:
 
-    $ python velocity.py
+    $ python pid_velocity.py
 
 Notes
 -----

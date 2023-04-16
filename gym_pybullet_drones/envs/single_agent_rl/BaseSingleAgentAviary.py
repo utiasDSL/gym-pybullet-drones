@@ -8,17 +8,13 @@ from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
-from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 
 class ActionType(Enum):
     """Action type enumeration class."""
     RPM = "rpm"                 # RPMS
-    DYN = "dyn"                 # Desired thrust and torques
     PID = "pid"                 # PID control
     VEL = "vel"                 # Velocity input (using PID control)
-    TUN = "tun"                 # Tune the coefficients of a PID controller
     ONE_D_RPM = "one_d_rpm"     # 1D (identical input to all motors) with RPMs
-    ONE_D_DYN = "one_d_dyn"     # 1D (identical input to all motors) with desired thrust and torques
     ONE_D_PID = "one_d_pid"     # 1D (identical input to all motors) with PID control
 
 ################################################################################
@@ -50,9 +46,9 @@ class BaseSingleAgentAviary(BaseAviary):
         """Initialization of a generic single agent RL environment.
 
         Attribute `num_drones` is automatically set to 1; `vision_attributes`
-        and `dynamics_attributes` are selected based on the choice of `obs`
-        and `act`; `obstacles` is set to True and overridden with landmarks for
-        vision applications; `user_debug_gui` is set to False for performance.
+        are selected based on the choice of `obs` and `act`; `obstacles` is
+        set to True and overridden with landmarks for vision applications; 
+        `user_debug_gui` is set to False for performance.
 
         Parameters
         ----------
@@ -79,31 +75,14 @@ class BaseSingleAgentAviary(BaseAviary):
 
         """
         vision_attributes = True if obs == ObservationType.RGB else False
-        dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
         #### Create integrated controllers #########################
-        if act in [ActionType.PID, ActionType.VEL, ActionType.TUN, ActionType.ONE_D_PID]:
+        if act in [ActionType.PID, ActionType.VEL, ActionType.ONE_D_PID]:
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
             if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
                 self.ctrl = DSLPIDControl(drone_model=DroneModel.CF2X)
-                if act == ActionType.TUN:
-                    self.TUNED_P_POS = np.array([.4, .4, 1.25])
-                    self.TUNED_I_POS = np.array([.05, .05, .05])
-                    self.TUNED_D_POS = np.array([.2, .2, .5])
-                    self.TUNED_P_ATT = np.array([70000., 70000., 60000.])
-                    self.TUNED_I_ATT = np.array([.0, .0, 500.])
-                    self.TUNED_D_ATT = np.array([20000., 20000., 12000.])
-            elif drone_model == DroneModel.HB:
-                self.ctrl = SimplePIDControl(drone_model=DroneModel.HB)
-                if act == ActionType.TUN:
-                    self.TUNED_P_POS = np.array([.1, .1, .2])
-                    self.TUNED_I_POS = np.array([.0001, .0001, .0001])
-                    self.TUNED_D_POS = np.array([.3, .3, .4])
-                    self.TUNED_P_ATT = np.array([.3, .3, .05])
-                    self.TUNED_I_ATT = np.array([.0001, .0001, .0001])
-                    self.TUNED_D_ATT = np.array([.3, .3, .5])
             else:
                 print("[ERROR] in BaseSingleAgentAviary.__init()__, no controller is available for the specified drone_model")
         super().__init__(drone_model=drone_model,
@@ -118,15 +97,10 @@ class BaseSingleAgentAviary(BaseAviary):
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
-                         dynamics_attributes=dynamics_attributes
                          )
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
             self.SPEED_LIMIT = 0.03 * self.MAX_SPEED_KMH * (1000/3600)
-        #### Try _trajectoryTrackingRPMs exists IFF ActionType.TUN #
-        if act == ActionType.TUN and not (hasattr(self.__class__, '_trajectoryTrackingRPMs') and callable(getattr(self.__class__, '_trajectoryTrackingRPMs'))):
-                print("[ERROR] in BaseSingleAgentAviary.__init__(), ActionType.TUN requires an implementation of _trajectoryTrackingRPMs in the instantiated subclass")
-                exit()
 
     ################################################################################
 
@@ -172,13 +146,11 @@ class BaseSingleAgentAviary(BaseAviary):
             A Box() of size 1, 3, 4, or 6 depending on the action type.
 
         """
-        if self.ACT_TYPE == ActionType.TUN:
-            size = 6
-        elif self.ACT_TYPE in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
+        if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
             size = 4
         elif self.ACT_TYPE == ActionType.PID:
             size = 3
-        elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
+        elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
             size = 1
         else:
             print("[ERROR] in BaseSingleAgentAviary._actionSpace()")
@@ -213,31 +185,8 @@ class BaseSingleAgentAviary(BaseAviary):
             commanded to the 4 motors of each drone.
 
         """
-        if self.ACT_TYPE == ActionType.TUN:
-            self.ctrl.setPIDCoefficients(p_coeff_pos=(action[0]+1)*self.TUNED_P_POS,
-                                         i_coeff_pos=(action[1]+1)*self.TUNED_I_POS,
-                                         d_coeff_pos=(action[2]+1)*self.TUNED_D_POS,
-                                         p_coeff_att=(action[3]+1)*self.TUNED_P_ATT,
-                                         i_coeff_att=(action[4]+1)*self.TUNED_I_ATT,
-                                         d_coeff_att=(action[5]+1)*self.TUNED_D_ATT
-                                         )
-            return self._trajectoryTrackingRPMs() 
-        elif self.ACT_TYPE == ActionType.RPM:
+        if self.ACT_TYPE == ActionType.RPM:
             return np.array(self.HOVER_RPM * (1+0.05*action))
-        elif self.ACT_TYPE == ActionType.DYN:
-            return nnlsRPM(thrust=(self.GRAVITY*(action[0]+1)),
-                           x_torque=(0.05*self.MAX_XY_TORQUE*action[1]),
-                           y_torque=(0.05*self.MAX_XY_TORQUE*action[2]),
-                           z_torque=(0.05*self.MAX_Z_TORQUE*action[3]),
-                           counter=self.step_counter,
-                           max_thrust=self.MAX_THRUST,
-                           max_xy_torque=self.MAX_XY_TORQUE,
-                           max_z_torque=self.MAX_Z_TORQUE,
-                           a=self.A,
-                           inv_a=self.INV_A,
-                           b_coeff=self.B_COEFF,
-                           gui=self.GUI
-                           )
         elif self.ACT_TYPE == ActionType.PID: 
             state = self._getDroneStateVector(0)
             rpm, _, _ = self.ctrl.computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
@@ -266,20 +215,6 @@ class BaseSingleAgentAviary(BaseAviary):
             return rpm
         elif self.ACT_TYPE == ActionType.ONE_D_RPM:
             return np.repeat(self.HOVER_RPM * (1+0.05*action), 4)
-        elif self.ACT_TYPE == ActionType.ONE_D_DYN:
-            return nnlsRPM(thrust=(self.GRAVITY*(1+0.05*action[0])),
-                           x_torque=0,
-                           y_torque=0,
-                           z_torque=0,
-                           counter=self.step_counter,
-                           max_thrust=self.MAX_THRUST,
-                           max_xy_torque=self.MAX_XY_TORQUE,
-                           max_z_torque=self.MAX_Z_TORQUE,
-                           a=self.A,
-                           inv_a=self.INV_A,
-                           b_coeff=self.B_COEFF,
-                           gui=self.GUI
-                           )
         elif self.ACT_TYPE == ActionType.ONE_D_PID:
             state = self._getDroneStateVector(0)
             rpm, _, _ = self.ctrl.computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 

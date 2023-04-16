@@ -37,7 +37,6 @@ class BaseAviary(gym.Env):
                  obstacles=False,
                  user_debug_gui=True,
                  vision_attributes=False,
-                 dynamics_attributes=False,
                  output_folder='results'
                  ):
         """Initialization of a generic aviary environment.
@@ -70,8 +69,6 @@ class BaseAviary(gym.Env):
             Whether to draw the drones' axes and the GUI RPMs sliders.
         vision_attributes : bool, optional
             Whether to allocate the attributes needed by vision-based aviary subclasses.
-        dynamics_attributes : bool, optional
-            Whether to allocate the attributes needed by subclasses accepting thrust and torques inputs.
 
         """
         #### Constants #############################################
@@ -140,15 +137,6 @@ class BaseAviary(gym.Env):
                 # TODO: This doesn't appear to work in general 
                 self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
                 os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
-        #### Create attributes for dynamics control inputs #########
-        self.DYNAMICS_ATTR = dynamics_attributes
-        if self.DYNAMICS_ATTR:
-            if self.DRONE_MODEL == DroneModel.CF2X:
-                self.A = np.array([ [1, 1, 1, 1], [1/np.sqrt(2), 1/np.sqrt(2), -1/np.sqrt(2), -1/np.sqrt(2)], [-1/np.sqrt(2), 1/np.sqrt(2), 1/np.sqrt(2), -1/np.sqrt(2)], [-1, 1, -1, 1] ])
-            elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]:
-                self.A = np.array([ [1, 1, 1, 1], [0, 1, 0, -1], [-1, 0, 1, 0], [-1, 1, -1, 1] ])
-            self.INV_A = np.linalg.inv(self.A)
-            self.B_COEFF = np.array([1/self.KF, 1/(self.KF*self.L), 1/(self.KF*self.L), 1/self.KM])
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################

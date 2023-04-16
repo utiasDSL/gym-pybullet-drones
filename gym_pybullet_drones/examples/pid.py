@@ -7,7 +7,7 @@ Example
 -------
 In a terminal, run as:
 
-    $ python fly.py
+    $ python pid.py
 
 Notes
 -----

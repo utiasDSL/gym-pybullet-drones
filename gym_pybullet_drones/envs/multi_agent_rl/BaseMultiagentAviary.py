@@ -2,16 +2,14 @@ import os
 import numpy as np
 import pybullet as p
 from gymnasium import spaces
-from ray.rllib.env.multi_agent_env import MultiAgentEnv
 
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.single_agent_rl.BaseSingleAgentAviary import ActionType, ObservationType
 from gym_pybullet_drones.utils.utils import nnlsRPM
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
-from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 
-class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
+class BaseMultiagentAviary(BaseAviary):
     """Base multi-agent environment class for reinforcement learning."""
     
     ################################################################################
@@ -68,11 +66,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         if num_drones < 2:
             print("[ERROR] in BaseMultiagentAviary.__init__(), num_drones should be >= 2")
             exit()
-        if act == ActionType.TUN:
-            print("[ERROR] in BaseMultiagentAviary.__init__(), ActionType.TUN can only used with BaseSingleAgentAviary")
-            exit()
         vision_attributes = True if obs == ObservationType.RGB else False
-        dynamics_attributes = True if act in [ActionType.DYN, ActionType.ONE_D_DYN] else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
         self.EPISODE_LEN_SEC = 5
@@ -81,8 +75,6 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             os.environ['KMP_DUPLICATE_LIB_OK']='True'
             if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
                 self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
-            elif drone_model == DroneModel.HB:
-                self.ctrl = [SimplePIDControl(drone_model=DroneModel.HB) for i in range(num_drones)]
             else:
                 print("[ERROR] in BaseMultiagentAviary.__init()__, no controller is available for the specified drone_model")
         super().__init__(drone_model=drone_model,
@@ -98,7 +90,6 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                          obstacles=True, # Add obstacles for RGB observations and/or FlyThruGate
                          user_debug_gui=False, # Remove of RPM sliders from all single agent learning aviaries
                          vision_attributes=vision_attributes,
-                         dynamics_attributes=dynamics_attributes
                          )
         #### Set a limit on the maximum target speed ###############
         if act == ActionType.VEL:
@@ -149,11 +140,11 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
             indexed by drone Id in integer format.
 
         """
-        if self.ACT_TYPE in [ActionType.RPM, ActionType.DYN, ActionType.VEL]:
+        if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
             size = 4
         elif self.ACT_TYPE==ActionType.PID:
             size = 3
-        elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_DYN, ActionType.ONE_D_PID]:
+        elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
             size = 1
         else:
             print("[ERROR] in BaseMultiagentAviary._actionSpace()")
@@ -196,20 +187,6 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         for k, v in action.items():
             if self.ACT_TYPE == ActionType.RPM: 
                 rpm[int(k),:] = np.array(self.HOVER_RPM * (1+0.05*v))
-            elif self.ACT_TYPE == ActionType.DYN: 
-                rpm[int(k),:] = nnlsRPM(thrust=(self.GRAVITY*(v[0]+1)),
-                                        x_torque=(0.05*self.MAX_XY_TORQUE*v[1]),
-                                        y_torque=(0.05*self.MAX_XY_TORQUE*v[2]),
-                                        z_torque=(0.05*self.MAX_Z_TORQUE*v[3]),
-                                        counter=self.step_counter,
-                                        max_thrust=self.MAX_THRUST,
-                                        max_xy_torque=self.MAX_XY_TORQUE,
-                                        max_z_torque=self.MAX_Z_TORQUE,
-                                        a=self.A,
-                                        inv_a=self.INV_A,
-                                        b_coeff=self.B_COEFF,
-                                        gui=self.GUI
-                                        )
             elif self.ACT_TYPE == ActionType.PID: 
                 state = self._getDroneStateVector(int(k))
                 rpm_k, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
@@ -238,20 +215,6 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                 rpm[int(k),:] = temp
             elif self.ACT_TYPE == ActionType.ONE_D_RPM: 
                 rpm[int(k),:] = np.repeat(self.HOVER_RPM * (1+0.05*v), 4)
-            elif self.ACT_TYPE == ActionType.ONE_D_DYN: 
-                rpm[int(k),:] = nnlsRPM(thrust=(self.GRAVITY*(1+0.05*v[0])),
-                                        x_torque=0,
-                                        y_torque=0,
-                                        z_torque=0,
-                                        counter=self.step_counter,
-                                        max_thrust=self.MAX_THRUST,
-                                        max_xy_torque=self.MAX_XY_TORQUE,
-                                        max_z_torque=self.MAX_Z_TORQUE,
-                                        a=self.A,
-                                        inv_a=self.INV_A,
-                                        b_coeff=self.B_COEFF,
-                                        gui=self.GUI
-                                        )
             elif self.ACT_TYPE == ActionType.ONE_D_PID:
                 state = self._getDroneStateVector(int(k))
                 rpm, _, _ = self.ctrl[k].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
