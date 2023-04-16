@@ -11,7 +11,7 @@ from PIL import Image
 import numpy as np
 import pybullet as p
 import pybullet_data
-import gym
+import gymnasium as gym
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 
 
