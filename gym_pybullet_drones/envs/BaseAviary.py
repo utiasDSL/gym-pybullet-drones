@@ -245,7 +245,9 @@ class BaseAviary(gym.Env):
         #### Start video recording #################################
         self._startVideoRecording()
         #### Return the initial observation ########################
-        return self._computeObs()
+        initial_obs = self._computeObs()
+        initial_info = self._computeInfo()
+        return initial_obs, initial_info
     
     ################################################################################
 
@@ -359,11 +361,12 @@ class BaseAviary(gym.Env):
         #### Prepare the return values #############################
         obs = self._computeObs()
         reward = self._computeReward()
-        done = self._computeDone()
+        terminated = self._computeDone()
+        truncated = False
         info = self._computeInfo()
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.AGGR_PHY_STEPS)
-        return obs, reward, done, info
+        return obs, reward, terminated, truncated, info
     
     ################################################################################
     

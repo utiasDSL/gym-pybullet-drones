@@ -5,7 +5,6 @@ class DroneModel(Enum):
 
     CF2X = "cf2x"   # Bitcraze Craziflie 2.0 in the X configuration
     CF2P = "cf2p"   # Bitcraze Craziflie 2.0 in the + configuration
-    HB = "hb"       # Generic quadrotor (with AscTec Hummingbird inertial properties)
 
 ################################################################################
 
@@ -13,7 +12,7 @@ class Physics(Enum):
     """Physics implementations enumeration class."""
 
     PYB = "pyb"                         # Base PyBullet physics update
-    DYN = "dyn"                         # Update with an explicit model of the dynamics
+    DYN = "dyn"                         # Explicit dynamics model
     PYB_GND = "pyb_gnd"                 # PyBullet physics update with ground effect
     PYB_DRAG = "pyb_drag"               # PyBullet physics update with drag
     PYB_DW = "pyb_dw"                   # PyBullet physics update with downwash

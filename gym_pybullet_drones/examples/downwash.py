@@ -84,7 +84,7 @@ def run(
     for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
         #### Step the simulation ###################################
-        obs, reward, done, info = env.step(action)
+        obs, reward, terminated, truncated, info = env.step(action)
 
         #### Compute control at the desired frequency ##############
         if i%CTRL_EVERY_N_STEPS == 0:

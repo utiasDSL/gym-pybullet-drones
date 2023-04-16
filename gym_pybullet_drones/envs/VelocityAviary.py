@@ -5,7 +5,6 @@ from gymnasium import spaces
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
-from gym_pybullet_drones.control.SimplePIDControl import SimplePIDControl
 
 class VelocityAviary(BaseAviary):
     """Multi-drone environment class for high-level planning."""
@@ -61,8 +60,6 @@ class VelocityAviary(BaseAviary):
         os.environ['KMP_DUPLICATE_LIB_OK']='True'
         if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
             self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
-        elif drone_model == DroneModel.HB:
-            raise ValueError("[ERROR] in VelocityAviary.__init__(), velocity control not supported for DroneModel.HB.")
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
