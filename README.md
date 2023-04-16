@@ -1,5 +1,7 @@
 # gym-pybullet-drones
 
+This is a minimalist remastering of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium) and the upcoming [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327) release.
+
 <img src="files/readme_images/helix.gif" alt="formation flight" width="350"> <img src="files/readme_images/helix.png" alt="control info" width="450">
 
 ## Installation
@@ -54,7 +56,7 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - C. Karen Liu and Dan Negrut (2020) [*The Role of Physics-Based Simulators in Robotics*](https://www.annualreviews.org/doi/pdf/10.1146/annurev-control-072220-093055)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
 
-![video](files/readme_images/2020.gif)
+<!-- ![video](files/readme_images/2020.gif) -->
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
