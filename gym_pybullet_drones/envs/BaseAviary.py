@@ -133,7 +133,6 @@ class BaseAviary(gym.Env):
                 print("[ERROR] in BaseAviary.__init__(), aggregate_phy_steps incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
             if self.RECORD:
-                # TODO: This doesn't appear to work in general 
                 self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
                 os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         #### Connect to PyBullet ###################################
@@ -217,11 +216,9 @@ class BaseAviary(gym.Env):
         ndarray | dict[..]
             The initial observation, check the specific implementation of `_computeObs()`
             in each subclass for its format.
-            
-        TODO UPDATE TO GYM v26
-            reset() further returns info, similar to the info returned by step().
-            This is important because info can include metrics or valid action mask
-            that is used or saved in the next step.
+        dict[..]
+            Additional information as a dictionary, check the specific implementation of `_computeInfo()`
+            in each subclass for its format.
 
         """
         p.resetSimulation(physicsClientId=self.CLIENT)
@@ -258,15 +255,13 @@ class BaseAviary(gym.Env):
             The step's reward value(s), check the specific implementation of `_computeReward()`
             in each subclass for its format.
         bool | dict[..]
-            Whether the current epoisode is over, check the specific implementation of `_computeDone()`
+            Whether the current episode is over, check the specific implementation of `_computeDone()`
             in each subclass for its format.
+        bool | dict[..]
+            Whether the current episode is trunacted, always false.
         dict[..]
             Additional information as a dictionary, check the specific implementation of `_computeInfo()`
             in each subclass for its format.
-            
-        TODO UPDATE TO GYM v26
-            For users wishing to update, in most cases, replacing done with terminated and truncated=False 
-            in step() should address most issues.
 
         """
         #### Save PNG video frames if RECORD=True and GUI=False ####
@@ -349,7 +344,7 @@ class BaseAviary(gym.Env):
         obs = self._computeObs()
         reward = self._computeReward()
         terminated = self._computeDone()
-        truncated = False
+        truncated = False # TODO: add support for truncated episodes
         info = self._computeInfo()
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.AGGR_PHY_STEPS)
@@ -720,8 +715,6 @@ class BaseAviary(gym.Env):
                                      flags=p.LINK_FRAME,
                                      physicsClientId=self.CLIENT
                                      )
-        #### TODO: a more realistic model accounting for the drone's
-        #### Attitude and its z-axis velocity in the world frame ###
     
     ################################################################################
 
