@@ -145,8 +145,6 @@ def run(
     #### Initialize the controllers ############################
     if drone in [DroneModel.CF2X, DroneModel.CF2P]:
         ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
-    elif drone in [DroneModel.HB]:
-        ctrl = [SimplePIDControl(drone_model=drone) for i in range(num_drones)]
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
