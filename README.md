@@ -31,6 +31,12 @@ cd gym_pybullet_drones/examples/
 python3 pid.py
 ```
 
+## TODO
+
+- [ ] Add `yaml` configuration files
+- [ ] Add `stable-baselines3` 2.0 support/examples
+- [ ] Add `pytest`s/GitHub Actions
+
 ## Citation
 
 If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142) as
