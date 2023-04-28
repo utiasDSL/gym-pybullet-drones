@@ -89,7 +89,7 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
 
     ################################################################################
     
-    def _computeDone(self):
+    def _computeTerminated(self):
         """Computes the current done value(s).
 
         Returns
@@ -103,6 +103,21 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
         done = {i: bool_val for i in range(self.NUM_DRONES)}
         done["__all__"] = bool_val # True if True in done.values() else False
         return done
+
+    ################################################################################
+    
+    def _computeTruncated(self):
+        """Computes the current truncated value(s).
+
+        Unused in this implementation.
+
+        Returns
+        -------
+        bool
+            Always false.
+
+        """
+        return False
 
     ################################################################################
     

@@ -255,7 +255,10 @@ class BaseAviary(gym.Env):
             The step's reward value(s), check the specific implementation of `_computeReward()`
             in each subclass for its format.
         bool | dict[..]
-            Whether the current episode is over, check the specific implementation of `_computeDone()`
+            Whether the current episode is over, check the specific implementation of `_computeTerminated()`
+            in each subclass for its format.
+        bool | dict[..]
+            Whether the current episode is truncated, check the specific implementation of `_computeTruncated()`
             in each subclass for its format.
         bool | dict[..]
             Whether the current episode is trunacted, always false.
@@ -343,8 +346,8 @@ class BaseAviary(gym.Env):
         #### Prepare the return values #############################
         obs = self._computeObs()
         reward = self._computeReward()
-        terminated = self._computeDone()
-        truncated = False # TODO: add support for truncated episodes
+        terminated = self._computeTerminated()
+        truncated = self._computeTruncated()
         info = self._computeInfo()
         #### Advance the step counter ##############################
         self.step_counter = self.step_counter + (1 * self.AGGR_PHY_STEPS)
@@ -1048,8 +1051,18 @@ class BaseAviary(gym.Env):
 
     ################################################################################
 
-    def _computeDone(self):
-        """Computes the current done value(s).
+    def _computeTerminated(self):
+        """Computes the current terminated value(s).
+
+        Must be implemented in a subclass.
+
+        """
+        raise NotImplementedError
+    
+    ################################################################################
+
+    def _computeTruncated(self):
+        """Computes the current truncated value(s).
 
         Must be implemented in a subclass.
 

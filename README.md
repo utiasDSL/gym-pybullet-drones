@@ -37,9 +37,9 @@ python3 pid.py
 
 ## TODO
 
-- [ ] Add `yaml` configuration files
 - [ ] Add `stable-baselines3` 2.0 support/examples
-- [ ] Add `pytest`s/GitHub Actions
+- [ ] Add `pytest`s/GitHub Action for learning examples
+- [ ] Add `yaml` configuration files
 
 ## Citation
 

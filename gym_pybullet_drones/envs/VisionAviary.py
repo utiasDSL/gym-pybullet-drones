@@ -213,8 +213,23 @@ class VisionAviary(BaseAviary):
 
     ################################################################################
     
-    def _computeDone(self):
-        """Computes the current done value(s).
+    def _computeTerminated(self):
+        """Computes the current terminated value(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        bool
+            Dummy value.
+
+        """
+        return False
+    
+    ################################################################################
+    
+    def _computeTruncated(self):
+        """Computes the current truncated value(s).
 
         Unused as this subclass is not meant for reinforcement learning.
 

@@ -76,7 +76,7 @@ class HoverAviary(BaseSingleAgentAviary):
 
     ################################################################################
     
-    def _computeDone(self):
+    def _computeTerminated(self):
         """Computes the current done value.
 
         Returns
@@ -89,6 +89,21 @@ class HoverAviary(BaseSingleAgentAviary):
             return True
         else:
             return False
+        
+    ################################################################################
+    
+    def _computeTruncated(self):
+        """Computes the current truncated value(s).
+
+        Unused in this implementation.
+
+        Returns
+        -------
+        bool
+            Always false.
+
+        """
+        return False
 
     ################################################################################
     
