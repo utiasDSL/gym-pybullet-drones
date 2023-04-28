@@ -31,6 +31,10 @@ cd gym_pybullet_drones/examples/
 python3 pid.py
 ```
 
+## Troubleshooting
+
+On Ubuntu, with an NVIDIA card, if you get a "Failed to create and OpenGL context" message, lunch `nvidia-settings` and under "PRIME Profiles" select "NVIDIA (Performance Mode)", reboot and try again.
+
 ## TODO
 
 - [ ] Add `yaml` configuration files
