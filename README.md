@@ -20,8 +20,8 @@ pip3 install -e .
 At the time of writing, [`stable-baselines3` 2.0's alpha can be installed from PyPI](https://github.com/DLR-RM/stable-baselines3/pull/1327)
 
 ```sh
-pip install "sb3_contrib>=2.0.0a1" --upgrade
-pip install "stable_baselines3>=2.0.0a1" --upgrade
+pip3 install "sb3_contrib>=2.0.0a1" --upgrade
+pip3 install "stable_baselines3>=2.0.0a1" --upgrade
 ```
 
 ## Use
