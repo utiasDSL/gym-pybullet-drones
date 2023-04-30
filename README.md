@@ -26,9 +26,18 @@ pip3 install "stable_baselines3>=2.0.0a1" --upgrade
 
 ## Use
 
+PID position control example
+
 ```sh
 cd gym_pybullet_drones/examples/
 python3 pid.py
+```
+
+PPO RL example
+
+```sh
+cd gym_pybullet_drones/examples/
+python3 learn.py
 ```
 
 ## Troubleshooting

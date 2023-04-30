@@ -18,7 +18,7 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 class BaseAviary(gym.Env):
     """Base class for "drone aviary" Gym environments."""
 
-    metadata = {'render.modes': ['human']}
+    # metadata = {'render.modes': ['human']}
     
     ################################################################################
 
@@ -208,8 +208,17 @@ class BaseAviary(gym.Env):
     
     ################################################################################
 
-    def reset(self):
+    def reset(self,
+              seed : int = None,
+              options : dict = None):
         """Resets the environment.
+
+        Parameters
+        ----------
+        seed : int, optional
+            Random seed.
+        options : dict[..], optional
+            Additinonal options, unused
 
         Returns
         -------
@@ -221,6 +230,9 @@ class BaseAviary(gym.Env):
             in each subclass for its format.
 
         """
+
+        # TODO : initialize random number generator with seed
+
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
         self._housekeeping()
