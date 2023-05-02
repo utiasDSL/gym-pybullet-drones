@@ -48,9 +48,10 @@ python3 learn.py
 
 - [ ] Flatten `dict` observations/action into `np.array`s
 - [ ] Replace `rpy` with quaternions and `ang_vel` with body rates
+- [ ] Add `yaml` configuration files
 - [ ] Add `stable-baselines3` 2.0 support/examples
 - [ ] Add `pytest`s/GitHub Action for learning examples
-- [ ] Add `yaml` configuration files
+- [ ] Add Betaflight SITL support
 
 ## Citation
 
