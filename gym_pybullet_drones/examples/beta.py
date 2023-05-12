@@ -7,7 +7,7 @@ In one terminal build and run SITL Betaflight:
     $ make TARGET=SITL
     $ betaflight/obj/main/betaflight_SITL.elf
 
-In a separate  terminal, run as:
+In a separate  terminal, run:
 
     $ python beta.py
 
