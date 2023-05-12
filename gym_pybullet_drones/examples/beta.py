@@ -101,6 +101,7 @@ def run(
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
     action = {'0': np.array([0,0,0,0])}
+    previous_vel = np.array([0.,0.,0.])
 
     START = time.time()
     ARM_TIME = 1.5
@@ -121,12 +122,17 @@ def run(
 
         #### State message to Betaflight ###########################
         o = obs['0']['state']
+        ang_vel = np.array([o[13], o[14], o[15]])
+        lin_acc = (np.array([o[10], -o[11], -o[12]]) - previous_vel) * env.SIM_FREQ
+        previous_vel = np.array([o[10], -o[11], -o[12]])
+        imu_ang_vel = ang_vel # TODO convert to body frame
+        imu_lin_acc = lin_acc # TODO convert to body frame
         fdm_packet = struct.pack('@dddddddddddddddddd', 
                             i/env.SIM_FREQ,         # datetime.now().timestamp(), # double timestamp; // in seconds
-                            0.,0.,0., # o[13], o[14], o[15], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
-                            0.,0.,0., # lin_a[0], -lin_a[1], -lin_a[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
+                            imu_ang_vel[0], imu_ang_vel[1], imu_ang_vel[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            imu_lin_acc[0], imu_lin_acc[1], imu_lin_acc[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
                             o[3], o[4], o[5], o[6], # double imu_orientation_quat[4];     // w, x, y, z
-                            o[10], -o[11], o[12],   # double velocity_xyz[3];             // m/s, earth frame
+                            o[10], -o[11], -o[12],   # double velocity_xyz[3];             // m/s, earth frame
                             o[0], -o[1], -o[2],     # double position_xyz[3];             // meters, NED from origin
                             2000.0                  # double pressure;
                             )
@@ -154,6 +160,7 @@ def run(
             # pitch = 1600
             # roll = 1600
 
+            # z PD control
             pos_err = 2.0 - o[2]
             vel_err = 0.0 - o[12]
             thro = int(1666 + 50*pos_err + 20*vel_err)
