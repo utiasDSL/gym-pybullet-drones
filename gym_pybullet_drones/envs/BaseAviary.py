@@ -116,8 +116,10 @@ class BaseAviary(gym.Env):
         self.MAX_THRUST = (4*self.KF*self.MAX_RPM**2)
         if self.DRONE_MODEL == DroneModel.CF2X:
             self.MAX_XY_TORQUE = (2*self.L*self.KF*self.MAX_RPM**2)/np.sqrt(2)
-        elif self.DRONE_MODEL in [DroneModel.CF2P, DroneModel.HB]:
+        elif self.DRONE_MODEL == DroneModel.CF2P:
             self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
+        elif self.DRONE_MODEL == DroneModel.RACE:
+            self.MAX_XY_TORQUE = (2*self.L*self.KF*self.MAX_RPM**2)/np.sqrt(2)
         self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
         self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt((15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST)
         #### Create attributes for vision tasks ####################
@@ -827,9 +829,12 @@ class BaseAviary(gym.Env):
         if self.DRONE_MODEL==DroneModel.CF2X:
             x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * (self.L/np.sqrt(2))
             y_torque = (- forces[0] + forces[1] + forces[2] - forces[3]) * (self.L/np.sqrt(2))
-        elif self.DRONE_MODEL==DroneModel.CF2P or self.DRONE_MODEL==DroneModel.HB:
+        elif self.DRONE_MODEL==DroneModel.CF2P:
             x_torque = (forces[1] - forces[3]) * self.L
             y_torque = (-forces[0] + forces[2]) * self.L
+        if self.DRONE_MODEL==DroneModel.RACE:
+            x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * (self.L/np.sqrt(2))
+            y_torque = (- forces[0] + forces[1] + forces[2] - forces[3]) * (self.L/np.sqrt(2))
         torques = np.array([x_torque, y_torque, z_torque])
         torques = torques - np.cross(rpy_rates, np.dot(self.J, rpy_rates))
         rpy_rates_deriv = np.dot(self.J_INV, torques)

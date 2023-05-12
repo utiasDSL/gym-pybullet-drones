@@ -5,6 +5,8 @@ class DroneModel(Enum):
 
     CF2X = "cf2x"   # Bitcraze Craziflie 2.0 in the X configuration
     CF2P = "cf2p"   # Bitcraze Craziflie 2.0 in the + configuration
+    RACE = "racer"  # Racer drone in the X configuration
+
 
 ################################################################################
 
