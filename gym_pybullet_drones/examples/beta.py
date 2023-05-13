@@ -56,10 +56,10 @@ sock_pwm = socket.socket(socket.AF_INET, # Internet
 sock_pwm.bind((UDP_IP, 9002))
 sock_pwm.settimeout(0.0)
 
-sock_raw = socket.socket(socket.AF_INET, # Internet
-                     socket.SOCK_DGRAM)  # UDP
-sock_raw.bind((UDP_IP, 9001))
-sock_raw.settimeout(0.0)
+# sock_raw = socket.socket(socket.AF_INET, # Internet
+#                      socket.SOCK_DGRAM)  # UDP
+# sock_raw.bind((UDP_IP, 9001))
+# sock_raw.settimeout(0.0)
 
 
 def run(
@@ -125,14 +125,15 @@ def run(
         ang_vel = np.array([o[13], o[14], o[15]])
         lin_acc = (np.array([o[10], -o[11], -o[12]]) - previous_vel) * env.SIM_FREQ
         previous_vel = np.array([o[10], -o[11], -o[12]])
-        imu_ang_vel = ang_vel # TODO convert to body frame
-        imu_lin_acc = lin_acc # TODO convert to body frame
+        invDronePos, invDroneOrn = p.invertTransform(o[0:3], o[3:7])
+        imu_ang_vel = ang_vel # TODO: convert to drone frame
+        imu_lin_acc = lin_acc # TODO: convert to drone frame
         fdm_packet = struct.pack('@dddddddddddddddddd', 
                             i/env.SIM_FREQ,         # datetime.now().timestamp(), # double timestamp; // in seconds
                             imu_ang_vel[0], imu_ang_vel[1], imu_ang_vel[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
                             imu_lin_acc[0], imu_lin_acc[1], imu_lin_acc[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
                             o[3], o[4], o[5], o[6], # double imu_orientation_quat[4];     // w, x, y, z
-                            o[10], -o[11], -o[12],   # double velocity_xyz[3];             // m/s, earth frame
+                            o[10], -o[11], -o[12],  # double velocity_xyz[3];             // m/s, earth frame
                             o[0], -o[1], -o[2],     # double position_xyz[3];             // meters, NED from origin
                             2000.0                  # double pressure;
                             )
@@ -258,105 +259,3 @@ if __name__ == "__main__":
     ARGS = parser.parse_args()
 
     run(**vars(ARGS))
-
-###########################
-
-# import socket
-# import struct
-
-# # betaflight -> gazebo udp://127.0.0.1:9002
-# # gazebo -> betaflight udp://127.0.0.1:9003
-# # define PORT_PWM_RAW    9001    // Out
-# # define PORT_PWM        9002    // Out
-# # define PORT_STATE      9003    // In
-# # define PORT_RC         9004    // In
-
-# UDP_IP = "127.0.0.1"
-
-# sock = socket.socket(socket.AF_INET, # Internet
-#                      socket.SOCK_DGRAM) # UDP
-# sock.bind((UDP_IP, 9002))
-
-# sock_raw = socket.socket(socket.AF_INET, # Internet
-#                      socket.SOCK_DGRAM) # UDP
-# sock_raw.bind((UDP_IP, 9001))
-
-# counter = 0
-
-# while True:
-
-#     counter += 1
-
-#     data, addr = sock.recvfrom(100) # buffer size is 100 bytes (servo_packet size 16)
-#     # print("received message: ", data)
-#     print(counter, 'servo', struct.unpack('@ffff', data))
-
-#     data, addr = sock_raw.recvfrom(100) # packet size 68
-#     # print("received message: ", data)
-#     print(counter, 'raw', struct.unpack('@Hffffffffffffffff', data))
-
-# # servo_packet = struct.pack('!ffff', 
-# #                     0, 0, 0, 0      # float motor_speed[4];   // normal: [0.0, 1.0], 3D: [-1.0, 1.0]
-# #                     )
-# # print("servo", servo_packet)
-
-# # servo_packet_raw = struct.pack('!Hffffffffffffffff',
-# #                     4,                                              # uint16_t motorCount; // Count of motor in the PWM output.
-# #                     1100.0, 1100.0, 1100.0, 1100.0, 
-# #                     1100.0, 1100.0, 1100.0, 1100.0, 
-# #                     1100.0, 1100.0, 1100.0, 1100.0, 
-# #                     1100.0, 1100.0, 1100.0, 1100.0                  # float pwm_output_raw[SIMULATOR_MAX_PWM_CHANNELS]; (16)  // Raw PWM from 1100 to 1900
-# #                     )
-# # print("servo raw", servo_packet_raw)
-
-###########################
-
-# import socket
-# import struct
-# import time
-# from datetime import datetime
-
-# # betaflight -> gazebo udp://127.0.0.1:9002
-# # gazebo -> betaflight udp://127.0.0.1:9003
-# # define PORT_PWM_RAW    9001    // Out
-# # define PORT_PWM        9002    // Out
-# # define PORT_STATE      9003    // In
-# # define PORT_RC         9004    // In
-
-# UDP_IP = "127.0.0.1"
-
-# sock = socket.socket(socket.AF_INET, # Internet
-#                      socket.SOCK_DGRAM) # UDP
-
-# counter = 0
-
-# while True:
-
-#     counter += 1
-
-#     time.sleep(.01)
-
-#     fdm_packet = struct.pack('@dddddddddddddddddd', 
-#                                 datetime.now().timestamp(), # double timestamp;                   // in seconds
-#                                 0.0, 0.0, 0.0,      # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
-#                                 0.0, 0.0, 0.0,      # double imu_linear_acceleration_xyz[3];    // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
-#                                 0.0, 0.0, 0.0, 1.0, # double imu_orientation_quat[4];     //w, x, y, z
-#                                 0.0, 0.0, 0.0,      # double velocity_xyz[3];             // m/s, earth frame
-#                                 0.0, 0.0, 0.0,      # double position_xyz[3];             // meters, NED from origin
-#                                 2000.0                 # double pressure;
-#                                 )
-#     print("fdm", struct.unpack('@dddddddddddddddddd', fdm_packet))
-#     sock.sendto(fdm_packet, (UDP_IP, 9003))
-
-#     aux1 = 1500 if counter > 500 else 1000
-#     thro = 1000 if counter < 1500 else 1500
-#     # define SIMULATOR_MAX_RC_CHANNELS   16
-#     rc_packet = struct.pack('@dHHHHHHHHHHHHHHHH', 
-#                         datetime.now().timestamp(), # double timestamp;                   // in seconds
-#                         1500, 1500, thro, 1500,              # roll, pitch, throttle, yaw
-#                         aux1, 1000, 1000, 1000,                 # aux 1, ..
-#                         1000, 1000, 1000, 1000, 
-#                         1000, 1000, 1000, 1000                  # uint16_t channels[SIMULATOR_MAX_RC_CHANNELS];   // RC channels
-#                         )
-#     print("rc", struct.unpack('@dHHHHHHHHHHHHHHHH', rc_packet))
-#     sock.sendto(rc_packet, (UDP_IP, 9004))
