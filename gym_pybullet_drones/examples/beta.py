@@ -189,11 +189,11 @@ def run(
             # print(i/env.SIM_FREQ, ': servo', struct.unpack('@ffff', data))
             betaflight_pwms = np.array(struct.unpack('@ffff', data))
             remapped_input = np.array([
-                                        betaflight_pwms[2], 
-                                        betaflight_pwms[1], 
-                                        betaflight_pwms[3], 
-                                        betaflight_pwms[0]
-                                    ]) # TODO: check order, should it be 3-2-0-1?
+                                        betaflight_pwms[2], # 0
+                                        betaflight_pwms[1], # 1
+                                        betaflight_pwms[3], # 2
+                                        betaflight_pwms[0] # 3
+                                    ]) # TODO : check order, should it be 3-2-0-1?, inb edit reacer.urdf, BaseAviary.py
             action =  {'0': env.MAX_RPM * remapped_input}
         # servo_packet = struct.pack('!ffff', 
         #                     0, 0, 0, 0      # float motor_speed[4];   // normal: [0.0, 1.0], 3D: [-1.0, 1.0]

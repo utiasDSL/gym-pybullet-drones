@@ -67,7 +67,7 @@ python3 beta.py
 - [ ] IMU transforms in Betaflight SITL example
 - [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
 - [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
-      - [ ] Add motor delay
+- [ ] Add motor delay
 - [ ] Replace `rpy` with quaternions and `ang_vel` with body rates
 - [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
 - [ ] Add pointer in `README.md` to the original `master` branch

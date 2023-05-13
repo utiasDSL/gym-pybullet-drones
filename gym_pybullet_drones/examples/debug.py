@@ -78,7 +78,7 @@ if __name__ == "__main__":
         # TEXT_2 = p.addUserDebugText("    p.LINK_FRAME", textPosition=[0,0,0], textColorRGB=[1,0,0], lifeTime=1, textSize=1, parentObjectUniqueId=ROBOT_2, parentLinkIndex=-1, replaceItemUniqueId=TEXT_2, physicsClientId=PYB_CLIENT)
 
         #### Get state #########################################################################################################
-        p.applyExternalTorque(ROBOT_1, -1, torqueObj=[0.,5e-5,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)
+        p.applyExternalTorque(ROBOT_1, -1, torqueObj=[0.,0.,5e-5], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT)
         p.applyExternalForce(ROBOT_1, -1, forceObj=[5e-2,0,0], posObj=[0.,0.,0.], flags=p.LINK_FRAME, physicsClientId=PYB_CLIENT) 
 
         pos, quat = p.getBasePositionAndOrientation(ROBOT_1, physicsClientId=PYB_CLIENT)

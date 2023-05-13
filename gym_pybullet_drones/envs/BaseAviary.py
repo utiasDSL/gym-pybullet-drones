@@ -678,7 +678,7 @@ class BaseAviary(gym.Env):
         """
         forces = np.array(rpm**2)*self.KF
         torques = np.array(rpm**2)*self.KM
-        z_torque = (-torques[0] + torques[1] - torques[2] + torques[3])
+        z_torque = (-torques[0] + torques[1] - torques[2] + torques[3]) # TODO : change this for non CW nor CCW configurations, e.g., Betaflight
         for i in range(4):
             p.applyExternalForce(self.DRONE_IDS[nth_drone],
                                  i,
