@@ -122,16 +122,16 @@ def run(
 
         #### State message to Betaflight ###########################
         o = obs['0']['state']
-        ang_vel = np.array([o[13], o[14], o[15]])
         lin_acc = (np.array([o[10], -o[11], -o[12]]) - previous_vel) * env.SIM_FREQ
         previous_vel = np.array([o[10], -o[11], -o[12]])
         invDronePos, invDroneOrn = p.invertTransform(o[0:3], o[3:7])
-        imu_ang_vel = ang_vel # TODO: convert to drone frame
-        imu_lin_acc = lin_acc # TODO: convert to drone frame
+        rel_lin_acc, _  = p.multiplyTransforms(invDronePos, invDroneOrn, lin_acc, [0.,0.,0.,1.])
+        ang_vel = np.array([o[13], o[14], o[15]])
+        rel_ang_vel = ang_vel # TODO: convert to drone frame
         fdm_packet = struct.pack('@dddddddddddddddddd', 
                             i/env.SIM_FREQ,         # datetime.now().timestamp(), # double timestamp; // in seconds
-                            imu_ang_vel[0], imu_ang_vel[1], imu_ang_vel[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
-                            imu_lin_acc[0], imu_lin_acc[1], imu_lin_acc[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
+                            rel_ang_vel[0], rel_ang_vel[1], rel_ang_vel[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            rel_lin_acc[0], rel_lin_acc[1], rel_lin_acc[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
                             o[3], o[4], o[5], o[6], # double imu_orientation_quat[4];     // w, x, y, z
                             o[10], -o[11], -o[12],  # double velocity_xyz[3];             // m/s, earth frame
                             o[0], -o[1], -o[2],     # double position_xyz[3];             // meters, NED from origin

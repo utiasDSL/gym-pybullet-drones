@@ -22,7 +22,7 @@ if __name__ == "__main__":
     p.resetBasePositionAndOrientation(ROBOT_1,
                                       posObj=[-.2,-.2,.5], 
                                       ornObj=p.getQuaternionFromEuler(
-                                                [0*(np.pi/180),0*(np.pi/180),0*(np.pi/180)],
+                                                [45*(np.pi/180),0*(np.pi/180),0*(np.pi/180)],
                                                 physicsClientId=PYB_CLIENT), physicsClientId=PYB_CLIENT)
     p.resetBasePositionAndOrientation(ROBOT_2,
                                       posObj=[1.,.0,.0],
@@ -64,7 +64,7 @@ if __name__ == "__main__":
                               torqueObj=[
                                             0., # 5e-5
                                             0., # 5e-5
-                                            0.  # 5e-5
+                                            5e-5  # 5e-5
                                         ],
                               flags=p.LINK_FRAME, # p.WORLD_FRAME
                               physicsClientId=PYB_CLIENT)
@@ -83,7 +83,6 @@ if __name__ == "__main__":
         vel, ang_vel = p.getBaseVelocity(ROBOT_1, physicsClientId=PYB_CLIENT)
     
         # invPos, invOrn = p.invertTransform(pos, quat)
-
         # pos2, quat2 = p.getBasePositionAndOrientation(ROBOT_2, physicsClientId=PYB_CLIENT)
         # rel_pos, rel_or = p.multiplyTransforms(invPos, invOrn, pos2, quat2)
 

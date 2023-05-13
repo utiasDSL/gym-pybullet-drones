@@ -62,19 +62,6 @@ python3 beta.py
 
 - On Ubuntu, with an NVIDIA card, if you receive a "Failed to create and OpenGL context" message, launch `nvidia-settings` and under "PRIME Profiles" select "NVIDIA (Performance Mode)", reboot and try again.
 
-## TODO
-
-- [ ] IMU transforms in Betaflight SITL example
-- [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
-- [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
-- [ ] Add motor delay
-- [ ] Replace `rpy` with quaternions and `ang_vel` with body rates
-- [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
-- [ ] Add pointer in `README.md` to the original `master` branch
-- [ ] Add `yaml` configuration files
-- [ ] Add `stable-baselines3` 2.0 support/examples
-- [ ] Add `pytest`s/GitHub Action for learning examples
-
 ## Citation
 
 If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142) as
@@ -106,6 +93,19 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - Mikayel Samvelyan, Tabish Rashid, Christian Schroeder de Witt, Gregory Farquhar, Nantas Nardelli, Tim G. J. Rudner, Chia-Man Hung, Philip H. S. Torr, Jakob Foerster, and Shimon Whiteson (2019) [*The StarCraft Multi-Agent Challenge*](https://arxiv.org/pdf/1902.04043.pdf)
 - C. Karen Liu and Dan Negrut (2020) [*The Role of Physics-Based Simulators in Robotics*](https://www.annualreviews.org/doi/pdf/10.1146/annurev-control-072220-093055)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
+
+## TODO
+
+- [ ] IMU transforms in Betaflight SITL example
+- [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
+- [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
+- [ ] Add motor delay
+- [ ] Replace `rpy` with quaternions and `ang_vel` with body rates
+- [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
+- [ ] Add pointer in `README.md` to the original `master` branch
+- [ ] Add `yaml` configuration files
+- [ ] Add `stable-baselines3` 2.0 support/examples
+- [ ] Add `pytest`s/GitHub Action for learning examples
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
