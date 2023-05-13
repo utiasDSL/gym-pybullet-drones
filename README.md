@@ -26,18 +26,36 @@ pip3 install "stable_baselines3>=2.0.0a1" --upgrade
 
 ## Use
 
-PID position control example
+### PID position control example
 
 ```sh
 cd gym_pybullet_drones/examples/
 python3 pid.py
 ```
 
-PPO RL example
+### PPO RL example
 
 ```sh
 cd gym_pybullet_drones/examples/
 python3 learn.py
+```
+
+### Betaflight SITL example
+
+In one terminal, run the Betaflight SITL binary
+
+```sh
+git clone  https://github.com/betaflight/betaflight
+cd betaflight/
+make TARGET=SITL # comment out this line: https://github.com/betaflight/betaflight/blob/c41b458e5891205da50465caeec0c1aa83beeb0c/src/main/main.c#L52
+betaflight/obj/main/betaflight_SITL.elf
+```
+
+In another terminal, run the example
+
+```sh
+cd gym_pybullet_drones/examples/
+python3 beta.py
 ```
 
 ## Troubleshooting
@@ -46,13 +64,14 @@ python3 learn.py
 
 ## TODO
 
-- [ ] Flatten `dict` observations/action into `np.array`s
-- [ ] Replace `rpy` with quaternions and `ang_vel` with body rates
+- [ ] IMU transforms in Betaflight SITL example
+- [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
 - [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
+- [ ] Replace `rpy` with quaternions and `ang_vel` with body rates
+- [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
 - [ ] Add `yaml` configuration files
 - [ ] Add `stable-baselines3` 2.0 support/examples
 - [ ] Add `pytest`s/GitHub Action for learning examples
-- [ ] Add Betaflight SITL support
 
 ## Citation
 
