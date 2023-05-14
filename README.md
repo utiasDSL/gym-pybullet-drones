@@ -106,6 +106,7 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - [ ] Add `yaml` configuration files
 - [ ] Add `stable-baselines3` 2.0 support/examples
 - [ ] Add `pytest`s/GitHub Action for learning examples
+- [ ] Add `cffirmware` SITL support
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
