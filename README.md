@@ -96,13 +96,13 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 
 ## TODO
 
+- [ ] Add pointer in `README.md` to the original `master` branch
 - [ ] IMU transforms in Betaflight SITL example
 - [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
 - [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
 - [ ] Add motor delay
-- [ ] Replace `rpy` with quaternions and `ang_vel` with body rates
+- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates?)
 - [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
-- [ ] Add pointer in `README.md` to the original `master` branch
 - [ ] Add `yaml` configuration files
 - [ ] Add `stable-baselines3` 2.0 support/examples
 - [ ] Add `pytest`s/GitHub Action for learning examples
