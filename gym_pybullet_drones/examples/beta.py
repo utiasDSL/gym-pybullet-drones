@@ -43,7 +43,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_AGGREGATE = True
 DEFAULT_SIMULATION_FREQ_HZ = 500
 DEFAULT_CONTROL_FREQ_HZ = 500
-DEFAULT_DURATION_SEC = 15
+DEFAULT_DURATION_SEC = 3.8
 DEFAULT_OUTPUT_FOLDER = 'results'
 
 UDP_IP = "127.0.0.1"
@@ -80,7 +80,7 @@ def run(
     #### Create the environment with or without video capture ##
     env = CtrlAviary(drone_model=drone,
                         num_drones=1,
-                        initial_xyzs=np.array([[.0, .0, .5]]),
+                        initial_xyzs=np.array([[.0, .0, .1]]),
                         initial_rpys=np.array([[.0, .0, .0]]),
                         physics=physics,
                         freq=simulation_freq_hz,
@@ -104,18 +104,18 @@ def run(
     previous_vel = np.array([0.,0.,0.])
 
     START = time.time()
-    ARM_TIME = 1.5
+    ARM_TIME = 1.
     for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
         #### No gravity until 1.5'' after arming ###################
-        if i/env.SIM_FREQ <= ARM_TIME + 1.5:
-            p.applyExternalForce(env.DRONE_IDS[0],
-                                 4,
-                                 forceObj=[0, 0, env.GRAVITY],
-                                 posObj=[0, 0, 0],
-                                 flags=p.LINK_FRAME,
-                                 physicsClientId=PYB_CLIENT
-                                 )
+        # if i/env.SIM_FREQ <= ARM_TIME + 1.5:
+        #     p.applyExternalForce(env.DRONE_IDS[0],
+        #                          4,
+        #                          forceObj=[0, 0, env.GRAVITY],
+        #                          posObj=[0, 0, 0],
+        #                          flags=p.LINK_FRAME,
+        #                          physicsClientId=PYB_CLIENT
+        #                          )
 
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
@@ -138,6 +138,12 @@ def run(
                             2000.0                  # double pressure;
                             )
         # print("fdm", struct.unpack('@dddddddddddddddddd', fdm_packet))
+        print("time: {}".format(i/env.SIM_FREQ))
+        print("omega: {}, {}, {}".format(rel_ang_vel[0], rel_ang_vel[1], rel_ang_vel[2]))
+        print("acc: {}, {}, {}".format(rel_lin_acc[0], rel_lin_acc[1], rel_lin_acc[2]))
+        print("ori: {}, {}, {}, {}".format(o[3], o[4], o[5], o[6]))
+        print("vel: {}, {}, {}".format(o[10], -o[11], -o[12]))
+        print("pos: {}, {}, {}".format(o[0], -o[1], -o[2]))
         sock.sendto(fdm_packet, (UDP_IP, 9003))
 
         #### RC defaults to Betaflight #############################
@@ -155,16 +161,22 @@ def run(
         #                          flags=p.LINK_FRAME,
         #                          physicsClientId=PYB_CLIENT
         #                          )
-        if i/env.SIM_FREQ > ARM_TIME+1.5:
-            # thro = 1400
-            # yaw = 1550
-            # pitch = 1600
-            # roll = 1600
+        if i/env.SIM_FREQ > ARM_TIME+.1:
+            thro = 1660
+            yaw = 1500
+            pitch = 1500
+            roll = 1500
+
+        if i/env.SIM_FREQ > ARM_TIME+2.:
+            thro = 1660
+            yaw = 1501
+            pitch = 1500
+            roll = 1500
 
             # z PD control
-            pos_err = 2.0 - o[2]
-            vel_err = 0.0 - o[12]
-            thro = int(1666 + 50*pos_err + 20*vel_err)
+            # pos_err = 2.0 - o[2]
+            # vel_err = 0.0 - o[12]
+            # thro = int(1666 + 50*pos_err + 20*vel_err)
         
         #### RC message to Betaflight ##############################
         aux1 = 1000 if i/env.SIM_FREQ < ARM_TIME else 1500 # Arm
@@ -186,7 +198,8 @@ def run(
             pass
         else:
             # print("received message: ", data)
-            # print(i/env.SIM_FREQ, ': servo', struct.unpack('@ffff', data))
+            print('SERVO:', struct.unpack('@ffff', data))
+            print('####################################################################################################')
             betaflight_pwms = np.array(struct.unpack('@ffff', data))
             remapped_input = np.array([
                                         betaflight_pwms[2], # 0
