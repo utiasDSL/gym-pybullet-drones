@@ -34,6 +34,7 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
+from transforms3d.quaternions import rotate_vector
 
 DEFAULT_DRONES = DroneModel("racer")
 DEFAULT_PHYSICS = Physics("pyb")
@@ -43,7 +44,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_AGGREGATE = True
 DEFAULT_SIMULATION_FREQ_HZ = 500
 DEFAULT_CONTROL_FREQ_HZ = 500
-DEFAULT_DURATION_SEC = 3.8
+DEFAULT_DURATION_SEC = 8.
 DEFAULT_OUTPUT_FOLDER = 'results'
 
 UDP_IP = "127.0.0.1"
@@ -122,28 +123,43 @@ def run(
 
         #### State message to Betaflight ###########################
         o = obs['0']['state']
-        lin_acc = (np.array([o[10], -o[11], -o[12]]) - previous_vel) * env.SIM_FREQ
-        previous_vel = np.array([o[10], -o[11], -o[12]])
-        invDronePos, invDroneOrn = p.invertTransform(o[0:3], o[3:7])
-        rel_lin_acc, _  = p.multiplyTransforms(invDronePos, invDroneOrn, lin_acc, [0.,0.,0.,1.])
-        ang_vel = np.array([o[13], o[14], o[15]])
-        rel_ang_vel = ang_vel # TODO: convert to drone frame
+        q = np.array([o[6], o[3], o[4], o[5]]) # w, x, y, z
+        v = np.array(o[10:13]) # world frame
+        v = rotate_vector(v, q) # local frame
+        a = (v - previous_vel) * env.SIM_FREQ # local frame
+        previous_vel = v # local frame
+        w = np.array([o[13:16]]) # world frame
+        w = rotate_vector(w, q) # local frame
+        # lin_acc = (np.array([o[10], -o[11], -o[12]]) - previous_vel) * env.SIM_FREQ
+        # previous_vel = np.array([o[10], -o[11], -o[12]])
+        # invDronePos, invDroneOrn = p.invertTransform(o[0:3], o[3:7])
+        # rel_lin_acc, _  = p.multiplyTransforms(invDronePos, invDroneOrn, lin_acc, [0.,0.,0.,1.])
+        # ang_vel = np.array([o[13], o[14], o[15]])
+        # rel_ang_vel = ang_vel # TODO: convert to drone frame
         fdm_packet = struct.pack('@dddddddddddddddddd', 
                             i/env.SIM_FREQ,         # datetime.now().timestamp(), # double timestamp; // in seconds
-                            rel_ang_vel[0], rel_ang_vel[1], rel_ang_vel[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
-                            rel_lin_acc[0], rel_lin_acc[1], rel_lin_acc[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
-                            o[3], o[4], o[5], o[6], # double imu_orientation_quat[4];     // w, x, y, z
-                            o[10], -o[11], -o[12],  # double velocity_xyz[3];             // m/s, earth frame
-                            o[0], -o[1], -o[2],     # double position_xyz[3];             // meters, NED from origin
-                            2000.0                  # double pressure;
+                            # w[0], w[1], -w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            0, 0, -w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            # a[0], a[1], a[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
+                            0, 0, 0, # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
+                            # q[0], q[1], q[2], -q[3], # double imu_orientation_quat[4];     // w, x, y, z
+                            1, 0, 0, 0, # double imu_orientation_quat[4];     // w, x, y, z
+                            # v[0], v[1], v[2],  # double velocity_xyz[3];             // m/s, earth frame
+                            0, 0, 0,  # double velocity_xyz[3];             // m/s, earth frame
+                            # o[0], o[1], o[2],     # double position_xyz[3];             // meters, NED from origin
+                            0, 0, 0,     # double position_xyz[3];             // meters, NED from origin
+                            # 101325.0                  # double pressure;
+                            1.0                  # double pressure;
                             )
         # print("fdm", struct.unpack('@dddddddddddddddddd', fdm_packet))
-        print("time: {}".format(i/env.SIM_FREQ))
-        print("omega: {}, {}, {}".format(rel_ang_vel[0], rel_ang_vel[1], rel_ang_vel[2]))
-        print("acc: {}, {}, {}".format(rel_lin_acc[0], rel_lin_acc[1], rel_lin_acc[2]))
-        print("ori: {}, {}, {}, {}".format(o[3], o[4], o[5], o[6]))
-        print("vel: {}, {}, {}".format(o[10], -o[11], -o[12]))
-        print("pos: {}, {}, {}".format(o[0], -o[1], -o[2]))
+        # print("time: {}".format(i/env.SIM_FREQ))
+        # print("omega: {}, {}, {}".format(w[0], -w[1], -w[2]))
+        # print("acc: {}, {}, {}".format(a[0], -a[1], -a[2]))
+        # print("ori: {}, {}, {}, {}".format(q[0], q[1], -q[2], -q[3]))
+        # print("vel: {}, {}, {}".format(v[0], -v[1], -v[2]))
+        # print("pos: {}, {}, {}".format(o[0], -o[1], -o[2]))
+        print("t:[{:.2f}],w:[{:.2f},{:.2f},{:.2f}],a:[{:.2f},{:.2f},{:.2f}],q:[{:.2f},{:.2f},{:.2f},{:.2f}],v:[{:.2f},{:.2f},{:.2f}],p:[{:.2f},{:.2f},{:.2f}]".format(
+            i/env.SIM_FREQ, w[0], -w[1], -w[2], a[0], -a[1], -a[2], q[0], q[1], -q[2], -q[3], v[0], -v[1], -v[2], o[0], -o[1], -o[2]))
         sock.sendto(fdm_packet, (UDP_IP, 9003))
 
         #### RC defaults to Betaflight #############################
