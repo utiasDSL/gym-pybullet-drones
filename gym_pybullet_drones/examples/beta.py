@@ -44,7 +44,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_AGGREGATE = True
 DEFAULT_SIMULATION_FREQ_HZ = 500
 DEFAULT_CONTROL_FREQ_HZ = 500
-DEFAULT_DURATION_SEC = 8.
+DEFAULT_DURATION_SEC = 5.
 DEFAULT_OUTPUT_FOLDER = 'results'
 
 UDP_IP = "127.0.0.1"
@@ -128,7 +128,7 @@ def run(
         v = rotate_vector(v, q) # local frame
         a = (v - previous_vel) * env.SIM_FREQ # local frame
         previous_vel = v # local frame
-        w = np.array([o[13:16]]) # world frame
+        w = o[13:16] # world frame
         w = rotate_vector(w, q) # local frame
         # lin_acc = (np.array([o[10], -o[11], -o[12]]) - previous_vel) * env.SIM_FREQ
         # previous_vel = np.array([o[10], -o[11], -o[12]])
@@ -139,7 +139,7 @@ def run(
         fdm_packet = struct.pack('@dddddddddddddddddd', 
                             i/env.SIM_FREQ,         # datetime.now().timestamp(), # double timestamp; // in seconds
                             # w[0], w[1], -w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
-                            0, 0, -w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            0, 0, -w[2] / 1, # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
                             # a[0], a[1], a[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
                             0, 0, 0, # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
                             # q[0], q[1], q[2], -q[3], # double imu_orientation_quat[4];     // w, x, y, z
@@ -159,14 +159,15 @@ def run(
         # print("vel: {}, {}, {}".format(v[0], -v[1], -v[2]))
         # print("pos: {}, {}, {}".format(o[0], -o[1], -o[2]))
         print("t:[{:.2f}],w:[{:.2f},{:.2f},{:.2f}],a:[{:.2f},{:.2f},{:.2f}],q:[{:.2f},{:.2f},{:.2f},{:.2f}],v:[{:.2f},{:.2f},{:.2f}],p:[{:.2f},{:.2f},{:.2f}]".format(
-            i/env.SIM_FREQ, w[0], -w[1], -w[2], a[0], -a[1], -a[2], q[0], q[1], -q[2], -q[3], v[0], -v[1], -v[2], o[0], -o[1], -o[2]))
+            i/env.SIM_FREQ, w[0], w[1], w[2], a[0], a[1], a[2], q[0], q[1], q[2], q[3], v[0], v[1], v[2], o[0], o[1], o[2]))
         sock.sendto(fdm_packet, (UDP_IP, 9003))
 
         #### RC defaults to Betaflight #############################
         thro = 1000 # Positive up
-        yaw = 1500 # Positive CCW
+        yaw = 1500 # Positive CCW ??
         pitch = 1500 # Positive forward in x
         roll = 1500 # Positive right/forward in y
+        aux1 = 1000
 
         #### Ctrl sandbox ##########################################
         # if i/env.SIM_FREQ >= ARM_TIME+1.5: # No gravity even after arming
@@ -177,17 +178,13 @@ def run(
         #                          flags=p.LINK_FRAME,
         #                          physicsClientId=PYB_CLIENT
         #                          )
-        if i/env.SIM_FREQ > ARM_TIME+.1:
+        t = i/env.SIM_FREQ
+        if t > 1.:
+            aux1 = 1500
+        if t > 1.1:
             thro = 1660
-            yaw = 1500
-            pitch = 1500
-            roll = 1500
-
-        if i/env.SIM_FREQ > ARM_TIME+2.:
-            thro = 1660
-            yaw = 1501
-            pitch = 1500
-            roll = 1500
+        if t > 2. and t < 8.:
+            yaw = 1750
 
             # z PD control
             # pos_err = 2.0 - o[2]
@@ -195,7 +192,7 @@ def run(
             # thro = int(1666 + 50*pos_err + 20*vel_err)
         
         #### RC message to Betaflight ##############################
-        aux1 = 1000 if i/env.SIM_FREQ < ARM_TIME else 1500 # Arm
+        # aux1 = 1000 if i/env.SIM_FREQ < ARM_TIME else 1500 # Arm
         rc_packet = struct.pack('@dHHHHHHHHHHHHHHHH', 
                             i/env.SIM_FREQ, # datetime.now().timestamp(), # double timestamp; // in seconds
                             roll, pitch, thro, yaw,              # roll, pitch, throttle, yaw
