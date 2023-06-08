@@ -139,7 +139,7 @@ def run(
         fdm_packet = struct.pack('@dddddddddddddddddd', 
                             i/env.SIM_FREQ,         # datetime.now().timestamp(), # double timestamp; // in seconds
                             # w[0], w[1], -w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
-                            0, 0, -w[2] / 1, # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            0, 0, -w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
                             # a[0], a[1], a[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
                             0, 0, 0, # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
                             # q[0], q[1], q[2], -q[3], # double imu_orientation_quat[4];     // w, x, y, z
