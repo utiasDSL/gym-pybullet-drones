@@ -27,5 +27,5 @@ tensorboard = "^2.9"
 [tool.poetry.dev-dependencies]
 
 [build-system]
-requires = ["poetry-core @ git+https://github.com/python-poetry/poetry-core.git@master"]
+requires = ["poetry-core @ git+https://github.com/python-poetry/poetry-core.git@main"]
 build-backend = "poetry.core.masonry.api"
