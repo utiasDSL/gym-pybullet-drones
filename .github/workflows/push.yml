@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install --upgrade setuptools
+        pip install setuptools==57.1.0
         pip install pytest
     - name: Install package
       run: |
