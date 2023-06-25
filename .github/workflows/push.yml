@@ -25,6 +25,7 @@ jobs:
         pip install pytest
     - name: Install package
       run: |
+        pip install --upgrade setuptools
         pip install -e .
     - name: Unit tests
       run: |
