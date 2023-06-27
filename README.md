@@ -17,13 +17,6 @@ pip3 install --upgrade pip
 pip3 install -e .
 ```
 
-At the time of writing, [`stable-baselines3` 2.0's alpha can be installed from PyPI](https://github.com/DLR-RM/stable-baselines3/pull/1327)
-
-```sh
-pip3 install "sb3_contrib>=2.0.0a1" --upgrade
-pip3 install "stable_baselines3>=2.0.0a1" --upgrade
-```
-
 ## Use
 
 ### PID position control example
@@ -62,9 +55,15 @@ python3 beta.py
 
 - On Ubuntu, with an NVIDIA card, if you receive a "Failed to create and OpenGL context" message, launch `nvidia-settings` and under "PRIME Profiles" select "NVIDIA (Performance Mode)", reboot and try again.
 
+Run all tests from the top folder with
+
+```sh
+pytest tests/
+```
+
 ## Citation
 
-If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142) as
+If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142) ([and original codebase](https://github.com/utiasDSL/gym-pybullet-drones/tree/paper)) as
 
 ```bibtex
 @INPROCEEDINGS{panerati2021learning,
@@ -96,7 +95,6 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 
 ## TODO
 
-- [ ] Add pointer in `README.md` to the original `master` branch
 - [ ] IMU transforms in Betaflight SITL example
 - [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
 - [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
@@ -104,8 +102,6 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates?)
 - [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
 - [ ] Add `yaml` configuration files
-- [ ] Add `stable-baselines3` 2.0 support/examples
-- [ ] Add `pytest`s/GitHub Action for learning examples
 - [ ] Add `cffirmware` SITL support
 
 -----

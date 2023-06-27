@@ -14,7 +14,6 @@ def test_downwash():
     from gym_pybullet_drones.examples.downwash import run
     run(gui=False, plot=False, output_folder='tmp')
 
-# Commented out until Stable Baselines 3 2.0 is released
-# def test_learn():
-#     from gym_pybullet_drones.examples.learn import run
-#     run(gui=False, plot=False, output_folder='tmp')
+def test_learn():
+    from gym_pybullet_drones.examples.learn import run
+    run(gui=False, plot=False, output_folder='tmp')
