@@ -11,8 +11,11 @@ In a separate  terminal, run:
 
     $ python beta.py
 
-Note
+Notes
 ---
+Remove XYZ to NED conversion from Betaflight's src/main/target/SITL/sitl.c:135-143 as in:
+https://github.com/ykeuter/betaflight/commit/190b9df8ebe382d26630781a9273232519d0c036
+
 Comment out line `delayMicroseconds_real(50); // max rate 20kHz` from Betaflight's SIMULATOR_BUILD
 https://github.com/betaflight/betaflight/blob/c41b458e5891205da50465caeec0c1aa83beeb0c/src/main/main.c#L52
 
