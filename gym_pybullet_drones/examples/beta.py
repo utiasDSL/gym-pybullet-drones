@@ -30,6 +30,8 @@ import numpy as np
 import pybullet as p
 import matplotlib.pyplot as plt
 
+from transforms3d.quaternions import rotate_vector, qconjugate
+
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.utils.Logger import Logger
@@ -121,22 +123,26 @@ def run(
         obs, reward, terminated, truncated, info = env.step(action)
 
         #### State message to Betaflight ###########################
-        o = obs['0']['state']
-        lin_acc = (np.array([o[10], -o[11], -o[12]]) - previous_vel) * env.SIM_FREQ
-        previous_vel = np.array([o[10], -o[11], -o[12]])
-        invDronePos, invDroneOrn = p.invertTransform(o[0:3], o[3:7])
-        rel_lin_acc, _  = p.multiplyTransforms(invDronePos, invDroneOrn, lin_acc, [0.,0.,0.,1.])
-        ang_vel = np.array([o[13], o[14], o[15]])
-        rel_ang_vel = ang_vel # TODO: convert to drone frame
-        fdm_packet = struct.pack('@dddddddddddddddddd', 
-                            i/env.SIM_FREQ,         # datetime.now().timestamp(), # double timestamp; // in seconds
-                            rel_ang_vel[0], rel_ang_vel[1], rel_ang_vel[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
-                            rel_lin_acc[0], rel_lin_acc[1], rel_lin_acc[2], # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
-                            o[3], o[4], o[5], o[6], # double imu_orientation_quat[4];     // w, x, y, z
-                            o[10], -o[11], -o[12],  # double velocity_xyz[3];             // m/s, earth frame
-                            o[0], -o[1], -o[2],     # double position_xyz[3];             // meters, NED from origin
-                            2000.0                  # double pressure;
+        o = obs['0']['state'] # p, q, euler, v, w, rpm (all in world frame)
+        p = o[:3]
+        q = np.array([o[6], o[3], o[4], o[5]]) # w, x, y, z
+        v = o[10:13]
+        w = o[13:16] # world frame
+        w = rotate_vector(w, qconjugate(q)) # local frame
+        t = i/env.SIM_FREQ
+        fdm_packet = struct.pack('@dddddddddddddddddd', # t, w, a, q, v, p, pressure
+                            t,         # datetime.now().timestamp(), # double timestamp; // in seconds
+                            w[0], w[1], w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            # 0, 0, 0, # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
+                            0, 0, 0, # double imu_linear_acceleration_xyz[3]; // m/s/s NED, body frame -> sim 1G = 9.80665, FC 1G = 256
+                            1., .0, .0, 0., # double imu_orientation_quat[4];     // w, x, y, z
+                            # q[0], q[1], q[2], q[3], # double imu_orientation_quat[4];     // w, x, y, z
+                            0, 0, 0,  # double velocity_xyz[3];             // m/s, earth frame
+                            0, 0, 0,     # double position_xyz[3];             // meters, NED from origin
+                            1.0                  # double pressure;
                             )
+        # print("t:[{:.2f}],w:[{:.2f},{:.2f},{:.2f}],q:[{:.2f},{:.2f},{:.2f},{:.2f}],p:[{:.2f},{:.2f},{:.2f}]".format(
+        #     t, w[0], w[1], w[2], q[0], q[1], q[2], q[3], p[0], p[1], p[2]))
         # print("fdm", struct.unpack('@dddddddddddddddddd', fdm_packet))
         sock.sendto(fdm_packet, (UDP_IP, 9003))
 
@@ -194,7 +200,7 @@ def run(
                                         betaflight_pwms[3], # 2
                                         betaflight_pwms[0] # 3
                                     ]) # TODO : check order, should it be 3-2-0-1?, inb edit reacer.urdf, BaseAviary.py
-            action =  {'0': env.MAX_RPM * remapped_input}
+            action =  {'0': np.sqrt(env.MAX_THRUST / 4 / env.KF * remapped_input)}
         # servo_packet = struct.pack('!ffff', 
         #                     0, 0, 0, 0      # float motor_speed[4];   // normal: [0.0, 1.0], 3D: [-1.0, 1.0]
         #                     )

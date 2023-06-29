@@ -14,6 +14,7 @@ packages = [
 python = "^3.10"
 numpy = "^1.24"
 scipy = "^1.10"
+transforms3d = "^0.4.1"
 matplotlib = "^3.7"
 pytest = "^7.3"
 pybullet = "^3.2.5"
