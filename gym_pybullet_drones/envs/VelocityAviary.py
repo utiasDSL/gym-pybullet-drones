@@ -84,18 +84,14 @@ class VelocityAviary(BaseAviary):
 
         Returns
         -------
-        dict[str, ndarray]
-            A Dict of Box(4,) with NUM_DRONES entries,
-            indexed by drone Id in string format.
+        spaces.Box
+            An ndarray of shape (NUM_DRONES, 4) for the commanded velocity vectors.
 
         """
         #### Action vector ######### X       Y       Z   fract. of MAX_SPEED_KMH
-        act_lower_bound = np.array([-1,     -1,     -1,                        0])
-        act_upper_bound = np.array([ 1,      1,      1,                        1])
-        return spaces.Dict({str(i): spaces.Box(low=act_lower_bound,
-                                               high=act_upper_bound,
-                                               dtype=np.float32
-                                               ) for i in range(self.NUM_DRONES)})
+        act_lower_bound = np.array([[-1,     -1,     -1,                        0] for i in range(self.NUM_DRONES)])
+        act_upper_bound = np.array([[ 1,      1,      1,                        1] for i in range(self.NUM_DRONES)])
+        return spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32)
     
     ################################################################################
 
@@ -104,38 +100,29 @@ class VelocityAviary(BaseAviary):
 
         Returns
         -------
-        dict[str, dict[str, ndarray]]
-            A Dict with NUM_DRONES entries indexed by Id in string format,
-            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+        spaces.Box
+            The observation space, i.e., and ndarray of shape (NUM_DRONES, 20).
 
         """
         #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ       P0            P1            P2            P3
-        obs_lower_bound = np.array([-np.inf, -np.inf, 0.,     -1., -1., -1., -1., -np.pi, -np.pi, -np.pi, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,           0.,           0.,           0.])
-        obs_upper_bound = np.array([np.inf,  np.inf,  np.inf, 1.,  1.,  1.,  1.,  np.pi,  np.pi,  np.pi,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM])
-        return spaces.Dict({str(i): spaces.Dict({"state": spaces.Box(low=obs_lower_bound,
-                                                                     high=obs_upper_bound,
-                                                                     dtype=np.float32
-                                                                     ),
-                                                 "neighbors": spaces.MultiBinary(self.NUM_DRONES)
-                                                 }) for i in range(self.NUM_DRONES)})
+        obs_lower_bound = np.array([[-np.inf, -np.inf, 0.,     -1., -1., -1., -1., -np.pi, -np.pi, -np.pi, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,           0.,           0.,           0.] for i in range(self.NUM_DRONES)])
+        obs_upper_bound = np.array([[np.inf,  np.inf,  np.inf, 1.,  1.,  1.,  1.,  np.pi,  np.pi,  np.pi,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM] for i in range(self.NUM_DRONES)])
+        return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
     ################################################################################
 
     def _computeObs(self):
         """Returns the current observation of the environment.
 
-        For the value of key "state", see the implementation of `_getDroneStateVector()`,
-        the value of key "neighbors" is the drone's own row of the adjacency matrix.
+        For the value of the state, see the implementation of `_getDroneStateVector()`.
 
         Returns
         -------
-        dict[str, dict[str, ndarray]]
-            A Dict with NUM_DRONES entries indexed by Id in string format,
-            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+        ndarray
+            An ndarray of shape (NUM_DRONES, 20) with the state of each drone.
 
         """
-        adjacency_mat = self._getAdjacencyMatrix()
-        return {str(i): {"state": self._getDroneStateVector(i), "neighbors": adjacency_mat[i, :]} for i in range(self.NUM_DRONES)}
+        return np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
 
     ################################################################################
 
@@ -145,11 +132,10 @@ class VelocityAviary(BaseAviary):
         """Pre-processes the action passed to `.step()` into motors' RPMs.
 
         Uses PID control to target a desired velocity vector.
-        Converts a dictionary into a 2D array.
 
         Parameters
         ----------
-        action : dict[str, ndarray]
+        action : ndarray
             The desired velocity input for each drone, to be translated into RPMs.
 
         Returns
@@ -160,24 +146,25 @@ class VelocityAviary(BaseAviary):
 
         """
         rpm = np.zeros((self.NUM_DRONES, 4))
-        for k, v in action.items():
+        for k in range(action.shape[0]):
             #### Get the current state of the drone  ###################
-            state = self._getDroneStateVector(int(k))
+            state = self._getDroneStateVector(k)
+            target_v = action[k, :]
             #### Normalize the first 3 components of the target velocity
-            if np.linalg.norm(v[0:3]) != 0:
-                v_unit_vector = v[0:3] / np.linalg.norm(v[0:3])
+            if np.linalg.norm(target_v[0:3]) != 0:
+                v_unit_vector = target_v[0:3] / np.linalg.norm(target_v[0:3])
             else:
                 v_unit_vector = np.zeros(3)
-            temp, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
+            temp, _, _ = self.ctrl[k].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                     cur_pos=state[0:3],
                                                     cur_quat=state[3:7],
                                                     cur_vel=state[10:13],
                                                     cur_ang_vel=state[13:16],
                                                     target_pos=state[0:3], # same as the current position
                                                     target_rpy=np.array([0,0,state[9]]), # keep current yaw
-                                                    target_vel=self.SPEED_LIMIT * np.abs(v[3]) * v_unit_vector # target the desired velocity vector
+                                                    target_vel=self.SPEED_LIMIT * np.abs(target_v[3]) * v_unit_vector # target the desired velocity vector
                                                     )
-            rpm[int(k),:] = temp
+            rpm[k,:] = temp
         return rpm
 
     ################################################################################

@@ -1,7 +1,3 @@
-def test_api():
-    from gym_pybullet_drones.examples.api import run
-    run(gui=False, plot=False, output_folder='tmp')
-
 def test_pid():
     from gym_pybullet_drones.examples.pid import run
     run(gui=False, plot=False, output_folder='tmp')

@@ -26,7 +26,6 @@ import matplotlib.pyplot as plt
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-from gym_pybullet_drones.envs.VisionAviary import VisionAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
@@ -117,7 +116,7 @@ def run(
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
-    action = {str(i): np.array([0,0,0,0]) for i in range(4)}
+    action = np.zeros((4,4))
     START = time.time()
     for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
@@ -132,17 +131,17 @@ def run(
 
             #### Compute control for the current way point #############
             for j in range(4):
-                action[str(j)] = TARGET_VEL[j, wp_counters[j], :] 
+                action[j, :] = TARGET_VEL[j, wp_counters[j], :] 
 
             #### Go to the next way point and loop #####################
-            for j in range(4): 
+            for j in range(4):
                 wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
         for j in range(4):
             logger.log(drone=j,
                        timestamp=i/env.SIM_FREQ,
-                       state= obs[str(j)]["state"],
+                       state= obs[j],
                        control=np.hstack([TARGET_VEL[j, wp_counters[j], 0:3], np.zeros(9)])
                        )
 

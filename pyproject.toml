@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gym-pybullet-drones"
-version = "1.0.0"
+version = "2.0.0"
 description = "PyBullet Gym environments for single and multi-agent reinforcement learning of quadcopter control"
 authors = ["Jacopo Panerati <jacopo.panerati@utoronto.ca>"]
 license = "MIT"

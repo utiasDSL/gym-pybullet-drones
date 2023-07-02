@@ -1,6 +1,6 @@
 """Script demonstrating the joint use of simulation and control.
 
-The simulation is run by a `CtrlAviary` or `VisionAviary` environment.
+The simulation is run by a `CtrlAviary` environment.
 The control is given by the PID implementation in `DSLPIDControl`.
 
 Example
@@ -28,7 +28,6 @@ import matplotlib.pyplot as plt
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-from gym_pybullet_drones.envs.VisionAviary import VisionAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
@@ -36,7 +35,6 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 DEFAULT_DRONES = DroneModel("cf2x")
 DEFAULT_NUM_DRONES = 3
 DEFAULT_PHYSICS = Physics("pyb")
-DEFAULT_VISION = False
 DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
 DEFAULT_PLOT = True
@@ -53,7 +51,6 @@ def run(
         drone=DEFAULT_DRONES,
         num_drones=DEFAULT_NUM_DRONES,
         physics=DEFAULT_PHYSICS,
-        vision=DEFAULT_VISION,
         gui=DEFAULT_GUI,
         record_video=DEFAULT_RECORD_VISION,
         plot=DEFAULT_PLOT,
@@ -103,34 +100,20 @@ def run(
     #         TARGET_POS[i, :] = 1 - ((i-5*NUM_WP/6)*6)/NUM_WP, 1 - ((i-5*NUM_WP/6)*6)/NUM_WP, 0.5 - 0.5*((i-5*NUM_WP/6)*6)/NUM_WP
     # wp_counters = np.array([0 for i in range(num_drones)])
 
-    #### Create the environment with or without video capture ##
-    if vision: 
-        env = VisionAviary(drone_model=drone,
-                           num_drones=num_drones,
-                           initial_xyzs=INIT_XYZS,
-                           initial_rpys=INIT_RPYS,
-                           physics=physics,
-                           neighbourhood_radius=10,
-                           freq=simulation_freq_hz,
-                           aggregate_phy_steps=AGGR_PHY_STEPS,
-                           gui=gui,
-                           record=record_video,
-                           obstacles=obstacles
-                           )
-    else: 
-        env = CtrlAviary(drone_model=drone,
-                         num_drones=num_drones,
-                         initial_xyzs=INIT_XYZS,
-                         initial_rpys=INIT_RPYS,
-                         physics=physics,
-                         neighbourhood_radius=10,
-                         freq=simulation_freq_hz,
-                         aggregate_phy_steps=AGGR_PHY_STEPS,
-                         gui=gui,
-                         record=record_video,
-                         obstacles=obstacles,
-                         user_debug_gui=user_debug_gui
-                         )
+    #### Create the environment ################################
+    env = CtrlAviary(drone_model=drone,
+                        num_drones=num_drones,
+                        initial_xyzs=INIT_XYZS,
+                        initial_rpys=INIT_RPYS,
+                        physics=physics,
+                        neighbourhood_radius=10,
+                        freq=simulation_freq_hz,
+                        aggregate_phy_steps=AGGR_PHY_STEPS,
+                        gui=gui,
+                        record=record_video,
+                        obstacles=obstacles,
+                        user_debug_gui=user_debug_gui
+                        )
 
     #### Obtain the PyBullet Client ID from the environment ####
     PYB_CLIENT = env.getPyBulletClient()
@@ -148,7 +131,7 @@ def run(
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
-    action = {str(i): np.array([0,0,0,0]) for i in range(num_drones)}
+    action = np.zeros((num_drones,4))
     START = time.time()
     for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
@@ -163,8 +146,8 @@ def run(
 
             #### Compute control for the current way point #############
             for j in range(num_drones):
-                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
-                                                                       state=obs[str(j)]["state"],
+                action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
+                                                                       state=obs[j],
                                                                        target_pos=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
                                                                        # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
                                                                        target_rpy=INIT_RPYS[j, :]
@@ -178,7 +161,7 @@ def run(
         for j in range(num_drones):
             logger.log(drone=j,
                        timestamp=i/env.SIM_FREQ,
-                       state=obs[str(j)]["state"],
+                       state=obs[j],
                        control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
                        # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
                        )
@@ -186,13 +169,6 @@ def run(
         #### Printout ##############################################
         if i%env.SIM_FREQ == 0:
             env.render()
-            #### Print matrices with the images captured by each drone #
-            if vision:
-                for j in range(num_drones):
-                    print(obs[str(j)]["rgb"].shape, np.average(obs[str(j)]["rgb"]),
-                          obs[str(j)]["dep"].shape, np.average(obs[str(j)]["dep"]),
-                          obs[str(j)]["seg"].shape, np.average(obs[str(j)]["seg"])
-                          )
 
         #### Sync the simulation ###################################
         if gui:
@@ -211,11 +187,10 @@ def run(
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
-    parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary or VisionAviary and DSLPIDControl')
+    parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary and DSLPIDControl')
     parser.add_argument('--drone',              default=DEFAULT_DRONES,     type=DroneModel,    help='Drone model (default: CF2X)', metavar='', choices=DroneModel)
     parser.add_argument('--num_drones',         default=DEFAULT_NUM_DRONES,          type=int,           help='Number of drones (default: 3)', metavar='')
     parser.add_argument('--physics',            default=DEFAULT_PHYSICS,      type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
-    parser.add_argument('--vision',             default=DEFAULT_VISION,      type=str2bool,      help='Whether to use VisionAviary (default: False)', metavar='')
     parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--record_video',       default=DEFAULT_RECORD_VISION,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')

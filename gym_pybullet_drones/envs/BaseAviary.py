@@ -889,22 +889,14 @@ class BaseAviary(gym.Env):
         """Stores the most recent action into attribute `self.last_action`.
 
         The last action can be used to compute aerodynamic effects.
-        The method disambiguates between array and dict inputs 
-        (for single or multi-agent aviaries, respectively).
 
         Parameters
         ----------
-        action : ndarray | dict
-            (4)-shaped array of ints (or dictionary of arrays) containing the current RPMs input.
+        action : ndarray
+            Ndarray containing the current RPMs input for each drone.
 
         """
-        if isinstance(action, collections.abc.Mapping):
-            for k, v in action.items(): 
-                res_v = np.resize(v, (1, 4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
-                self.last_action[int(k), :] = res_v
-        else: 
-            res_action = np.resize(action, (1, 4)) # Resize, possibly with repetition, to cope with different action spaces in RL subclasses
-            self.last_action = np.reshape(res_action, (self.NUM_DRONES, 4))
+        self.last_action = np.reshape(action, (self.NUM_DRONES, 4))
     
     ################################################################################
 

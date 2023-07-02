@@ -105,7 +105,7 @@ def run(
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
-    action = {'0': np.array([0,0,0,0])}
+    action = np.zeros((1,4))
     previous_vel = np.array([0.,0.,0.])
 
     START = time.time()
@@ -126,7 +126,7 @@ def run(
         obs, reward, terminated, truncated, info = env.step(action)
 
         #### State message to Betaflight ###########################
-        o = obs['0']['state'] # p, q, euler, v, w, rpm (all in world frame)
+        o = obs[0] # p, q, euler, v, w, rpm (all in world frame)
         p = o[:3]
         q = np.array([o[6], o[3], o[4], o[5]]) # w, x, y, z
         v = o[10:13]
@@ -203,7 +203,7 @@ def run(
                                         betaflight_pwms[3], # 2
                                         betaflight_pwms[0] # 3
                                     ]) # TODO : check order, should it be 3-2-0-1?, inb edit reacer.urdf, BaseAviary.py
-            action =  {'0': np.sqrt(env.MAX_THRUST / 4 / env.KF * remapped_input)}
+            action =  np.array([np.sqrt(env.MAX_THRUST / 4 / env.KF * remapped_input)])
         # servo_packet = struct.pack('!ffff', 
         #                     0, 0, 0, 0      # float motor_speed[4];   // normal: [0.0, 1.0], 3D: [-1.0, 1.0]
         #                     )
@@ -229,7 +229,7 @@ def run(
         #### Log the simulation ####################################
         logger.log(drone=0,
                     timestamp=i/env.SIM_FREQ,
-                    state=obs['0']["state"]
+                    state=obs[0]
                     )
 
         #### Printout ##############################################

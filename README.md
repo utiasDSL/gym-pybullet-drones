@@ -97,14 +97,15 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 
 ## TODO
 
-- [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
-- [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
-- [ ] Revise IMU transforms in Betaflight SITL example (@ykeuter)
-- [ ] Add motor delay
-- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates?) in `obs`
-- [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
-- [ ] Add `yaml` configuration files
-- [ ] Add `cffirmware` SITL support
+- [ ] Replace `aggregate_phy_steps` with simulation and control frequencies @JacopoPan
+- [ ] Revise IMU transforms in Betaflight SITL example @ykeuter
+- [ ] Add motor delay @JacopoPan / @spencerteetaert
+- [ ] Add `cffirmware` SITL support @spencerteetaert
+- [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with a single `RLAviary` @JacopoPan
+- [ ] (desiderata) Add `yaml` configuration files
+- [ ] (desiderata) Replace `rpy` with quaternions (and `ang_vel` with body rates) in `obs`
+
+
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)

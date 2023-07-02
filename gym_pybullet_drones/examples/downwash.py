@@ -79,7 +79,7 @@ def run(
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
-    action = {str(i): np.array([0, 0, 0, 0]) for i in range(2)}
+    action = np.zeros((2,4))
     START = time.time()
     for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
 
@@ -91,8 +91,8 @@ def run(
 
             #### Compute control for the current way point #############
             for j in range(2):
-                action[str(j)], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
-                                                                       state=obs[str(j)]["state"],
+                action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
+                                                                       state=obs[j],
                                                                        target_pos=np.hstack([TARGET_POS[wp_counters[j], :], INIT_XYZS[j, 2]]),
                                                                        )
 
@@ -104,7 +104,7 @@ def run(
         for j in range(2):
             logger.log(drone=j,
                        timestamp=i/env.SIM_FREQ,
-                       state=obs[str(j)]["state"],
+                       state=obs[j],
                        control=np.hstack([TARGET_POS[wp_counters[j], :], INIT_XYZS[j ,2], np.zeros(9)])
                        )
 
