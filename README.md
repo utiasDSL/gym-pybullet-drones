@@ -1,6 +1,8 @@
 # gym-pybullet-drones
 
-This is a (minimalist) refactoring of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium) and [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327).
+This is a minimalist refactoring of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium) and [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327).
+
+If you prefer to access the original codebase, please `git checkout [paper|old-master]` after cloning the repo, and refer to the respective `README.md`.
 
 <img src="files/readme_images/helix.gif" alt="formation flight" width="350"> <img src="files/readme_images/helix.png" alt="control info" width="450">
 
@@ -95,11 +97,11 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 
 ## TODO
 
-- [ ] IMU transforms in Betaflight SITL example
 - [ ] Flatten `dict` observations/action into `np.array`s (with wrapper?)
 - [ ] Replace `aggregate_phy_steps` with simulation and control frequencies
+- [ ] Revise IMU transforms in Betaflight SITL example (@ykeuter)
 - [ ] Add motor delay
-- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates?)
+- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates?) in `obs`
 - [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with `RLAviary`
 - [ ] Add `yaml` configuration files
 - [ ] Add `cffirmware` SITL support
