@@ -102,10 +102,10 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - [ ] Add motor delay @JacopoPan / @spencerteetaert
 - [ ] Add `cffirmware` SITL support @spencerteetaert
 - [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with a single `RLAviary` @JacopoPan
+- [ ] Add a multi-agent MDP with 2-drone chase through a gate @JacopoPan
 - [ ] (desiderata) Add `yaml` configuration files
 - [ ] (desiderata) Replace `rpy` with quaternions (and `ang_vel` with body rates) in `obs`
-
-
+- [ ] (desiderata) vectorize any remaining loop @JacopoPan
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
