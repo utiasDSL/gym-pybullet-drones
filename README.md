@@ -98,7 +98,7 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 ## TODO
 
 - [ ] Replace `aggregate_phy_steps` with simulation and control frequencies @JacopoPan
-- [ ] Revise IMU transforms in Betaflight SITL example @ykeuter
+- [ ] Revise IMU transforms in Betaflight SITL exampl (+ `_dynamics()`) @ykeuter
 - [ ] Add motor delay @JacopoPan / @spencerteetaert
 - [ ] Add `cffirmware` SITL support @spencerteetaert
 - [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with a single `RLAviary` @JacopoPan
