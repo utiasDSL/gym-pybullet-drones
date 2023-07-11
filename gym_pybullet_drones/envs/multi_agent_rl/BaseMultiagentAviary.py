@@ -368,7 +368,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
         """
         raise NotImplementedError
     
-    def calculate_next_step(self, current_position, destination, step_size=1):
+    def _calculateNextStep(self, current_position, destination, step_size=1):
         """
         Calculates intermediate waypoint
         towards drone's destination
