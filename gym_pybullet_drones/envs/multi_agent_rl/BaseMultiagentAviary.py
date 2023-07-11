@@ -214,7 +214,7 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                 state = self._getDroneStateVector(int(k))
                 curr_pos = state[0:3]
                 destination = v
-                next_pos = self.calculate_next_step(
+                next_pos = self._calculateNextStep(
                     current_position=curr_pos,
                     destination=destination,
                     step_size=1,
