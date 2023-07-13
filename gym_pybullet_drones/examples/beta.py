@@ -45,7 +45,6 @@ DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_PLOT = True
 DEFAULT_USER_DEBUG_GUI = False
-DEFAULT_AGGREGATE = True
 DEFAULT_SIMULATION_FREQ_HZ = 500
 DEFAULT_CONTROL_FREQ_HZ = 500
 DEFAULT_DURATION_SEC = 15
@@ -73,23 +72,19 @@ def run(
         gui=DEFAULT_GUI,
         plot=DEFAULT_PLOT,
         user_debug_gui=DEFAULT_USER_DEBUG_GUI,
-        aggregate=DEFAULT_AGGREGATE,
         simulation_freq_hz=DEFAULT_SIMULATION_FREQ_HZ,
         control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
         duration_sec=DEFAULT_DURATION_SEC,
         output_folder=DEFAULT_OUTPUT_FOLDER,
         ):
-    #### Initialize the simulation #############################
-    AGGR_PHY_STEPS = int(simulation_freq_hz/control_freq_hz) if aggregate else 1
-
     #### Create the environment with or without video capture ##
     env = CtrlAviary(drone_model=drone,
                         num_drones=1,
                         initial_xyzs=np.array([[.0, .0, .5]]),
                         initial_rpys=np.array([[.0, .0, .0]]),
                         physics=physics,
-                        freq=simulation_freq_hz,
-                        aggregate_phy_steps=AGGR_PHY_STEPS,
+                        pyb_freq=simulation_freq_hz,
+                        ctrl_freq=control_freq_hz,
                         gui=gui,
                         user_debug_gui=user_debug_gui
                         )
@@ -98,22 +93,21 @@ def run(
     PYB_CLIENT = env.getPyBulletClient()
 
     #### Initialize the logger #################################
-    logger = Logger(logging_freq_hz=int(simulation_freq_hz/AGGR_PHY_STEPS),
+    logger = Logger(logging_freq_hz=control_freq_hz,
                     num_drones=1,
                     output_folder=output_folder,
                     )
 
     #### Run the simulation ####################################
-    CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
     action = np.zeros((1,4))
     previous_vel = np.array([0.,0.,0.])
 
     START = time.time()
     ARM_TIME = 1.5
-    for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
+    for i in range(0, int(duration_sec*env.CTRL_FREQ)):
 
         #### No gravity until 1.5'' after arming ###################
-        if i/env.SIM_FREQ <= ARM_TIME + 1.5:
+        if i/env.CTRL_FREQ <= ARM_TIME + 1.5:
             p.applyExternalForce(env.DRONE_IDS[0],
                                  4,
                                  forceObj=[0, 0, env.GRAVITY],
@@ -132,7 +126,7 @@ def run(
         v = o[10:13]
         w = o[13:16] # world frame
         w = rotate_vector(w, qconjugate(q)) # local frame
-        t = i/env.SIM_FREQ
+        t = i/env.CTRL_FREQ
         fdm_packet = struct.pack('@dddddddddddddddddd', # t, w, a, q, v, p, pressure
                             t,         # datetime.now().timestamp(), # double timestamp; // in seconds
                             w[0], w[1], w[2], # double imu_angular_velocity_rpy[3]; // rad/s -> range: +/- 8192; +/- 2000 deg/se
@@ -164,7 +158,7 @@ def run(
         #                          flags=p.LINK_FRAME,
         #                          physicsClientId=PYB_CLIENT
         #                          )
-        if i/env.SIM_FREQ > ARM_TIME+1.5:
+        if i/env.CTRL_FREQ > ARM_TIME+1.5:
             # thro = 1400
             # yaw = 1550
             # pitch = 1600
@@ -176,9 +170,9 @@ def run(
             thro = int(1666 + 50*pos_err + 20*vel_err)
         
         #### RC message to Betaflight ##############################
-        aux1 = 1000 if i/env.SIM_FREQ < ARM_TIME else 1500 # Arm
+        aux1 = 1000 if i/env.CTRL_FREQ < ARM_TIME else 1500 # Arm
         rc_packet = struct.pack('@dHHHHHHHHHHHHHHHH', 
-                            i/env.SIM_FREQ, # datetime.now().timestamp(), # double timestamp; // in seconds
+                            i/env.CTRL_FREQ, # datetime.now().timestamp(), # double timestamp; // in seconds
                             roll, pitch, thro, yaw,              # roll, pitch, throttle, yaw
                             aux1, 1000, 1000, 1000,              # aux 1, ..
                             1000, 1000, 1000, 1000, 
@@ -228,18 +222,17 @@ def run(
 
         #### Log the simulation ####################################
         logger.log(drone=0,
-                    timestamp=i/env.SIM_FREQ,
+                    timestamp=i/env.CTRL_FREQ,
                     state=obs[0]
                     )
 
         #### Printout ##############################################
-        if i%env.SIM_FREQ == 0:
-            env.render()
+        env.render()
 
         #### Sync the simulation ###################################
         if gui:
             pass
-            sync(i, START, env.TIMESTEP)
+            sync(i, START, env.CTRL_TIMESTEP)
 
     #### Close the environment #################################
     env.close()
@@ -260,7 +253,6 @@ if __name__ == "__main__":
     parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--user_debug_gui',     default=DEFAULT_USER_DEBUG_GUI,      type=str2bool,      help='Whether to add debug lines and parameters to the GUI (default: False)', metavar='')
-    parser.add_argument('--aggregate',          default=DEFAULT_AGGREGATE,       type=str2bool,      help='Whether to aggregate physics steps (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=DEFAULT_SIMULATION_FREQ_HZ,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=DEFAULT_CONTROL_FREQ_HZ,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
     parser.add_argument('--duration_sec',       default=DEFAULT_DURATION_SEC,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')

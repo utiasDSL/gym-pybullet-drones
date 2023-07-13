@@ -16,8 +16,8 @@ class CtrlAviary(BaseAviary):
                  initial_xyzs=None,
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
-                 freq: int=240,
-                 aggregate_phy_steps: int=1,
+                 pyb_freq: int = 240,
+                 ctrl_freq: int = 240,
                  gui=False,
                  record=False,
                  obstacles=False,
@@ -40,10 +40,10 @@ class CtrlAviary(BaseAviary):
             (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
         physics : Physics, optional
             The desired implementation of PyBullet physics/custom dynamics.
-        freq : int, optional
-            The frequency (Hz) at which the physics engine steps.
-        aggregate_phy_steps : int, optional
-            The number of physics steps within one call to `BaseAviary.step()`.
+        pyb_freq : int, optional
+            The frequency at which PyBullet steps (a multiple of ctrl_freq).
+        ctrl_freq : int, optional
+            The frequency at which the environment steps.
         gui : bool, optional
             Whether to use PyBullet's GUI.
         record : bool, optional
@@ -60,8 +60,8 @@ class CtrlAviary(BaseAviary):
                          initial_xyzs=initial_xyzs,
                          initial_rpys=initial_rpys,
                          physics=physics,
-                         freq=freq,
-                         aggregate_phy_steps=aggregate_phy_steps,
+                         pyb_freq=pyb_freq,
+                         ctrl_freq=ctrl_freq,
                          gui=gui,
                          record=record,
                          obstacles=obstacles,

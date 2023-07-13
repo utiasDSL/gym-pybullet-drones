@@ -16,10 +16,10 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
                  initial_xyzs=None,
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
-                 freq: int=240,
-                 aggregate_phy_steps: int=1,
+                 pyb_freq: int = 240,
+                 ctrl_freq: int = 240,
                  gui=False,
-                 record=False, 
+                 record=False,
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM):
         """Initialization of a multi-agent RL environment.
@@ -40,10 +40,10 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
             (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
         physics : Physics, optional
             The desired implementation of PyBullet physics/custom dynamics.
-        freq : int, optional
-            The frequency (Hz) at which the physics engine steps.
-        aggregate_phy_steps : int, optional
-            The number of physics steps within one call to `BaseAviary.step()`.
+        pyb_freq : int, optional
+            The frequency at which PyBullet steps (a multiple of ctrl_freq).
+        ctrl_freq : int, optional
+            The frequency at which the environment steps.
         gui : bool, optional
             Whether to use PyBullet's GUI.
         record : bool, optional
@@ -60,8 +60,8 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
                          initial_xyzs=initial_xyzs,
                          initial_rpys=initial_rpys,
                          physics=physics,
-                         freq=freq,
-                         aggregate_phy_steps=aggregate_phy_steps,
+                         pyb_freq=pyb_freq,
+                         ctrl_freq=ctrl_freq,
                          gui=gui,
                          record=record, 
                          obs=obs,
@@ -99,7 +99,7 @@ class LeaderFollowerAviary(BaseMultiagentAviary):
             one additional boolean value for key "__all__".
 
         """
-        bool_val = True if self.step_counter/self.SIM_FREQ > self.EPISODE_LEN_SEC else False
+        bool_val = True if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC else False
         done = {i: bool_val for i in range(self.NUM_DRONES)}
         done["__all__"] = bool_val # True if True in done.values() else False
         return done

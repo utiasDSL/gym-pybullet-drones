@@ -47,27 +47,26 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
     env = HoverAviary(gui=gui,
                       record=record_video
                      )
-    logger = Logger(logging_freq_hz=int(env.SIM_FREQ/env.AGGR_PHY_STEPS),
+    logger = Logger(logging_freq_hz=int(env.CTRL_FREQ),
                     num_drones=1,
                     output_folder=output_folder,
                     colab=colab
                     )
     obs, info = env.reset(seed=42, options={})
     start = time.time()
-    for i in range(3*env.SIM_FREQ):
+    for i in range(3*env.CTRL_FREQ):
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
         obs, reward, terminated, truncated, info = env.step(action)
         logger.log(drone=0,
-                   timestamp=i/env.SIM_FREQ,
+                   timestamp=i/env.CTRL_FREQ,
                    state=np.hstack([obs[0:3], np.zeros(4), obs[3:15],  np.resize(action, (4))]),
                    control=np.zeros(12)
                    )
-        if i%env.SIM_FREQ == 0:
-            env.render()
-            print(terminated)
-        sync(i, start, env.TIMESTEP)
+        env.render()
+        print(terminated)
+        sync(i, start, env.CTRL_TIMESTEP)
         if terminated:
             obs = env.reset(seed=42, options={})
     env.close()

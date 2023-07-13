@@ -39,7 +39,6 @@ DEFAULT_GUI = True
 DEFAULT_RECORD_VISION = False
 DEFAULT_PLOT = True
 DEFAULT_USER_DEBUG_GUI = False
-DEFAULT_AGGREGATE = True
 DEFAULT_OBSTACLES = True
 DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48
@@ -55,7 +54,6 @@ def run(
         record_video=DEFAULT_RECORD_VISION,
         plot=DEFAULT_PLOT,
         user_debug_gui=DEFAULT_USER_DEBUG_GUI,
-        aggregate=DEFAULT_AGGREGATE,
         obstacles=DEFAULT_OBSTACLES,
         simulation_freq_hz=DEFAULT_SIMULATION_FREQ_HZ,
         control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
@@ -69,7 +67,6 @@ def run(
     R = .3
     INIT_XYZS = np.array([[R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(num_drones)])
     INIT_RPYS = np.array([[0, 0,  i * (np.pi/2)/num_drones] for i in range(num_drones)])
-    AGGR_PHY_STEPS = int(simulation_freq_hz/control_freq_hz) if aggregate else 1
 
     #### Initialize a circular trajectory ######################
     PERIOD = 10
@@ -107,8 +104,8 @@ def run(
                         initial_rpys=INIT_RPYS,
                         physics=physics,
                         neighbourhood_radius=10,
-                        freq=simulation_freq_hz,
-                        aggregate_phy_steps=AGGR_PHY_STEPS,
+                        pyb_freq=simulation_freq_hz,
+                        ctrl_freq=control_freq_hz,
                         gui=gui,
                         record=record_video,
                         obstacles=obstacles,
@@ -119,7 +116,7 @@ def run(
     PYB_CLIENT = env.getPyBulletClient()
 
     #### Initialize the logger #################################
-    logger = Logger(logging_freq_hz=int(simulation_freq_hz/AGGR_PHY_STEPS),
+    logger = Logger(logging_freq_hz=control_freq_hz,
                     num_drones=num_drones,
                     output_folder=output_folder,
                     colab=colab
@@ -130,10 +127,9 @@ def run(
         ctrl = [DSLPIDControl(drone_model=drone) for i in range(num_drones)]
 
     #### Run the simulation ####################################
-    CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
     action = np.zeros((num_drones,4))
     START = time.time()
-    for i in range(0, int(duration_sec*env.SIM_FREQ), AGGR_PHY_STEPS):
+    for i in range(0, int(duration_sec*env.CTRL_FREQ)):
 
         #### Make it rain rubber ducks #############################
         # if i/env.SIM_FREQ>5 and i%10==0 and i/env.SIM_FREQ<10: p.loadURDF("duck_vhacd.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
@@ -141,38 +137,34 @@ def run(
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
 
-        #### Compute control at the desired frequency ##############
-        if i%CTRL_EVERY_N_STEPS == 0:
+        #### Compute control for the current way point #############
+        for j in range(num_drones):
+            action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
+                                                                    state=obs[j],
+                                                                    target_pos=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
+                                                                    # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
+                                                                    target_rpy=INIT_RPYS[j, :]
+                                                                    )
 
-            #### Compute control for the current way point #############
-            for j in range(num_drones):
-                action[j, :], _, _ = ctrl[j].computeControlFromState(control_timestep=CTRL_EVERY_N_STEPS*env.TIMESTEP,
-                                                                       state=obs[j],
-                                                                       target_pos=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2]]),
-                                                                       # target_pos=INIT_XYZS[j, :] + TARGET_POS[wp_counters[j], :],
-                                                                       target_rpy=INIT_RPYS[j, :]
-                                                                       )
-
-            #### Go to the next way point and loop #####################
-            for j in range(num_drones): 
-                wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
+        #### Go to the next way point and loop #####################
+        for j in range(num_drones):
+            wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
         for j in range(num_drones):
             logger.log(drone=j,
-                       timestamp=i/env.SIM_FREQ,
+                       timestamp=i/env.CTRL_FREQ,
                        state=obs[j],
                        control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
                        # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
                        )
 
         #### Printout ##############################################
-        if i%env.SIM_FREQ == 0:
-            env.render()
+        env.render()
 
         #### Sync the simulation ###################################
         if gui:
-            sync(i, START, env.TIMESTEP)
+            sync(i, START, env.CTRL_TIMESTEP)
 
     #### Close the environment #################################
     env.close()
@@ -195,7 +187,6 @@ if __name__ == "__main__":
     parser.add_argument('--record_video',       default=DEFAULT_RECORD_VISION,      type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--user_debug_gui',     default=DEFAULT_USER_DEBUG_GUI,      type=str2bool,      help='Whether to add debug lines and parameters to the GUI (default: False)', metavar='')
-    parser.add_argument('--aggregate',          default=DEFAULT_AGGREGATE,       type=str2bool,      help='Whether to aggregate physics steps (default: True)', metavar='')
     parser.add_argument('--obstacles',          default=DEFAULT_OBSTACLES,       type=str2bool,      help='Whether to add obstacles to the environment (default: True)', metavar='')
     parser.add_argument('--simulation_freq_hz', default=DEFAULT_SIMULATION_FREQ_HZ,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
     parser.add_argument('--control_freq_hz',    default=DEFAULT_CONTROL_FREQ_HZ,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
