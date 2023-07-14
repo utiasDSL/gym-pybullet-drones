@@ -35,7 +35,7 @@ cd gym_pybullet_drones/examples/
 python3 learn.py
 ```
 
-### Betaflight SITL example
+### Betaflight SITL example (Ubuntu only)
 
 In one terminal, run the Betaflight SITL binary
 
