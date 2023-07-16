@@ -482,13 +482,14 @@ class BaseAviary(gym.Env):
         #### Remove default damping #################################
         # for i in range(self.NUM_DRONES):
         #     p.changeDynamics(self.DRONE_IDS[i], -1, linearDamping=0, angularDamping=0)
-        for i in range(self.NUM_DRONES):
-            #### Show the frame of reference of the drone, note that ###
-            #### It severly slows down the GUI #########################
-            if self.GUI and self.USER_DEBUG:
+        #### Show the frame of reference of the drone, note that ###
+        #### It severly slows down the GUI #########################
+        if self.GUI and self.USER_DEBUG:
+            for i in range(self.NUM_DRONES):
                 self._showDroneLocalAxes(i)
-            #### Disable collisions between drones' and the ground plane
-            #### E.g., to start a drone at [0,0,0] #####################
+        #### Disable collisions between drones' and the ground plane
+        #### E.g., to start a drone at [0,0,0] #####################
+        # for i in range(self.NUM_DRONES):
             # p.setCollisionFilterPair(bodyUniqueIdA=self.PLANE_ID, bodyUniqueIdB=self.DRONE_IDS[i], linkIndexA=-1, linkIndexB=-1, enableCollision=0, physicsClientId=self.CLIENT)
         if self.OBSTACLES:
             self._addObstacles()
