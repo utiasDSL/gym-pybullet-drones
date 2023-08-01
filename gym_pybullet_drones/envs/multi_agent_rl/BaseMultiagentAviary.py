@@ -212,13 +212,22 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
                                         )
             elif self.ACT_TYPE == ActionType.PID: 
                 state = self._getDroneStateVector(int(k))
+                curr_pos = state[0:3]
+                destination = v
+                next_pos = self._calculateNextStep(
+                    current_position=curr_pos,
+                    destination=destination,
+                    step_size=1,
+                )
                 rpm_k, _, _ = self.ctrl[int(k)].computeControl(control_timestep=self.AGGR_PHY_STEPS*self.TIMESTEP, 
                                                         cur_pos=state[0:3],
                                                         cur_quat=state[3:7],
                                                         cur_vel=state[10:13],
                                                         cur_ang_vel=state[13:16],
-                                                        target_pos=state[0:3]+0.1*v
+                                                        target_pos=next_pos,
+
                                                         )
+        
                 rpm[int(k),:] = rpm_k
             elif self.ACT_TYPE == ActionType.VEL:
                 state = self._getDroneStateVector(int(k))
@@ -358,3 +367,47 @@ class BaseMultiagentAviary(BaseAviary, MultiAgentEnv):
 
         """
         raise NotImplementedError
+    
+    def _calculateNextStep(self, current_position, destination, step_size=1):
+        """
+        Calculates intermediate waypoint
+        towards drone's destination
+        from drone's current position
+
+        Enables drones to reach distant waypoints without
+        losing control/crashing, and hover on arrival at destintion
+
+        Parameters
+        ----------
+        current_position : ndarray
+            drone's current position from state vector
+        destination : ndarray
+            drone's target position 
+        step_size: int
+            distance next waypoint is from current position, default 1
+
+        Returns
+        ----------
+        next_pos: int 
+            intermediate waypoint for drone
+
+        """
+        direction = (
+            destination - current_position
+        )  # Calculate the direction vector
+        distance = np.linalg.norm(
+            direction
+        )  # Calculate the distance to the destination
+
+        if distance <= step_size:
+            # If the remaining distance is less than or equal to the step size,
+            # return the destination
+            return destination
+
+        normalized_direction = (
+            direction / distance
+        )  # Normalize the direction vector
+        next_step = (
+            current_position + normalized_direction * step_size
+        )  # Calculate the next step
+        return next_step
