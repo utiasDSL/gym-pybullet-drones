@@ -22,7 +22,7 @@ class BaseMultiagentAviary(BaseAviary):
                  pyb_freq: int = 240,
                  ctrl_freq: int = 240,
                  gui=False,
-                 record=False, 
+                 record=False,
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM
                  ):
@@ -182,16 +182,21 @@ class BaseMultiagentAviary(BaseAviary):
         rpm = np.zeros((self.NUM_DRONES,4))
         for k in range(action.shape[0]):
             target = action[k, :]
-            if self.ACT_TYPE == ActionType.RPM: 
+            if self.ACT_TYPE == ActionType.RPM:
                 rpm[k,:] = np.array(self.HOVER_RPM * (1+0.05*target))
             elif self.ACT_TYPE == ActionType.PID:
                 state = self._getDroneStateVector(k)
+                next_pos = self._calculateNextStep(
+                    current_position=state[0:3],
+                    destination=target,
+                    step_size=1,
+                    )
                 rpm_k, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
                                                         cur_pos=state[0:3],
                                                         cur_quat=state[3:7],
                                                         cur_vel=state[10:13],
                                                         cur_ang_vel=state[13:16],
-                                                        target_pos=state[0:3]+0.1*target
+                                                        target_pos=next_pos
                                                         )
                 rpm[k,:] = rpm_k
             elif self.ACT_TYPE == ActionType.VEL:

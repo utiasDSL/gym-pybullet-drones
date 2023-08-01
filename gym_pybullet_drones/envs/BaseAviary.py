@@ -1092,3 +1092,49 @@ class BaseAviary(gym.Env):
 
         """
         raise NotImplementedError
+
+    ################################################################################
+
+    def _calculateNextStep(self, current_position, destination, step_size=1):
+        """
+        Calculates intermediate waypoint
+        towards drone's destination
+        from drone's current position
+
+        Enables drones to reach distant waypoints without
+        losing control/crashing, and hover on arrival at destintion
+
+        Parameters
+        ----------
+        current_position : ndarray
+            drone's current position from state vector
+        destination : ndarray
+            drone's target position 
+        step_size: int
+            distance next waypoint is from current position, default 1
+
+        Returns
+        ----------
+        next_pos: int 
+            intermediate waypoint for drone
+
+        """
+        direction = (
+            destination - current_position
+        )  # Calculate the direction vector
+        distance = np.linalg.norm(
+            direction
+        )  # Calculate the distance to the destination
+
+        if distance <= step_size:
+            # If the remaining distance is less than or equal to the step size,
+            # return the destination
+            return destination
+
+        normalized_direction = (
+            direction / distance
+        )  # Normalize the direction vector
+        next_step = (
+            current_position + normalized_direction * step_size
+        )  # Calculate the next step
+        return next_step
