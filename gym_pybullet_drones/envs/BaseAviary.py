@@ -127,6 +127,9 @@ class BaseAviary(gym.Env):
         self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
         self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt((15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST)
         #### Create attributes for vision tasks ####################
+        if self.RECORD:
+            self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+            os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         self.VISION_ATTR = vision_attributes
         if self.VISION_ATTR:
             self.IMG_RES = np.array([64, 48])
@@ -138,9 +141,8 @@ class BaseAviary(gym.Env):
             if self.IMG_CAPTURE_FREQ%self.PYB_STEPS_PER_CTRL != 0:
                 print("[ERROR] in BaseAviary.__init__(), PyBullet and control frequencies incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
-            if self.RECORD:
-                self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
-                os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
+            for i in range(self.NUM_DRONES):
+                os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH+"/drone_"+str(i)+"/"), exist_ok=True)
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################
@@ -309,7 +311,7 @@ class BaseAviary(gym.Env):
                     #### Printing observation to PNG frames example ############
                     self._exportImage(img_type=ImageType.RGB, # ImageType.BW, ImageType.DEP, ImageType.SEG
                                     img_input=self.rgb[i],
-                                    path=self.ONBOARD_IMG_PATH+"drone_"+str(i),
+                                    path=self.ONBOARD_IMG_PATH+"/drone_"+str(i),
                                     frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ)
                                     )
         #### Read the GUI's input parameters #######################
