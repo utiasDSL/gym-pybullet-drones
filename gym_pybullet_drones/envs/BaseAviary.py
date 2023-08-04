@@ -141,8 +141,9 @@ class BaseAviary(gym.Env):
             if self.IMG_CAPTURE_FREQ%self.PYB_STEPS_PER_CTRL != 0:
                 print("[ERROR] in BaseAviary.__init__(), PyBullet and control frequencies incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
-            for i in range(self.NUM_DRONES):
-                os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH+"/drone_"+str(i)+"/"), exist_ok=True)
+            if self.RECORD:
+                for i in range(self.NUM_DRONES):
+                    os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH+"/drone_"+str(i)+"/"), exist_ok=True)
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################
