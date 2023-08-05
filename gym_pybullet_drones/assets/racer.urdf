@@ -1,27 +1,21 @@
 <?xml version="1.0" ?>
 
-<robot name="cf2">
+<robot name="racer">
 
-  <properties arm="0.0397" kf="3.16e-10" km="7.94e-12" thrust2weight="2.25" max_speed_kmh="30" gnd_eff_coeff="11.36859" prop_radius="2.31348e-2" drag_coeff_xy="9.1785e-7" drag_coeff_z="10.311e-7" dw_coeff_1="2267.18" dw_coeff_2=".16" dw_coeff_3="-.11" />
+  <properties arm="0.109" kf="8.47e-9" km="2.13e-11" thrust2weight="4.17" max_speed_kmh="200" gnd_eff_coeff="11.36859" prop_radius="12.7e-2" drag_coeff_xy="9.1785e-7" drag_coeff_z="10.311e-7" dw_coeff_1="2267.18" dw_coeff_2=".16" dw_coeff_3="-.11" />
 
   <link name="base_link"> 
 
     <inertial>
       <origin rpy="0 0 0" xyz="0 0 0"/>
-      <mass value="0.027"/>
-      <inertia ixx="1.4e-5" ixy="0.0" ixz="0.0" iyy="1.4e-5" iyz="0.0" izz="2.17e-5"/>
+      <mass value="0.830"/>
+      <inertia ixx=".003113" ixy="0.0" ixz="0.0" iyy=".003113" iyz="0.0" izz=".003113"/>
     </inertial>
-
-    <!-- links>
-      <carlos url="https://arxiv.org/pdf/1608.05786.pdf" />
-      <julian url="https://www.research-collection.ethz.ch/handle/20.500.11850/214143" />
-      <mit url="http://groups.csail.mit.edu/robotics-center/public_papers/Landry15.pdf" />
-    </links -->
 
     <visual>
       <origin rpy="0 0 55" xyz="0 0 0"/>
       <geometry>
-        <mesh filename="./cf2.dae" scale=" 1 1 1"/>
+        <mesh filename="./cf2.dae" scale="3 3 3"/>
       </geometry> 
       <material name="grey">
         <color rgba=".5 .5 .5 1"/>
@@ -39,7 +33,7 @@
 
   <link name="prop0_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="0.028 0.028 0"/>
+      <origin rpy="0 0 0" xyz="0.0850 0.0675 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
@@ -51,7 +45,7 @@
 
   <link name="prop1_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-0.028 0.028 0"/>
+      <origin rpy="0 0 0" xyz="-0.0850 0.0675 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
@@ -63,7 +57,7 @@
 
   <link name="prop2_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-0.028 -0.028 0"/>
+      <origin rpy="0 0 0" xyz="-0.085 -0.0675 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
@@ -75,7 +69,7 @@
 
   <link name="prop3_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="0.028 -0.028 0"/>
+      <origin rpy="0 0 0" xyz="0.085 -0.0675 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
@@ -98,4 +92,3 @@
   </joint>
 
 </robot>
-
