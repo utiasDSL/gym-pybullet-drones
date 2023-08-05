@@ -97,17 +97,12 @@ If you wish, please cite [our IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 
 ## TODO
 
-- [ ] Revise IMU transforms in Betaflight SITL example (+ `_dynamics()`) @ykeuter
-- [ ] Add Betaflight SITL control example and `pytest` (with pre-compiled `.elf` ) @ykeuter
-- [ ] Add motor delay @JacopoPan / @spencerteetaert
 - [ ] Add `cffirmware` SITL support @spencerteetaert
+- [ ] Add Betaflight SITL control example in `pytest`/workflows (with pre-compiled `.elf` ) @ykeuter
+- [ ] Add motor delay @JacopoPan / @spencerteetaert
+- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates) in `obs`
 - [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with a single `RLAviary`, incl. PR #161 @JacopoPan
 - [ ] Add a multi-agent MDP with 2-drone chase through a gate @JacopoPan
-
-## Desiderata
-
-- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates) in `obs`
-- [ ] Add `yaml` configuration files
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
