@@ -2,7 +2,7 @@
 
 This is a minimalist refactoring of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium) and [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327).
 
-If you prefer to access the original codebase, please `git checkout [paper|old-master]` after cloning the repo, and refer to the respective `README.md`.
+> **IMPORTANT NOTE**: if you prefer to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]` after cloning the repo, and refer to the corresponding `README.md`'s.
 
 <img src="files/readme_images/helix.gif" alt="formation flight" width="350"> <img src="files/readme_images/helix.png" alt="control info" width="450">
 
