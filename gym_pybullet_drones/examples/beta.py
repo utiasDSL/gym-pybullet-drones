@@ -9,7 +9,7 @@ Comment out line `delayMicroseconds_real(50); // max rate 20kHz` from Betaflight
 
 Step 2: Install betaflight configurator https://github.com/betaflight/betaflight-configurator/releases
 
-Load the `beta.txt` configuration file onto the target using the BF configurator
+Load the `../assets/beta.txt` configuration file onto the target using the BF configurator
 
 Example
 -------
@@ -104,7 +104,7 @@ def run(
                     )
 
     #### Run the simulation ####################################
-    with open("beta.csv", mode='r') as csv_file:
+    with open("../assets/beta.csv", mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         trajectory = iter([{
             "pos": np.array([
