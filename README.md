@@ -19,6 +19,8 @@ pip3 install --upgrade pip
 pip3 install -e .
 ```
 
+If needed, `sudo apt install build-essentials` to install `gcc` and build `pybullet`.
+
 ## Use
 
 ### PID position control example
@@ -40,9 +42,10 @@ python3 learn.py
 In one terminal, run the Betaflight SITL binary
 
 ```sh
-git clone  https://github.com/betaflight/betaflight
-cd betaflight/
-make TARGET=SITL # comment out this line: https://github.com/betaflight/betaflight/blob/c41b458e5891205da50465caeec0c1aa83beeb0c/src/main/main.c#L52
+git clone https://github.com/betaflight/betaflight
+cd betaflight/ 
+make arm_sdk_install # if needed, `apt install curl``
+make TARGET=SITL # comment out this line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
 betaflight/obj/main/betaflight_SITL.elf
 ```
 
