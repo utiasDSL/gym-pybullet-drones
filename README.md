@@ -8,6 +8,8 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 
 ## Installation
 
+Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 13.4.
+
 ```sh
 git clone https://github.com/utiasDSL/gym-pybullet-drones.git
 cd gym-pybullet-drones/
@@ -53,7 +55,7 @@ In another terminal, run the example
 
 ```sh
 cd gym_pybullet_drones/examples/
-python3 beta.py
+python3 beta.py # also check the steps in the file's docstrings
 ```
 
 ## Troubleshooting
