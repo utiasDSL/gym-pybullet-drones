@@ -16,7 +16,7 @@ Step 3: Install betaflight configurator https://github.com/betaflight/betaflight
 
 Step 4: Load the configuration file onto the target using the BF configurator
     Type address `tcp://localhost:5761` (top right) and click `Connect`
-    Find the `CLI` tab (on the left) -> `Load from file` -> select file `../assets/beta.txt`
+    Find the `Presets` tab (on the left) -> `Load backup` -> select file `../assets/beta.txt`
 
 Example
 -------
