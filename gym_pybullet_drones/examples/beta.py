@@ -3,15 +3,18 @@
 Setup
 -----
 Step 1: Clone betaflight https://github.com/betaflight/betaflight
+    git clone https://github.com/betaflight/betaflight
+    cd betaflight/ 
+    make arm_sdk_install
 
-Comment out line `delayMicroseconds_real(50); // max rate 20kHz` from Betaflight's SIMULATOR_BUILD
+Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz` from Betaflight's SIMULATOR_BUILD
     https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
 
-Step 2: Install betaflight configurator https://github.com/betaflight/betaflight-configurator/releases
+Step 3: Install betaflight configurator https://github.com/betaflight/betaflight-configurator/releases
     wget https://github.com/betaflight/betaflight-configurator/releases/download/10.9.0/betaflight-configurator_10.9.0_amd64.deb
     sudo dpkg -i betaflight-configurator_10.9.0_amd64.deb 
 
-Load the configuration file onto the target using the BF configurator
+Step 4: Load the configuration file onto the target using the BF configurator
     Type address `tcp://localhost:5761` (top right) and click `Connect`
     Find the `CLI` tab (on the left) -> `Load from file` -> select file `../assets/beta.txt`
 
