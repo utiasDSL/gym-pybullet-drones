@@ -3,16 +3,16 @@
 Setup
 -----
 Step 1: Clone betaflight https://github.com/betaflight/betaflight
-    git clone https://github.com/betaflight/betaflight
-    cd betaflight/ 
-    make arm_sdk_install
+    $ git clone https://github.com/betaflight/betaflight
+    $ cd betaflight/ 
+    $ make arm_sdk_install
 
 Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz` from Betaflight's SIMULATOR_BUILD
     https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
 
 Step 3: Install betaflight configurator https://github.com/betaflight/betaflight-configurator/releases
-    wget https://github.com/betaflight/betaflight-configurator/releases/download/10.9.0/betaflight-configurator_10.9.0_amd64.deb
-    sudo dpkg -i betaflight-configurator_10.9.0_amd64.deb 
+    $ wget https://github.com/betaflight/betaflight-configurator/releases/download/10.9.0/betaflight-configurator_10.9.0_amd64.deb
+    $ sudo dpkg -i betaflight-configurator_10.9.0_amd64.deb 
 
 Step 4: Load the configuration file onto the target using the BF configurator
     Type address `tcp://localhost:5761` (top right) and click `Connect`
@@ -22,11 +22,13 @@ Example
 -------
 In one terminal build and run SITL Betaflight:
 
+    $ cd betaflight/
     $ make TARGET=SITL
     $ betaflight/obj/main/betaflight_SITL.elf
 
 In a separate  terminal, run:
 
+    $ cd gym-pybullet-drones/gym_pybullet_drones/examples/
     $ python beta.py
 
 """
