@@ -866,7 +866,6 @@ class BaseAviary(gym.Env):
     def _integrateQ(self, quat, omega, dt):
         omega_norm = np.linalg.norm(omega)
         p, q, r = omega
-        print(omega_norm)
         if np.isclose(omega_norm, 0):
             return quat
         lambda_ = np.array([
