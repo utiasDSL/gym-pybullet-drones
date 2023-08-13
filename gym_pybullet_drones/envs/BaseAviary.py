@@ -312,7 +312,7 @@ class BaseAviary(gym.Env):
                     #### Printing observation to PNG frames example ############
                     self._exportImage(img_type=ImageType.RGB, # ImageType.BW, ImageType.DEP, ImageType.SEG
                                     img_input=self.rgb[i],
-                                    path=self.ONBOARD_IMG_PATH+"/drone_"+str(i)+str(i)+"/",
+                                    path=self.ONBOARD_IMG_PATH+"/drone_"+str(i)+"/",
                                     frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ)
                                     )
         #### Read the GUI's input parameters #######################
