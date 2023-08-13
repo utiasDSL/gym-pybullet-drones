@@ -127,11 +127,14 @@ class BaseAviary(gym.Env):
         self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
         self.GND_EFF_H_CLIP = 0.25 * self.PROP_RADIUS * np.sqrt((15 * self.MAX_RPM**2 * self.KF * self.GND_EFF_COEFF) / self.MAX_THRUST)
         #### Create attributes for vision tasks ####################
+        if self.RECORD:
+            self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+            os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
         self.VISION_ATTR = vision_attributes
         if self.VISION_ATTR:
             self.IMG_RES = np.array([64, 48])
             self.IMG_FRAME_PER_SEC = 24
-            self.IMG_CAPTURE_FREQ = int(self.SIM_FREQ/self.IMG_FRAME_PER_SEC)
+            self.IMG_CAPTURE_FREQ = int(self.PYB_FREQ/self.IMG_FRAME_PER_SEC)
             self.rgb = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4)))
             self.dep = np.ones(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
             self.seg = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
@@ -139,8 +142,8 @@ class BaseAviary(gym.Env):
                 print("[ERROR] in BaseAviary.__init__(), PyBullet and control frequencies incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
             if self.RECORD:
-                self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
-                os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
+                for i in range(self.NUM_DRONES):
+                    os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH+"/drone_"+str(i)+"/"), exist_ok=True)
         #### Connect to PyBullet ###################################
         if self.GUI:
             #### With debug GUI ########################################
@@ -303,6 +306,15 @@ class BaseAviary(gym.Env):
             # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8')
             # (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
             self.FRAME_NUM += 1
+            if self.VISION_ATTR:
+                for i in range(self.NUM_DRONES):
+                    self.rgb[i], self.dep[i], self.seg[i] = self._getDroneImages(i)
+                    #### Printing observation to PNG frames example ############
+                    self._exportImage(img_type=ImageType.RGB, # ImageType.BW, ImageType.DEP, ImageType.SEG
+                                    img_input=self.rgb[i],
+                                    path=self.ONBOARD_IMG_PATH+"/drone_"+str(i)+str(i)+"/",
+                                    frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ)
+                                    )
         #### Read the GUI's input parameters #######################
         if self.GUI and self.USER_DEBUG:
             current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
@@ -683,7 +695,9 @@ class BaseAviary(gym.Env):
         """
         forces = np.array(rpm**2)*self.KF
         torques = np.array(rpm**2)*self.KM
-        z_torque = (-torques[0] + torques[1] - torques[2] + torques[3]) # TODO : change this for non CW nor CCW configurations, e.g., Betaflight
+        if self.DRONE_MODEL == DroneModel.RACE:
+            torques = -torques
+        z_torque = (-torques[0] + torques[1] - torques[2] + torques[3])
         for i in range(4):
             p.applyExternalForce(self.DRONE_IDS[nth_drone],
                                  i,
@@ -829,16 +843,15 @@ class BaseAviary(gym.Env):
         thrust_world_frame = np.dot(rotation, thrust)
         force_world_frame = thrust_world_frame - np.array([0, 0, self.GRAVITY])
         z_torques = np.array(rpm**2)*self.KM
+        if self.DRONE_MODEL == DroneModel.RACE:
+            z_torques = -z_torques
         z_torque = (-z_torques[0] + z_torques[1] - z_torques[2] + z_torques[3])
-        if self.DRONE_MODEL==DroneModel.CF2X:
+        if self.DRONE_MODEL==DroneModel.CF2X or self.DRONE_MODEL==DroneModel.RACE:
             x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * (self.L/np.sqrt(2))
             y_torque = (- forces[0] + forces[1] + forces[2] - forces[3]) * (self.L/np.sqrt(2))
         elif self.DRONE_MODEL==DroneModel.CF2P:
             x_torque = (forces[1] - forces[3]) * self.L
             y_torque = (-forces[0] + forces[2]) * self.L
-        if self.DRONE_MODEL==DroneModel.RACE:
-            x_torque = (forces[0] + forces[1] - forces[2] - forces[3]) * (self.L/np.sqrt(2))
-            y_torque = (- forces[0] + forces[1] + forces[2] - forces[3]) * (self.L/np.sqrt(2))
         torques = np.array([x_torque, y_torque, z_torque])
         torques = torques - np.cross(rpy_rates, np.dot(self.J, rpy_rates))
         rpy_rates_deriv = np.dot(self.J_INV, torques)
@@ -1106,3 +1119,49 @@ class BaseAviary(gym.Env):
 
         """
         raise NotImplementedError
+
+    ################################################################################
+
+    def _calculateNextStep(self, current_position, destination, step_size=1):
+        """
+        Calculates intermediate waypoint
+        towards drone's destination
+        from drone's current position
+
+        Enables drones to reach distant waypoints without
+        losing control/crashing, and hover on arrival at destintion
+
+        Parameters
+        ----------
+        current_position : ndarray
+            drone's current position from state vector
+        destination : ndarray
+            drone's target position 
+        step_size: int
+            distance next waypoint is from current position, default 1
+
+        Returns
+        ----------
+        next_pos: int 
+            intermediate waypoint for drone
+
+        """
+        direction = (
+            destination - current_position
+        )  # Calculate the direction vector
+        distance = np.linalg.norm(
+            direction
+        )  # Calculate the distance to the destination
+
+        if distance <= step_size:
+            # If the remaining distance is less than or equal to the step size,
+            # return the destination
+            return destination
+
+        normalized_direction = (
+            direction / distance
+        )  # Normalize the direction vector
+        next_step = (
+            current_position + normalized_direction * step_size
+        )  # Calculate the next step
+        return next_step
