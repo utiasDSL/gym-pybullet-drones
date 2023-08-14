@@ -834,7 +834,6 @@ class BaseAviary(gym.Env):
         #### Current state #########################################
         pos = self.pos[nth_drone,:]
         quat = self.quat[nth_drone,:]
-        rpy = self.rpy[nth_drone,:]
         vel = self.vel[nth_drone,:]
         rpy_rates = self.rpy_rates[nth_drone,:]
         rotation = np.array(p.getMatrixFromQuaternion(quat)).reshape(3, 3)
@@ -861,22 +860,37 @@ class BaseAviary(gym.Env):
         vel = vel + self.PYB_TIMESTEP * no_pybullet_dyn_accs
         rpy_rates = rpy_rates + self.PYB_TIMESTEP * rpy_rates_deriv
         pos = pos + self.PYB_TIMESTEP * vel
-        rpy = rpy + self.PYB_TIMESTEP * rpy_rates
+        quat = self._integrateQ(quat, rpy_rates, self.TIMESTEP)
         #### Set PyBullet's state ##################################
         p.resetBasePositionAndOrientation(self.DRONE_IDS[nth_drone],
                                           pos,
-                                          p.getQuaternionFromEuler(rpy),
+                                          quat,
                                           physicsClientId=self.CLIENT
                                           )
         #### Note: the base's velocity only stored and not used ####
         p.resetBaseVelocity(self.DRONE_IDS[nth_drone],
                             vel,
-                            [-1, -1, -1], # ang_vel not computed by DYN
+                            np.dot(rotation, rpy_rates),
                             physicsClientId=self.CLIENT
                             )
         #### Store the roll, pitch, yaw rates for the next step ####
         self.rpy_rates[nth_drone,:] = rpy_rates
-    
+
+    def _integrateQ(self, quat, omega, dt):
+        omega_norm = np.linalg.norm(omega)
+        p, q, r = omega
+        if np.isclose(omega_norm, 0):
+            return quat
+        lambda_ = np.array([
+            [ 0,  r, -q, p],
+            [-r,  0,  p, q],
+            [ q, -p,  0, r],
+            [-p, -q, -r, 0]
+        ]) * .5
+        theta = omega_norm * dt / 2
+        quat = np.dot(np.eye(4) * np.cos(theta) + 2 / omega_norm * lambda_ * np.sin(theta), quat)
+        return quat
+
     ################################################################################
 
     def _normalizedActionToRPM(self,
