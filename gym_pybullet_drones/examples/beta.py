@@ -25,6 +25,7 @@ Step 4: Load the configuration file onto the target using the BF configurator:
         $ ./obj/main/betaflight_SITL.elf
     Type address `tcp://localhost:5761` (top right) and click `Connect`
     Find the `Presets` tab (on the left) -> `Load backup` -> select file `../assets/beta.txt`
+    Restart `betaflight_SITL.elf`
 
 Example
 -------
