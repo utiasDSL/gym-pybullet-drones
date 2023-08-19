@@ -2,29 +2,36 @@
 
 Setup
 -----
-Step 1: Clone betaflight https://github.com/betaflight/betaflight
+Step 1: Clone betaflight:
     $ git clone https://github.com/betaflight/betaflight
-    $ cd betaflight/ 
-    $ make arm_sdk_install
+    $ cd betaflight/  
 
-Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz` from Betaflight's SIMULATOR_BUILD
-    https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
+Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz`
+    (https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52)
+    from Betaflight's `SIMULATOR_BUILD` and compile:
+    $ cd betaflight/
+    $ make arm_sdk_install 
+    $ make TARGET=SITL 
 
-Step 3: Install betaflight configurator https://github.com/betaflight/betaflight-configurator/releases
+Step 3: Install betaflight configurator (https://github.com/betaflight/betaflight-configurator/releases):
     $ wget https://github.com/betaflight/betaflight-configurator/releases/download/10.9.0/betaflight-configurator_10.9.0_amd64.deb
     $ sudo dpkg -i betaflight-configurator_10.9.0_amd64.deb 
+    If needed, also run:
+        $ apt install libgconf-2-4
+        $ apt --fix-broken install
 
-Step 4: Load the configuration file onto the target using the BF configurator
+Step 4: Load the configuration file onto the target using the BF configurator:
+    First, start the SITL controller:
+        $ ./obj/main/betaflight_SITL.elf
     Type address `tcp://localhost:5761` (top right) and click `Connect`
     Find the `Presets` tab (on the left) -> `Load backup` -> select file `../assets/beta.txt`
 
 Example
 -------
-In one terminal build and run SITL Betaflight:
+In one terminal run the SITL Betaflight:
 
     $ cd betaflight/
-    $ make TARGET=SITL
-    $ betaflight/obj/main/betaflight_SITL.elf
+    $ ./obj/main/betaflight_SITL.elf
 
 In a separate  terminal, run:
 

@@ -18,7 +18,7 @@ conda create -n drones python=3.10
 conda activate drones
 
 pip3 install --upgrade pip
-pip3 install -e . # ff needed, `sudo apt install build-essentials` to install `gcc` and build `pybullet`
+pip3 install -e . # if needed, `sudo apt install build-essentials` to install `gcc` and build `pybullet`
 
 ```
 
@@ -40,7 +40,7 @@ python3 learn.py
 
 ### Betaflight SITL example (Ubuntu only)
 
-In one terminal, run the Betaflight SITL binary
+First, check the steps in the docstrings of [`beta.py`](https://github.com/utiasDSL/gym-pybullet-drones/blob/main/gym_pybullet_drones/examples/beta.py), then, in one terminal, run the Betaflight SITL binary
 
 ```sh
 git clone https://github.com/betaflight/betaflight
@@ -53,6 +53,7 @@ betaflight/obj/main/betaflight_SITL.elf
 In another terminal, run the example
 
 ```sh
+conda activate drones
 cd gym_pybullet_drones/examples/
 python3 beta.py # also check the steps in the file's docstrings
 ```
