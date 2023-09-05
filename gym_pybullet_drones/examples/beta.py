@@ -17,8 +17,8 @@ Step 3: Install betaflight configurator (https://github.com/betaflight/betafligh
     $ wget https://github.com/betaflight/betaflight-configurator/releases/download/10.9.0/betaflight-configurator_10.9.0_amd64.deb
     $ sudo dpkg -i betaflight-configurator_10.9.0_amd64.deb 
     If needed, also run:
-        $ apt install libgconf-2-4
-        $ apt --fix-broken install
+        $ sudo apt install libgconf-2-4
+        $ sudo apt --fix-broken install
 
 Step 4: Load the configuration file onto the target using the BF configurator:
     First, start the SITL controller:
