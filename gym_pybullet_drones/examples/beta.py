@@ -2,9 +2,10 @@
 
 Setup
 -----
-Step 1: Clone betaflight:
+Step 1: Clone and open betaflight's source:
     $ git clone https://github.com/betaflight/betaflight
-    $ cd betaflight/  
+    $ cd betaflight/
+    $ code ./src/main/main.c
 
 Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz`
     (https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52)
