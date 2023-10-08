@@ -54,6 +54,9 @@ DEFAULT_SIMULATION_FREQ_HZ = 500
 DEFAULT_CONTROL_FREQ_HZ = 500
 DEFAULT_DURATION_SEC = 20
 DEFAULT_OUTPUT_FOLDER = 'results'
+NUM_DRONES = 1
+INIT_XYZ = np.array([[.5*i, .5*i, .1] for i in range(NUM_DRONES)])
+INIT_RPY = np.array([[.0, .0, .0] for _ in range(NUM_DRONES)])
 
 def run(
         drone=DEFAULT_DRONES,
@@ -68,9 +71,9 @@ def run(
         ):
     #### Create the environment with or without video capture ##
     env = BetaAviary(drone_model=drone,
-                        num_drones=1,
-                        initial_xyzs=np.array([[.0, .0, .1]]),
-                        initial_rpys=np.array([[.0, .0, .0]]),
+                        num_drones=NUM_DRONES,
+                        initial_xyzs=INIT_XYZ,
+                        initial_rpys=INIT_RPY,
                         physics=physics,
                         pyb_freq=simulation_freq_hz,
                         ctrl_freq=control_freq_hz,
@@ -85,7 +88,7 @@ def run(
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=control_freq_hz,
-                    num_drones=1,
+                    num_drones=NUM_DRONES,
                     output_folder=output_folder,
                     )
 
@@ -104,7 +107,7 @@ def run(
                 float(row["v_z"]),
             ]),
         } for row in csv_reader])
-    action = np.zeros((1,4))
+    action = np.zeros((NUM_DRONES,4))
     ARM_TIME = 1.
     TRAJ_TIME = 1.5
     START = time.time()
@@ -114,22 +117,26 @@ def run(
         obs, reward, terminated, truncated, info = env.step(action, i)
         
         if t > env.TRAJ_TIME:
-            try:
-                target = next(trajectory)
-                action[0,:] = ctrl.computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
-                                                state=obs[0],
-                                                target_pos=target["pos"],
-                                                target_vel=target["vel"]
-                                                )
-            except:
-                break
+            for j in range(NUM_DRONES):
+                try:
+                    target = next(trajectory)
+                    print(target['pos'])
+                    print(target['vel'])
+                    action[j,:] = ctrl.computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
+                                                    state=obs[j],
+                                                    target_pos=target["pos"]+[INIT_XYZ[j][0], INIT_XYZ[j][1], 0],
+                                                    target_vel=target["vel"]
+                                                    )
+                except:
+                    break
         
 
         #### Log the simulation ####################################
-        logger.log(drone=0,
-                    timestamp=i/env.CTRL_FREQ,
-                    state=obs[0]
-                    )
+        for j in range(NUM_DRONES):
+            logger.log(drone=j,
+                        timestamp=i/env.CTRL_FREQ,
+                        state=obs[j]
+                        )
 
         #### Printout ##############################################
         env.render()
