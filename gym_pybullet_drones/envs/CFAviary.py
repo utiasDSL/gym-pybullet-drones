@@ -212,7 +212,6 @@ class CFAviary(BaseAviary):
 
         while self.tick / self.firmware_freq < t + self.ctrl_dt:
             # Step the environment and print all returned information.
-            print("Action", self.action, self.setpoint.position.z)
             obs, reward, terminated, truncated, info = super().step(self.action)
 
             # Get state values from pybullet
@@ -255,7 +254,6 @@ class CFAviary(BaseAviary):
 
             # Get action 
             new_action = self.PWM2RPM_SCALE * np.clip(np.array(self.pwms), self.MIN_PWM, self.MAX_PWM) + self.PWM2RPM_CONST
-            new_action = new_action[[3, 2, 1, 0]] # FL, BL, BR, FR 
 
             if self.ACTION_DELAY:
                 # Delays action commands to mimic real life hardware response delay 

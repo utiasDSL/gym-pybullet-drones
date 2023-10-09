@@ -45,7 +45,7 @@ from gym_pybullet_drones.control.CTBRControl import CTBRControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
-DEFAULT_DRONES = DroneModel("racer")
+DEFAULT_DRONES = DroneModel("cf2x")
 DEFAULT_PHYSICS = Physics("pyb")
 DEFAULT_GUI = True
 DEFAULT_PLOT = True
@@ -94,43 +94,34 @@ def run(
                     )
 
     #### Run the simulation ####################################
-    with open("../assets/beta.csv", mode='r') as csv_file:
-        csv_reader = csv.DictReader(csv_file)
-        trajectory = iter([{
-            "pos": np.array([
-                float(row["p_x"]),
-                float(row["p_y"]),
-                float(row["p_z"]),
-            ]),
-            "vel": np.array([
-                float(row["v_x"]),
-                float(row["v_y"]),
-                float(row["v_z"]),
-            ]),
-        } for row in csv_reader])
+    delta = 75 # 3s
+    trajectory = [[0, 0, 0] for i in range(delta)] + \
+        [[0, 0, i/delta] for i in range(delta)] + \
+        [[i/delta, 0, 1] for i in range(delta)] + \
+        [[1, i/delta, 1] for i in range(delta)] + \
+        [[1-i/delta, 1, 1] for i in range(delta)] + \
+        [[0, 1-i/delta, 1] for i in range(delta)] + \
+        [[0, 0, 1-i/delta] for i in range(delta)]
+
     action = np.zeros((NUM_DRONES,4))
     ARM_TIME = 1.
-    TRAJ_TIME = 0.1
     START = time.time()
-    for i in range(0, int(duration_sec*env.firmware_freq)):
-        t = i/env.firmware_freq
+    for i in range(0, len(trajectory)):
+        t = i/env.ctrl_freq
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(i)
-        print(t)
         
-        if t > TRAJ_TIME:
-            for j in range(NUM_DRONES):
-                # try:
-                target = next(trajectory)
-                pos = target["pos"]+[INIT_XYZ[j][0], INIT_XYZ[j][1], 0]
-                vel = target['vel']
+        for j in range(NUM_DRONES):
+            try:
+                target = trajectory[i]
+                pos = target+[INIT_XYZ[j][0], INIT_XYZ[j][1], 0]
+                vel = np.zeros(3)
                 acc = np.zeros(3)
-                yaw = 0
+                yaw = i*np.pi/delta/2
                 rpy_rate = np.zeros(3)
-                print(pos)
                 env.sendFullStateCmd(pos, vel, acc, yaw, rpy_rate, t)
-                # except:
-                #     break
+            except:
+                break
         
 
         #### Log the simulation ####################################
