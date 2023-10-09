@@ -1,34 +1,14 @@
-"""Control + Betaflight. 
+"""CrazyFlie software-in-the-loop control example. 
 
 Setup
 -----
-Step 1: Clone and open betaflight's source:
-    $ git clone https://github.com/betaflight/betaflight
-    $ cd betaflight/
-    $ code ./src/main/main.c 
-
-Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz`
-    (https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52)
-    from Betaflight's `SIMULATOR_BUILD` and compile:
-    $ cd betaflight/
-    $ make arm_sdk_install 
-    $ make TARGET=SITL 
-
-Step 3: Copy over the configured `eeprom.bin` file from folder 
-    `gym-pybullet-drones/gym_pybullet_drones/assets/` to BF's main folder `betaflight/`
-    $ cp ~/gym-pybullet-drones/gym_pybullet_drones/assets/eeprom.bin ~/betaflight/
+Step 1: Clone pycffirmware from https://github.com/utiasDSL/pycffirmware
+Step 2: Follow the install instructions for pycffirmware in its README 
 
 Example
 -------
-In one terminal run the SITL Betaflight:
-
-    $ cd betaflight/
-    $ ./obj/main/betaflight_SITL.elf
-
-In a separate  terminal, run:
-
-    $ cd gym-pybullet-drones/gym_pybullet_drones/examples/
-    $ python beta.py
+In terminal, run: 
+python gym_pybullet_drones/examples/cf.py
 
 """
 import time
@@ -52,7 +32,6 @@ DEFAULT_PLOT = True
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_SIMULATION_FREQ_HZ = 500
 DEFAULT_CONTROL_FREQ_HZ = 25
-DEFAULT_DURATION_SEC = 20
 DEFAULT_OUTPUT_FOLDER = 'results'
 NUM_DRONES = 1
 INIT_XYZ = np.array([[.5*i, .5*i, .1] for i in range(NUM_DRONES)])
@@ -66,12 +45,10 @@ def run(
         user_debug_gui=DEFAULT_USER_DEBUG_GUI,
         simulation_freq_hz=DEFAULT_SIMULATION_FREQ_HZ,
         control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
-        duration_sec=DEFAULT_DURATION_SEC,
         output_folder=DEFAULT_OUTPUT_FOLDER,
         ):
     #### Create the environment with or without video capture ##
-    env = CFAviary(firmware_freq=500,
-                        drone_model=drone,
+    env = CFAviary(drone_model=drone,
                         num_drones=NUM_DRONES,
                         initial_xyzs=INIT_XYZ,
                         initial_rpys=INIT_RPY,
@@ -94,7 +71,7 @@ def run(
                     )
 
     #### Run the simulation ####################################
-    delta = 75 # 3s
+    delta = 75 # 3s @ 25hz control loop 
     trajectory = [[0, 0, 0] for i in range(delta)] + \
         [[0, 0, i/delta] for i in range(delta)] + \
         [[i/delta, 0, 1] for i in range(delta)] + \
@@ -103,8 +80,6 @@ def run(
         [[0, 1-i/delta, 1] for i in range(delta)] + \
         [[0, 0, 1-i/delta] for i in range(delta)]
 
-    action = np.zeros((NUM_DRONES,4))
-    ARM_TIME = 1.
     START = time.time()
     for i in range(0, len(trajectory)):
         t = i/env.ctrl_freq
@@ -122,7 +97,6 @@ def run(
                 env.sendFullStateCmd(pos, vel, acc, yaw, rpy_rate, t)
             except:
                 break
-        
 
         #### Log the simulation ####################################
         for j in range(NUM_DRONES):
@@ -158,9 +132,8 @@ if __name__ == "__main__":
     parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')
     parser.add_argument('--user_debug_gui',     default=DEFAULT_USER_DEBUG_GUI,      type=str2bool,      help='Whether to add debug lines and parameters to the GUI (default: False)', metavar='')
-    parser.add_argument('--simulation_freq_hz', default=DEFAULT_SIMULATION_FREQ_HZ,        type=int,           help='Simulation frequency in Hz (default: 240)', metavar='')
-    parser.add_argument('--control_freq_hz',    default=DEFAULT_CONTROL_FREQ_HZ,         type=int,           help='Control frequency in Hz (default: 48)', metavar='')
-    parser.add_argument('--duration_sec',       default=DEFAULT_DURATION_SEC,         type=int,           help='Duration of the simulation in seconds (default: 5)', metavar='')
+    parser.add_argument('--simulation_freq_hz', default=DEFAULT_SIMULATION_FREQ_HZ,        type=int,           help='Simulation frequency in Hz (default: 500)', metavar='')
+    parser.add_argument('--control_freq_hz',    default=DEFAULT_CONTROL_FREQ_HZ,         type=int,           help='Control frequency in Hz (default: 25)', metavar='')
     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
     ARGS = parser.parse_args()
 
