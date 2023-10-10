@@ -44,8 +44,8 @@ python3 learn.py
 git clone https://github.com/betaflight/betaflight
 cd betaflight/ 
 make arm_sdk_install # if needed, `apt install curl``
-make TARGET=SITL # comment out this line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
-cp cp ~/gym-pybullet-drones/gym_pybullet_drones/assets/eeprom.bin ~/betaflight/
+make TARGET=SITL # comment out line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
+cp ~/gym-pybullet-drones/gym_pybullet_drones/assets/eeprom.bin ~/betaflight/ # assuming both gym-pybullet-drones/ and betaflight/ were cloned in ~/
 betaflight/obj/main/betaflight_SITL.elf
 ```
 
