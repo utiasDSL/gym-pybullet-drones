@@ -88,68 +88,70 @@ class BetaAviary(BaseAviary):
         self.sock_pwm.bind((self.UDP_IP, 9002))
         self.sock_pwm.settimeout(0.0)
 
-        self.last_action = np.zeros((self.NUM_DRONES, 4))
+        self.beta_action = np.zeros((self.NUM_DRONES, 4))
     
     ################################################################################
 
     def step(self, action, i):
-        # Action is (thro, roll, pitch, yaw) 
+        obs, reward, terminated, truncated, info = super().step(self.beta_action)
+
         t = i/self.CTRL_FREQ
 
-        thro = 1000 # Positive up
-        yaw = 1500 # Positive CCW
-        pitch = 1500 # Positive forward in x
-        roll = 1500 # Positive right/forward in y
+        for j in range(self.NUM_DRONES): #TODO: add multi-drone support
 
-        if t > self.TRAJ_TIME: 
-            thro, roll, pitch, yaw = self.ctbr2beta(*action[0])
+            #### State message to Betaflight ###########################
+            o = obs[0] # p, q, euler, v, w, rpm (all in world frame)
+            p = o[:3]
+            q = np.array([o[6], o[3], o[4], o[5]]) # w, x, y, z
+            v = o[10:13]
+            w = o[13:16] # world frame
+            w_body = rotate_vector(w, qconjugate(q)) # local frame
+            
+            fdm_packet = struct.pack(
+                '@dddddddddddddddddd', # t, w, a, q, v, p, pressure
+                t, # double timestamp in seconds
+                # minus signs due to ENU to NED conversion
+                w_body[0], -w_body[1], -w_body[2], # double imu_angular_velocity_rpy[3]
+                0, 0, 0, # double imu_linear_acceleration_xyz[3]
+                1., .0, .0, 0., # double imu_orientation_quat[4] w, x, y, z
+                0, 0, 0, # double velocity_xyz[3]
+                0, 0, 0, # double position_xyz[3]
+                1.0 # double pressure;
+            )
+            self.sock.sendto(fdm_packet, (self.UDP_IP, 9003))
 
-        #### RC message to Betaflight ##############################
-        aux1 = 1000 if t < self.ARM_TIME else 1500 # Arm
-        rc_packet = struct.pack(
-            '@dHHHHHHHHHHHHHHHH', 
-            t, # datetime.now().timestamp(), # double timestamp; // in seconds
-            round(roll), round(pitch), round(thro), round(yaw),              # roll, pitch, throttle, yaw
-            aux1, 1000, 1000, 1000,              # aux 1, ..
-            1000, 1000, 1000, 1000, 
-            1000, 1000, 1000, 1000
-        )
-        # print("rc", struct.unpack('@dHHHHHHHHHHHHHHHH', rc_packet))
-        self.sock.sendto(rc_packet, (self.UDP_IP, 9004))
+            # Action is (thro, roll, pitch, yaw) 
+            thro = 1000 # Positive up
+            yaw = 1500 # Positive CCW
+            pitch = 1500 # Positive forward in x
+            roll = 1500 # Positive right/forward in y
 
-        #### PWMs message from Betaflight ##########################
-        try:
-            data, addr = self.sock_pwm.recvfrom(16) # buffer size is 100 bytes (servo_packet size 16)
-        except socket.error as msg:
-            _action = self.last_action
-            pass
-        else:
-            # print("received message: ", data)
-            _action = np.array(struct.unpack('@ffff', data)).reshape((1,4))
+            if t > self.TRAJ_TIME: 
+                thro, roll, pitch, yaw = self.ctbr2beta(*action[0])
 
-        obs, reward, terminated, truncated, info = super().step(_action)
-        self.last_action = _action
+            #### RC message to Betaflight ##############################
+            aux1 = 1000 if t < self.ARM_TIME else 1500 # Arm
+            rc_packet = struct.pack(
+                '@dHHHHHHHHHHHHHHHH', 
+                t, # datetime.now().timestamp(), # double timestamp; // in seconds
+                round(roll), round(pitch), round(thro), round(yaw),              # roll, pitch, throttle, yaw
+                aux1, 1000, 1000, 1000,              # aux 1, ..
+                1000, 1000, 1000, 1000, 
+                1000, 1000, 1000, 1000
+            )
+            # print("rc", struct.unpack('@dHHHHHHHHHHHHHHHH', rc_packet))
+            self.sock.sendto(rc_packet, (self.UDP_IP, 9004))
 
-        #### State message to Betaflight ###########################
-        o = obs[0] # p, q, euler, v, w, rpm (all in world frame)
-        p = o[:3]
-        q = np.array([o[6], o[3], o[4], o[5]]) # w, x, y, z
-        v = o[10:13]
-        w = o[13:16] # world frame
-        w_body = rotate_vector(w, qconjugate(q)) # local frame
-        
-        fdm_packet = struct.pack(
-            '@dddddddddddddddddd', # t, w, a, q, v, p, pressure
-            t, # double timestamp in seconds
-            # minus signs due to ENU to NED conversion
-            w_body[0], -w_body[1], -w_body[2], # double imu_angular_velocity_rpy[3]
-            0, 0, 0, # double imu_linear_acceleration_xyz[3]
-            1., .0, .0, 0., # double imu_orientation_quat[4] w, x, y, z
-            0, 0, 0, # double velocity_xyz[3]
-            0, 0, 0, # double position_xyz[3]
-            1.0 # double pressure;
-        )
-        self.sock.sendto(fdm_packet, (self.UDP_IP, 9003))
+            #### PWMs message from Betaflight ##########################
+            try:
+                data, addr = self.sock_pwm.recvfrom(16) # buffer size is 100 bytes (servo_packet size 16)
+            except socket.error as msg:
+                _action = self.beta_action
+                pass
+            else:
+                # print("received message: ", data)
+                _action = np.array(struct.unpack('@ffff', data)).reshape((1,4))
+            self.beta_action = _action
 
         return obs, reward, terminated, truncated, info
 
