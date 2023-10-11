@@ -8,6 +8,10 @@ from transforms3d.quaternions import rotate_vector, qconjugate
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 
+BASE_PORT_PWM=9002 # In
+BASE_PORT_STATE=9003 # Out
+BASE_PORT_RC=9004 # Out
+
 class BetaAviary(BaseAviary):
     """Multi-drone environment class for use of BetaFlight controller."""
 
@@ -80,13 +84,15 @@ class BetaAviary(BaseAviary):
         self.ARM_TIME = 1
         self.TRAJ_TIME = 1.5
 
-        self.sock = socket.socket(socket.AF_INET,    # Internet
-                            socket.SOCK_DGRAM) # UDP
-
-        self.sock_pwm = socket.socket(socket.AF_INET, # Internet
-                            socket.SOCK_DGRAM)  # UDP
-        self.sock_pwm.bind((self.UDP_IP, 9002))
-        self.sock_pwm.settimeout(0.0)
+        self.sock = []
+        self.sock_pwm = []
+        for i in range(self.NUM_DRONES):
+            self.sock.append(socket.socket(socket.AF_INET,    # Internet
+                                socket.SOCK_DGRAM)) # UDP
+            self.sock_pwm.append(socket.socket(socket.AF_INET, # Internet
+                                socket.SOCK_DGRAM))  # UDP
+            self.sock_pwm[i].bind((self.UDP_IP, BASE_PORT_PWM + 10 * (i))) # drone0 will be on 9002, drone1 on 9012, etc.
+            self.sock_pwm[i].settimeout(0.0)
 
         self.beta_action = np.zeros((self.NUM_DRONES, 4))
     
@@ -100,7 +106,7 @@ class BetaAviary(BaseAviary):
         for j in range(self.NUM_DRONES): #TODO: add multi-drone support
 
             #### State message to Betaflight ###########################
-            o = obs[0] # p, q, euler, v, w, rpm (all in world frame)
+            o = obs[j,:] # p, q, euler, v, w, rpm (all in world frame)
             p = o[:3]
             q = np.array([o[6], o[3], o[4], o[5]]) # w, x, y, z
             v = o[10:13]
@@ -118,7 +124,7 @@ class BetaAviary(BaseAviary):
                 0, 0, 0, # double position_xyz[3]
                 1.0 # double pressure;
             )
-            self.sock.sendto(fdm_packet, (self.UDP_IP, 9003))
+            self.sock[j].sendto(fdm_packet, (self.UDP_IP, BASE_PORT_STATE + 10 * (j))) # drone0 will be on 9003, drone1 on 9013, etc.
 
             # Action is (thro, roll, pitch, yaw) 
             thro = 1000 # Positive up
@@ -127,7 +133,7 @@ class BetaAviary(BaseAviary):
             roll = 1500 # Positive right/forward in y
 
             if t > self.TRAJ_TIME: 
-                thro, roll, pitch, yaw = self.ctbr2beta(*action[0])
+                thro, roll, pitch, yaw = self.ctbr2beta(*action[j,:])
 
             #### RC message to Betaflight ##############################
             aux1 = 1000 if t < self.ARM_TIME else 1500 # Arm
@@ -140,18 +146,18 @@ class BetaAviary(BaseAviary):
                 1000, 1000, 1000, 1000
             )
             # print("rc", struct.unpack('@dHHHHHHHHHHHHHHHH', rc_packet))
-            self.sock.sendto(rc_packet, (self.UDP_IP, 9004))
+            self.sock[j].sendto(rc_packet, (self.UDP_IP, BASE_PORT_RC + 10 * (j))) # drone0 will be on 9004, drone1 on 9014, etc.
 
             #### PWMs message from Betaflight ##########################
             try:
-                data, addr = self.sock_pwm.recvfrom(16) # buffer size is 100 bytes (servo_packet size 16)
+                data, addr = self.sock_pwm[j].recvfrom(16) # buffer size is 100 bytes (servo_packet size 16)
             except socket.error as msg:
-                _action = self.beta_action
+                _action = self.beta_action[j,:]
                 pass
             else:
                 # print("received message: ", data)
                 _action = np.array(struct.unpack('@ffff', data)).reshape((1,4))
-            self.beta_action = _action
+            self.beta_action[j,:] = _action
 
         return obs, reward, terminated, truncated, info
 
