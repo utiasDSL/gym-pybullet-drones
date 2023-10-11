@@ -1,0 +1,82 @@
+defaults nosave
+
+
+# version
+# Betaflight / SITL (SITL) 4.5.0 Jul  7 2023 / 10:53:28 (b54ae921f) MSP API: 1.46
+
+# start the command batch
+batch start
+
+# reset configuration to default settings
+defaults nosave
+
+mcu_id 000000000000000100000002
+signature 
+
+# feature
+feature -GPS
+feature -TELEMETRY
+
+# aux
+aux 0 0 0 1300 1700 0 0
+
+# master
+set motor_pwm_protocol = PWM
+set pid_process_denom = 16
+
+profile 0
+
+# profile 0
+set pidsum_limit = 1000
+set pidsum_limit_yaw = 1000
+set p_pitch = 70
+set i_pitch = 75
+set d_pitch = 43
+set f_pitch = 224
+set p_roll = 58
+set i_roll = 62
+set d_roll = 42
+set f_roll = 187
+set p_yaw = 58
+set i_yaw = 62
+set f_yaw = 187
+set d_min_roll = 42
+set d_min_pitch = 43
+set simplified_master_multiplier = 130
+set simplified_i_gain = 60
+set simplified_d_gain = 110
+set simplified_dmax_gain = 0
+set simplified_feedforward_gain = 120
+set simplified_pitch_d_gain = 90
+set simplified_pitch_pi_gain = 115
+
+profile 1
+
+profile 2
+
+profile 3
+
+# restore original profile selection
+profile 0
+
+rateprofile 0
+
+# rateprofile 0
+set rates_type = BETAFLIGHT
+set roll_rc_rate = 180
+set pitch_rc_rate = 180
+set yaw_rc_rate = 180
+set roll_srate = 0
+set pitch_srate = 0
+set yaw_srate = 0
+
+rateprofile 1
+
+rateprofile 2
+
+rateprofile 3
+
+# restore original rateprofile selection
+rateprofile 0
+
+# save configuration

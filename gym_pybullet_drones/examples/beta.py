@@ -55,7 +55,7 @@ DEFAULT_CONTROL_FREQ_HZ = 500
 DEFAULT_DURATION_SEC = 20
 DEFAULT_OUTPUT_FOLDER = 'results'
 NUM_DRONES = 2
-INIT_XYZ = np.array([[.3*i, .3*i, .1] for i in range(NUM_DRONES)])
+INIT_XYZ = np.array([[.3*i, .3*i, .1] for i in range(1,NUM_DRONES+1)])
 INIT_RPY = np.array([[.0, .0, .0] for _ in range(NUM_DRONES)])
 
 def run(
