@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# USE
-# 1. ..
+# Clone, edit, build, configure, multiple Betaflight SITL executables
 
 # Check for the correct number of command-line arguments
 if [ "$#" -ne 2 ]; then
@@ -15,8 +14,18 @@ num_iterations="$2"
 
 # Create directory along gym-pybullet-donres
 cd $gpd_base_path
+cd ..
 mkdir betaflights/
 cd betaflights/
+
+pattern0="delayMicroseconds_real(50); // max rate 20kHz"
+pattern1="#define PORT_PWM_RAW    9001    // Out"
+pattern2="#define PORT_PWM        9002    // Out"
+pattern3="#define PORT_STATE      9003    // In"
+pattern4="#define PORT_RC         9004    // In"
+pattern5="#define BASE_PORT 5760"
+
+replacement0="// delayMicroseconds_real(50); // max rate 20kHz"
 
 for ((i = 1; i <= num_iterations; i++)); do
 
@@ -25,8 +34,22 @@ for ((i = 1; i <= num_iterations; i++)); do
     cd "bf${i}/"
 
     # Edit
-    # comment out line `delayMicroseconds_real(50); // max rate 20kHz` in ./src/main/main.c
-    # edit ports in ./src/main/target/SITL/sitl.c, ./src/main/drivers/serial_tcp.c
+    sed -i "s/$pattern0/$replacement0/g" ./src/main/target/SITL/sitl.c
+
+    replacement1="#define PORT_PWM_RAW    90${i}1    // Out"
+    sed -i "s/$pattern1/$replacement1/g" ./src/main/target/SITL/sitl.c
+
+    replacement2="#define PORT_PWM    90${i}2    // Out"
+    sed -i "s/$pattern2/$replacement2/g" ./src/main/target/SITL/sitl.c
+
+    replacement3="#define PORT_STATE    90${i}3    // In"
+    sed -i "s/$pattern3/$replacement3/g" ./src/main/target/SITL/sitl.c
+
+    replacement4="#define PORT_PWPORT_RCM_RAW    90${i}4    // In"
+    sed -i "s/$pattern4/$replacement4/g" ./src/main/target/SITL/sitl.c
+
+    replacement5="#define BASE_PORT 57${i}0"
+    sed -i "s/$pattern5/$replacement5/g" ./src/main/drivers/serial_tcp.c
 
     # Build
     make arm_sdk_install 
@@ -36,19 +59,3 @@ for ((i = 1; i <= num_iterations; i++)); do
     cp "${gpd_base_path}/gym_pybullet_drones/assets/eeprom.bin" .
 
 done
-
-# # Define the file you want to modify
-# file="your_source_code.c"
-
-# # Define the base pattern to search for
-# pattern1="#define PORT_PWM_RAW    9001    // Out"
-# pattern2="#define PORT_PWM        9002    // Out"
-# pattern3="#define PORT_STATE      9003    // In"
-# pattern4="#define PORT_RC         9004    // In"
-
-# # Use a for loop to perform replacements
-# for ((i = 1; i <= 10; i++)); do
-#     current_pattern="${base_pattern}${i}"
-#     replacement="new_pattern_${i}"
-#     sed -i "s/$current_pattern/$replacement/g" "$file"
-# done
