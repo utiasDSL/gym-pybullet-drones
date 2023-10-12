@@ -24,8 +24,10 @@ pattern2="#define PORT_PWM        9002    // Out"
 pattern3="#define PORT_STATE      9003    // In"
 pattern4="#define PORT_RC         9004    // In"
 pattern5="#define BASE_PORT 5760"
+pattern6="ret = udpInit(&stateLink, NULL, 9003, true);"
 
 replacement0="// delayMicroseconds_real(50); // max rate 20kHz"
+replacement6="ret = udpInit(&stateLink, NULL, PORT_STATE, true);"
 
 for ((i = 1; i <= num_iterations; i++)); do
 
@@ -50,6 +52,8 @@ for ((i = 1; i <= num_iterations; i++)); do
 
     replacement5="#define BASE_PORT 57${i}0"
     sed -i "s/$pattern5/$replacement5/g" ./src/main/drivers/serial_tcp.c
+
+    sed -i "s/$pattern6/$replacement6/g" ./src/main/target/SITL/sitl.c
 
     # Build
     make arm_sdk_install 

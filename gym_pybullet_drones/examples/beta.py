@@ -95,7 +95,7 @@ def run(
     #### Run the simulation ####################################
     with open("../assets/beta.csv", mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
-        trajectory = iter([{
+        trajectory1 = iter([{
             "pos": np.array([
                 float(row["p_x"]),
                 float(row["p_y"]),
@@ -107,6 +107,20 @@ def run(
                 float(row["v_z"]),
             ]),
         } for row in csv_reader])
+    with open("../assets/beta.csv", mode='r') as csv_file:
+        csv_reader = csv.DictReader(csv_file)
+        trajectory2 = iter(reversed([{
+            "pos": np.array([
+                float(row["p_x"]),
+                float(row["p_y"]),
+                float(row["p_z"]),
+            ]),
+            "vel": np.array([
+                float(row["v_x"]),
+                float(row["v_y"]),
+                float(row["v_z"]),
+            ]),
+        } for row in csv_reader]))
     action = np.zeros((NUM_DRONES,4))
     ARM_TIME = 1.
     TRAJ_TIME = 1.5
@@ -119,9 +133,7 @@ def run(
         if t > env.TRAJ_TIME:
             for j in range(NUM_DRONES):
                 try:
-                    target = next(trajectory)
-                    print(target['pos'])
-                    print(target['vel'])
+                    target = next(trajectory1) if j%2 == 0 else next(trajectory2)
                     action[j,:] = ctrl.computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
                                                     state=obs[j],
                                                     target_pos=target["pos"]+[INIT_XYZ[j][0], INIT_XYZ[j][1], 0],
