@@ -2,28 +2,22 @@
 
 Setup
 -----
-Step 1: Clone and open betaflight's source:
-    $ git clone https://github.com/betaflight/betaflight
-    $ cd betaflight/
-    $ code ./src/main/main.c 
-
-Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz`
-    (https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52)
-    from Betaflight's `SIMULATOR_BUILD` and compile:
-    $ cd betaflight/
-    $ make arm_sdk_install 
-    $ make TARGET=SITL 
-
-Step 3: Copy over the configured `eeprom.bin` file from folder 
-    `gym-pybullet-drones/gym_pybullet_drones/assets/` to BF's main folder `betaflight/`
-    $ cp ~/gym-pybullet-drones/gym_pybullet_drones/assets/eeprom.bin ~/betaflight/
+Use script `gym_pybullet_drones/assets/clone_bfs.sh` to create
+executables for as many drones as needed (e.g. 2):
+    $ ./gym_pybullet_drones/assets/clone_bfs.sh 2
 
 Example
 -------
-In one terminal run the SITL Betaflight:
+Run as many SITL Betaflight as drones in the simulation 
+in separate terminals (navigate the each `bf0`, `bf1`, etc. folder first):
 
-    $ cd betaflight/
+    $ cd betaflights/bf0/
     $ ./obj/main/betaflight_SITL.elf
+
+    $ cd betaflights/bf1/
+    $ ./obj/main/betaflight_SITL.elf
+
+    $ ..
 
 In a separate  terminal, run:
 
@@ -54,12 +48,11 @@ DEFAULT_SIMULATION_FREQ_HZ = 500
 DEFAULT_CONTROL_FREQ_HZ = 500
 DEFAULT_DURATION_SEC = 20
 DEFAULT_OUTPUT_FOLDER = 'results'
-NUM_DRONES = 2
-INIT_XYZ = np.array([[.3*i, .3*i, .1] for i in range(1,NUM_DRONES+1)])
-INIT_RPY = np.array([[.0, .0, .0] for _ in range(NUM_DRONES)])
+DEFAULT_NUM_DRONES = 2
 
 def run(
         drone=DEFAULT_DRONES,
+        num_drones=DEFAULT_NUM_DRONES,
         physics=DEFAULT_PHYSICS,
         gui=DEFAULT_GUI,
         plot=DEFAULT_PLOT,
@@ -70,8 +63,10 @@ def run(
         output_folder=DEFAULT_OUTPUT_FOLDER,
         ):
     #### Create the environment with or without video capture ##
+    INIT_XYZ = np.array([[.3*i, .3*i, .1] for i in range(1,num_drones+1)])
+    INIT_RPY = np.array([[.0, .0, .0] for _ in range(num_drones)])
     env = BetaAviary(drone_model=drone,
-                        num_drones=NUM_DRONES,
+                        num_drones=num_drones,
                         initial_xyzs=INIT_XYZ,
                         initial_rpys=INIT_RPY,
                         physics=physics,
@@ -88,7 +83,7 @@ def run(
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=control_freq_hz,
-                    num_drones=NUM_DRONES,
+                    num_drones=num_drones,
                     output_folder=output_folder,
                     )
 
@@ -121,7 +116,7 @@ def run(
                 float(row["v_z"]),
             ]),
         } for row in csv_reader]))
-    action = np.zeros((NUM_DRONES,4))
+    action = np.zeros((num_drones,4))
     ARM_TIME = 1.
     TRAJ_TIME = 1.5
     START = time.time()
@@ -131,7 +126,7 @@ def run(
         obs, reward, terminated, truncated, info = env.step(action, i)
         
         if t > env.TRAJ_TIME:
-            for j in range(NUM_DRONES):
+            for j in range(num_drones):
                 try:
                     target = next(trajectory1) if j%2 == 0 else next(trajectory2)
                     action[j,:] = ctrl.computeControlFromState(control_timestep=env.CTRL_TIMESTEP,
@@ -144,7 +139,7 @@ def run(
         
 
         #### Log the simulation ####################################
-        for j in range(NUM_DRONES):
+        for j in range(num_drones):
             logger.log(drone=j,
                         timestamp=i/env.CTRL_FREQ,
                         state=obs[j]
@@ -173,6 +168,7 @@ if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Test flight script using SITL Betaflight')
     parser.add_argument('--drone',              default=DEFAULT_DRONES,     type=DroneModel,    help='Drone model (default: BETA)', metavar='', choices=DroneModel)
+    parser.add_argument('--num_drones',         default=DEFAULT_NUM_DRONES,          type=int,           help='Number of drones (default: 3)', metavar='')
     parser.add_argument('--physics',            default=DEFAULT_PHYSICS,      type=Physics,       help='Physics updates (default: PYB)', metavar='', choices=Physics)
     parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--plot',               default=DEFAULT_PLOT,       type=str2bool,      help='Whether to plot the simulation results (default: True)', metavar='')

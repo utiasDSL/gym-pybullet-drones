@@ -54,7 +54,7 @@ In another terminal, run the example
 ```sh
 conda activate drones
 cd gym_pybullet_drones/examples/
-python3 beta.py # also check the steps in the file's docstrings
+python3 beta.py --num_drones 1 # also check the steps in the file's docstrings to use multiple drones
 ```
 
 ## Troubleshooting

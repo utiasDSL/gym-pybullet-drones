@@ -3,63 +3,72 @@
 # Clone, edit, build, configure, multiple Betaflight SITL executables
 
 # Check for the correct number of command-line arguments
-if [ "$#" -ne 2 ]; then
-    echo "Usage: $0 <gym_pybullet_drones full path> <num_iterations>"
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <desired_max_num_drones>"
     exit 1
 fi
 
 # Extract command-line arguments
-gpd_base_path="$1"
-num_iterations="$2"
+desired_max_num_drones="$1"
 
-# Create directory along gym-pybullet-donres
-cd $gpd_base_path
+# Create gitignored directory in gym-pybullet-donres
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd $SCRIPT_DIR
+cd ../../
+mkdir betaflight_sitl/
+cd betaflight_sitl/
+
+# Step 1: Clone and open betaflight's source:
+git clone https://github.com/betaflight/betaflight temp/
+
+
+# Step 2: Comment out line `delayMicroseconds_real(50); // max rate 20kHz` 
+# (https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52) 
+# from Betaflight's `SIMULATOR_BUILD`
+cd temp/
+sed -i "s/delayMicroseconds_real(50);/\/\/delayMicroseconds_real(50);/g" ./src/main/main.c
+sed -i "s/ret = udpInit(\&stateLink, NULL, 9003, true);/\/\/ret = udpInit(\&stateLink, NULL, PORT_STATE, true);/g" ./src/main/target/SITL/sitl.c
+sed -i "s/printf(\"start UDP server.../\/\/printf(\"start UDP server.../g" ./src/main/target/SITL/sitl.c
+
+# Prepare
+make arm_sdk_install 
+
 cd ..
-mkdir betaflights/
-cd betaflights/
 
-pattern0="delayMicroseconds_real(50); // max rate 20kHz"
-pattern1="#define PORT_PWM_RAW    9001    // Out"
-pattern2="#define PORT_PWM        9002    // Out"
-pattern3="#define PORT_STATE      9003    // In"
-pattern4="#define PORT_RC         9004    // In"
-# pattern5="#define BASE_PORT 5760"
-pattern6="ret = udpInit(&stateLink, NULL, 9003, true);"
+pattern1="PORT_PWM_RAW    9001"
+pattern2="PORT_PWM        9002"
+pattern3="PORT_STATE      9003"
+pattern4="PORT_RC         9004"
+# pattern5="BASE_PORT 5760"
 
-replacement0="// delayMicroseconds_real(50); // max rate 20kHz"
-replacement6="ret = udpInit(&stateLink, NULL, PORT_STATE, true);"
+for ((i = 0; i < desired_max_num_drones; i++)); do
 
-for ((i = 1; i <= num_iterations; i++)); do
-
-    # Clone
-    git clone https://github.com/betaflight/betaflight "bf${i}"
+    # Copy
+    cp -r temp/ "bf${i}/"
     cd "bf${i}/"
 
-    # Edit
-    sed -i "s/$pattern0/$replacement0/g" ./src/main/target/SITL/sitl.c
-
-    replacement1="#define PORT_PWM_RAW    90${i}1    // Out"
+    # Step 3: Change the UDP ports used by each Betaflight SITL instancet
+    replacement1="PORT_PWM_RAW    90${i}1"
     sed -i "s/$pattern1/$replacement1/g" ./src/main/target/SITL/sitl.c
-
-    replacement2="#define PORT_PWM    90${i}2    // Out"
+    replacement2="PORT_PWM    90${i}2"
     sed -i "s/$pattern2/$replacement2/g" ./src/main/target/SITL/sitl.c
-
-    replacement3="#define PORT_STATE    90${i}3    // In"
+    replacement3="PORT_STATE    90${i}3"
     sed -i "s/$pattern3/$replacement3/g" ./src/main/target/SITL/sitl.c
-
-    replacement4="#define PORT_PWPORT_RCM_RAW    90${i}4    // In"
+    replacement4="PORT_RC    90${i}4"
     sed -i "s/$pattern4/$replacement4/g" ./src/main/target/SITL/sitl.c
-
-    # replacement5="#define BASE_PORT 57${i}0"
+    # replacement5="BASE_PORT 57${i}0"
     # sed -i "s/$pattern5/$replacement5/g" ./src/main/drivers/serial_tcp.c
 
-    sed -i "s/$pattern6/$replacement6/g" ./src/main/target/SITL/sitl.c
-
     # Build
-    make arm_sdk_install 
-    make TARGET=SITL 
+    make TARGET=SITL
 
-    # Copy configured memory
-    cp "${gpd_base_path}/gym_pybullet_drones/assets/eeprom.bin" .
+    cd ..
+
+done
+
+for ((i = 0; i < desired_max_num_drones; i++)); do
+
+    # Step 4: Copy over the configured `eeprom.bin` file from folder 
+    cp "${SCRIPT_DIR}/eeprom.bin" "bf${i}/"
 
 done

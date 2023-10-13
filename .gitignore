@@ -12,6 +12,9 @@ tmp/
 # Learning results
 experiments/learning/results/save-*
 
+# Betaflight
+betaflight_sitl/
+
 # macOS users
 .DS_Store
 
