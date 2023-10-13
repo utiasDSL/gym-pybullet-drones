@@ -2,6 +2,9 @@ import numpy as np
 from gymnasium import spaces
 import socket
 import struct 
+import os
+import subprocess
+import time
 
 from transforms3d.quaternions import rotate_vector, qconjugate
 
@@ -78,6 +81,13 @@ class BetaAviary(BaseAviary):
                          user_debug_gui=user_debug_gui,
                          output_folder=output_folder
                          )
+        
+        # Spawn SITL Betaflight instances (must have been created with assets/clone_bfs/sh first)
+        for i in range(num_drones):
+            FOLDER = os.path.dirname(os.path.abspath(__file__))+'/../../betaflight_sitl/bf'+str(i)+'/'
+            cmd = f"gnome-terminal -- bash -c 'cd {FOLDER} && ./obj/main/betaflight_SITL.elf; exec bash'"
+            subprocess.Popen(cmd, shell=True)
+        time.sleep(2)
         
         # Initialize connection to BetaFlight Controller 
         self.UDP_IP = udp_ip

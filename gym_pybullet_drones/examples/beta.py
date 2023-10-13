@@ -6,10 +6,10 @@ Use script `gym_pybullet_drones/assets/clone_bfs.sh` to create
 executables for as many drones as needed (e.g. 2):
     $ ./gym_pybullet_drones/assets/clone_bfs.sh 2
 
-Example
+Note
 -------
-Run as many SITL Betaflight as drones in the simulation 
-in separate terminals (navigate the each `bf0`, `bf1`, etc. folder first):
+This example will automatically start as many SITL Betaflight as drones
+in the simulation in separate terminals:
 
     $ cd betaflights/bf0/
     $ ./obj/main/betaflight_SITL.elf
@@ -19,7 +19,7 @@ in separate terminals (navigate the each `bf0`, `bf1`, etc. folder first):
 
     $ ..
 
-In a separate  terminal, run:
+Run as:
 
     $ cd gym-pybullet-drones/gym_pybullet_drones/examples/
     $ python beta.py
