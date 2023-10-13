@@ -40,13 +40,12 @@ python3 learn.py
 
 ### Betaflight SITL example (Ubuntu only)
 
-First, check the steps in the docstrings of [`beta.py`](https://github.com/utiasDSL/gym-pybullet-drones/blob/main/gym_pybullet_drones/examples/beta.py), then, in one terminal, run the Betaflight SITL binary
-
 ```sh
 git clone https://github.com/betaflight/betaflight
 cd betaflight/ 
 make arm_sdk_install # if needed, `apt install curl``
-make TARGET=SITL # comment out this line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
+make TARGET=SITL # comment out line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
+cp ~/gym-pybullet-drones/gym_pybullet_drones/assets/eeprom.bin ~/betaflight/ # assuming both gym-pybullet-drones/ and betaflight/ were cloned in ~/
 betaflight/obj/main/betaflight_SITL.elf
 ```
 
@@ -55,7 +54,7 @@ In another terminal, run the example
 ```sh
 conda activate drones
 cd gym_pybullet_drones/examples/
-python3 beta.py # also check the steps in the file's docstrings
+python3 beta.py --num_drones 1 # also check the steps in the file's docstrings to use multiple drones
 ```
 
 ## Troubleshooting
