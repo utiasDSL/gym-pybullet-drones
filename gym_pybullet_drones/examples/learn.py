@@ -11,7 +11,7 @@ In a terminal, run as:
 Notes
 -----
 This is a minimal working example integrating `gym-pybullet-drones` with 
-reinforcement learning libraries `stable-baselines3`.
+reinforcement learning library `stable-baselines3`.
 
 """
 import time
