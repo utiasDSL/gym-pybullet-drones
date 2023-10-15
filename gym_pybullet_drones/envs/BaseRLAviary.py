@@ -7,14 +7,14 @@ from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 
-class BaseMultiagentAviary(BaseAviary):
-    """Base multi-agent environment class for reinforcement learning."""
+class BaseRLAviary(BaseAviary):
+    """Base single and multi-agent environment class for reinforcement learning."""
     
     ################################################################################
 
     def __init__(self,
                  drone_model: DroneModel=DroneModel.CF2X,
-                 num_drones: int=2,
+                 num_drones: int=1,
                  neighbourhood_radius: float=np.inf,
                  initial_xyzs=None,
                  initial_rpys=None,
@@ -26,7 +26,7 @@ class BaseMultiagentAviary(BaseAviary):
                  obs: ObservationType=ObservationType.KIN,
                  act: ActionType=ActionType.RPM
                  ):
-        """Initialization of a generic multi-agent RL environment.
+        """Initialization of a generic single and multi-agent RL environment.
 
         Attributes `vision_attributes` and `dynamics_attributes` are selected
         based on the choice of `obs` and `act`; `obstacles` is set to True 
@@ -61,9 +61,6 @@ class BaseMultiagentAviary(BaseAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
-        if num_drones < 2:
-            print("[ERROR] in BaseMultiagentAviary.__init__(), num_drones should be >= 2")
-            exit()
         vision_attributes = True if obs == ObservationType.RGB else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
@@ -74,7 +71,7 @@ class BaseMultiagentAviary(BaseAviary):
             if drone_model in [DroneModel.CF2X, DroneModel.CF2P]:
                 self.ctrl = [DSLPIDControl(drone_model=DroneModel.CF2X) for i in range(num_drones)]
             else:
-                print("[ERROR] in BaseMultiagentAviary.__init()__, no controller is available for the specified drone_model")
+                print("[ERROR] in BaseRLAviary.__init()__, no controller is available for the specified drone_model")
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -144,7 +141,7 @@ class BaseMultiagentAviary(BaseAviary):
         elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
             size = 1
         else:
-            print("[ERROR] in BaseMultiagentAviary._actionSpace()")
+            print("[ERROR] in BaseRLAviary._actionSpace()")
             exit()
         act_lower_bound = np.array([-1*np.ones(size) for i in range(self.NUM_DRONES)])
         act_upper_bound = np.array([+1*np.ones(size) for i in range(self.NUM_DRONES)])
@@ -228,7 +225,7 @@ class BaseMultiagentAviary(BaseAviary):
                                                         )
                 rpm[k,:] = rpm
             else:
-                print("[ERROR] in BaseMultiagentAviary._preprocessAction()")
+                print("[ERROR] in BaseRLAviary._preprocessAction()")
                 exit()
         return rpm
 
@@ -244,10 +241,6 @@ class BaseMultiagentAviary(BaseAviary):
 
         """
         if self.OBS_TYPE == ObservationType.RGB:
-            # return spaces.Dict({i: spaces.Box(low=0,
-            #                                   high=255,
-            #                                   shape=(self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8
-            #                                   ) for i in range(self.NUM_DRONES)})
             return spaces.Box(low=0,
                               high=255,
                               shape=(self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
@@ -259,13 +252,14 @@ class BaseMultiagentAviary(BaseAviary):
             # obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])          
             # return spaces.Box( low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32 )
             ############################################################
-            #### OBS SPACE OF SIZE 12
+            #### OBS SPACE OF SIZE 12, W/O RPMS
+            #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
             obs_lower_bound = np.array([[-1,-1,0, -1,-1,-1, -1,-1,-1, -1,-1,-1] for i in range(self.NUM_DRONES)])
             obs_upper_bound = np.array([[1,1,1, 1,1,1, 1,1,1, 1,1,1] for i in range(self.NUM_DRONES)])
             return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
             ############################################################
         else:
-            print("[ERROR] in BaseMultiagentAviary._observationSpace()")
+            print("[ERROR] in BaseRLAviary._observationSpace()")
     
     ################################################################################
 
@@ -291,21 +285,21 @@ class BaseMultiagentAviary(BaseAviary):
                                           path=self.ONBOARD_IMG_PATH+"drone_"+str(i),
                                           frame_num=int(self.step_counter/self.IMG_CAPTURE_FREQ)
                                           )
-            return np.array([self.rgb[i] for i in range(self.NUM_DRONES)])
+            return np.array([self.rgb[i] for i in range(self.NUM_DRONES)]).astype('float32')
         elif self.OBS_TYPE == ObservationType.KIN:
             ############################################################
             #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
-            # return {   i   : self._clipAndNormalizeState(self._getDroneStateVector(i)) for i in range(self.NUM_DRONES) }
+            # return np.array([ self._clipAndNormalizeState(self._getDroneStateVector(i)) for i in range(self.NUM_DRONES) ]).astype('float32')
             ############################################################
             #### OBS SPACE OF SIZE 12
             obs_12 = np.zeros((self.NUM_DRONES,12))
             for i in range(self.NUM_DRONES):
                 obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
                 obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
-            return np.array([obs_12[i, :] for i in range(self.NUM_DRONES)])
+            return np.array([obs_12[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
             ############################################################
         else:
-            print("[ERROR] in BaseMultiagentAviary._computeObs()")
+            print("[ERROR] in BaseRLAviary._computeObs()")
 
     ################################################################################
 

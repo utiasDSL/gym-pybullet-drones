@@ -12,20 +12,10 @@ register(
 
 register(
     id='hover-aviary-v0',
-    entry_point='gym_pybullet_drones.envs.single_agent_rl:HoverAviary',
-)
-
-register(
-    id='flythrugate-aviary-v0',
-    entry_point='gym_pybullet_drones.envs.single_agent_rl:FlyThruGateAviary',
-)
-
-register(
-    id='flock-aviary-v0',
-    entry_point='gym_pybullet_drones.envs.multi_agent_rl:FlockAviary',
+    entry_point='gym_pybullet_drones.envs:HoverAviary',
 )
 
 register(
     id='leaderfollower-aviary-v0',
-    entry_point='gym_pybullet_drones.envs.multi_agent_rl:LeaderFollowerAviary',
+    entry_point='gym_pybullet_drones.envs:LeaderFollowerAviary',
 )

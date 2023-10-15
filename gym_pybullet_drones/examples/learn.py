@@ -21,7 +21,8 @@ import numpy as np
 from stable_baselines3 import PPO
 
 from gym_pybullet_drones.utils.Logger import Logger
-from gym_pybullet_drones.envs.single_agent_rl.HoverAviary import HoverAviary
+from gym_pybullet_drones.envs.HoverAviary import HoverAviary
+from gym_pybullet_drones.envs.LeaderFollowerAviary import LeaderFollowerAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
 
 DEFAULT_GUI = True
@@ -32,12 +33,13 @@ DEFAULT_COLAB = False
 def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO):
 
     #### Check the environment's spaces ########################
-    env = gym.make("hover-aviary-v0")
-    print("[INFO] Action space:", env.action_space)
-    print("[INFO] Observation space:", env.observation_space)
+    # env = gym.make('hover-aviary-v0')
+    env = gym.make('leaderfollower-aviary-v0')
+    print('[INFO] Action space:', env.action_space)
+    print('[INFO] Observation space:', env.observation_space)
 
     #### Train the model #######################################
-    model = PPO("MlpPolicy",
+    model = PPO('MlpPolicy',
                 env,
                 verbose=1
                 )
@@ -59,9 +61,16 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
                                         deterministic=True
                                         )
         obs, reward, terminated, truncated, info = env.step(action)
+        obs2 = obs.squeeze()
+        act2 = action.squeeze()
+        print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
         logger.log(drone=0,
                    timestamp=i/env.CTRL_FREQ,
-                   state=np.hstack([obs[0:3], np.zeros(4), obs[3:15],  np.resize(action, (4))]),
+                   state=np.hstack([obs2[0:3],
+                                    np.zeros(4),
+                                    obs2[3:15],
+                                    act2
+                                    ]),
                    control=np.zeros(12)
                    )
         env.render()
@@ -74,7 +83,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
     if plot:
         logger.plot()
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script using HoverAviary')
     parser.add_argument('--gui',                default=DEFAULT_GUI,       type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
@@ -293,32 +302,32 @@ if __name__ == "__main__":
 #                                                                 )
 
 #     #### Create eveluation environment #########################
-#     if obs == ObservationType.KIN: 
+#     if obs == ObservationType.KIN:
 #         eval_env = gym.make(env_name,
 #                             aggregate_phy_steps=shared_constants.AGGR_PHY_STEPS,
 #                             obs=obs,
 #                             act=act
 #                             )
 #     elif obs == ObservationType.RGB:
-#         if env_name == "takeoff-aviary-v0": 
+#         if env_name == "takeoff-aviary-v0":
 #             eval_env = make_vec_env(TakeoffAviary,
 #                                     env_kwargs=sa_env_kwargs,
 #                                     n_envs=1,
 #                                     seed=0
 #                                     )
-#         if env_name == "hover-aviary-v0": 
+#         if env_name == "hover-aviary-v0":
 #             eval_env = make_vec_env(HoverAviary,
 #                                     env_kwargs=sa_env_kwargs,
 #                                     n_envs=1,
 #                                     seed=0
 #                                     )
-#         if env_name == "flythrugate-aviary-v0": 
+#         if env_name == "flythrugate-aviary-v0":
 #             eval_env = make_vec_env(FlyThruGateAviary,
 #                                     env_kwargs=sa_env_kwargs,
 #                                     n_envs=1,
 #                                     seed=0
 #                                     )
-#         if env_name == "tune-aviary-v0": 
+#         if env_name == "tune-aviary-v0":
 #             eval_env = make_vec_env(TuneAviary,
 #                                     env_kwargs=sa_env_kwargs,
 #                                     n_envs=1,
@@ -362,8 +371,8 @@ if __name__ == "__main__":
 #     parser.add_argument('--algo',       default=DEFAULT_ALGO,        type=str,             choices=['a2c', 'ppo', 'sac', 'td3', 'ddpg'],        help='RL agent (default: ppo)', metavar='')
 #     parser.add_argument('--obs',        default=DEFAULT_OBS,        type=ObservationType,                                                      help='Observation space (default: kin)', metavar='')
 #     parser.add_argument('--act',        default=DEFAULT_ACT,  type=ActionType,                                                           help='Action space (default: one_d_rpm)', metavar='')
-#     parser.add_argument('--cpu',        default=DEFAULT_CPU,          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')        
-#     parser.add_argument('--steps',        default=DEFAULT_STEPS,          type=int,                                                                  help='Number of training time steps (default: 35000)', metavar='')        
+#     parser.add_argument('--cpu',        default=DEFAULT_CPU,          type=int,                                                                  help='Number of training environments (default: 1)', metavar='')
+#     parser.add_argument('--steps',        default=DEFAULT_STEPS,          type=int,                                                                  help='Number of training time steps (default: 35000)', metavar='')
 #     parser.add_argument('--output_folder',     default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
 #     ARGS = parser.parse_args()
 
