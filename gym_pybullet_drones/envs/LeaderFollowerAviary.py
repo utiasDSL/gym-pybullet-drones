@@ -20,7 +20,7 @@ class LeaderFollowerAviary(BaseRLAviary):
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
-                 act: ActionType=ActionType.RPM):
+                 act: ActionType=ActionType.PID):
         """Initialization of a multi-agent RL environment.
 
         Using the generic multi-agent RL superclass.
@@ -70,32 +70,31 @@ class LeaderFollowerAviary(BaseRLAviary):
     ################################################################################
     
     def _computeReward(self):
-        """Computes the current reward value(s).
+        """Computes the current reward value.
 
         Returns
         -------
-        dict[int, float]
-            The reward value for each drone.
+        float
+            The reward.
 
         """
         rewards = np.zeros(self.NUM_DRONES)
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
         rewards[0] = -1 * np.linalg.norm(np.array([0, 0, 0.5]) - states[0, 0:3])**2
         # rewards[1] = -1 * np.linalg.norm(np.array([states[1, 0], states[1, 1], 0.5]) - states[1, 0:3])**2 # DEBUG WITH INDEPENDENT REWARD
-        for i in range(1, self.NUM_DRONES):
-            rewards[i] = (-(1/self.NUM_DRONES) * np.linalg.norm(np.array([states[i, 0], states[i, 1], states[0, 2]]) - states[i, 0:3])**2)
+        # for i in range(1, self.NUM_DRONES):
+        #     rewards[i] = (-(1/self.NUM_DRONES) * np.linalg.norm(np.array([states[i, 0], states[i, 1], states[0, 2]]) - states[i, 0:3])**2)
         return rewards[0] #TODO: return multiple rewards
 
     ################################################################################
     
     def _computeTerminated(self):
-        """Computes the current done value(s).
+        """Computes the current done value.
 
         Returns
         -------
-        dict[int | "__all__", bool]
-            Dictionary with the done value of each drone and 
-            one additional boolean value for key "__all__".
+        bool
+            Whether the current episode is done.
 
         """
         bool_val = True if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC else False
