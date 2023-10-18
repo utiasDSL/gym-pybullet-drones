@@ -20,7 +20,8 @@ class LeaderFollowerAviary(BaseRLAviary):
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
-                 act: ActionType=ActionType.PID):
+                 act: ActionType=ActionType.RPM
+                 ):
         """Initialization of a multi-agent RL environment.
 
         Using the generic multi-agent RL superclass.
