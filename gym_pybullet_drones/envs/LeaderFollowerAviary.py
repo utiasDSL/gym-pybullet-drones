@@ -47,7 +47,7 @@ class LeaderFollowerAviary(BaseRLAviary):
         gui : bool, optional
             Whether to use PyBullet's GUI.
         record : bool, optional
-            Whether to save a video of the simulation in folder `files/videos/`.
+            Whether to save a video of the simulation.
         obs : ObservationType, optional
             The type of observation space (kinematic information or vision)
         act : ActionType, optional

@@ -4,7 +4,7 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 
 > **NOTE**: if you prefer to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]` after cloning the repo, and refer to the corresponding `README.md`'s.
 
-<img src="files/readme_images/helix.gif" alt="formation flight" width="350"> <img src="files/readme_images/helix.png" alt="control info" width="450">
+<img src="gym_pybullet_drones/assets/helix.gif" alt="formation flight" width="350"> <img src="gym_pybullet_drones/assets/helix.png" alt="control info" width="450">
 
 ## Installation
 

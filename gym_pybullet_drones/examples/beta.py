@@ -88,7 +88,7 @@ def run(
                     )
 
     #### Run the simulation ####################################
-    with open("../assets/beta.csv", mode='r') as csv_file:
+    with open("../assets/beta-traj.csv", mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         trajectory1 = iter([{
             "pos": np.array([

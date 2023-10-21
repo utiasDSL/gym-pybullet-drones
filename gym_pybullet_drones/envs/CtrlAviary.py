@@ -47,7 +47,7 @@ class CtrlAviary(BaseAviary):
         gui : bool, optional
             Whether to use PyBullet's GUI.
         record : bool, optional
-            Whether to save a video of the simulation in folder `files/videos/`.
+            Whether to save a video of the simulation.
         obstacles : bool, optional
             Whether to add obstacles to the simulation.
         user_debug_gui : bool, optional
