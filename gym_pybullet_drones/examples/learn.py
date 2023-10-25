@@ -1,4 +1,4 @@
-"""Script demonstrating the use of `gym_pybullet_drones`' Gymnasium interface.
+"""Script demonstrating the use of `gym_pybullet_drones`'s Gymnasium interface.
 
 Class HoverAviary is used as a learning env for the PPO algorithm.
 
