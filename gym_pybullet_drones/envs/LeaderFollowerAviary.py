@@ -54,7 +54,7 @@ class LeaderFollowerAviary(BaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
-        self.target_pos = np.array([0,0,1])
+        self.TARGET_POS = np.array([0,0,1])
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -82,7 +82,7 @@ class LeaderFollowerAviary(BaseRLAviary):
         """
         rewards = np.zeros(self.NUM_DRONES)
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        ret = max(0, 500 - np.linalg.norm(self.target_pos-states[0, 0:3])**2)
+        ret = max(0, 500 - np.linalg.norm(self.TARGET_POS-states[0, 0:3])**2)
         for i in range(1, self.NUM_DRONES):
             ret += max(0, 100 - np.linalg.norm(states[i-1, 3]-states[i, 3])**2)
         return ret
@@ -99,7 +99,7 @@ class LeaderFollowerAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        if np.linalg.norm(self.target_pos-state[0:3]) < .001:
+        if np.linalg.norm(self.TARGET_POS-state[0:3]) < .001:
             return True
         else:
             return False

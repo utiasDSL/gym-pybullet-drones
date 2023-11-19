@@ -48,7 +48,7 @@ class HoverAviary(BaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
-        self.target_pos = np.array([0,0,1])
+        self.TARGET_POS = np.array([0,0,1])
         super().__init__(drone_model=drone_model,
                          num_drones=1,
                          initial_xyzs=initial_xyzs,
@@ -74,7 +74,7 @@ class HoverAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        ret = max(0, 500 - np.linalg.norm(self.target_pos-state[0:3])**2)
+        ret = max(0, 500 - np.linalg.norm(self.TARGET_POS-state[0:3])**2)
         return ret
 
     ################################################################################
@@ -89,7 +89,7 @@ class HoverAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        if np.linalg.norm(self.target_pos-state[0:3]) < .001:
+        if np.linalg.norm(self.TARGET_POS-state[0:3]) < .001:
             return True
         else:
             return False
