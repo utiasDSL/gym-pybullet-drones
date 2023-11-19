@@ -54,6 +54,7 @@ class LeaderFollowerAviary(BaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
+        self.target_pos = np.array([0,0,1])
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -81,11 +82,10 @@ class LeaderFollowerAviary(BaseRLAviary):
         """
         rewards = np.zeros(self.NUM_DRONES)
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        rewards[0] = -1 * np.linalg.norm(np.array([0, 0, 0.5]) - states[0, 0:3])**2
-        # rewards[1] = -1 * np.linalg.norm(np.array([states[1, 0], states[1, 1], 0.5]) - states[1, 0:3])**2 # DEBUG WITH INDEPENDENT REWARD
-        # for i in range(1, self.NUM_DRONES):
-        #     rewards[i] = (-(1/self.NUM_DRONES) * np.linalg.norm(np.array([states[i, 0], states[i, 1], states[0, 2]]) - states[i, 0:3])**2)
-        return rewards[0] #TODO: return multiple rewards
+        ret = max(0, 500 - np.linalg.norm(self.target_pos-states[0, 0:3])**2)
+        for i in range(1, self.NUM_DRONES):
+            ret += max(0, 100 - np.linalg.norm(states[i-1, 3]-states[i, 3])**2)
+        return ret
 
     ################################################################################
     
@@ -98,25 +98,27 @@ class LeaderFollowerAviary(BaseRLAviary):
             Whether the current episode is done.
 
         """
-        bool_val = True if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC else False
-        # done = {i: bool_val for i in range(self.NUM_DRONES)}
-        # done["__all__"] = bool_val # True if True in done.values() else False
-        return bool_val #TODO: return multiple terminatation values
+        state = self._getDroneStateVector(0)
+        if np.linalg.norm(self.target_pos-state[0:3]) < .001:
+            return True
+        else:
+            return False
 
     ################################################################################
     
     def _computeTruncated(self):
-        """Computes the current truncated value(s).
-
-        Unused in this implementation.
+        """Computes the current truncated value.
 
         Returns
         -------
         bool
-            Always false.
+            Whether the current episode timed out.
 
         """
-        return False
+        if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
+            return True
+        else:
+            return False
 
     ################################################################################
     
@@ -127,11 +129,11 @@ class LeaderFollowerAviary(BaseRLAviary):
 
         Returns
         -------
-        dict[int, dict[]]
-            Dictionary of empty dictionaries.
+        dict[str, int]
+            Dummy value.
 
         """
-        return {i: {} for i in range(self.NUM_DRONES)}
+        return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
     ################################################################################
 
