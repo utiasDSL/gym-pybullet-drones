@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pybullet as p
 from gymnasium import spaces
+from collections import deque
 
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType, ImageType
@@ -61,6 +62,10 @@ class BaseRLAviary(BaseAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
+        #### Create a buffer for the last 10 actions ###############
+        self.ACTION_BUFFER_SIZE = 10
+        self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE)
+        ####
         vision_attributes = True if obs == ObservationType.RGB else False
         self.OBS_TYPE = obs
         self.ACT_TYPE = act
@@ -145,6 +150,10 @@ class BaseRLAviary(BaseAviary):
             exit()
         act_lower_bound = np.array([-1*np.ones(size) for i in range(self.NUM_DRONES)])
         act_upper_bound = np.array([+1*np.ones(size) for i in range(self.NUM_DRONES)])
+        #
+        for i in range(self.ACTION_BUFFER_SIZE):
+            self.action_buffer.append(np.zeros((self.NUM_DRONES,size)))
+        #
         return spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32)
 
     ################################################################################
@@ -176,6 +185,7 @@ class BaseRLAviary(BaseAviary):
             commanded to the 4 motors of each drone.
 
         """
+        self.action_buffer.append(action)
         rpm = np.zeros((self.NUM_DRONES,4))
         for k in range(action.shape[0]):
             target = action[k, :]
@@ -246,16 +256,25 @@ class BaseRLAviary(BaseAviary):
                               shape=(self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4), dtype=np.uint8)
         elif self.OBS_TYPE == ObservationType.KIN:
             ############################################################
-            #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
-            #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ       P0            P1            P2            P3
-            # obs_lower_bound = np.array([-1,      -1,      0,      -1,  -1,  -1,  -1,  -1,     -1,     -1,     -1,      -1,      -1,      -1,      -1,      -1,      -1,           -1,           -1,           -1])
-            # obs_upper_bound = np.array([1,       1,       1,      1,   1,   1,   1,   1,      1,      1,      1,       1,       1,       1,       1,       1,       1,            1,            1,            1])          
-            # return spaces.Box( low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32 )
-            ############################################################
-            #### OBS SPACE OF SIZE 12, W/O RPMS
+            #### OBS SPACE OF SIZE 12
             #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ
-            obs_lower_bound = np.array([[-1,-1,0, -1,-1,-1, -1,-1,-1, -1,-1,-1] for i in range(self.NUM_DRONES)])
-            obs_upper_bound = np.array([[1,1,1, 1,1,1, 1,1,1, 1,1,1] for i in range(self.NUM_DRONES)])
+            lo = -np.inf
+            hi = np.inf
+            obs_lower_bound = np.array([[lo,lo,0, lo,lo,lo,lo,lo,lo,lo,lo,lo] for i in range(self.NUM_DRONES)])
+            obs_upper_bound = np.array([[hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi] for i in range(self.NUM_DRONES)])
+            #### Add action buffer to observation space ################
+            act_lo = -1
+            act_hi = +1
+            for i in range(self.ACTION_BUFFER_SIZE):
+                if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
+                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
+                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
+                elif self.ACT_TYPE==ActionType.PID:
+                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
+                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
+                elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
+                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo] for i in range(self.NUM_DRONES)])])
+                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi] for i in range(self.NUM_DRONES)])])
             return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
             ############################################################
         else:
@@ -288,32 +307,17 @@ class BaseRLAviary(BaseAviary):
             return np.array([self.rgb[i] for i in range(self.NUM_DRONES)]).astype('float32')
         elif self.OBS_TYPE == ObservationType.KIN:
             ############################################################
-            #### OBS OF SIZE 20 (WITH QUATERNION AND RPMS)
-            # return np.array([ self._clipAndNormalizeState(self._getDroneStateVector(i)) for i in range(self.NUM_DRONES) ]).astype('float32')
-            ############################################################
             #### OBS SPACE OF SIZE 12
             obs_12 = np.zeros((self.NUM_DRONES,12))
             for i in range(self.NUM_DRONES):
-                obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+                #obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+                obs = self._getDroneStateVector(i)
                 obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
-            return np.array([obs_12[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
+            ret = np.array([obs_12[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
+            #### Add action buffer to observation #######################
+            for i in range(self.ACTION_BUFFER_SIZE):
+                ret = np.hstack([ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
+            return ret
             ############################################################
         else:
             print("[ERROR] in BaseRLAviary._computeObs()")
-
-    ################################################################################
-
-    def _clipAndNormalizeState(self,
-                               state
-                               ):
-        """Normalizes a drone's state to the [-1,1] range.
-
-        Must be implemented in a subclass.
-
-        Parameters
-        ----------
-        state : ndarray
-            Array containing the non-normalized state of a single drone.
-
-        """
-        raise NotImplementedError
