@@ -81,9 +81,9 @@ class LeaderFollowerAviary(BaseRLAviary):
 
         """
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        ret = max(0, 100 - np.linalg.norm(self.TARGET_POS-states[0, 0:3])**2)
+        ret = max(0, 10 - np.linalg.norm(self.TARGET_POS-states[0, 0:3])**4)
         for i in range(1, self.NUM_DRONES):
-            ret += max(0, 10 - np.linalg.norm(states[i-1, 3]-states[i, 3])**2)
+            ret += max(0, 10 - np.linalg.norm(states[i-1, 3]-states[i, 3])**4)
         return ret
 
     ################################################################################
