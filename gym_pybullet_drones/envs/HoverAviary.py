@@ -14,7 +14,7 @@ class HoverAviary(BaseRLAviary):
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
                  pyb_freq: int = 240,
-                 ctrl_freq: int = 240,
+                 ctrl_freq: int = 30,
                  gui=False,
                  record=False,
                  obs: ObservationType=ObservationType.KIN,
@@ -74,7 +74,7 @@ class HoverAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        ret = max(0, 500 - np.linalg.norm(self.TARGET_POS-state[0:3])**2)
+        ret = max(0, 10 - np.linalg.norm(self.TARGET_POS-state[0:3])**4)
         return ret
 
     ################################################################################
@@ -89,7 +89,7 @@ class HoverAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        if np.linalg.norm(self.TARGET_POS-state[0:3]) < .001:
+        if np.linalg.norm(self.TARGET_POS-state[0:3]) < .0001:
             return True
         else:
             return False

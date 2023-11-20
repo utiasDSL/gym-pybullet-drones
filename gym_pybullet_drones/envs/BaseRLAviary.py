@@ -226,14 +226,14 @@ class BaseRLAviary(BaseAviary):
                 rpm[k,:] = np.repeat(self.HOVER_RPM * (1+0.05*target), 4)
             elif self.ACT_TYPE == ActionType.ONE_D_PID:
                 state = self._getDroneStateVector(k)
-                rpm, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
+                res, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
                                                         cur_pos=state[0:3],
                                                         cur_quat=state[3:7],
                                                         cur_vel=state[10:13],
                                                         cur_ang_vel=state[13:16],
                                                         target_pos=state[0:3]+0.1*np.array([0,0,target[0]])
                                                         )
-                rpm[k,:] = rpm
+                rpm[k,:] = res
             else:
                 print("[ERROR] in BaseRLAviary._preprocessAction()")
                 exit()
