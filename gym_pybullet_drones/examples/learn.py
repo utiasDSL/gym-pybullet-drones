@@ -37,10 +37,10 @@ DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
-DEFAULT_OBS = ObservationType('kin')
-DEFAULT_ACT = ActionType('rpm')
-DEFAULT_AGENTS = 2
-DEFAULT_MA = True
+DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
+DEFAULT_ACT = ActionType('vel') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' / TO BE FIXED: 'one_d_pid'
+DEFAULT_AGENTS = 3
+DEFAULT_MA = False
 
 def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO):
 
@@ -152,27 +152,28 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
         obs2 = obs.squeeze()
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
-        if not DEFAULT_MA:
-            logger.log(drone=0,
-                   timestamp=i/test_env.CTRL_FREQ,
-                   state=np.hstack([obs2[0:3],
-                                    np.zeros(4),
-                                    obs2[3:15],
-                                    act2
-                                    ]),
-                   control=np.zeros(12)
-                   )
-        else:
-            for d in range(DEFAULT_AGENTS):
-                logger.log(drone=d,
+        if DEFAULT_OBS == ObservationType.KIN:
+            if not DEFAULT_MA:
+                logger.log(drone=0,
                     timestamp=i/test_env.CTRL_FREQ,
-                    state=np.hstack([obs2[d][0:3],
+                    state=np.hstack([obs2[0:3],
                                         np.zeros(4),
-                                        obs2[d][3:15],
-                                        act2[d]
+                                        obs2[3:15],
+                                        act2
                                         ]),
                     control=np.zeros(12)
                     )
+            else:
+                for d in range(DEFAULT_AGENTS):
+                    logger.log(drone=d,
+                        timestamp=i/test_env.CTRL_FREQ,
+                        state=np.hstack([obs2[d][0:3],
+                                            np.zeros(4),
+                                            obs2[d][3:15],
+                                            act2[d]
+                                            ]),
+                        control=np.zeros(12)
+                        )
         test_env.render()
         print(terminated)
         sync(i, start, test_env.CTRL_TIMESTEP)
@@ -180,7 +181,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
             obs = test_env.reset(seed=42, options={})
     test_env.close()
 
-    if plot:
+    if plot and DEFAULT_OBS == ObservationType.KIN:
         logger.plot()
 
 if __name__ == '__main__':
