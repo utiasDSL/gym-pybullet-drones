@@ -6,7 +6,8 @@ Example
 -------
 In a terminal, run as:
 
-    $ python learn.py
+    $ python learn.py --multiagent false
+    $ python learn.py --multiagent true
 
 Notes
 -----
@@ -42,13 +43,13 @@ DEFAULT_ACT = ActionType('one_d_rpm') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' o
 DEFAULT_AGENTS = 3
 DEFAULT_MA = False
 
-def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO):
+def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO):
 
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
 
-    if not DEFAULT_MA:
+    if not multiagent:
         train_env = make_vec_env(HoverAviary,
                                  env_kwargs=dict(obs=DEFAULT_OBS, act=DEFAULT_ACT),
                                  n_envs=1,
@@ -112,7 +113,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
     model = PPO.load(path)
 
     #### Show (and record a video of) the model's performance ##
-    if not DEFAULT_MA:
+    if not multiagent:
         test_env = HoverAviary(gui=gui,
                                obs=DEFAULT_OBS,
                                act=DEFAULT_ACT,
@@ -148,7 +149,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
         if DEFAULT_OBS == ObservationType.KIN:
-            if not DEFAULT_MA:
+            if not multiagent:
                 logger.log(drone=0,
                     timestamp=i/test_env.CTRL_FREQ,
                     state=np.hstack([obs2[0:3],
@@ -182,6 +183,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=D
 if __name__ == '__main__':
     #### Define and parse (optional) arguments for the script ##
     parser = argparse.ArgumentParser(description='Single agent reinforcement learning example script')
+    parser.add_argument('--multiagent',         default=DEFAULT_MA,            type=str2bool,      help='Whether to use example LeaderFollower instead of Hover (default: False)', metavar='')
     parser.add_argument('--gui',                default=DEFAULT_GUI,           type=str2bool,      help='Whether to use PyBullet GUI (default: True)', metavar='')
     parser.add_argument('--record_video',       default=DEFAULT_RECORD_VIDEO,  type=str2bool,      help='Whether to record a video (default: False)', metavar='')
     parser.add_argument('--output_folder',      default=DEFAULT_OUTPUT_FOLDER, type=str,           help='Folder where to save logs (default: "results")', metavar='')
