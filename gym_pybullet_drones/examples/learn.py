@@ -88,7 +88,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     if not multiagent:
         steps = 2 * int(1e5)
     else:
-        steps = int(1e6)
+        steps = int(1e4)
     model.learn(total_timesteps=steps,
                 callback=eval_callback,
                 log_interval=100)
@@ -131,7 +131,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                         record=record_video)
         test_env_nogui = LeaderFollowerAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
-                num_drones=DEFAULT_AGENTS if DEFAULT_MA else 1,
+                num_drones=DEFAULT_AGENTS if multiagent else 1,
                 output_folder=output_folder,
                 colab=colab
                 )

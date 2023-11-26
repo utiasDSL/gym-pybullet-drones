@@ -55,7 +55,7 @@ class LeaderFollowerAviary(BaseRLAviary):
 
         """
         self.TARGET_POS = np.array([0,0,1])
-        self.EPISODE_LEN_SEC = 5
+        self.EPISODE_LEN_SEC = 8
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -82,9 +82,9 @@ class LeaderFollowerAviary(BaseRLAviary):
 
         """
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        ret = max(0, 10 - np.linalg.norm(self.TARGET_POS-states[0, 0:3])**4)
+        ret = max(0, 2 - np.linalg.norm(self.TARGET_POS-states[0, 0:3])**4)
         for i in range(1, self.NUM_DRONES):
-            ret += max(0, 10 - np.linalg.norm(states[i-1, 3]-states[i, 3])**4)
+            ret += max(0, 2 - np.linalg.norm(states[i-1, 3]-states[i, 3])**4)
         return ret
 
     ################################################################################
