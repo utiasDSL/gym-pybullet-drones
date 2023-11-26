@@ -1,6 +1,6 @@
 """Script demonstrating the use of `gym_pybullet_drones`'s Gymnasium interface.
 
-Classes HoverAviary and LeaderFollowerAviary are used as learning envs for the PPO algorithm.
+Classes HoverAviary and MultiHoverAviary are used as learning envs for the PPO algorithm.
 
 Example
 -------
