@@ -85,7 +85,11 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  eval_freq=int(2000),
                                  deterministic=True,
                                  render=False)
-    model.learn(total_timesteps=int(1e6),
+    if not multiagent:
+        steps = 2 * int(1e5)
+    else:
+        steps = int(1e6)
+    model.learn(total_timesteps=steps,
                 callback=eval_callback,
                 log_interval=100)
 
@@ -140,7 +144,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     obs, info = test_env.reset(seed=42, options={})
     start = time.time()
-    for i in range(3*test_env.CTRL_FREQ):
+    for i in range((test_env.EPISODE_LEN_SEC+2)*test_env.CTRL_FREQ):
         action, _states = model.predict(obs,
                                         deterministic=True
                                         )
