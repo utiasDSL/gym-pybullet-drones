@@ -4,7 +4,7 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 
 > **NOTE**: if you prefer to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]` after cloning the repo, and refer to the corresponding `README.md`'s.
 
-<img src="files/readme_images/helix.gif" alt="formation flight" width="350"> <img src="files/readme_images/helix.png" alt="control info" width="450">
+<img src="gym_pybullet_drones/assets/helix.gif" alt="formation flight" width="350"> <img src="gym_pybullet_drones/assets/helix.png" alt="control info" width="450">
 
 ## Installation
 
@@ -24,18 +24,27 @@ pip3 install -e . # if needed, `sudo apt install build-essential` to install `gc
 
 ## Use
 
-### PID position control example
+### PID control examples
 
 ```sh
 cd gym_pybullet_drones/examples/
-python3 pid.py
+python3 pid.py # position and velocity reference
+python3 pid_velocity.py # desired velocity reference
 ```
 
-### Stable-baselines3 PPO RL example
+### Downwash effect example
 
 ```sh
 cd gym_pybullet_drones/examples/
-python3 learn.py
+python3 downwash.py
+```
+
+### Stable-baselines3 PPO RL 3'-training examples
+
+```sh
+cd gym_pybullet_drones/examples/
+python learn.py # task: single drone hover at z == 1
+python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 ```
 
 ### Betaflight SITL example (Ubuntu only)
@@ -96,13 +105,14 @@ If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - C. Karen Liu and Dan Negrut (2020) [*The Role of Physics-Based Simulators in Robotics*](https://www.annualreviews.org/doi/pdf/10.1146/annurev-control-072220-093055)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
 
-## TODO
+## Core Team WIP
 
-- [ ] Add `crazyflie-firmware` SITL support @spencerteetaert
-- [ ] Add motor delay @JacopoPan / @spencerteetaert
-- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates) in `obs` @JacopoPan
-- [ ] Replace `BaseSingleAgentAviary` and `BaseMultiAgentAviary` with a single `RLAviary`, incl. PR #161 @JacopoPan
-- [ ] Add a multi-agent MDP with 2-drone chase through a gate @JacopoPan
+- [ ] Multi-drone `crazyflie-firmware` SITL support (@spencerteetaert, @JacopoPan)
+
+## Desired Contributions/PRs
+
+- [ ] Add motor delay by implementing a buffer in `BaseAviary._dynamics()`
+- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates) by editing `BaseAviary._updateAndStoreKinematicInformation()`, `BaseAviary._getDroneStateVector()`, and the `.computeObs()` methods of relevant subclasses
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)

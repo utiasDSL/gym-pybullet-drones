@@ -18,7 +18,7 @@ cd ../../
 mkdir betaflight_sitl/
 cd betaflight_sitl/
 
-# Step 1: Clone and open betaflight's source:
+# Step 1: Clone and open betaflight's source (at the time of writing, branch `master`, future release 4.5)):
 git clone https://github.com/betaflight/betaflight temp/
 
 
@@ -27,8 +27,6 @@ git clone https://github.com/betaflight/betaflight temp/
 # from Betaflight's `SIMULATOR_BUILD`
 cd temp/
 sed -i "s/delayMicroseconds_real(50);/\/\/delayMicroseconds_real(50);/g" ./src/main/main.c
-sed -i "s/ret = udpInit(\&stateLink, NULL, 9003, true);/\/\/ret = udpInit(\&stateLink, NULL, PORT_STATE, true);/g" ./src/main/target/SITL/sitl.c
-sed -i "s/printf(\"start UDP server.../\/\/printf(\"start UDP server.../g" ./src/main/target/SITL/sitl.c
 
 # Prepare
 make arm_sdk_install 
@@ -47,7 +45,7 @@ for ((i = 0; i < desired_max_num_drones; i++)); do
     cp -r temp/ "bf${i}/"
     cd "bf${i}/"
 
-    # Step 3: Change the UDP ports used by each Betaflight SITL instancet
+    # Step 3: Change the UDP ports used by each Betaflight SITL instance
     replacement1="PORT_PWM_RAW    90${i}1"
     sed -i "s/$pattern1/$replacement1/g" ./src/main/target/SITL/sitl.c
     replacement2="PORT_PWM    90${i}2"

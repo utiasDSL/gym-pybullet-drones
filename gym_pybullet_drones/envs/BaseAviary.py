@@ -61,7 +61,7 @@ class BaseAviary(gym.Env):
         gui : bool, optional
             Whether to use PyBullet's GUI.
         record : bool, optional
-            Whether to save a video of the simulation in folder `files/videos/`.
+            Whether to save a video of the simulation.
         obstacles : bool, optional
             Whether to add obstacles to the simulation.
         user_debug_gui : bool, optional
@@ -338,7 +338,6 @@ class BaseAviary(gym.Env):
                                                           ) for i in range(self.NUM_DRONES)]
         #### Save, preprocess, and clip the action to the max. RPM #
         else:
-            self._saveLastAction(action)
             clipped_action = np.reshape(self._preprocessAction(action), (self.NUM_DRONES, 4))
         #### Repeat for as many as the aggregate physics steps #####
         for _ in range(self.PYB_STEPS_PER_CTRL):
@@ -466,7 +465,6 @@ class BaseAviary(gym.Env):
         self.GUI_INPUT_TEXT = -1*np.ones(self.NUM_DRONES)
         self.USE_GUI_RPM=False
         self.last_input_switch = 0
-        self.last_action = -1*np.ones((self.NUM_DRONES, 4))
         self.last_clipped_action = np.zeros((self.NUM_DRONES, 4))
         self.gui_input = np.zeros(4)
         #### Initialize the drones kinemaatic information ##########
@@ -913,23 +911,6 @@ class BaseAviary(gym.Env):
         if np.any(np.abs(action) > 1):
             print("\n[ERROR] it", self.step_counter, "in BaseAviary._normalizedActionToRPM(), out-of-bound action")
         return np.where(action <= 0, (action+1)*self.HOVER_RPM, self.HOVER_RPM + (self.MAX_RPM - self.HOVER_RPM)*action) # Non-linear mapping: -1 -> 0, 0 -> HOVER_RPM, 1 -> MAX_RPM`
-    
-    ################################################################################
-
-    def _saveLastAction(self,
-                        action
-                        ):
-        """Stores the most recent action into attribute `self.last_action`.
-
-        The last action can be used to compute aerodynamic effects.
-
-        Parameters
-        ----------
-        action : ndarray
-            Ndarray containing the current RPMs input for each drone.
-
-        """
-        self.last_action = np.reshape(action, (self.NUM_DRONES, 4))
     
     ################################################################################
 
