@@ -24,18 +24,27 @@ pip3 install -e . # if needed, `sudo apt install build-essential` to install `gc
 
 ## Use
 
-### PID position control example
+### PID control examples
 
 ```sh
 cd gym_pybullet_drones/examples/
-python3 pid.py
+python3 pid.py # position and velocity reference
+python3 pid_velocity.py # desired velocity reference
 ```
 
-### Stable-baselines3 PPO RL example
+### Downwash efect examples
 
 ```sh
 cd gym_pybullet_drones/examples/
-python3 learn.py
+python3 downwash.py
+```
+
+### Stable-baselines3 PPO RL examples (3' training)
+
+```sh
+cd gym_pybullet_drones/examples/
+python learn.py # task: single drone hover at z == 1
+python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 ```
 
 ### Betaflight SITL example (Ubuntu only)

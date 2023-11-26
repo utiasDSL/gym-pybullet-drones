@@ -29,7 +29,7 @@ from stable_baselines3.common.evaluation import evaluate_policy
 
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.envs.HoverAviary import HoverAviary
-from gym_pybullet_drones.envs.LeaderFollowerAviary import LeaderFollowerAviary
+from gym_pybullet_drones.envs.MultiHoverAviary import MultiHoverAviary
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.utils.enums import ObservationType, ActionType
 
@@ -40,7 +40,7 @@ DEFAULT_COLAB = False
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
 DEFAULT_ACT = ActionType('one_d_rpm') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
-DEFAULT_AGENTS = 3
+DEFAULT_AGENTS = 2
 DEFAULT_MA = False
 
 def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_GUI, plot=True, colab=DEFAULT_COLAB, record_video=DEFAULT_RECORD_VIDEO):
@@ -57,12 +57,12 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  )
         eval_env = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)
     else:
-        train_env = make_vec_env(LeaderFollowerAviary,
+        train_env = make_vec_env(MultiHoverAviary,
                                  env_kwargs=dict(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT),
                                  n_envs=1,
                                  seed=0
                                  )
-        eval_env = LeaderFollowerAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
+        eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
 
     #### Check the environment's spaces ########################
     print('[INFO] Action space:', train_env.action_space)
@@ -85,11 +85,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                  eval_freq=int(2000),
                                  deterministic=True,
                                  render=False)
-    if not multiagent:
-        steps = 2 * int(1e5)
-    else:
-        steps = int(1e4)
-    model.learn(total_timesteps=steps,
+    model.learn(total_timesteps=3*int(1e5),
                 callback=eval_callback,
                 log_interval=100)
 
@@ -124,12 +120,12 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                                record=record_video)
         test_env_nogui = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)
     else:
-        test_env = LeaderFollowerAviary(gui=gui,
+        test_env = MultiHoverAviary(gui=gui,
                                         num_drones=DEFAULT_AGENTS,
                                         obs=DEFAULT_OBS,
                                         act=DEFAULT_ACT,
                                         record=record_video)
-        test_env_nogui = LeaderFollowerAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
+        test_env_nogui = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                 num_drones=DEFAULT_AGENTS if multiagent else 1,
                 output_folder=output_folder,

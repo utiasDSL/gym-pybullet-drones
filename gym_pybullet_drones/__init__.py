@@ -16,6 +16,6 @@ register(
 )
 
 register(
-    id='leaderfollower-aviary-v0',
-    entry_point='gym_pybullet_drones.envs:LeaderFollowerAviary',
+    id='multihover-aviary-v0',
+    entry_point='gym_pybullet_drones.envs:MultiHoverAviary',
 )

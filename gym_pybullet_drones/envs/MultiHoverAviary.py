@@ -3,7 +3,7 @@ import numpy as np
 from gym_pybullet_drones.envs.BaseRLAviary import BaseRLAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ActionType, ObservationType
 
-class LeaderFollowerAviary(BaseRLAviary):
+class MultiHoverAviary(BaseRLAviary):
     """Multi-agent RL problem: leader-follower."""
 
     ################################################################################
@@ -54,7 +54,6 @@ class LeaderFollowerAviary(BaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
-        self.TARGET_POS = np.array([0,0,1])
         self.EPISODE_LEN_SEC = 8
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
@@ -69,6 +68,8 @@ class LeaderFollowerAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
+        
+        self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
 
     ################################################################################
     
@@ -82,9 +83,9 @@ class LeaderFollowerAviary(BaseRLAviary):
 
         """
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        ret = max(0, 2 - np.linalg.norm(self.TARGET_POS-states[0, 0:3])**4)
-        for i in range(1, self.NUM_DRONES):
-            ret += max(0, 2 - np.linalg.norm(states[i-1, 3]-states[i, 3])**4)
+        ret = 0
+        for i in range(self.NUM_DRONES):
+            ret += max(0, 2 - np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])**4)
         return ret
 
     ################################################################################
@@ -98,8 +99,11 @@ class LeaderFollowerAviary(BaseRLAviary):
             Whether the current episode is done.
 
         """
-        state = self._getDroneStateVector(0)
-        if np.linalg.norm(self.TARGET_POS-state[0:3]) < .001:
+        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
+        dist = 0
+        for i in range(self.NUM_DRONES):
+            dist += np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])
+        if dist < .0001:
             return True
         else:
             return False
