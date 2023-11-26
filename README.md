@@ -32,14 +32,14 @@ python3 pid.py # position and velocity reference
 python3 pid_velocity.py # desired velocity reference
 ```
 
-### Downwash efect examples
+### Downwash effect example
 
 ```sh
 cd gym_pybullet_drones/examples/
 python3 downwash.py
 ```
 
-### Stable-baselines3 PPO RL examples (3' training)
+### Stable-baselines3 PPO RL 3'-training examples
 
 ```sh
 cd gym_pybullet_drones/examples/
