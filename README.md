@@ -8,7 +8,7 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 
 ## Installation
 
-Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 13.4.
+Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 14.1.
 
 ```sh
 git clone https://github.com/utiasDSL/gym-pybullet-drones.git
@@ -39,18 +39,18 @@ cd gym_pybullet_drones/examples/
 python3 downwash.py
 ```
 
-### Stable-baselines3 PPO RL 3'-training examples
+### Reinforcement learning 3'-training examples (SB3's PPO)
 
 ```sh
 cd gym_pybullet_drones/examples/
-python learn.py # task: single drone hover at z == 1
+python learn.py # task: single drone hover at z == 1.0
 python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 ```
 
 ### Betaflight SITL example (Ubuntu only)
 
 ```sh
-git clone https://github.com/betaflight/betaflight
+git clone https://github.com/betaflight/betaflight # use the `master` branch at the time of writing (future release 4.5)
 cd betaflight/ 
 make arm_sdk_install # if needed, `apt install curl``
 make TARGET=SITL # comment out line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
@@ -63,7 +63,7 @@ In another terminal, run the example
 ```sh
 conda activate drones
 cd gym_pybullet_drones/examples/
-python3 beta.py --num_drones 1 # also check the steps in the file's docstrings to use multiple drones
+python3 beta.py --num_drones 1 # check the steps in the file's docstrings to use multiple drones
 ```
 
 ## Troubleshooting
@@ -111,7 +111,7 @@ If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 
 ## Desired Contributions/PRs
 
-- [ ] Add motor delay by implementing a buffer in `BaseAviary._dynamics()`
+- [ ] Add motor delay, advanced ESC modeling by implementing a buffer in `BaseAviary._dynamics()`
 - [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates) by editing `BaseAviary._updateAndStoreKinematicInformation()`, `BaseAviary._getDroneStateVector()`, and the `.computeObs()` methods of relevant subclasses
 
 -----
