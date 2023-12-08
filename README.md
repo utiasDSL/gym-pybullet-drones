@@ -46,7 +46,7 @@ cd gym_pybullet_drones/examples/
 python learn.py # task: single drone hover at z == 1.0
 ```
 
-<img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="350">
+![rl example](gym_pybullet_drones/assets/rl.gif)
 
 ### Betaflight SITL example (Ubuntu only)
 
