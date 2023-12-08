@@ -90,7 +90,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                 log_interval=100)
 
     #### Save the model ########################################
-    model.save(filename+'/success_model.zip')
+    model.save(filename+'/final_model.zip')
     print(filename)
 
     #### Print training progression ############################
@@ -104,9 +104,10 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     ############################################################
     ############################################################
 
-    if os.path.isfile(filename+'/success_model.zip'):
-        path = filename+'/success_model.zip'
-    elif os.path.isfile(filename+'/best_model.zip'):
+    if local:
+        input("Press Enter to continue...")
+
+    if os.path.isfile(filename+'/best_model.zip'):
         path = filename+'/best_model.zip'
     else:
         print("[ERROR]: no model under the specified path", filename)
