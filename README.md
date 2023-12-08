@@ -39,13 +39,14 @@ cd gym_pybullet_drones/examples/
 python3 downwash.py
 ```
 
-### Reinforcement learning 3'-training examples (SB3's PPO)
+### Reinforcement learning 10'-training example (SB3's PPO)
 
 ```sh
 cd gym_pybullet_drones/examples/
 python learn.py # task: single drone hover at z == 1.0
-python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 ```
+
+<img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="350">
 
 ### Betaflight SITL example (Ubuntu only)
 
