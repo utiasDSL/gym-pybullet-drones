@@ -71,21 +71,20 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     #### Train the model #######################################
     model = PPO('MlpPolicy',
                 train_env,
-                # policy_kwargs=dict(activation_fn=torch.nn.ReLU, net_arch=[512, 512, dict(vf=[256, 128], pi=[256, 128])]),
                 # tensorboard_log=filename+'/tb/',
                 verbose=1)
 
-    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=np.inf,
+    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=465 if not multiagent else 920, # reward thresholds for the 3D case, use 474 and 950 for the 1D case
                                                      verbose=1)
     eval_callback = EvalCallback(eval_env,
                                  callback_on_new_best=callback_on_best,
                                  verbose=1,
                                  best_model_save_path=filename+'/',
                                  log_path=filename+'/',
-                                 eval_freq=int(2000),
+                                 eval_freq=int(1000),
                                  deterministic=True,
                                  render=False)
-    model.learn(total_timesteps=int(1e6) if local else int(1e2), # shorter training in GitHub Actions pytest
+    model.learn(total_timesteps=int(1e7) if local else int(1e2), # shorter training in GitHub Actions pytest
                 callback=eval_callback,
                 log_interval=100)
 
@@ -107,7 +106,9 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     if local:
         input("Press Enter to continue...")
 
-    if os.path.isfile(filename+'/best_model.zip'):
+    if os.path.isfile(filename+'/final_model.zip'):
+        path = filename+'/final_model.zip'
+    elif os.path.isfile(filename+'/best_model.zip'):
         path = filename+'/best_model.zip'
     else:
         print("[ERROR]: no model under the specified path", filename)

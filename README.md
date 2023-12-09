@@ -4,7 +4,7 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 
 > **NOTE**: if you prefer to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]` after cloning the repo, and refer to the corresponding `README.md`'s.
 
-<img src="gym_pybullet_drones/assets/helix.gif" alt="formation flight" width="350"> <img src="gym_pybullet_drones/assets/helix.png" alt="control info" width="450">
+<img src="gym_pybullet_drones/assets/helix.gif" alt="formation flight" width="325"> <img src="gym_pybullet_drones/assets/helix.png" alt="control info" width="425">
 
 ## Installation
 
@@ -39,14 +39,15 @@ cd gym_pybullet_drones/examples/
 python3 downwash.py
 ```
 
-### Reinforcement learning 10'-training example (SB3's PPO)
+### Reinforcement learning examples (SB3's PPO)
 
 ```sh
 cd gym_pybullet_drones/examples/
 python learn.py # task: single drone hover at z == 1.0
+python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 ```
 
-<img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="800">
+<img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="375"> <img src="gym_pybullet_drones/assets/marl.gif" alt="marl example" width="375">
 
 ### Betaflight SITL example (Ubuntu only)
 

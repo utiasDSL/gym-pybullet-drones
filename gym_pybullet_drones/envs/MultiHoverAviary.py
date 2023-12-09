@@ -68,7 +68,6 @@ class MultiHoverAviary(BaseRLAviary):
                          obs=obs,
                          act=act
                          )
-        
         self.TARGET_POS = self.INIT_XYZS + np.array([[0,0,1/(i+1)] for i in range(num_drones)])
 
     ################################################################################
@@ -119,6 +118,12 @@ class MultiHoverAviary(BaseRLAviary):
             Whether the current episode timed out.
 
         """
+        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
+        for i in range(self.NUM_DRONES):
+            if (abs(states[i][0]) > 2.0 or abs(states[i][1]) > 2.0 or states[i][2] > 2.0 # Truncate when a drones is too far away
+             or abs(states[i][7]) > .5 or abs(states[i][8]) > .5 # Truncate when a drone is too tilted
+            ):
+                return True
         if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
             return True
         else:
