@@ -39,7 +39,7 @@ DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
 DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
-DEFAULT_ACT = ActionType('rpm') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
+DEFAULT_ACT = ActionType('one_d_rpm') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
 DEFAULT_AGENTS = 2
 DEFAULT_MA = False
 
@@ -74,7 +74,12 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                 # tensorboard_log=filename+'/tb/',
                 verbose=1)
 
-    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=465 if not multiagent else 920, # reward thresholds for the 3D case, use 474 and 950 for the 1D case
+    #### Target cumulative rewards (problem-dependent) ##########
+    if DEFAULT_ACT == ActionType.ONE_D_RPM:
+        target_reward = 474.1 if not multiagent else 950.
+    else:
+        target_reward = 465. if not multiagent else 920.
+    callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
                                                      verbose=1)
     eval_callback = EvalCallback(eval_env,
                                  callback_on_new_best=callback_on_best,
