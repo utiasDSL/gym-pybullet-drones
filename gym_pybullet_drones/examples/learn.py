@@ -76,9 +76,9 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Target cumulative rewards (problem-dependent) ##########
     if DEFAULT_ACT == ActionType.ONE_D_RPM:
-        target_reward = 474.1 if not multiagent else 950.
+        target_reward = 474.15 if not multiagent else 949.5
     else:
-        target_reward = 465. if not multiagent else 920.
+        target_reward = 467. if not multiagent else 920.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
                                                      verbose=1)
     eval_callback = EvalCallback(eval_env,
@@ -111,9 +111,9 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
     if local:
         input("Press Enter to continue...")
 
-    if os.path.isfile(filename+'/final_model.zip'):
-        path = filename+'/final_model.zip'
-    elif os.path.isfile(filename+'/best_model.zip'):
+    # if os.path.isfile(filename+'/final_model.zip'):
+    #     path = filename+'/final_model.zip'
+    if os.path.isfile(filename+'/best_model.zip'):
         path = filename+'/best_model.zip'
     else:
         print("[ERROR]: no model under the specified path", filename)

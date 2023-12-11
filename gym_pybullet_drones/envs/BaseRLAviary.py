@@ -62,8 +62,8 @@ class BaseRLAviary(BaseAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, waypoint or velocity with PID control; etc.)
 
         """
-        #### Create a buffer for the last 10 actions ###############
-        self.ACTION_BUFFER_SIZE = 10
+        #### Create a buffer for the last .5 sec of actions ########
+        self.ACTION_BUFFER_SIZE = int(ctrl_freq//2)
         self.action_buffer = deque(maxlen=self.ACTION_BUFFER_SIZE)
         ####
         vision_attributes = True if obs == ObservationType.RGB else False
