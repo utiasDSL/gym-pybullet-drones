@@ -859,7 +859,7 @@ class BaseAviary(gym.Env):
         vel = vel + self.PYB_TIMESTEP * no_pybullet_dyn_accs
         rpy_rates = rpy_rates + self.PYB_TIMESTEP * rpy_rates_deriv
         pos = pos + self.PYB_TIMESTEP * vel
-        quat = self._integrateQ(quat, rpy_rates, self.TIMESTEP)
+        quat = self._integrateQ(quat, rpy_rates, self.PYB_TIMESTEP)
         #### Set PyBullet's state ##################################
         p.resetBasePositionAndOrientation(self.DRONE_IDS[nth_drone],
                                           pos,
