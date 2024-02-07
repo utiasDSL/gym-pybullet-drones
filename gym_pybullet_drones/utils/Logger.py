@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+
+import numpy
 from cycler import cycler
 import numpy as np
 import matplotlib.pyplot as plt
@@ -21,7 +23,7 @@ class Logger(object):
                  output_folder: str="results",
                  num_drones: int=1,
                  duration_sec: int=0,
-                 colab: bool=False,
+                 colab: bool=False
                  ):
         """Logger class __init__ method.
 
@@ -202,7 +204,7 @@ class Logger(object):
 
     ################################################################################
     
-    def plot(self, pwm=False):
+    def plot(self, pwm=False, trajs=0):
         """Logs entries for a single simulation step, of a single drone.
 
         Parameters
@@ -373,6 +375,36 @@ class Logger(object):
                             wspace=0.15,
                             hspace=0.0
                             )
+
+        plt.rc('font', size=17)
+        plt.rc('axes', titlesize=17)  # fontsize of the axes title
+        plt.rc('axes', labelsize=17)  # fontsize of the x and y labels
+        plt.rc('legend', fontsize=20)
+        plt.rc('figure', titlesize=1000)
+        plot_fs = 10
+        trajs_s = trajs.sample(plot_fs)
+        tr = trajs_s.r
+
+        fig = plt.figure(figsize=(10, 10))
+        ax = fig.add_subplot(111)
+        ax.set_title('Траектории')
+        plots = []
+        for i in range(trajs.m):
+            plots += ax.plot(tr[0, i, 0], tr[0, i, 1], label=f'Траектория {i}', linewidth=5.0)
+
+        ax.axes
+        ax.set_xlabel('  x, м')
+        ax.set_ylabel('  y, м')
+        tr_min = np.min(tr, axis=(0, 1))
+
+        tr_max = np.max(tr, axis=(0, 1))
+        print(tr_min, tr_max)
+        ax.set(xlim=[tr_min[0], tr_max[0]],
+               ylim=[tr_min[1], tr_max[1]])
+        plt.legend(fontsize=14)
+        for i, plot in enumerate(plots):
+            plot.set_xdata(tr[:trajs_s.time.n, i, 0])
+            plot.set_ydata(tr[:trajs_s.time.n, i, 1])
         if self.COLAB: 
             plt.savefig(os.path.join('results', 'output_figure.png'))
         else:

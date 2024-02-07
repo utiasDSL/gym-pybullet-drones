@@ -53,7 +53,7 @@ class USV_trajectory:
 
       k_a_attr = 0.1
       k_a_rep = 20
-      k_a_diss = 1
+      k_a_diss = 5
       alpha = math.pi / 6
       mass = 200
       l = 2.5
@@ -110,8 +110,8 @@ class USV_trajectory:
 
 
   def sample(self, fs):
-      if self.time.fs%fs:
-        raise ValueError(f"'fs': {fs} is not a divisor of 'self.time.fs': {self.time.fs}")
+      #if self.time.fs%fs:
+        #raise ValueError(f"'fs': {fs} is not a divisor of 'self.time.fs': {self.time.fs}")
       step = self.time.fs//fs
       tr_s = USV_trajectory(time=self.time.sample(fs), m = self.m, gen = False)
       tr_s.r = self.r[::step]
