@@ -773,7 +773,7 @@ class BaseAviary(gym.Env):
         base_rot = np.array(p.getMatrixFromQuaternion(self.quat[nth_drone, :])).reshape(3, 3)
         #### Simple draft model applied to the base/center of mass #
         drag_factors = -1 * self.DRAG_COEFF * np.sum(np.array(2*np.pi*rpm/60))
-        drag = np.dot(base_rot, drag_factors*np.array(self.vel[nth_drone, :]))
+        drag = np.dot(base_rot.T, drag_factors*np.array(self.vel[nth_drone, :]))
         p.applyExternalForce(self.DRONE_IDS[nth_drone],
                              4,
                              forceObj=drag,
