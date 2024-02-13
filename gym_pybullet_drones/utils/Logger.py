@@ -405,7 +405,20 @@ class Logger(object):
         for i, plot in enumerate(plots):
             plot.set_xdata(tr[:trajs_s.time.n, i, 0])
             plot.set_ydata(tr[:trajs_s.time.n, i, 1])
+
+        UAV_coord = np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]])
+        USV_coord = trajs_s.xyz
+        val = np.sum(np.min(np.linalg.norm(UAV_coord - USV_coord, axis=1), axis=1) ** 2)
+
+        plt.figure(figsize=(10, 10))
+        plt.plot(val, trajs_s.time.n)
+        plt.title("угол ориентации")
+        plt.grid()
+
         if self.COLAB: 
             plt.savefig(os.path.join('results', 'output_figure.png'))
         else:
             plt.show()
+
+        #val = np.sum(np.min(np.linalg.norm(x[:,None]-y[None], axis=1), axis=1)**2)
+
