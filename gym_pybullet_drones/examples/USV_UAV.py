@@ -39,8 +39,8 @@ DEFAULT_RECORD_VIDEO = False
 DEFAULT_PLOT = True
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
-DEFAULT_SIMULATION_FREQ_HZ = 240
-DEFAULT_CONTROL_FREQ_HZ = 48
+DEFAULT_SIMULATION_FREQ_HZ = 300
+DEFAULT_CONTROL_FREQ_HZ = 300
 DEFAULT_DURATION_SEC = 20
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
@@ -102,8 +102,8 @@ def run(
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui
                          )
-    time_data = TimeData(duration_sec, control_freq_hz)
-    trajs = USV_trajectory(time_data, m=4, r0=r1)
+    time_data = TimeData(duration_sec, simulation_freq_hz)
+
 
     #### Obtain the PyBullet Client ID from the environment ####
     PYB_CLIENT = env.getPyBulletClient()
@@ -113,7 +113,7 @@ def run(
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
     wp_counters = np.array([0 for i in range(4)])
-
+    trajs = USV_trajectory(time_data, m=4, r0=r1)
     #### Initialize the velocity target ########################
     TARGET_VEL = np.zeros((1,NUM_WP,4))
     for i in range(NUM_WP):

@@ -110,6 +110,7 @@ class Logger(object):
             self.timestamps = np.concatenate((self.timestamps, np.zeros((self.NUM_DRONES, 1))), axis=1)
             self.states = np.concatenate((self.states, np.zeros((self.NUM_DRONES, 16, 1))), axis=2)
             self.controls = np.concatenate((self.controls, np.zeros((self.NUM_DRONES, 12, 1))), axis=2)
+            #self.coord = np.concatenate((self.coord, np.zeros((self.NUM_DRONES, 16, 1))), axis=2)
         #### Advance a counter is the matrices have overgrown it ###
         elif not self.PREALLOCATED_ARRAYS and self.timestamps.shape[1] > current_counter:
             current_counter = self.timestamps.shape[1]-1
@@ -117,6 +118,7 @@ class Logger(object):
         self.timestamps[drone, current_counter] = timestamp
         #### Re-order the kinematic obs (of most Aviaries) #########
         self.states[drone, :, current_counter] = np.hstack([state[0:3], state[10:13], state[7:10], state[13:20]])
+        #self.coord[current_counter, drone, :] = np.hstack([state[0:3], state[10:13], state[7:10], state[13:20]])
         self.controls[drone, :, current_counter] = control
         self.counters[drone] = current_counter + 1
 
@@ -214,7 +216,7 @@ class Logger(object):
 
         """
         #### Loop over colors and line styles ######################
-        plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) + cycler('linestyle', ['-', '--', ':', '-.'])))
+        #plt.rc('axes', prop_cycle=(cycler('color', ['r', 'g', 'b', 'y']) + cycler('linestyle', ['-', '--', ':', '-.'])))
         fig, axs = plt.subplots(10, 2)
         t = np.arange(0, self.timestamps.shape[1]/self.LOGGING_FREQ_HZ, 1/self.LOGGING_FREQ_HZ)
 
@@ -381,7 +383,7 @@ class Logger(object):
         plt.rc('axes', labelsize=17)  # fontsize of the x and y labels
         plt.rc('legend', fontsize=20)
         plt.rc('figure', titlesize=1000)
-        plot_fs = 10
+        plot_fs = 300
         trajs_s = trajs.sample(plot_fs)
         tr = trajs_s.r
 
@@ -396,7 +398,7 @@ class Logger(object):
         ax.set_xlabel('  x, м')
         ax.set_ylabel('  y, м')
         tr_min = np.min(tr, axis=(0, 1))
-
+        ax.scatter(self.states[:, 0, :], self.states[:, 1, :], c='#ff7f0e')
         tr_max = np.max(tr, axis=(0, 1))
         print(tr_min, tr_max)
         ax.set(xlim=[tr_min[0], tr_max[0]],
@@ -406,13 +408,25 @@ class Logger(object):
             plot.set_xdata(tr[:trajs_s.time.n, i, 0])
             plot.set_ydata(tr[:trajs_s.time.n, i, 1])
 
-        UAV_coord = np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]])
+        UAV_coord = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2,1,0))
         USV_coord = trajs_s.xyz
-        val = np.sum(np.min(np.linalg.norm(UAV_coord - USV_coord, axis=1), axis=1) ** 2)
+        print(UAV_coord.shape, USV_coord.shape)
+        new_x = UAV_coord[:, :, None]
+        new_y = USV_coord[:, None]
+        print(new_x.shape, new_y.shape)
+        r = new_x - new_y
+        print(r.shape)
+        norm = np.linalg.norm(new_x-new_y, axis=-1)
+        print(norm.shape)
+        minimum = np.min(norm, axis=1)
+        print(minimum.shape)
+        val = np.sum(minimum**2, axis=1)
+
+        #val = np.sum(np.min(np.linalg.norm(UAV_coord[:, :, None] - USV_coord[:, None], axis=-1), axis=1)**2, axis=1)
 
         plt.figure(figsize=(10, 10))
-        plt.plot(val, trajs_s.time.n)
-        plt.title("угол ориентации")
+        plt.plot(val)
+        plt.title("Функция качества связи")
         plt.grid()
 
         if self.COLAB: 

@@ -27,7 +27,7 @@ class USV_trajectory:
                gen=True):
     self.time = time
     self.m = m
-    self.xyz = np.empty((3, m, time.n))
+    self.xyz = np.empty((time.n, m, 3))
     self.r = np.empty((time.n, m, 2))
     self.v = np.empty((time.n, m, 2))
     self.a = np.empty((time.n, m, 2))
@@ -36,7 +36,7 @@ class USV_trajectory:
     self.ε = np.empty((time.n, m, 1))
     self.anglr = np.empty((time.n, m))
     self.total_force = np.empty((time.n, m, 2))
-    self.xyz[0] = xyz0 if xyz0 is not None else np.zeros((3, m))
+    self.xyz[0] = xyz0 if xyz0 is not None else np.zeros((m, 3))
     self.r[0] = r0 if r0 is not None else np.zeros((m, 2))
     self.v[0] = v0 if v0 is not None else np.zeros((m, 2))
     self.a[0] = a0 if a0 is not None else np.zeros((m, 2))
@@ -115,13 +115,13 @@ class USV_trajectory:
             self.a[i, j] = self.total_force[i, j] / mass + a_diss * deltafi
             self.v[i, j] = self.v[i-1, j] + self.a[i, j] * self.time.dt
             self.r[i, j] = self.r[i-1, j] + self.v[i, j] * self.time.dt
-            self.xyz[j, i] = np.array([self.r[i, j, 0], self.r[i, j, 1], 0])
+            self.xyz[i, j] = np.array([self.r[i, j, 0], self.r[i, j, 1], 0])
 
 
 
   def sample(self, fs):
-      #if self.time.fs%fs:
-        #raise ValueError(f"'fs': {fs} is not a divisor of 'self.time.fs': {self.time.fs}")
+      if self.time.fs%fs:
+        raise ValueError(f"'fs': {fs} is not a divisor of 'self.time.fs': {self.time.fs}")
       step = self.time.fs//fs
       tr_s = USV_trajectory(time=self.time.sample(fs), m=self.m, gen=False)
       tr_s.r = self.r[::step]
