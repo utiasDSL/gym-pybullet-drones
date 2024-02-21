@@ -41,7 +41,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 300
 DEFAULT_CONTROL_FREQ_HZ = 300
-DEFAULT_DURATION_SEC = 20
+DEFAULT_DURATION_SEC = 40
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
@@ -87,7 +87,7 @@ def run(
                           [0, 0, np.pi/3]
                           ])
     PHY = Physics.PYB
-    r1 = np.array([[0, 0], [0, 50], [0, 100], [0, 150]])
+    r1 = np.array([[0, 0], [0, 25], [0, 50], [0, 75]])
     #### Create the environment ################################
     env = VelocityAviary(drone_model=drone,
                          num_drones=1,
@@ -129,7 +129,7 @@ def run(
                     )
 
     #### Run the simulation ####################################
-    action = np.zeros((1,4))
+    action = np.zeros((1, 4))
     START = time.time()
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
 
@@ -151,7 +151,7 @@ def run(
         for j in range(1):
             logger.log(drone=j,
                        timestamp=i/env.CTRL_FREQ,
-                       state= obs[j],
+                       state=obs[j],
                        control=np.hstack([TARGET_VEL[j, wp_counters[j], 0:3], np.zeros(9)])
                        )
 

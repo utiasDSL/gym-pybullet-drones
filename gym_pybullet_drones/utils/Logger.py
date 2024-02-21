@@ -5,8 +5,11 @@ import numpy
 from cycler import cycler
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import minimize
 
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+#from gym_pybullet_drones.examples.gradient_descent import gradient_descent
+
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
 class Logger(object):
     """A class for logging and visualization.
@@ -377,15 +380,49 @@ class Logger(object):
                             wspace=0.15,
                             hspace=0.0
                             )
+        plot_fs = 300
+        trajs_s = trajs.sample(plot_fs)
+        tr = trajs_s.r
+
+        UAV_coord = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2, 1, 0))
+        USV_coord = trajs_s.xyz
+        val = np.sum(np.min(np.linalg.norm(UAV_coord[:, :, None] - USV_coord[:, None], axis=-1), axis=1)**2, axis=1)
+
+        def loss_function(x, USV_coord):
+            return np.sum(np.min(np.linalg.norm(x[:, :, None] - USV_coord[:, None], axis=-1), axis=1) ** 2, axis=1)
+
+        def gradient(x, USV_coord):
+            distances = np.linalg.norm(x[:, :, None] - USV_coord[:, None], axis=-1)
+            #print(distances.shape)
+            min_distances = np.min(distances, axis=1)
+            #print("min", min_distances.shape)
+            diff = x[:, :, None] - USV_coord[:, None]
+            #print("diff", diff.shape)
+            f = np.transpose(np.tile(distances[:, :, None], (3, 1)).T, (3, 2, 0, 1))
+            #print("f", f.shape)
+            min_f = np.transpose(np.tile(min_distances[:, None, None], (3, 1)).T, (3, 2, 0, 1))
+            #print(min_distances[:, None, None].shape)
+            grad = 2 * np.sum((diff / f) * min_f, axis=2)
+            #print(grad.shape)
+            return grad
+
+        def gradient_descent(x, USV_coord, learning_rate, num_iterations):
+            for i in range(num_iterations):
+                grad = gradient(x, USV_coord)
+                x -= learning_rate * grad
+            return x
+
+        learning_rate = 0.01
+        num_iterations = 100
+        optimized_x = gradient_descent(UAV_coord, USV_coord, learning_rate, num_iterations)
+
 
         plt.rc('font', size=17)
         plt.rc('axes', titlesize=17)  # fontsize of the axes title
         plt.rc('axes', labelsize=17)  # fontsize of the x and y labels
         plt.rc('legend', fontsize=20)
         plt.rc('figure', titlesize=1000)
-        plot_fs = 300
-        trajs_s = trajs.sample(plot_fs)
-        tr = trajs_s.r
+
 
         fig = plt.figure(figsize=(10, 10))
         ax = fig.add_subplot(111)
@@ -398,7 +435,6 @@ class Logger(object):
         ax.set_xlabel('  x, м')
         ax.set_ylabel('  y, м')
         tr_min = np.min(tr, axis=(0, 1))
-        ax.scatter(self.states[:, 0, :], self.states[:, 1, :], c='#ff7f0e')
         tr_max = np.max(tr, axis=(0, 1))
         print(tr_min, tr_max)
         ax.set(xlim=[tr_min[0], tr_max[0]],
@@ -407,24 +443,11 @@ class Logger(object):
         for i, plot in enumerate(plots):
             plot.set_xdata(tr[:trajs_s.time.n, i, 0])
             plot.set_ydata(tr[:trajs_s.time.n, i, 1])
+        plt.plot(optimized_x[:, :, 0], optimized_x[:, :, 1], 'k*')
 
-        UAV_coord = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2,1,0))
-        USV_coord = trajs_s.xyz
-        print(UAV_coord.shape, USV_coord.shape)
-        new_x = UAV_coord[:, :, None]
-        new_y = USV_coord[:, None]
-        print(new_x.shape, new_y.shape)
-        r = new_x - new_y
-        print(r.shape)
-        norm = np.linalg.norm(new_x-new_y, axis=-1)
-        print(norm.shape)
-        minimum = np.min(norm, axis=1)
-        print(minimum.shape)
-        val = np.sum(minimum**2, axis=1)
-
-        #val = np.sum(np.min(np.linalg.norm(UAV_coord[:, :, None] - USV_coord[:, None], axis=-1), axis=1)**2, axis=1)
 
         plt.figure(figsize=(10, 10))
+        plt.plot(loss_function(optimized_x, USV_coord))
         plt.plot(val)
         plt.title("Функция качества связи")
         plt.grid()
@@ -433,6 +456,4 @@ class Logger(object):
             plt.savefig(os.path.join('results', 'output_figure.png'))
         else:
             plt.show()
-
-        #val = np.sum(np.min(np.linalg.norm(x[:,None]-y[None], axis=1), axis=1)**2)
 
