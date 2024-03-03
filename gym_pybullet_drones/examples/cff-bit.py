@@ -17,8 +17,8 @@ import random
 import numpy as np
 import pybullet as p
 import matplotlib.pyplot as plt
-
 import cffirmware
+from scipy.spatial.transform import Rotation as R
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
@@ -34,9 +34,9 @@ DEFAULT_RECORD_VISION = False
 DEFAULT_PLOT = True
 DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = True
-DEFAULT_SIMULATION_FREQ_HZ = 240
-DEFAULT_CONTROL_FREQ_HZ = 48
-DEFAULT_DURATION_SEC = 12
+DEFAULT_SIMULATION_FREQ_HZ = 500
+DEFAULT_CONTROL_FREQ_HZ = 500
+DEFAULT_DURATION_SEC = 14
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
@@ -56,22 +56,18 @@ def run(
         colab=DEFAULT_COLAB
         ):
     #### Initialize the simulation #############################
-    H = .1
-    H_STEP = .05
-    R = .3
-    #INIT_XYZS = np.array([[R*np.cos((i/6)*2*np.pi+np.pi/2), R*np.sin((i/6)*2*np.pi+np.pi/2)-R, H+i*H_STEP] for i in range(num_drones)])
-    INIT_XYZS = np.array([[.5*i, .5*i, .1] for i in range(num_drones)])
-    INIT_RPYS = np.array([[0, 0,  i * (np.pi/2)/num_drones] for i in range(num_drones)])
+    INIT_XYZS = np.array([[.5*i, .5*i, .05] for i in range(num_drones)])
+    INIT_RPYS = np.array([[0, 0,  0] for i in range(num_drones)])
 
     #### Initialize a circular trajectory ######################
-    PERIOD = 10
-    NUM_WP = control_freq_hz*PERIOD
-    TARGET_POS = np.zeros((NUM_WP,3))
-    for i in range(NUM_WP):
-        TARGET_POS[i, :] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0, 0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0, 1], 0
-    wp_counters = np.array([int((i*NUM_WP/6)%NUM_WP) for i in range(num_drones)])
+    # PERIOD = 10
+    # NUM_WP = control_freq_hz*PERIOD
+    # TARGET_POS = np.zeros((NUM_WP,3))
+    # for i in range(NUM_WP):
+    #     TARGET_POS[i, :] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0, 0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0, 1], 0
+    # wp_counters = np.array([int((i*NUM_WP/6)%NUM_WP) for i in range(num_drones)])
 
-    delta = 75 # 3s @ 25hz control loop 
+    delta = 2*DEFAULT_CONTROL_FREQ_HZ
     trajectory = [[0, 0, 0] for i in range(delta)] + \
         [[0, 0, i/delta] for i in range(delta)] + \
         [[i/delta, 0, 1] for i in range(delta)] + \
@@ -79,28 +75,6 @@ def run(
         [[1-i/delta, 1, 1] for i in range(delta)] + \
         [[0, 1-i/delta, 1] for i in range(delta)] + \
         [[0, 0, 1-i/delta] for i in range(delta)]
-
-
-    #### Debug trajectory ######################################
-    #### Uncomment alt. target_pos in .computeControlFromState()
-    # INIT_XYZS = np.array([[.3 * i, 0, .1] for i in range(num_drones)])
-    # INIT_RPYS = np.array([[0, 0,  i * (np.pi/3)/num_drones] for i in range(num_drones)])
-    # NUM_WP = control_freq_hz*15
-    # TARGET_POS = np.zeros((NUM_WP,3))
-    # for i in range(NUM_WP):
-    #     if i < NUM_WP/6:
-    #         TARGET_POS[i, :] = (i*6)/NUM_WP, 0, 0.5*(i*6)/NUM_WP
-    #     elif i < 2 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 1 - ((i-NUM_WP/6)*6)/NUM_WP, 0, 0.5 - 0.5*((i-NUM_WP/6)*6)/NUM_WP
-    #     elif i < 3 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 0, ((i-2*NUM_WP/6)*6)/NUM_WP, 0.5*((i-2*NUM_WP/6)*6)/NUM_WP
-    #     elif i < 4 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 0, 1 - ((i-3*NUM_WP/6)*6)/NUM_WP, 0.5 - 0.5*((i-3*NUM_WP/6)*6)/NUM_WP
-    #     elif i < 5 * NUM_WP/6:
-    #         TARGET_POS[i, :] = ((i-4*NUM_WP/6)*6)/NUM_WP, ((i-4*NUM_WP/6)*6)/NUM_WP, 0.5*((i-4*NUM_WP/6)*6)/NUM_WP
-    #     elif i < 6 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 1 - ((i-5*NUM_WP/6)*6)/NUM_WP, 1 - ((i-5*NUM_WP/6)*6)/NUM_WP, 0.5 - 0.5*((i-5*NUM_WP/6)*6)/NUM_WP
-    # wp_counters = np.array([0 for i in range(num_drones)])
 
     #### Create the environment ################################
     env = CtrlAviary(drone_model=drone,
@@ -137,6 +111,21 @@ def run(
     #### Run the simulation ####################################
     action = np.zeros((num_drones,4))
     START = time.time()
+
+    pid_rpm1 = []
+    pid_rpm2 = []
+    pid_rpm3 = []
+    pid_rpm4 = []
+
+    cff_rpm1 = []
+    cff_rpm2 = []
+    cff_rpm3 = []
+    cff_rpm4 = []
+
+    prev_rpy = [0, 0, 0]
+    prev_vel = [0, 0, 0]
+
+
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
 
         #### Make it rain rubber ducks #############################
@@ -155,7 +144,7 @@ def run(
                 acc = np.zeros(3)
                 yaw = i*np.pi/delta/2
                 rpy_rate = np.zeros(3)
-                print(pos)
+                # print(pos)
             except:
                 break
 
@@ -167,40 +156,123 @@ def run(
                                                         target_rpy=INIT_RPYS[j, :]
                                                         )
 
+
+
             state = cffirmware.state_t()
-            state.attitude.roll = 0
-            state.attitude.pitch = -0 # WARNING: This needs to be negated
-            state.attitude.yaw = 0
-            state.position.x = obs[j][0]
-            state.position.y = obs[j][1]
-            state.position.z = obs[j][2]
-            state.velocity.x = obs[j][10]
-            state.velocity.y = obs[j][11]
-            state.velocity.z = obs[j][12]
+
+            cur_pos=np.array([obs[j][0], obs[j][1], obs[j][2]]) # global coord, m
+
+            state.position.x = cur_pos[0]
+            state.position.y = cur_pos[1]
+            state.position.z = cur_pos[2]
+
+            cur_vel=np.array([obs[j][10], obs[j][11], obs[j][12]]) # global coord, m/s
+
+            state.velocity.x = cur_vel[0]
+            state.velocity.y = cur_vel[1]
+            state.velocity.z = cur_vel[2]
+
+            cur_acc = (cur_vel - prev_vel) / env.CTRL_FREQ / 9.8 + np.array([0, 0, 1]) # global coord
+            prev_vel = cur_vel
+
+            state.acc.x = cur_acc[0]
+            state.acc.y = cur_acc[1]
+            state.acc.z = cur_acc[2]
+
+            cur_rpy = np.array([obs[j][7], obs[j][8], obs[j][9]]) # body coord, rad 
+
+            # state.attitude.roll = cur_rpy[0]
+            # state.attitude.pitch = -cur_rpy[1] # WARNING: This needs to be negated
+            # state.attitude.yaw = cur_rpy[2]
+
+            qx, qy, qz, qw = _get_quaternion_from_euler(cur_rpy[0], cur_rpy[1], cur_rpy[2]) 
+
+            state.attitudeQuaternion.x = qx
+            state.attitudeQuaternion.y = qy
+            state.attitudeQuaternion.z = qz
+            state.attitudeQuaternion.w = qw
+
+            # state.timestamp = int(i / env.CTRL_FREQ * 1e3)
+
+
+
+
+
+
 
             sensors = cffirmware.sensorData_t()
-            sensors.gyro.x = obs[j][7]
-            sensors.gyro.y = obs[j][8]
-            sensors.gyro.z = obs[j][9]
+
+            body_rot = R.from_euler('XYZ', cur_rpy).inv()
+
+            cur_rotation_rates = (cur_rpy - prev_rpy) / env.CTRL_FREQ # body coord, rad/s
+            prev_rpy = cur_rpy
+
+            s_gy = cur_rotation_rates * 180/math.pi
+            s_acc = body_rot.apply(cur_acc)
+
+            sensors.gyro.x = s_gy[0]
+            sensors.gyro.y = s_gy[1]
+            sensors.gyro.z = s_gy[2]
+            sensors.acc.x = s_acc[0]
+            sensors.acc.y = s_acc[1]
+            sensors.acc.z = s_acc[2]
+
+
 
             setpoint = cffirmware.setpoint_t()
-            setpoint.mode.z = cffirmware.modeAbs
-            setpoint.position.z = INIT_XYZS[j, 2]
-            setpoint.mode.x = cffirmware.modeAbs
-            setpoint.velocity.x = TARGET_POS[wp_counters[j], 0]
-            setpoint.mode.y = cffirmware.modeAbs
-            setpoint.velocity.y = TARGET_POS[wp_counters[j], 1]
-            setpoint.mode.yaw = cffirmware.modeVelocity
-            setpoint.attitudeRate.yaw = 0
 
-            control = cffirmware.control_t()
-            step = i
-            cffirmware.controllerMellinger(cff_controller, control, setpoint, sensors, state, step)
-            # assert control.controlMode == cffirmware.controlModeLegacy
+            setpoint.position.x = pos[0]
+            setpoint.position.y = pos[1]
+            setpoint.position.z = pos[2]
+            setpoint.velocity.x = vel[0]
+            setpoint.velocity.y = vel[1]
+            setpoint.velocity.z = vel[2]
+            setpoint.acceleration.x = acc[0]
+            setpoint.acceleration.y = acc[1]
+            setpoint.acceleration.z = acc[2]
+
+            setpoint.attitudeRate.roll = rpy_rate[0] * 180/np.pi
+            setpoint.attitudeRate.pitch = rpy_rate[1] * 180/np.pi
+            setpoint.attitudeRate.yaw = rpy_rate[2] * 180/np.pi
+
+            # setpoint.timestamp = int(i/env.CTRL_FREQ*1000) # TODO: This may end up skipping control loops 
+
+            quat = _get_quaternion_from_euler(0, 0, yaw)
+            setpoint.attitudeQuaternion.x = quat[0]
+            setpoint.attitudeQuaternion.y = quat[1]
+            setpoint.attitudeQuaternion.z = quat[2]
+            setpoint.attitudeQuaternion.w = quat[3]
+
+            setpoint.mode.x = cffirmware.modeAbs
+            setpoint.mode.y = cffirmware.modeAbs
+            setpoint.mode.z = cffirmware.modeAbs
+
+            setpoint.mode.quat = cffirmware.modeAbs
+            setpoint.mode.roll = cffirmware.modeDisable
+            setpoint.mode.pitch = cffirmware.modeDisable
+            setpoint.mode.yaw = cffirmware.modeDisable
+
+
+
+
+            control_t = cffirmware.control_t()
+            step = 0
+            cffirmware.controllerMellinger(cff_controller, control_t, setpoint, sensors, state, step)
+            assert control_t.controlMode == cffirmware.controlModeLegacy
             # print(control.thrust, control.roll, control.pitch, control.yaw)
 
+            r = control_t.roll / 2
+            p = control_t.pitch / 2
+            motor_pwms = []
+            motor_pwms += [_motorsGetPWM(_limitThrust(control_t.thrust - r + p + control_t.yaw))]
+            motor_pwms += [_motorsGetPWM(_limitThrust(control_t.thrust - r - p - control_t.yaw))]
+            motor_pwms += [_motorsGetPWM(_limitThrust(control_t.thrust + r - p + control_t.yaw))]
+            motor_pwms += [_motorsGetPWM(_limitThrust(control_t.thrust + r + p - control_t.yaw))]
+
             actual = cffirmware.motors_thrust_uncapped_t()
-            cffirmware.powerDistribution(control, actual)
+            cffirmware.powerDistribution(control_t, actual)
+            # actual = cffirmware.motors_thrust_pwm_t()
+            # isCapped = cffirmware.powerDistributionCap(input, actual)
             # print(actual.motors.m1, actual.motors.m2, actual.motors.m3, actual.motors.m4)
             PWM2RPM_SCALE = 0.2685
             PWM2RPM_CONST = 4070.3
@@ -208,20 +280,33 @@ def run(
             MAX_PWM = 65535
             new_action = PWM2RPM_SCALE * np.clip(np.array([actual.motors.m1, actual.motors.m2, actual.motors.m3, actual.motors.m4]), MIN_PWM, MAX_PWM) + PWM2RPM_CONST
             print(i, new_action)
+            print(i, action[j, :])
+            print()
 
-            # action[j, :] = [actual.motors.m1, actual.motors.m2, actual.motors.m3, actual.motors.m4]
-            # action[j, :] = new_action
+            # compare plot
+            pid_rpm1.append(action[j, 0])
+            pid_rpm2.append(action[j, 1])
+            pid_rpm3.append(action[j, 2])
+            pid_rpm4.append(action[j, 3])
+
+            cff_rpm1.append(new_action[0])
+            cff_rpm2.append(new_action[1])
+            cff_rpm3.append(new_action[2])
+            cff_rpm4.append(new_action[3])
+
+            action[j, :] = [new_action[1], new_action[2], new_action[3], new_action[0]] 
+            action[j, :] = motor_pwms
 
         #### Go to the next way point and loop #####################
-        for j in range(num_drones):
-            wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
+        # for j in range(num_drones):
+        #     wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
         for j in range(num_drones):
             logger.log(drone=j,
                        timestamp=i/env.CTRL_FREQ,
                        state=obs[j],
-                       control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
+                       # control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
                        # control=np.hstack([INIT_XYZS[j, :]+TARGET_POS[wp_counters[j], :], INIT_RPYS[j, :], np.zeros(6)])
                        )
 
@@ -235,6 +320,18 @@ def run(
     #### Close the environment #################################
     env.close()
 
+    fig, axs = plt.subplots(4, 2)
+    axs[0, 0].plot(pid_rpm1)
+    axs[1, 0].plot(pid_rpm2)
+    axs[2, 0].plot(pid_rpm3)
+    axs[3, 0].plot(pid_rpm4)
+
+    axs[0, 1].plot(cff_rpm1)
+    axs[1, 1].plot(cff_rpm2)
+    axs[2, 1].plot(cff_rpm3)
+    axs[3, 1].plot(cff_rpm4)
+    plt.show()
+
     #### Save the simulation results ###########################
     logger.save()
     logger.save_as_csv("pid") # Optional CSV save
@@ -242,6 +339,41 @@ def run(
     #### Plot the simulation results ###########################
     if plot:
         logger.plot()
+
+def _get_quaternion_from_euler(roll, pitch, yaw):
+    """Convert an Euler angle to a quaternion.
+    
+    Args:
+        roll (float): The roll (rotation around x-axis) angle in radians.
+        pitch (float): The pitch (rotation around y-axis) angle in radians.
+        yaw (float): The yaw (rotation around z-axis) angle in radians.
+    
+    Returns:
+        list: The orientation in quaternion [x,y,z,w] format
+    """
+    qx = np.sin(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) - np.cos(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    qy = np.cos(roll/2) * np.sin(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.cos(pitch/2) * np.sin(yaw/2)
+    qz = np.cos(roll/2) * np.cos(pitch/2) * np.sin(yaw/2) - np.sin(roll/2) * np.sin(pitch/2) * np.cos(yaw/2)
+    qw = np.cos(roll/2) * np.cos(pitch/2) * np.cos(yaw/2) + np.sin(roll/2) * np.sin(pitch/2) * np.sin(yaw/2)
+    
+    return [qx, qy, qz, qw]
+
+MAX_PWM = 65535
+SUPPLY_VOLTAGE = 3
+def _motorsGetPWM(thrust):
+    thrust = thrust / 65536 * 60
+    volts = -0.0006239 * thrust**2 + 0.088 * thrust
+    percentage = min(1, volts / SUPPLY_VOLTAGE)
+    ratio = percentage * MAX_PWM
+
+    return ratio
+
+def _limitThrust(val):
+    if val > MAX_PWM:
+        return MAX_PWM
+    elif val < 0:
+        return 0
+    return val
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
