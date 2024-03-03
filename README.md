@@ -49,6 +49,35 @@ python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 
 <img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="375"> <img src="gym_pybullet_drones/assets/marl.gif" alt="marl example" width="375">
 
+### utiasDSL `pycffirmware` Python Bindings example (multiplatform, single-drone)
+
+Install [`pycffirmware`](https://github.com/utiasDSL/pycffirmware?tab=readme-ov-file#installation) for Ubuntu, macOS, or Windows
+
+```sh
+cd gym_pybullet_drones/examples/
+python3 cff-dsl.py
+```
+
+### Bitcraze Python bindings example (Ubuntu only, multi-drone)
+
+```sh
+sudo apt update
+sudo apt -y install swig
+sudo apt-get install make gcc-arm-none-eabi
+git clone --recursive https://github.com/bitcraze/crazyflie-firmware.git
+cd crazyflie-firmware/
+make cf2_defconfig
+make -j 12
+make bindings_python
+cd build/
+python3 setup.py install --user
+```
+
+```sh
+cd gym_pybullet_drones/examples/
+python3 cff-bit.py
+```
+
 ### Betaflight SITL example (Ubuntu only)
 
 ```sh
