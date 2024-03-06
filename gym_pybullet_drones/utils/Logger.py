@@ -383,7 +383,6 @@ class Logger(object):
         plot_fs = 300
         trajs_s = trajs.sample(plot_fs)
         tr = trajs_s.r
-
         UAV_coord = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2, 1, 0))
         USV_coord = trajs_s.xyz
         val = np.sum(np.min(np.linalg.norm(UAV_coord[:, :, None] - USV_coord[:, None], axis=-1), axis=1)**2, axis=1)
@@ -393,22 +392,17 @@ class Logger(object):
 
         def gradient(x, USV_coord):
             distances = np.linalg.norm(x[:, :, None] - USV_coord[:, None], axis=-1)
-            #print(distances.shape)
             min_distances = np.min(distances, axis=1)
-            #print("min", min_distances.shape)
             diff = x[:, :, None] - USV_coord[:, None]
-            #print("diff", diff.shape)
             f = np.transpose(np.tile(distances[:, :, None], (3, 1)).T, (3, 2, 0, 1))
-            #print("f", f.shape)
             min_f = np.transpose(np.tile(min_distances[:, None, None], (3, 1)).T, (3, 2, 0, 1))
-            #print(min_distances[:, None, None].shape)
             grad = 2 * np.sum((diff / f) * min_f, axis=2)
-            #print(grad.shape)
             return grad
 
         def gradient_descent(x, USV_coord, learning_rate, num_iterations):
             for i in range(num_iterations):
                 grad = gradient(x, USV_coord)
+                #grad = np.gradient(loss_function(x, USV_coord), axis=0)
                 x -= learning_rate * grad
             return x
 
@@ -443,7 +437,9 @@ class Logger(object):
         for i, plot in enumerate(plots):
             plot.set_xdata(tr[:trajs_s.time.n, i, 0])
             plot.set_ydata(tr[:trajs_s.time.n, i, 1])
-        plt.plot(optimized_x[:, :, 0], optimized_x[:, :, 1], 'k*')
+        for i in range(2):
+            plt.plot(self.states[i, 0, :], self.states[i, 1, :])
+
 
 
         plt.figure(figsize=(10, 10))

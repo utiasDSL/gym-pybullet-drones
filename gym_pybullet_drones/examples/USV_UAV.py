@@ -79,18 +79,19 @@ def run(
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
-                          #[ 0, 0, .1],
-                          [.3, 0, 2]
+                          [0, 30, 10],
+                          [0, 0, 10]
                           ])
     INIT_RPYS = np.array([
-                          #[0, 0, 0],
+                          [0, 0, 0],
                           [0, 0, np.pi/3]
                           ])
-    PHY = Physics.PYB
-    r1 = np.array([[0, 0], [0, 25], [0, 50], [0, 75]])
+
+    r1 = np.array([[0, 0], [0, 10], [0, 20], [0, 30]])
+
     #### Create the environment ################################
     env = VelocityAviary(drone_model=drone,
-                         num_drones=1,
+                         num_drones=2,
                          initial_xyzs=INIT_XYZS,
                          initial_rpys=INIT_RPYS,
                          physics=Physics.PYB,
@@ -102,53 +103,74 @@ def run(
                          obstacles=obstacles,
                          user_debug_gui=user_debug_gui
                          )
-    time_data = TimeData(duration_sec, simulation_freq_hz)
-
-
-    #### Obtain the PyBullet Client ID from the environment ####
-    PYB_CLIENT = env.getPyBulletClient()
-    DRONE_IDS = env.getDroneIds()
 
     #### Compute number of control steps in the simlation ######
+    time_data = TimeData(duration_sec, simulation_freq_hz)
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
     wp_counters = np.array([0 for i in range(4)])
     trajs = USV_trajectory(time_data, m=4, r0=r1)
-    #### Initialize the velocity target ########################
-    TARGET_VEL = np.zeros((1,NUM_WP,4))
-    for i in range(NUM_WP):
-        TARGET_VEL[0, i, :] = [0, 0, 2, 0]#if i < (NUM_WP/8) else [0.5, -1, 0, 0.99]
-        #TARGET_VEL[1, i, :] = [0, 0, 5, 0] #if i < (NUM_WP/8+NUM_WP/6) else [0, -1, 0, 0.99]
+    learning_rate = 0.01
+    #num_iterations = 100
 
+    #### Initialize the velocity target ############
+    TARGET_VEL = np.zeros((2, NUM_WP, 4))
+
+    def loss_function(x, usv_coord):
+        return np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
+
+    def gradient(x, usv_coord):
+        distances = np.linalg.norm(x[:, None] - usv_coord[None], axis=-1)
+        min_distances = np.min(distances, axis=1)
+        diff = x[:, None] - usv_coord[None]
+        f = np.tile(distances[:, :, None], (1, 3))
+        min_f = np.tile(min_distances[:, None, None], (4, 3))
+        grad = 2 * np.sum((diff / f) * min_f, axis=1)
+
+        return grad
+
+    def gradient_descent(x, usv_coord, learning_rate):
+        grad = gradient(x, usv_coord)
+        #val = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
+        #grad = np.gradient(val, )
+        #print(grad)
+        x -= learning_rate * grad
+        return x
 
     #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=control_freq_hz,
-                    num_drones=1,
+                    num_drones=2,
                     output_folder=output_folder,
                     colab=colab
                     )
 
     #### Run the simulation ####################################
-    action = np.zeros((1, 4))
+    action = np.zeros((2, 4))
     START = time.time()
+    plot_fs = 300
+    trajs_s = trajs.sample(plot_fs)
+    usv_coord = trajs_s.xyz
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
-
-        ############################################################
-        # for j in range(3): env._showDroneLocalAxes(j)
 
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
+        uav_coord = np.transpose(np.array([obs[:, 0], obs[:, 1], obs[:, 2]]), (1, 0))
+        optimized_x = gradient_descent(uav_coord, usv_coord[i, :, :], learning_rate)
 
         #### Compute control for the current way point #############
-        for j in range(1):
-            action[j, :] = TARGET_VEL[j, wp_counters[j], :]
+
+        d_err = optimized_x - np.transpose(np.array([obs[:, 0], obs[:, 1], obs[:, 2]]), (1, 0))
+
+        for j in range(2):
+            TARGET_VEL[j, i, :] = [d_err[j, 0], d_err[j, 1], 0, 3]
+            action[j, :] = TARGET_VEL[j, i, :]
 
         #### Go to the next way point and loop #####################
-        for j in range(1):
+        for j in range(2):
             wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
-        for j in range(1):
+        for j in range(2):
             logger.log(drone=j,
                        timestamp=i/env.CTRL_FREQ,
                        state=obs[j],
