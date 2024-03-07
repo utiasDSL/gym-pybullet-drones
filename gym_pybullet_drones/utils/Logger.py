@@ -402,7 +402,6 @@ class Logger(object):
         def gradient_descent(x, USV_coord, learning_rate, num_iterations):
             for i in range(num_iterations):
                 grad = gradient(x, USV_coord)
-                #grad = np.gradient(loss_function(x, USV_coord), axis=0)
                 x -= learning_rate * grad
             return x
 
@@ -437,13 +436,14 @@ class Logger(object):
         for i, plot in enumerate(plots):
             plot.set_xdata(tr[:trajs_s.time.n, i, 0])
             plot.set_ydata(tr[:trajs_s.time.n, i, 1])
-        for i in range(2):
-            plt.plot(self.states[i, 0, :], self.states[i, 1, :])
+
+        plt.plot(self.states[:, 0, :], self.states[:, 1, :], '*k')
+        #plt.plot(self.states[1, 0, :], self.states[1, 1, :], "*y")
 
 
 
         plt.figure(figsize=(10, 10))
-        plt.plot(loss_function(optimized_x, USV_coord))
+        plt.plot(loss_function([optimized_x[0], optimized_x[1], 10], USV_coord))
         plt.plot(val)
         plt.title("Функция качества связи")
         plt.grid()

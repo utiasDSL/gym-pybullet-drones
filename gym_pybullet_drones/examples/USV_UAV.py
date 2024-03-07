@@ -23,7 +23,8 @@ import random
 import numpy as np
 import pybullet as p
 import matplotlib.pyplot as plt
-
+import autograd.numpy as np
+from autograd import grad
 from gym_pybullet_drones.examples.USV_trajectory import USV_trajectory
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
@@ -34,7 +35,7 @@ from gym_pybullet_drones.utils.utils import sync, str2bool
 from gym_pybullet_drones.envs.VelocityAviary import VelocityAviary
 
 DEFAULT_DRONE = DroneModel("cf2x")
-DEFAULT_GUI = True
+DEFAULT_GUI = False
 DEFAULT_RECORD_VIDEO = False
 DEFAULT_PLOT = True
 DEFAULT_USER_DEBUG_GUI = False
@@ -44,6 +45,7 @@ DEFAULT_CONTROL_FREQ_HZ = 300
 DEFAULT_DURATION_SEC = 40
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
+NUM_DRONE = 2
 
 from dataclasses import dataclass, field
 from functools import cache
@@ -75,7 +77,8 @@ def run(
         control_freq_hz=DEFAULT_CONTROL_FREQ_HZ,
         duration_sec=DEFAULT_DURATION_SEC,
         output_folder=DEFAULT_OUTPUT_FOLDER,
-        colab=DEFAULT_COLAB
+        colab=DEFAULT_COLAB,
+        num_drone=NUM_DRONE
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
@@ -91,7 +94,7 @@ def run(
 
     #### Create the environment ################################
     env = VelocityAviary(drone_model=drone,
-                         num_drones=2,
+                         num_drones=num_drone,
                          initial_xyzs=INIT_XYZS,
                          initial_rpys=INIT_RPYS,
                          physics=Physics.PYB,
@@ -114,10 +117,10 @@ def run(
     #num_iterations = 100
 
     #### Initialize the velocity target ############
-    TARGET_VEL = np.zeros((2, NUM_WP, 4))
+    TARGET_VEL = np.zeros((num_drone, NUM_WP, 4))
 
     def loss_function(x, usv_coord):
-        return np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
+        return np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0) #+ np.sum(np.linalg.norm(x[np.newaxis, :, :] - x, axis=-1)**2)
 
     def gradient(x, usv_coord):
         distances = np.linalg.norm(x[:, None] - usv_coord[None], axis=-1)
@@ -125,27 +128,26 @@ def run(
         diff = x[:, None] - usv_coord[None]
         f = np.tile(distances[:, :, None], (1, 3))
         min_f = np.tile(min_distances[:, None, None], (4, 3))
-        grad = 2 * np.sum((diff / f) * min_f, axis=1)
+        grad = 2 * np.sum((diff / f) * min_f, axis=1) #+ np.sum(diff_uav/new_dist, axis=1))
 
         return grad
 
     def gradient_descent(x, usv_coord, learning_rate):
-        grad = gradient(x, usv_coord)
-        #val = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
-        #grad = np.gradient(val, )
-        #print(grad)
-        x -= learning_rate * grad
+        #grad_point = gradient(x, usv_coord)
+        gradient_func = grad(loss_function)
+        grad_point = gradient_func(x, usv_coord)
+        x -= learning_rate * grad_point
         return x
 
-    #### Initialize the logger #################################
+    #### Initialize the logger #################################0
     logger = Logger(logging_freq_hz=control_freq_hz,
-                    num_drones=2,
+                    num_drones=num_drone,
                     output_folder=output_folder,
                     colab=colab
                     )
 
     #### Run the simulation ####################################
-    action = np.zeros((2, 4))
+    action = np.zeros((num_drone, 4))
     START = time.time()
     plot_fs = 300
     trajs_s = trajs.sample(plot_fs)
@@ -161,16 +163,16 @@ def run(
 
         d_err = optimized_x - np.transpose(np.array([obs[:, 0], obs[:, 1], obs[:, 2]]), (1, 0))
 
-        for j in range(2):
+        for j in range(num_drone):
             TARGET_VEL[j, i, :] = [d_err[j, 0], d_err[j, 1], 0, 3]
             action[j, :] = TARGET_VEL[j, i, :]
 
         #### Go to the next way point and loop #####################
-        for j in range(2):
+        for j in range(num_drone):
             wp_counters[j] = wp_counters[j] + 1 if wp_counters[j] < (NUM_WP-1) else 0
 
         #### Log the simulation ####################################
-        for j in range(2):
+        for j in range(num_drone):
             logger.log(drone=j,
                        timestamp=i/env.CTRL_FREQ,
                        state=obs[j],

@@ -71,6 +71,7 @@ class USV_trajectory:
       l = 2.5
       moment_inertia = mass * l**2 #момент инерции
       force_engine = np.array([1, 0])
+      MAX_THRUST = 5000
       for i in range(1, self.time.n):
           for j in range(self.m):
             rs = np.delete(self.r[i-1], j, axis=0) - self.r[i-1, j]
@@ -96,8 +97,12 @@ class USV_trajectory:
 
             self.total_force[i, j] = random_traction * self.random_force() + proectia
 
+            if np.linalg.norm(self.total_force[i, j]) > MAX_THRUST:
+                thrust = (self.total_force[i, j] / np.linalg.norm(self.total_force[i, j])) * MAX_THRUST
+            else:
+                thrust = self.total_force[i, j]
             d = np.array([l*np.cos(self.φ[i-1, j]), l*np.sin(self.φ[i-1, j]), 0])
-            F = np.array([self.total_force[i, j][0], self.total_force[i, j][1], 0])
+            F = np.array([thrust[0], thrust[1], 0])
             mometn_force = np.cross(F, d)
             ε_diss = - k_a_diss * self.ω[i-1, j]
             self.ε[i, j] = np.linalg.norm(mometn_force)*np.sign(mometn_force[2]) / moment_inertia + 2*ε_diss
@@ -112,7 +117,7 @@ class USV_trajectory:
                 self.φ[i, j] = orient
             anapravl = math.atan2(a_diss[1], a_diss[0])
             deltafi = abs(anapravl-self.φ[i-1, j])
-            self.a[i, j] = self.total_force[i, j] / mass + a_diss * deltafi
+            self.a[i, j] = thrust / mass + a_diss * deltafi
             self.v[i, j] = self.v[i-1, j] + self.a[i, j] * self.time.dt
             self.r[i, j] = self.r[i-1, j] + self.v[i, j] * self.time.dt
             self.xyz[i, j] = np.array([self.r[i, j, 0], self.r[i, j, 1], 0])
