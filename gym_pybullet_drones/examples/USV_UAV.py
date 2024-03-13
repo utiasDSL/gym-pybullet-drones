@@ -43,6 +43,13 @@ DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 300
 DEFAULT_CONTROL_FREQ_HZ = 300
 DEFAULT_DURATION_SEC = 40
+
+
+
+
+
+
+
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_DRONE = 2
@@ -82,15 +89,15 @@ def run(
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
-                          [0, 30, 10],
-                          [0, 0, 10]
+                          [0, 0, 10],
+                          [0, 60, 10]
                           ])
     INIT_RPYS = np.array([
                           [0, 0, 0],
                           [0, 0, np.pi/3]
                           ])
 
-    r1 = np.array([[0, 0], [0, 10], [0, 20], [0, 30]])
+    r1 = np.array([[0, 0], [0, 20], [0, 40], [0, 60]])
 
     #### Create the environment ################################
     env = VelocityAviary(drone_model=drone,
@@ -114,26 +121,16 @@ def run(
     wp_counters = np.array([0 for i in range(4)])
     trajs = USV_trajectory(time_data, m=4, r0=r1)
     learning_rate = 0.01
-    #num_iterations = 100
 
     #### Initialize the velocity target ############
     TARGET_VEL = np.zeros((num_drone, NUM_WP, 4))
 
     def loss_function(x, usv_coord):
-        return np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0) #+ np.sum(np.linalg.norm(x[np.newaxis, :, :] - x, axis=-1)**2)
-
-    def gradient(x, usv_coord):
-        distances = np.linalg.norm(x[:, None] - usv_coord[None], axis=-1)
-        min_distances = np.min(distances, axis=1)
-        diff = x[:, None] - usv_coord[None]
-        f = np.tile(distances[:, :, None], (1, 3))
-        min_f = np.tile(min_distances[:, None, None], (4, 3))
-        grad = 2 * np.sum((diff / f) * min_f, axis=1) #+ np.sum(diff_uav/new_dist, axis=1))
-
-        return grad
+        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
+        uav_sum_dist = np.sum(np.linalg.norm(x[::-1] - x, axis=-1)**2)/2
+        return uav_usv_sum_dist + uav_sum_dist
 
     def gradient_descent(x, usv_coord, learning_rate):
-        #grad_point = gradient(x, usv_coord)
         gradient_func = grad(loss_function)
         grad_point = gradient_func(x, usv_coord)
         x -= learning_rate * grad_point

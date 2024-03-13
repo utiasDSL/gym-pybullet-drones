@@ -6,6 +6,8 @@ from cycler import cycler
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import minimize
+import autograd.numpy as np
+from autograd import grad
 
 #from gym_pybullet_drones.examples.gradient_descent import gradient_descent
 
@@ -383,31 +385,31 @@ class Logger(object):
         plot_fs = 300
         trajs_s = trajs.sample(plot_fs)
         tr = trajs_s.r
-        UAV_coord = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2, 1, 0))
-        USV_coord = trajs_s.xyz
-        val = np.sum(np.min(np.linalg.norm(UAV_coord[:, :, None] - USV_coord[:, None], axis=-1), axis=1)**2, axis=1)
+        uav_coord = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2, 1, 0))
+        usv_coord = trajs_s.xyz
+        uav_sum = np.sum(np.linalg.norm(uav_coord[:, ::-1] - uav_coord, axis=-1)**2, axis=1)/2
+        uav_usv_sum = np.sum(np.min(np.linalg.norm(uav_coord[:, :, None]-usv_coord[:, None],axis=-1), axis=1)**2,axis=1)
+        val = uav_usv_sum + uav_sum
 
-        def loss_function(x, USV_coord):
-            return np.sum(np.min(np.linalg.norm(x[:, :, None] - USV_coord[:, None], axis=-1), axis=1) ** 2, axis=1)
+        def loss_function_n(x, usv_coord):
+            uav = np.sum(np.linalg.norm(x[:, ::-1] - x, axis=-1)**2)/2
+            return np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2, axis=1) + uav
 
-        def gradient(x, USV_coord):
-            distances = np.linalg.norm(x[:, :, None] - USV_coord[:, None], axis=-1)
-            min_distances = np.min(distances, axis=1)
-            diff = x[:, :, None] - USV_coord[:, None]
-            f = np.transpose(np.tile(distances[:, :, None], (3, 1)).T, (3, 2, 0, 1))
-            min_f = np.transpose(np.tile(min_distances[:, None, None], (3, 1)).T, (3, 2, 0, 1))
-            grad = 2 * np.sum((diff / f) * min_f, axis=2)
-            return grad
+        def loss_function(x, usv_coord):
+            uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
+            uav_sum_dist = np.sum(np.linalg.norm(x[::-1] - x, axis=-1) ** 2) / 2
+            return uav_usv_sum_dist + 0.1 * uav_sum_dist
 
-        def gradient_descent(x, USV_coord, learning_rate, num_iterations):
+        def gradient_descent(x, usv_coord, learning_rate, num_iterations):
             for i in range(num_iterations):
-                grad = gradient(x, USV_coord)
-                x -= learning_rate * grad
+                gradient_func = np.gradient(loss_function_n(x, usv_coord), axis=0)
+                #grad_point = gradient_func(x, usv_coord)
+                x -= learning_rate * gradient_func
             return x
 
         learning_rate = 0.01
         num_iterations = 100
-        optimized_x = gradient_descent(UAV_coord, USV_coord, learning_rate, num_iterations)
+        #optimized_x = gradient_descent(uav_coord, usv_coord, learning_rate, num_iterations)
 
 
         plt.rc('font', size=17)
@@ -437,13 +439,14 @@ class Logger(object):
             plot.set_xdata(tr[:trajs_s.time.n, i, 0])
             plot.set_ydata(tr[:trajs_s.time.n, i, 1])
 
-        plt.plot(self.states[:, 0, :], self.states[:, 1, :], '*k')
+        for j in range(self.NUM_DRONES):
+            plt.plot(self.states[j, 0, :], self.states[j, 1, :])
         #plt.plot(self.states[1, 0, :], self.states[1, 1, :], "*y")
 
-
+        #optimized_x[:, :, 2] = 10
 
         plt.figure(figsize=(10, 10))
-        plt.plot(loss_function([optimized_x[0], optimized_x[1], 10], USV_coord))
+        #plt.plot(loss_function_n(optimized_x, usv_coord))
         plt.plot(val)
         plt.title("Функция качества связи")
         plt.grid()
