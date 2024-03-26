@@ -42,7 +42,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 300
 DEFAULT_CONTROL_FREQ_HZ = 300
-DEFAULT_DURATION_SEC = 40
+DEFAULT_DURATION_SEC = 100
 
 
 
@@ -189,7 +189,7 @@ def run(
     #### Plot the simulation results ###########################
     logger.save_as_csv("vel") # Optional CSV save
     if plot:
-        logger.plot(False, trajs=trajs)
+        logger.plot_trajct(False, trajs=trajs)
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
