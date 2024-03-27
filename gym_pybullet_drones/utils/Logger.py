@@ -9,8 +9,7 @@ from matplotlib import animation
 from scipy.optimize import minimize
 import autograd.numpy as np
 from autograd import grad
-
-#from gym_pybullet_drones.examples.gradient_descent import gradient_descent
+from IPython.display import HTML, display
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
@@ -389,93 +388,88 @@ class Logger(object):
         else:
             plt.show()
 
+    def loss_function(self, x, usv_coord):
+        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
+        uav_sum_dist = np.sum(np.linalg.norm(x[::-1] - x, axis=-1) ** 2) / 2
+        return uav_usv_sum_dist + uav_sum_dist
+
+    def loss_function_n(self, x, usv_coord):
+        uav_sum_dist = np.sum(np.linalg.norm(x[:, ::-1] - x, axis=-1) ** 2, axis=1) / 2
+        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2, axis=1)
+        return  uav_usv_sum_dist + uav_sum_dist
+
+    def gradient_descent(self, x, usv_coord, learning_rate):
+        for i in range(usv_coord.shape[0]):
+            gradient_func = grad(self.loss_function)
+            grad_point = gradient_func(x[i, :, :], usv_coord[i, :, :])
+            x -= learning_rate * grad_point
+        return x
+
+
+
     def plot_trajct(self, pwm=False, trajs=0):
 
-        plot_fs = 10
-        trajs_s = trajs.sample(plot_fs)
-        step = 300 // plot_fs
-        tr = trajs_s.r
+        PLOT_FS = 10
+        SIMULATED_FS = 300
+        trajs_s = trajs.sample(PLOT_FS)
+        step = SIMULATED_FS // PLOT_FS
         uav_c = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2, 1, 0))
         uav_coord = uav_c[::step]
+        uav_coord_c = np.copy(uav_coord)
         usv_coord = trajs_s.xyz
-        uav_sum = np.sum(np.linalg.norm(uav_coord[:, ::-1] - uav_coord, axis=-1)**2, axis=1)/2
-        uav_usv_sum = np.sum(np.min(np.linalg.norm(uav_coord[:, :, None]-usv_coord[:, None],axis=-1), axis=1)**2,axis=1)
-        val = uav_usv_sum + uav_sum
-
-        def loss_function_n(x, usv_coord):
-            uav = np.sum(np.linalg.norm(x[:, ::-1] - x, axis=-1)**2)/2
-            return np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2, axis=1) + uav
-
-        def loss_function(x, usv_coord):
-            uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
-            uav_sum_dist = np.sum(np.linalg.norm(x[::-1] - x, axis=-1) ** 2) / 2
-            return uav_usv_sum_dist + 0.1 * uav_sum_dist
-
-        #def gradient_descent(x, usv_coord, learning_rate, num_iterations):
-        #    for i in range(num_iterations):
-         #       gradient_func = np.gradient(loss_function_n(x, usv_coord), axis=0)
-                #grad_point = gradient_func(x, usv_coord)
-         #       x -= learning_rate * gradient_func
-        #    return x
-
+        val = self.loss_function_n(uav_coord, usv_coord)
         learning_rate = 0.01
-        num_iterations = 100
-        #optimized_x = gradient_descent(uav_coord, usv_coord, learning_rate, num_iterations)
+        optimized_x = self.gradient_descent(uav_coord_c, usv_coord, learning_rate)
+        optimized_x[:, :, 2] += 10
+        val_opt = self.loss_function_n(optimized_x, usv_coord)
 
         fig = plt.figure()
         ax = fig.add_subplot(121)
-        plots = []
-        plots2 = []
+        plots_usv = []
+        plots_uav = []
         for i in range(trajs.m):
-            plots += ax.plot(tr[0, i, 0], tr[0, i, 1], label=f'Траектория {i}', linewidth=5.0)
+            plots_usv += ax.plot(usv_coord[0, i, 0], usv_coord[0, i, 1], label=f'USV {i}', linewidth=5.0)
 
         for j in range(self.NUM_DRONES):
-            plots2 += ax.plot(self.states[j, 0, :], self.states[j, 1, :])
-
-        #for i, plot in enumerate(plots):
-        #    plot.set_xdata(tr[:trajs_s.time.n, i, 0])
-        #    plot.set_ydata(tr[:trajs_s.time.n, i, 1])
-        #    for j in range(self.NUM_DRONES):
-        #        ax.plot(self.states[j, 0, :], self.states[j, 1, :])
+            plots_uav += ax.plot(uav_coord[0, j, 0], uav_coord[0, j, 1], label=f'UAV {j}', linewidth=2.0)
 
         ax.set_xlabel('  x, м')
         ax.set_ylabel('  y, м')
         ax.set_title('Траектории')
-        tr_min = np.min(tr, axis=(0, 1))
-        tr_max = np.max(tr, axis=(0, 1))
+        tr_min = np.min(usv_coord, axis=(0, 1))
+        tr_max = np.max(usv_coord, axis=(0, 1))
         ax.set(xlim=[tr_min[0], tr_max[0]],
                ylim=[tr_min[1], tr_max[1]])
         ax.legend(fontsize=10)
         ax2 = fig.add_subplot(122)
-        #ax2.plot(val)
         ax2.set(xlim=[0, trajs_s.time.n],
                 ylim=[0, np.max(val)])
-
         ax2.set_title("Функция качества связи")
         ax2.grid()
 
         def update(frame):
-            for i, plot in enumerate(plots):
-                plot.set_xdata(tr[:frame, i, 0])
-                plot.set_ydata(tr[:frame, i, 1])
+            for i, plot in enumerate(plots_usv):
+                plot.set_xdata(usv_coord[:frame, i, 0])
+                plot.set_ydata(usv_coord[:frame, i, 1])
 
-            for j, plot in enumerate(plots2):
+            for j, plot in enumerate(plots_uav):
                 plot.set_xdata(uav_coord[:frame, j, 0])
                 plot.set_ydata(uav_coord[:frame, j, 1])
-            ptt = []
-            ptt += ax2.plot(val[:frame])
-            fullplots = plots + ptt + plots2
+
+            plot_val = []
+            plot_opt_val = []
+            plot_val += ax2.plot(val[:frame], "b")
+            plot_opt_val += ax2.plot(val_opt[:frame], "r")
+            fullplots = plots_usv + plots_uav + plot_opt_val + plot_val
             return fullplots
 
-
         ani1 = animation.FuncAnimation(fig, update, frames=trajs_s.time.n, blit=True, interval=100)
-        #plt.show()
-        ani1.save('animation.mp4', writer='ffmpeg')
 
-
-
-        if self.COLAB: 
+        if self.COLAB:
+            display(HTML(ani1.to_jshtml()))
+            plt.close(fig)
             plt.savefig(os.path.join('results', 'output_figure.png'))
         else:
+            ani1.save('animation2.mp4', writer='ffmpeg')
             plt.show()
         plt.close(fig)

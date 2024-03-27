@@ -36,7 +36,6 @@ class USV_trajectory:
     self.ε = np.empty((time.n, m, 1))
     self.anglr = np.empty((time.n, m))
     self.total_force = np.empty((time.n, m, 2))
-    self.xyz[0] = xyz0 if xyz0 is not None else np.zeros((m, 3))
     self.r[0] = r0 if r0 is not None else np.zeros((m, 2))
     self.v[0] = v0 if v0 is not None else np.zeros((m, 2))
     self.a[0] = a0 if a0 is not None else np.zeros((m, 2))
@@ -45,6 +44,7 @@ class USV_trajectory:
     self.ε[0] = ε0 if ε0 is not None else np.zeros((m, 1))
     self.anglr[0] = anglr0 if anglr0 is not None else np.zeros(m)
     self.total_force[0] = total_force0 if total_force0 is not None else np.zeros((m, 2))
+    self.xyz[0] = xyz0 if xyz0 is not None else np.zeros((m, 3))
 
     if gen:
       self.ranningRandomTrajectory()
@@ -63,7 +63,7 @@ class USV_trajectory:
       return f
   def ranningRandomTrajectory(self):
 
-      k_a_attr = 0.1
+      k_a_attr = 0.05
       k_a_rep = 20
       k_a_diss = 5
       alpha = math.pi / 6

@@ -42,14 +42,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 300
 DEFAULT_CONTROL_FREQ_HZ = 300
-DEFAULT_DURATION_SEC = 100
-
-
-
-
-
-
-
+DEFAULT_DURATION_SEC = 10
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_DRONE = 2
@@ -98,7 +91,7 @@ def run(
                           ])
 
     r1 = np.array([[0, 0], [0, 20], [0, 40], [0, 60]])
-
+    xyz1 = np.array([[0, 0, 0], [0, 20, 0], [0, 40, 0], [0, 60, 0]])
     #### Create the environment ################################
     env = VelocityAviary(drone_model=drone,
                          num_drones=num_drone,
@@ -119,7 +112,7 @@ def run(
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
     wp_counters = np.array([0 for i in range(4)])
-    trajs = USV_trajectory(time_data, m=4, r0=r1)
+    trajs = USV_trajectory(time_data, m=4, r0=r1, xyz0=xyz1)
     learning_rate = 0.01
 
     #### Initialize the velocity target ############
@@ -146,9 +139,7 @@ def run(
     #### Run the simulation ####################################
     action = np.zeros((num_drone, 4))
     START = time.time()
-    plot_fs = 300
-    trajs_s = trajs.sample(plot_fs)
-    usv_coord = trajs_s.xyz
+    usv_coord = trajs.xyz
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
 
         #### Step the simulation ###################################
@@ -187,7 +178,7 @@ def run(
     env.close()
 
     #### Plot the simulation results ###########################
-    logger.save_as_csv("vel") # Optional CSV save
+    #logger.save_as_csv("vel") # Optional CSV save
     if plot:
         logger.plot_trajct(False, trajs=trajs)
 
