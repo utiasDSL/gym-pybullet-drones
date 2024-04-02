@@ -42,7 +42,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 300
 DEFAULT_CONTROL_FREQ_HZ = 300
-DEFAULT_DURATION_SEC = 10
+DEFAULT_DURATION_SEC = 100
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_DRONE = 2
@@ -121,7 +121,7 @@ def run(
     def loss_function(x, usv_coord):
         uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
         uav_sum_dist = np.sum(np.linalg.norm(x[::-1] - x, axis=-1)**2)/2
-        return uav_usv_sum_dist + uav_sum_dist
+        return uav_usv_sum_dist + 0.05 * uav_sum_dist
 
     def gradient_descent(x, usv_coord, learning_rate):
         gradient_func = grad(loss_function)

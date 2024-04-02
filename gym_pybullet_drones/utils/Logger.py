@@ -396,7 +396,7 @@ class Logger(object):
     def loss_function_n(self, x, usv_coord):
         uav_sum_dist = np.sum(np.linalg.norm(x[:, ::-1] - x, axis=-1) ** 2, axis=1) / 2
         uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2, axis=1)
-        return  uav_usv_sum_dist + uav_sum_dist
+        return uav_usv_sum_dist + uav_sum_dist
 
     def gradient_descent(self, x, usv_coord, learning_rate):
         for i in range(usv_coord.shape[0]):
@@ -405,7 +405,15 @@ class Logger(object):
             x -= learning_rate * grad_point
         return x
 
+    def created_plot(self, plots, ax,  nums, coord_vehicle, names):
+        for i in range(nums):
+            plots += ax.plot(coord_vehicle[0, i, 0], coord_vehicle[0, i, 1], label=f'{names} {i}', linewidth=3.0)
 
+
+    def update_aniamtion(self, start_frame, frame, coord_vehicle, plots):
+        for i, plot in enumerate(plots):
+            plot.set_xdata(coord_vehicle[start_frame:frame, i, 0])
+            plot.set_ydata(coord_vehicle[start_frame:frame, i, 1])
 
     def plot_trajct(self, pwm=False, trajs=0):
 
@@ -415,23 +423,23 @@ class Logger(object):
         step = SIMULATED_FS // PLOT_FS
         uav_c = np.transpose(np.array([self.states[:, 0, :], self.states[:, 1, :], self.states[:, 2, :]]), (2, 1, 0))
         uav_coord = uav_c[::step]
-        uav_coord_c = np.copy(uav_coord)
+        uav_coord_c = np.copy(uav_c)
         usv_coord = trajs_s.xyz
         val = self.loss_function_n(uav_coord, usv_coord)
         learning_rate = 0.01
-        optimized_x = self.gradient_descent(uav_coord_c, usv_coord, learning_rate)
-        optimized_x[:, :, 2] += 10
+        opt_x = self.gradient_descent(uav_coord_c, trajs.xyz, learning_rate)
+        opt_x[:, :, 2] += 10
+        optimized_x = opt_x[::step]
         val_opt = self.loss_function_n(optimized_x, usv_coord)
 
         fig = plt.figure()
         ax = fig.add_subplot(121)
         plots_usv = []
         plots_uav = []
-        for i in range(trajs.m):
-            plots_usv += ax.plot(usv_coord[0, i, 0], usv_coord[0, i, 1], label=f'USV {i}', linewidth=5.0)
-
-        for j in range(self.NUM_DRONES):
-            plots_uav += ax.plot(uav_coord[0, j, 0], uav_coord[0, j, 1], label=f'UAV {j}', linewidth=2.0)
+        plots_uav_opt = []
+        self.created_plot(plots_usv, ax, trajs.m, usv_coord, "USV")
+        self.created_plot(plots_uav, ax, self.NUM_DRONES, uav_coord, "UAV")
+        #self.created_plot(plots_uav_opt, ax, self.NUM_DRONES, optimized_x, "UAV_OPT")
 
         ax.set_xlabel('  x, м')
         ax.set_ylabel('  y, м')
@@ -440,7 +448,8 @@ class Logger(object):
         tr_max = np.max(usv_coord, axis=(0, 1))
         ax.set(xlim=[tr_min[0], tr_max[0]],
                ylim=[tr_min[1], tr_max[1]])
-        ax.legend(fontsize=10)
+        ax.legend(fontsize=5)
+
         ax2 = fig.add_subplot(122)
         ax2.set(xlim=[0, trajs_s.time.n],
                 ylim=[0, np.max(val)])
@@ -448,13 +457,11 @@ class Logger(object):
         ax2.grid()
 
         def update(frame):
-            for i, plot in enumerate(plots_usv):
-                plot.set_xdata(usv_coord[:frame, i, 0])
-                plot.set_ydata(usv_coord[:frame, i, 1])
-
-            for j, plot in enumerate(plots_uav):
-                plot.set_xdata(uav_coord[:frame, j, 0])
-                plot.set_ydata(uav_coord[:frame, j, 1])
+            start_frame = max(0, frame - 100)
+            start_frame_uav = max(0, frame - 10)
+            self.update_aniamtion(start_frame, frame, usv_coord, plots_usv)
+            self.update_aniamtion(start_frame_uav, frame, uav_coord, plots_uav)
+            #self.update_aniamtion(start_frame_uav, frame, optimized_x, plots_uav_opt)
 
             plot_val = []
             plot_opt_val = []
@@ -470,6 +477,7 @@ class Logger(object):
             plt.close(fig)
             plt.savefig(os.path.join('results', 'output_figure.png'))
         else:
-            ani1.save('animation2.mp4', writer='ffmpeg')
             plt.show()
+            #ani1.save('animation2.mp4', writer='ffmpeg')
+
         plt.close(fig)
