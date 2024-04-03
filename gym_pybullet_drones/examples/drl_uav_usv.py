@@ -55,21 +55,31 @@ def run(multiagent=DEFAULT_MA,
     filename = os.path.join(output_folder, 'save-'+datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
     if not os.path.exists(filename):
         os.makedirs(filename+'/')
+
+    INIT_XYZS = np.array([
+        [0, 0, 10],
+        [0, 60, 10]
+    ])
+    INIT_RPYS = np.array([
+        [0, 0, 0],
+        [0, 0, np.pi / 3]
+    ])
     # в зависимости много аппартов или один создаем средудля обучения и среду для оценки
-    if not multiagent:
-        train_env = make_vec_env(HoverAviary,
-                                 env_kwargs=dict(obs=DEFAULT_OBS, act=DEFAULT_ACT),
-                                 n_envs=1,
-                                 seed=0
-                                 )
-        eval_env = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)
-    else:
-        train_env = make_vec_env(MultiHoverAviary,
-                                 env_kwargs=dict(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT),
-                                 n_envs=1,
-                                 seed=0
-                                 )
-        eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
+
+    train_env = make_vec_env(MultiHoverAviary,
+                             env_kwargs=dict(num_drones=DEFAULT_AGENTS,
+                                             initial_xyzs=INIT_XYZS,
+                                             initial_rpys=INIT_RPYS,
+                                             obs=DEFAULT_OBS,
+                                             act=DEFAULT_ACT),
+                             n_envs=1,
+                             seed=0)
+
+    eval_env = MultiHoverAviary(num_drones=DEFAULT_AGENTS,
+                                initial_xyzs=INIT_XYZS,
+                                initial_rpys=INIT_RPYS,
+                                obs=DEFAULT_OBS,
+                                act=DEFAULT_ACT)
 
     #### Check the environment's spaces ########################
     print('[INFO] Action space:', train_env.action_space)
@@ -128,19 +138,14 @@ def run(multiagent=DEFAULT_MA,
     model = PPO.load(path)
 
     #### Show (and record a video of) the model's performance ##
-    if not multiagent:
-        test_env = HoverAviary(gui=gui,
-                               obs=DEFAULT_OBS,
-                               act=DEFAULT_ACT,
-                               record=record_video)
-        test_env_nogui = HoverAviary(obs=DEFAULT_OBS, act=DEFAULT_ACT)
-    else:
-        test_env = MultiHoverAviary(gui=gui,
-                                        num_drones=DEFAULT_AGENTS,
-                                        obs=DEFAULT_OBS,
-                                        act=DEFAULT_ACT,
-                                        record=record_video)
-        test_env_nogui = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
+
+    test_env = MultiHoverAviary(gui=gui,
+                                    num_drones=DEFAULT_AGENTS,
+                                    obs=DEFAULT_OBS,
+                                    act=DEFAULT_ACT,
+                                    record=record_video)
+    test_env_nogui = MultiHoverAviary(num_drones=DEFAULT_AGENTS, obs=DEFAULT_OBS, act=DEFAULT_ACT)
+
     logger = Logger(logging_freq_hz=int(test_env.CTRL_FREQ),
                 num_drones=DEFAULT_AGENTS if multiagent else 1,
                 output_folder=output_folder,
@@ -164,27 +169,17 @@ def run(multiagent=DEFAULT_MA,
         act2 = action.squeeze()
         print("Obs:", obs, "\tAction", action, "\tReward:", reward, "\tTerminated:", terminated, "\tTruncated:", truncated)
         if DEFAULT_OBS == ObservationType.KIN:
-            if not multiagent:
-                logger.log(drone=0,
+            for d in range(DEFAULT_AGENTS):
+                logger.log(drone=d,
                     timestamp=i/test_env.CTRL_FREQ,
-                    state=np.hstack([obs2[0:3],
+                    state=np.hstack([obs2[d][0:3],
                                         np.zeros(4),
-                                        obs2[3:15],
-                                        act2
+                                        obs2[d][3:15],
+                                        act2[d]
                                         ]),
                     control=np.zeros(12)
                     )
-            else:
-                for d in range(DEFAULT_AGENTS):
-                    logger.log(drone=d,
-                        timestamp=i/test_env.CTRL_FREQ,
-                        state=np.hstack([obs2[d][0:3],
-                                            np.zeros(4),
-                                            obs2[d][3:15],
-                                            act2[d]
-                                            ]),
-                        control=np.zeros(12)
-                        )
+
         test_env.render()
         print(terminated)
         sync(i, start, test_env.CTRL_TIMESTEP)

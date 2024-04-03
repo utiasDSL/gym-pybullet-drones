@@ -81,8 +81,11 @@ class MultiHoverAviary(BaseRLAviary):
             The reward.
 
         """
+
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
+
         ret = 0
+
         for i in range(self.NUM_DRONES):
             ret += max(0, 2 - np.linalg.norm(self.TARGET_POS[i,:]-states[i][0:3])**4)
         return ret
