@@ -13,6 +13,12 @@ from IPython.display import HTML, display
 
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'
 
+
+def created_plot(plots, ax, nums, coord_vehicle, names):
+    for i in range(nums):
+        plots += ax.plot(coord_vehicle[0, i, 0], coord_vehicle[0, i, 1], label=f'{names} {i}', linewidth=3.0)
+
+
 class Logger(object):
     """A class for logging and visualization.
 
@@ -387,39 +393,23 @@ class Logger(object):
         else:
             plt.show()
 
-    def loss_function(self, x, usv_coord):
-        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
-        uav_sum_dist = np.sum(np.linalg.norm(x[::-1] - x, axis=-1) ** 2) / 2
+    def loss_function_n(self, x, usv_coord):
+        norm = np.linalg.norm(x[:, :, None] - x[:, None], axis=-1) ** 2
+        uav_sum_dist = np.sum(norm.reshape(norm.shape[0], -1), axis=1) / 2
+        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2,
+                                  axis=1)
         return uav_usv_sum_dist + 0.05 * uav_sum_dist
 
-    def gradient_descent(self, x, usv_coord, learning_rate):
-        for i in range(1, usv_coord.shape[0]):
-            gradient_func = grad(self.loss_function)
-            grad_point = gradient_func(x[i, :, :], usv_coord[i, :, :])
-            x -= learning_rate * grad_point
-        return x
-
-    def created_plot(self, plots, ax,  nums, coord_vehicle, names):
-        for i in range(nums):
-            plots += ax.plot(coord_vehicle[0, i, 0], coord_vehicle[0, i, 1], label=f'{names} {i}', linewidth=3.0)
-
-
-    def update_aniamtion(self, start_frame, frame, coord_vehicle, plots):
+    def update_aniamtion(self,
+                         start_frame,
+                         frame,
+                         coord_vehicle,
+                         plots):
         for i, plot in enumerate(plots):
             plot.set_xdata(coord_vehicle[start_frame:frame, i, 0])
             plot.set_ydata(coord_vehicle[start_frame:frame, i, 1])
 
-    def plot_trajct(self, pwm=False, trajs=0):
-
-            def loss_function_n(x):
-                x_one = x[:, :, None]
-                x_all = x[:,  None]
-                dist = x_one - x_all
-                norm = (np.linalg.norm(dist, axis=-1) ** 2)
-                uav_sum_dist = np.sum(norm, axis=1) / 2
-                uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2,
-                    axis=1)
-                return uav_usv_sum_dist + 0.05 * uav_sum_dist
+    def plot_trajct(self, trajs=0):
 
             PLOT_FS = 10
             SIMULATED_FS = 300
@@ -429,12 +419,19 @@ class Logger(object):
             uav_coord = uav_c[::step]
             uav_coord_c = uav_coord.copy()
             usv_coord = trajs_s.xyz
-            val = loss_function_n(uav_coord.reshape(1,-1))
-            x0 = uav_coord_c[0, :, :].reshape(1, -1)
-            learning_rate = 0.01
-            optimized_x = minimize(loss_function_n, x0, method='L-BFGS-B')
-            optimized_x[:, :, 2] += 10
-            val_opt = loss_function_n(optimized_x)
+            val = self.loss_function_n(uav_coord, usv_coord)
+
+            opt_x = np.zeros((usv_coord.shape[0], self.NUM_DRONES, 3))
+            opt_x[0] = uav_coord_c[0, :, :]
+            for i in range(1, usv_coord.shape[0]):
+                function = lambda x : self.loss_function_n(x.reshape(1, self.NUM_DRONES, 3), usv_coord[i, :, :].reshape(1, 4, 3))
+                optimized = minimize(function, opt_x[i-1].reshape(1, -1))
+                opt_x[i] += optimized.x.reshape(self.NUM_DRONES, 3)
+                #opt = .reshape(self.NUM_DRONES, 3)
+
+
+            opt_x[:, :, 2] += 10
+            val_opt = self.loss_function_n(opt_x, usv_coord)
 
 
             plt.rc('font', size=25)
@@ -447,9 +444,9 @@ class Logger(object):
             plots_usv = []
             plots_uav = []
             plots_uav_opt = []
-            self.created_plot(plots_usv, ax, trajs.m, usv_coord, "USV")
-            self.created_plot(plots_uav, ax, self.NUM_DRONES, uav_coord, "UAV")
-            #self.created_plot(plots_uav_opt, ax, self.NUM_DRONES, optimized_x, "UAV_OPT")
+            created_plot(plots_usv, ax, trajs.m, usv_coord, "USV")
+            created_plot(plots_uav, ax, self.NUM_DRONES, uav_coord, "UAV")
+            created_plot(plots_uav_opt, ax, self.NUM_DRONES, opt_x, "UAV_OPT")
 
             ax.set_xlabel('  x, м')
             ax.set_ylabel('  y, м')
@@ -471,13 +468,13 @@ class Logger(object):
                 start_frame_uav = max(0, frame - 10)
                 self.update_aniamtion(start_frame, frame, usv_coord, plots_usv)
                 self.update_aniamtion(start_frame_uav, frame, uav_coord, plots_uav)
-                #self.update_aniamtion(start_frame, frame, optimized_x, plots_uav_opt)
+                self.update_aniamtion(start_frame_uav, frame, opt_x, plots_uav_opt)
 
                 plot_val = []
                 plot_opt_val = []
                 plot_val += ax2.plot(val[:frame], "b")
-                #plot_opt_val += ax2.plot(val_opt[:frame], "r")
-                fullplots = plots_usv + plots_uav + plot_val #+ plots_uav_opt + plot_opt_val
+                plot_opt_val += ax2.plot(val_opt[:frame], "r")
+                fullplots = plots_usv + plots_uav + plot_val + plots_uav_opt + plot_opt_val
                 return fullplots
 
             ani1 = animation.FuncAnimation(fig, update, frames=trajs_s.time.n, blit=True, interval=100)

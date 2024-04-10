@@ -31,7 +31,7 @@ from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
-
+from scipy.optimize import minimize
 from gym_pybullet_drones.envs.VelocityAviary import VelocityAviary
 
 DEFAULT_DRONE = DroneModel("cf2x")
@@ -42,7 +42,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 300
 DEFAULT_CONTROL_FREQ_HZ = 300
-DEFAULT_DURATION_SEC = 5
+DEFAULT_DURATION_SEC = 100
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_DRONE = 2
@@ -82,8 +82,8 @@ def run(
         ):
         #### Initialize the simulation #############################
     INIT_XYZS = np.array([
-                          [0, 0, 10],
-                          [0, 60, 10]
+                          [0, 10, 10],
+                          [0, 50, 10]
                           ])
     INIT_RPYS = np.array([
                           [0, 0, 0],
@@ -113,21 +113,16 @@ def run(
     NUM_WP = control_freq_hz*PERIOD
     wp_counters = np.array([0 for i in range(4)])
     trajs = USV_trajectory(time_data, m=4, r0=r1, xyz0=xyz1)
-    learning_rate = 0.01
 
     #### Initialize the velocity target ############
     TARGET_VEL = np.zeros((num_drone, NUM_WP, 4))
 
-    def loss_function(x, usv_coord):
-        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, None] - usv_coord[None], axis=-1), axis=1) ** 2, axis=0)
-        uav_sum_dist = np.sum(np.linalg.norm(x[::-1] - x, axis=-1)**2)/2
+    def loss_function_n(x, usv_coord):
+        norm = np.linalg.norm(x[:, :, None] - x[:, None], axis=-1) ** 2
+        uav_sum_dist = np.sum(norm.reshape(norm.shape[0], -1), axis=1) / 2
+        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2,
+                                  axis=1)
         return uav_usv_sum_dist + 0.05 * uav_sum_dist
-
-    def gradient_descent(x, usv_coord, learning_rate):
-        gradient_func = grad(loss_function)
-        grad_point = gradient_func(x, usv_coord)
-        x -= learning_rate * grad_point
-        return x
 
     #### Initialize the logger #################################0
     logger = Logger(logging_freq_hz=control_freq_hz,
@@ -140,16 +135,19 @@ def run(
     action = np.zeros((num_drone, 4))
     START = time.time()
     usv_coord = trajs.xyz
-    for i in range(0, int(duration_sec*env.CTRL_FREQ)):
+    opt_x = np.zeros((usv_coord.shape[0], num_drone, 3))
+    opt_x[0] = INIT_XYZS
+    for i in range(1, int(duration_sec*env.CTRL_FREQ)):
 
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
-        uav_coord = np.transpose(np.array([obs[:, 0], obs[:, 1], obs[:, 2]]), (1, 0))
-        optimized_x = gradient_descent(uav_coord, usv_coord[i, :, :], learning_rate)
+        function = lambda x: loss_function_n(x.reshape(1, num_drone, 3), usv_coord[i, :, :].reshape(1, 4, 3))
+        optimized = minimize(function, opt_x[i-1].reshape(1, -1))
+        opt_x[i] = optimized.x.reshape(num_drone, 3)
 
         #### Compute control for the current way point #############
 
-        d_err = optimized_x - np.transpose(np.array([obs[:, 0], obs[:, 1], obs[:, 2]]), (1, 0))
+        d_err = opt_x[i] - np.transpose(np.array([obs[:, 0], obs[:, 1], obs[:, 2]]), (1, 0))
 
         for j in range(num_drone):
             TARGET_VEL[j, i, :] = [d_err[j, 0], d_err[j, 1], 0, 3]
@@ -180,7 +178,7 @@ def run(
     #### Plot the simulation results ###########################
     #logger.save_as_csv("vel") # Optional CSV save
     if plot:
-        logger.plot_trajct(False, trajs=trajs)
+        logger.plot_trajct(trajs=trajs)
 
 if __name__ == "__main__":
     #### Define and parse (optional) arguments for the script ##
