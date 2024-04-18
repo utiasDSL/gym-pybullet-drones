@@ -25,7 +25,8 @@ import pybullet as p
 import matplotlib.pyplot as plt
 import autograd.numpy as np
 from autograd import grad
-from gym_pybullet_drones.examples.USV_trajectory import USV_trajectory
+from gym_pybullet_drones.examples.USV_trajectory import UsvTrajectory
+from gym_pybullet_drones.examples.gradient_descent import LossFunction
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
@@ -42,7 +43,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = False
 DEFAULT_SIMULATION_FREQ_HZ = 300
 DEFAULT_CONTROL_FREQ_HZ = 300
-DEFAULT_DURATION_SEC = 100
+DEFAULT_DURATION_SEC = 50
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 NUM_DRONE = 2
@@ -112,17 +113,10 @@ def run(
     PERIOD = duration_sec
     NUM_WP = control_freq_hz*PERIOD
     wp_counters = np.array([0 for i in range(4)])
-    trajs = USV_trajectory(time_data, m=4, r0=r1, xyz0=xyz1)
+    trajs = UsvTrajectory(time_data, m=4, r0=r1, xyz0=xyz1)
 
     #### Initialize the velocity target ############
     TARGET_VEL = np.zeros((num_drone, NUM_WP, 4))
-
-    def loss_function_n(x, usv_coord):
-        norm = np.linalg.norm(x[:, :, None] - x[:, None], axis=-1) ** 2
-        uav_sum_dist = np.sum(norm.reshape(norm.shape[0], -1), axis=1) / 2
-        uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2,
-                                  axis=1)
-        return uav_usv_sum_dist + 0.05 * uav_sum_dist
 
     #### Initialize the logger #################################0
     logger = Logger(logging_freq_hz=control_freq_hz,
@@ -141,7 +135,7 @@ def run(
 
         #### Step the simulation ###################################
         obs, reward, terminated, truncated, info = env.step(action)
-        function = lambda x: loss_function_n(x.reshape(1, num_drone, 3), usv_coord[i, :, :].reshape(1, 4, 3))
+        function = lambda x: LossFunction.communication_quality_function(x.reshape(1, num_drone, 3), usv_coord[i, :, :].reshape(1, 4, 3))
         optimized = minimize(function, opt_x[i-1].reshape(1, -1))
         opt_x[i] = optimized.x.reshape(num_drone, 3)
 
