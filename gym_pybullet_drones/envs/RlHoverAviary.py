@@ -75,7 +75,7 @@ class RlHoverAviary(NewBaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
-        self.EPISODE_LEN_SEC = 50
+        self.EPISODE_LEN_SEC = 30
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -89,11 +89,11 @@ class RlHoverAviary(NewBaseRLAviary):
                          obs=obs,
                          act=act
                          )
-        self.TARGET_POS = self.INIT_XYZS + np.array([[0, 0, 1 / (i + 1)] for i in range(num_drones)])
+        self.TARGET_POS = self.INIT_XYZS + np.array([[30, 0, 1 / (i + 1)] for i in range(num_drones)])
 
         r1 = np.array([[0, 0], [0, 20], [0, 40], [0, 60]])
         xyz1 = np.array([[0, 0, 0], [0, 20, 0], [0, 40, 0], [0, 60, 0]])
-        time_data = TimeData(self.EPISODE_LEN_SEC, ctrl_freq)
+        time_data = TimeData(self.EPISODE_LEN_SEC, pyb_freq)
         self.trajs = UsvTrajectory(time_data, m=4, r0=r1, xyz0=xyz1)
         self.usv_coord = self.trajs.xyz
 
@@ -108,16 +108,16 @@ class RlHoverAviary(NewBaseRLAviary):
             The reward.
 
         """
-        ret = 0
+        #ret = 0
 
-        gamma = 0.1
-        for i in range(self.usv_coord.shape[0]):
-            states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-            uav_coord = np.transpose(np.array([states[:, 0], states[:, 1], states[:, 2]]), (1, 0))
+        gamma = 0.9
+        #for i in range(self.usv_coord.shape[0]):
+        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
+        uav_coord = np.transpose(np.array([states[:, 0], states[:, 1], states[:, 2]]), (1, 0))
+        a = self.step_counter
+        val = LossFunction.communication_quality_function(uav_coord.reshape(1, 2, 3),self.usv_coord[self.step_counter, :, :].reshape(1, 4, 3))
+        ret = (10000 / val)
 
-            val = LossFunction.communication_quality_function(uav_coord.reshape(1, 2, 3),
-                                                              self.usv_coord[i, :, :].reshape(1, 4, 3))
-            ret += 10000 * (1 / val)
         return ret
 
     ################################################################################
@@ -131,14 +131,14 @@ class RlHoverAviary(NewBaseRLAviary):
             Whether the current episode is done.
 
         """
-        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        dist = 0
-        for i in range(self.NUM_DRONES):
-            dist += np.linalg.norm(self.TARGET_POS[i, :] - states[i][0:3])
-        if dist < .0001:
-            return True
-        else:
-            return False
+        #states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
+        #dist = 0
+        #for i in range(self.NUM_DRONES):
+            #dist += np.linalg.norm(self.TARGET_POS[i, :] - states[i][0:3])
+        #if dist < .0001:
+            #return True
+        #else:
+        return False
 
     ################################################################################
 
@@ -151,14 +151,8 @@ class RlHoverAviary(NewBaseRLAviary):
             Whether the current episode timed out.
 
         """
-        states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
-        for i in range(self.NUM_DRONES):
-            if (abs(states[i][0]) > 2.0 or abs(states[i][1]) > 2.0 or states[i][
-                2] > 2.0  # Truncate when a drones is too far away
-                    or abs(states[i][7]) > .4 or abs(states[i][8]) > .4  # Truncate when a drone is too tilted
-            ):
-                return True
-        if self.step_counter / self.PYB_FREQ > self.EPISODE_LEN_SEC:
+
+        if self.step_counter / self.PYB_FREQ == self.EPISODE_LEN_SEC-1:
             return True
         else:
             return False

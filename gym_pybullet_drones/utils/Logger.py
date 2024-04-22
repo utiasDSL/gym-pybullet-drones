@@ -401,7 +401,7 @@ class Logger(object):
     def plot_trajct(self, trajs=0):
 
         PLOT_FS = 20
-        SIMULATED_FS = 300
+        SIMULATED_FS = 20
 
         trajs_s = trajs.sample(PLOT_FS)
         step = SIMULATED_FS // PLOT_FS

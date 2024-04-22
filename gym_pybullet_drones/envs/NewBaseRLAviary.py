@@ -115,8 +115,8 @@ class NewBaseRLAviary(BaseAviary):
         else:
             print("[ERROR] in BaseRLAviary._actionSpace()")
             exit()
-        act_lower_bound = np.array([-1000 * np.ones(size) for i in range(self.NUM_DRONES)])
-        act_upper_bound = np.array([+1000 * np.ones(size) for i in range(self.NUM_DRONES)])
+        act_lower_bound = np.array([-10000 * np.ones(size) for i in range(self.NUM_DRONES)])
+        act_upper_bound = np.array([+10000 * np.ones(size) for i in range(self.NUM_DRONES)])
         #
         for i in range(self.ACTION_BUFFER_SIZE):
             self.action_buffer.append(np.zeros((self.NUM_DRONES, size)))
@@ -188,7 +188,10 @@ class NewBaseRLAviary(BaseAviary):
         rpm = np.zeros((self.NUM_DRONES, 4))
         for k in range(action.shape[0]):
             target = action[k, :]
-            if self.ACT_TYPE == ActionType.PID:
+            target[2] = 0
+            if self.ACT_TYPE == ActionType.RPM:
+                rpm[k, :] = np.array(self.HOVER_RPM * (1 + 0.05 * target))
+            elif self.ACT_TYPE == ActionType.PID:
                 state = self._getDroneStateVector(k)
                 next_pos = self._calculateNextStep(
                     current_position=state[0:3],
@@ -220,6 +223,8 @@ class NewBaseRLAviary(BaseAviary):
                                                          # target the desired velocity vector
                                                          )
                 rpm[k, :] = temp
+            elif self.ACT_TYPE == ActionType.ONE_D_RPM:
+                rpm[k, :] = np.repeat(self.HOVER_RPM * (1 + 0.05 * target), 4)
             elif self.ACT_TYPE == ActionType.ONE_D_PID:
                 state = self._getDroneStateVector(k)
                 res, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
