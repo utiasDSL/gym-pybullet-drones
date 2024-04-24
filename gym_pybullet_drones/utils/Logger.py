@@ -434,9 +434,9 @@ class Logger(object):
         plots_usv = []
         plots_uav = []
         plots_uav_opt = []
-        PlotGeneration.created_plot(plots_usv, ax, trajs.m, usv_coord, "USV")
-        PlotGeneration.created_plot(plots_uav, ax, self.NUM_DRONES, uav_coord, "UAV")
-        PlotGeneration.created_plot(plots_uav_opt, ax, self.NUM_DRONES, opt_x, "UAV_OPT")
+        PlotGeneration.created_plot(plots_usv, ax, trajs.m, usv_coord, "USV", 3.0)
+        PlotGeneration.created_plot(plots_uav, ax, self.NUM_DRONES, uav_coord, "UAV", 4.0)
+        PlotGeneration.created_plot(plots_uav_opt, ax, self.NUM_DRONES, opt_x, "UAV_OPT", 3.0)
 
         ax.set_xlabel('  x, м')
         ax.set_ylabel('  y, м')

@@ -23,7 +23,7 @@ import argparse
 import gymnasium as gym
 import numpy as np
 import torch
-from stable_baselines3 import PPO
+from stable_baselines3 import PPO, DDPG
 from stable_baselines3.common.env_util import make_vec_env
 from stable_baselines3.common.callbacks import EvalCallback, StopTrainingOnRewardThreshold, StopTrainingOnMaxEpisodes, \
     StopTrainingOnNoModelImprovement
@@ -109,7 +109,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER,
 
     #### Train the model #######################################
     # создаем модель с PPO
-    model = PPO('MlpPolicy',
+    model = DDPG('MlpPolicy',
                 train_env,
                 # tensorboard_log=filename+'/tb/',
                 verbose=1)
@@ -118,13 +118,13 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER,
     target_reward = 8000
 
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward, verbose=1)
-    stop_traning = StopTrainingOnNoModelImprovement(max_no_improvement_evals=100, min_evals=1000, verbose=1)
+    stop_traning = StopTrainingOnNoModelImprovement(max_no_improvement_evals=5, min_evals=100, verbose=1)
     # stop_traning = StopTrainingOnMaxEpisodes(max_episodes=5, verbose=1)
     eval_callback = EvalCallback(eval_env,
                                  #callback_on_new_best=callback_on_best,
                                  callback_after_eval=stop_traning,
                                  verbose=1,
-                                 n_eval_episodes=1,
+                                 n_eval_episodes=10,
                                  best_model_save_path=filename + '/',
                                  log_path=filename + '/',
                                  eval_freq=int(1000),
@@ -158,7 +158,7 @@ def run(output_folder=DEFAULT_OUTPUT_FOLDER,
         path = filename + '/best_model.zip'
     else:
         print("[ERROR]: no model under the specified path", filename)
-    model = PPO.load(path)
+    model = DDPG.load(path)
 
     #### Show (and record a video of) the model's performance ##
 

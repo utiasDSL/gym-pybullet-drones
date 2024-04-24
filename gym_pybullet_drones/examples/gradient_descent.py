@@ -12,4 +12,4 @@ class LossFunction:
         uav_sum_dist = np.sum(norm.reshape(norm.shape[0], -1), axis=1) / 2
         uav_usv_sum_dist = np.sum(np.min(np.linalg.norm(x[:, :, None] - usv_coord[:, None], axis=-1), axis=1) ** 2,
                                   axis=1)
-        return uav_usv_sum_dist + 0.05 * uav_sum_dist
+        return uav_usv_sum_dist + 0.5 * uav_sum_dist

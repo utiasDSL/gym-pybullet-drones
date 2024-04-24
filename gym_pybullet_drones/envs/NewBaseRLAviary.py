@@ -115,8 +115,8 @@ class NewBaseRLAviary(BaseAviary):
         else:
             print("[ERROR] in BaseRLAviary._actionSpace()")
             exit()
-        act_lower_bound = np.array([-10000 * np.ones(size) for i in range(self.NUM_DRONES)])
-        act_upper_bound = np.array([+10000 * np.ones(size) for i in range(self.NUM_DRONES)])
+        act_lower_bound = np.array([-1 * np.ones(size) for i in range(self.NUM_DRONES)])
+        act_upper_bound = np.array([+1 * np.ones(size) for i in range(self.NUM_DRONES)])
         #
         for i in range(self.ACTION_BUFFER_SIZE):
             self.action_buffer.append(np.zeros((self.NUM_DRONES, size)))
@@ -188,10 +188,11 @@ class NewBaseRLAviary(BaseAviary):
         rpm = np.zeros((self.NUM_DRONES, 4))
         for k in range(action.shape[0]):
             target = action[k, :]
-            target[2] = 0
             if self.ACT_TYPE == ActionType.RPM:
                 rpm[k, :] = np.array(self.HOVER_RPM * (1 + 0.05 * target))
             elif self.ACT_TYPE == ActionType.PID:
+                target *= 10
+                target[2] = 10
                 state = self._getDroneStateVector(k)
                 next_pos = self._calculateNextStep(
                     current_position=state[0:3],
@@ -207,6 +208,7 @@ class NewBaseRLAviary(BaseAviary):
                                                           )
                 rpm[k, :] = rpm_k
             elif self.ACT_TYPE == ActionType.VEL:
+               #target[2] = 0
                 state = self._getDroneStateVector(k)
                 if np.linalg.norm(target[0:3]) != 0:
                     v_unit_vector = target[0:3] / np.linalg.norm(target[0:3])
@@ -218,8 +220,8 @@ class NewBaseRLAviary(BaseAviary):
                                                          cur_vel=state[10:13],
                                                          cur_ang_vel=state[13:16],
                                                          target_pos=state[0:3],  # same as the current position
-                                                         target_rpy=np.array([0, 0, state[9]]),  # keep current yaw
-                                                         target_vel=self.SPEED_LIMIT * np.abs(target[3]) * v_unit_vector
+                                                         target_rpy=np.array([0, 0, 0]),  # keep current yaw
+                                                         target_vel=np.abs(target[3]) * v_unit_vector
                                                          # target the desired velocity vector
                                                          )
                 rpm[k, :] = temp

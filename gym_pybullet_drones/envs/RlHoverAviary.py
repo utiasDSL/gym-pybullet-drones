@@ -75,7 +75,7 @@ class RlHoverAviary(NewBaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
-        self.EPISODE_LEN_SEC = 30
+        self.EPISODE_LEN_SEC = 10
         super().__init__(drone_model=drone_model,
                          num_drones=num_drones,
                          neighbourhood_radius=neighbourhood_radius,
@@ -108,15 +108,14 @@ class RlHoverAviary(NewBaseRLAviary):
             The reward.
 
         """
-        #ret = 0
 
-        gamma = 0.9
-        #for i in range(self.usv_coord.shape[0]):
         states = np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
         uav_coord = np.transpose(np.array([states[:, 0], states[:, 1], states[:, 2]]), (1, 0))
-        a = self.step_counter
         val = LossFunction.communication_quality_function(uav_coord.reshape(1, 2, 3),self.usv_coord[self.step_counter, :, :].reshape(1, 4, 3))
-        ret = (10000 / val)
+        if 10.5 >= uav_coord[0, 2] >= 9.5 or 10.5 >= uav_coord[0, 2] >= 9.5:
+            ret = (10000 / val**2)
+        else:
+            ret = 0
 
         return ret
 
