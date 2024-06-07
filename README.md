@@ -114,6 +114,11 @@ If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 ## Desired Contributions/PRs
 
 - [ ] Add motor delay, advanced ESC modeling by implementing a buffer in `BaseAviary._dynamics()`
+```
+Some work on system identification (submitted to IROS): https://arxiv.org/abs/2404.07837
+TL:DR: estimated to be a first-order time constant of around 72ms
+In the learning to fly paper it was assumed much higher (150ms) based on some prior work and not so accurate reading from bitcraze's step response
+```
 - [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates) by editing `BaseAviary._updateAndStoreKinematicInformation()`, `BaseAviary._getDroneStateVector()`, and the `.computeObs()` methods of relevant subclasses
 
 ## Troubleshooting
