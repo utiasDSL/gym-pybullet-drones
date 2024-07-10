@@ -1,7 +1,8 @@
 import os
 import numpy as np
 from gym import spaces
-
+import pkg_resources
+import pybullet as p
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 
@@ -97,6 +98,39 @@ class VisionAviary(BaseAviary):
     
     ################################################################################
     
+    def _addObstacles(self):
+        """Add obstacles to the environment, including multiple cylinders of different colors at fixed positions."""
+        super()._addObstacles()
+        base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+        cylinder_colors = ['red', 'orange', 'green']
+        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(3)]
+
+        # Fixed positions
+        self.fixed_positions = [
+            (2, 2, 0),
+            (-2, -2, 0),
+            (3, 0, 0),
+            (-3, 0, 0),
+            (0, 3, 0),
+            (0, -3, 0),
+            (-2, 3, 0),
+            (-2, -3, 0),
+            (5, 4, 0)
+        ]
+
+        for urdf, pos in zip(cylinders, self.fixed_positions):
+            if os.path.exists(urdf):
+                p.loadURDF(urdf,
+                           pos,
+                           p.getQuaternionFromEuler([0, 0, 0]),
+                           useFixedBase=True,
+                           physicsClientId=self.CLIENT
+                           )
+            else:
+                print(f"File not found: {urdf}")
+
+    ################################################################################
+
     def _observationSpace(self):
         """Returns the observation space of the environment.
 
@@ -130,7 +164,7 @@ class VisionAviary(BaseAviary):
                                                                    high=100,
                                                                    shape=(self.IMG_RES[1],
                                                                    self.IMG_RES[0]),
-                                                                   dtype=np.int
+                                                                   dtype=int
                                                                    )
                                                  }) for i in range(self.NUM_DRONES)})
     
