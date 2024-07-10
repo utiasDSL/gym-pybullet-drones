@@ -112,8 +112,12 @@ def run(
 
     #### Initialize plots for images ###########################
     if vision:
-        fig, axs = plt.subplots(num_drones, 2, figsize=(10, 5 * num_drones))
-        plt.ion()
+        if num_drones > 1:
+            fig, axs = plt.subplots(num_drones, 2, figsize=(10, 5 * num_drones))
+        else:
+            fig, axs = plt.subplots(1, 1, figsize=(10, 5))
+    plt.ion()
+
 
     #### Run the simulation ####################################
     CTRL_EVERY_N_STEPS = int(np.floor(env.SIM_FREQ/control_freq_hz))
@@ -148,21 +152,22 @@ def run(
                        control=np.hstack([TARGET_POS[wp_counters[j], 0:2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)])
                        )
 
-        #### Printout and plot images #############################
-        # if i%env.SIM_FREQ == 0:
-        #     env.render()
-        #     if vision:
-        #         for j in range(num_drones):
-        #             axs[j, 0].imshow(obs[str(j)]["rgb"])
-        #             axs[j, 0].set_title(f'Drone {j} RGB Image')
-        #             axs[j, 0].axis('off')
+        ### Printout and plot images #############################
+        if i%env.SIM_FREQ == 0:
+            env.render()
+            if vision:
+                for j in range(num_drones):
+                    if num_drones > 1:
+                        axs[j, 0].imshow(obs[str(j)]["dep"], cmap='plasma')
+                        axs[j, 0].set_title(f'Drone {j} Depth Image')
+                        axs[j, 0].axis('off')
+                    else:
+                        axs.imshow(obs[str(j)]["dep"], cmap='plasma')
+                        axs.set_title(f'Drone {j} Depth Image')
+                        axs.axis('off')
 
-        #             axs[j, 1].imshow(obs[str(j)]["dep"], cmap='plasma')
-        #             axs[j, 1].set_title(f'Drone {j} Depth Image')
-        #             axs[j, 1].axis('off')
-
-        #         plt.draw()
-        #         plt.pause(0.001)
+        plt.draw()
+        plt.pause(0.0000000001)
 
         #### Sync the simulation ###################################
         if gui:
