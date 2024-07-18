@@ -48,7 +48,9 @@ class HoverAviary(BaseRLAviary):
             The type of action space (1 or 3D; RPMS, thurst and torques, or waypoint with PID control)
 
         """
-        self.TARGET_POS = np.array([0,0,1])
+        #TODO I CHANGED TIHS FROM 1,1,1 TO: 0,0,1
+        self.TARGET_POS = np.array([0,1,1])
+        #TODO I CHANGED TIHS FROM 8 TO 16
         self.EPISODE_LEN_SEC = 8
         super().__init__(drone_model=drone_model,
                          num_drones=1,
@@ -75,7 +77,9 @@ class HoverAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        ret = max(0, 2 - np.linalg.norm(self.TARGET_POS-state[0:3])**4)
+        #ret = max(0, 2 - (np.linalg.norm(self.TARGET_POS[1:3]-state[1:3])**4))
+        #ret = max(0, 3 - (np.linalg.norm(self.TARGET_POS[:3]-state[:3])) - (abs(state[7]) if abs(state[7])>0.2 else 0) - (abs(state[8]) if abs(state[8])>0.2 else 0))
+        ret = 2 - (np.linalg.norm(self.TARGET_POS[:3]-state[:3])) - (abs(state[7])**0.5 if abs(state[7])>0.2 else 0) - (abs(state[8])**0.5 if abs(state[8])>0.2 else 0) - (20 if state[2] < 0.11 else 0)
         return ret
 
     ################################################################################
@@ -90,7 +94,7 @@ class HoverAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        if np.linalg.norm(self.TARGET_POS-state[0:3]) < .0001:
+        if np.linalg.norm(self.TARGET_POS[:3]-state[:3]) < .0001:
             return True
         else:
             return False
@@ -107,11 +111,13 @@ class HoverAviary(BaseRLAviary):
 
         """
         state = self._getDroneStateVector(0)
-        if (abs(state[0]) > 1.5 or abs(state[1]) > 1.5 or state[2] > 2.0 # Truncate when the drone is too far away
+        if ((state[0] > 4.0 or state[0] < -1.0) or (state[1] > 4.0 or state[1] < -1.0) or state[2] > 4.0 # Truncate when the drone is too far away
              or abs(state[7]) > .4 or abs(state[8]) > .4 # Truncate when the drone is too tilted
         ):
+            ret = 2 - (np.linalg.norm(self.TARGET_POS[:3]-state[:3])) - (abs(state[7])*5 if abs(state[7])>0.2 else 0) - (abs(state[8])*5 if abs(state[8])>0.2 else 0)
             return True
         if self.step_counter/self.PYB_FREQ > self.EPISODE_LEN_SEC:
+            ret = 2 - (np.linalg.norm(self.TARGET_POS[:3]-state[:3])) - (abs(state[7])**0.5 if abs(state[7])>0.2 else 0) - (abs(state[8])**0.5 if abs(state[8])>0.2 else 0)
             return True
         else:
             return False

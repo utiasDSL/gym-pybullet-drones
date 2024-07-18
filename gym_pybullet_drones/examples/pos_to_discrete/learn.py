@@ -38,8 +38,8 @@ DEFAULT_RECORD_VIDEO = False
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
-DEFAULT_OBS = ObservationType('kin') # 'kin' or 'rgb'
-DEFAULT_ACT = ActionType('two_d_rpm') # 'rpm' or 'pid' or 'vel' or 'one_d_rpm' or 'one_d_pid'
+DEFAULT_OBS = ObservationType('pos') # 
+DEFAULT_ACT = ActionType('discrete_2d') # 
 DEFAULT_AGENTS = 2
 DEFAULT_MA = False
 
@@ -51,7 +51,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     if not multiagent:
         train_env = make_vec_env(HoverAviary,
-                                 env_kwargs=dict(obs=DEFAULT_OBS, act=DEFAULT_ACT),
+                                 env_kwargs=dict(obs=DEFAULT_OBS, act=DEFAULT_ACT, initial_xyzs=np.array([[1,0,0]])),
                                  n_envs=1,
                                  seed=0
                                  )
@@ -70,7 +70,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Train the model #######################################
     policy_kwargs = dict(activation_fn=torch.nn.ReLU,
-                     net_arch=dict(pi=[256, 256, 256], vf=[256, 256, 256]))
+                     net_arch=dict(pi=[256, 256, 256, 256, 256], vf=[256, 256, 256]))
     
     model = PPO('MlpPolicy',
                 train_env,
@@ -79,7 +79,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                 verbose=1)
 
     #### Target cumulative rewards (problem-dependent) ##########
-    if DEFAULT_ACT == ActionType.ONE_D_RPM or DEFAULT_ACT == ActionType.TWO_D_RPM:
+    if DEFAULT_ACT == ActionType.ONE_D_RPM or DEFAULT_ACT == ActionType.TWO_D_RPM or ActionType.DISCRETE_2D:
         target_reward = 460 if not multiagent else 949.5
     else:
         target_reward = 467. if not multiagent else 920.

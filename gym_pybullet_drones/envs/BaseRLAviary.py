@@ -144,9 +144,25 @@ class BaseRLAviary(BaseAviary):
             size = 3
         elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
             size = 1
+        # ALTERED
+        elif self.ACT_TYPE==ActionType.TWO_D_RPM:
+            size = 2
+        elif self.ACT_TYPE==ActionType.DISCRETE_2D:   #STRONG LEFT, WEAK LEFT, UP, HOVER, DOWN, WEAK RIGHT, STRONG RIGHT
+            size = 7
+        elif self.ACT_TYPE==ActionType.DISCRETE_3D:   #STRONG LEFT, WEAK LEFT, UP, HOVER, DOWN, WEAK RIGHT, STRONG RIGHT
+            size = 11
         else:
             print("[ERROR] in BaseRLAviary._actionSpace()")
             exit()
+        if self.ACT_TYPE==ActionType.DISCRETE_2D or self.ACT_TYPE==ActionType.DISCRETE_3D:
+            ##
+            act_lower_bound = np.array([0*np.ones(size) for i in range(self.NUM_DRONES)])
+            act_upper_bound = np.array([+1*np.ones(size) for i in range(self.NUM_DRONES)])
+            return spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32)
+            ##
+            #TODO VOLTAR A ALTERAR
+            #return spaces.Discrete(size)
+        #TODO actions stay in the range [-1,1] ?
         act_lower_bound = np.array([-1*np.ones(size) for i in range(self.NUM_DRONES)])
         act_upper_bound = np.array([+1*np.ones(size) for i in range(self.NUM_DRONES)])
         #
@@ -186,56 +202,133 @@ class BaseRLAviary(BaseAviary):
         """
         self.action_buffer.append(action)
         rpm = np.zeros((self.NUM_DRONES,4))
-        for k in range(action.shape[0]):
-            target = action[k, :]
-            if self.ACT_TYPE == ActionType.RPM:
-                rpm[k,:] = np.array(self.HOVER_RPM * (1+0.05*target))
-            elif self.ACT_TYPE == ActionType.PID:
-                state = self._getDroneStateVector(k)
-                next_pos = self._calculateNextStep(
-                    current_position=state[0:3],
-                    destination=target,
-                    step_size=1,
-                    )
-                rpm_k, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
-                                                        cur_pos=state[0:3],
-                                                        cur_quat=state[3:7],
-                                                        cur_vel=state[10:13],
-                                                        cur_ang_vel=state[13:16],
-                                                        target_pos=next_pos
-                                                        )
-                rpm[k,:] = rpm_k
-            elif self.ACT_TYPE == ActionType.VEL:
-                state = self._getDroneStateVector(k)
-                if np.linalg.norm(target[0:3]) != 0:
-                    v_unit_vector = target[0:3] / np.linalg.norm(target[0:3])
-                else:
-                    v_unit_vector = np.zeros(3)
-                temp, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
-                                                        cur_pos=state[0:3],
-                                                        cur_quat=state[3:7],
-                                                        cur_vel=state[10:13],
-                                                        cur_ang_vel=state[13:16],
-                                                        target_pos=state[0:3], # same as the current position
-                                                        target_rpy=np.array([0,0,state[9]]), # keep current yaw
-                                                        target_vel=self.SPEED_LIMIT * np.abs(target[3]) * v_unit_vector # target the desired velocity vector
-                                                        )
-                rpm[k,:] = temp
-            elif self.ACT_TYPE == ActionType.ONE_D_RPM:
-                rpm[k,:] = np.repeat(self.HOVER_RPM * (1+0.05*target), 4)
-            elif self.ACT_TYPE == ActionType.ONE_D_PID:
-                state = self._getDroneStateVector(k)
-                res, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
-                                                        cur_pos=state[0:3],
-                                                        cur_quat=state[3:7],
-                                                        cur_vel=state[10:13],
-                                                        cur_ang_vel=state[13:16],
-                                                        target_pos=state[0:3]+0.1*np.array([0,0,target[0]])
-                                                        )
-                rpm[k,:] = res
+
+        if self.ACT_TYPE == ActionType.DISCRETE_2D or self.ACT_TYPE == ActionType.DISCRETE_3D:
+            action_to_take = np.argmax(action)
+            strong = 0.05
+            weak = 0.025
+            if action_to_take == 0: #STRONG LEFT
+                rpm[0,:2] = np.repeat(self.HOVER_RPM * (1+strong), 2)
+                rpm[0,2:] = np.repeat(self.HOVER_RPM, 2)
+            elif action_to_take == 1: #WEAK LEFT
+                rpm[0,:2] = np.repeat(self.HOVER_RPM * (1+weak), 2)
+                rpm[0,2:] = np.repeat(self.HOVER_RPM, 2)
+            elif action_to_take == 2: #UP
+                rpm[0,:] = np.repeat(self.HOVER_RPM * (1+strong), 4)
+            elif action_to_take == 3: #HOVER
+                rpm[0,:] = np.repeat(self.HOVER_RPM, 4)
+            elif action_to_take == 4: #DOWN
+                rpm[0,:] = np.repeat(self.HOVER_RPM * (1-strong), 4)
+            elif action_to_take == 5: #WEAK RIGHT
+                rpm[0,:2] = np.repeat(self.HOVER_RPM, 2)
+                rpm[0,2:] = np.repeat(self.HOVER_RPM * (1+weak), 2)
+            elif action_to_take == 6: #STRONG RIGHT
+                rpm[0,:2] = np.repeat(self.HOVER_RPM, 2)
+                rpm[0,2:] = np.repeat(self.HOVER_RPM * (1+strong), 2)
             else:
-                print("[ERROR] in BaseRLAviary._preprocessAction()")
-                exit()
+                    if action_to_take == 7: #STRONG FORWARD
+                        rpm[0,0] = self.HOVER_RPM * (1+strong)
+                        rpm[0,1] = self.HOVER_RPM
+                        rpm[0,2] = self.HOVER_RPM * (1+strong)
+                        rpm[0,3] = self.HOVER_RPM
+                    elif action_to_take == 8: #WEAK FORWARD
+                        rpm[0,0] = self.HOVER_RPM * (1+weak)
+                        rpm[0,1] = self.HOVER_RPM
+                        rpm[0,2] = self.HOVER_RPM * (1+weak)
+                        rpm[0,3] = self.HOVER_RPM
+                    elif action_to_take == 9: #WEAK BACKWARD
+                        rpm[0,0] = self.HOVER_RPM
+                        rpm[0,1] = self.HOVER_RPM * (1+weak)
+                        rpm[0,2] = self.HOVER_RPM
+                        rpm[0,3] = self.HOVER_RPM * (1+weak)
+                    elif action_to_take == 10: #STRONG BACKWARD
+                        rpm[0,0] = self.HOVER_RPM
+                        rpm[0,1] = self.HOVER_RPM * (1+strong)
+                        rpm[0,2] = self.HOVER_RPM
+                        rpm[0,3] = self.HOVER_RPM * (1+strong)
+                
+        else:
+            for k in range(action.shape[0]):
+                target = action[k, :]
+                if self.ACT_TYPE == ActionType.RPM:
+                    rpm[k,:] = np.array(self.HOVER_RPM * (1+0.05*target))
+                elif self.ACT_TYPE == ActionType.PID:
+                    state = self._getDroneStateVector(k)
+                    next_pos = self._calculateNextStep(
+                        current_position=state[0:3],
+                        destination=target,
+                        step_size=1,
+                        )
+                    rpm_k, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
+                                                            cur_pos=state[0:3],
+                                                            cur_quat=state[3:7],
+                                                            cur_vel=state[10:13],
+                                                            cur_ang_vel=state[13:16],
+                                                            target_pos=next_pos
+                                                            )
+                    rpm[k,:] = rpm_k
+                elif self.ACT_TYPE == ActionType.VEL:
+                    state = self._getDroneStateVector(k)
+                    if np.linalg.norm(target[0:3]) != 0:
+                        v_unit_vector = target[0:3] / np.linalg.norm(target[0:3])
+                    else:
+                        v_unit_vector = np.zeros(3)
+                    temp, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
+                                                            cur_pos=state[0:3],
+                                                            cur_quat=state[3:7],
+                                                            cur_vel=state[10:13],
+                                                            cur_ang_vel=state[13:16],
+                                                            target_pos=state[0:3], # same as the current position
+                                                            target_rpy=np.array([0,0,state[9]]), # keep current yaw
+                                                            target_vel=self.SPEED_LIMIT * np.abs(target[3]) * v_unit_vector # target the desired velocity vector
+                                                            )
+                    rpm[k,:] = temp
+                elif self.ACT_TYPE == ActionType.ONE_D_RPM:
+                    rpm[k,:] = np.repeat(self.HOVER_RPM * (1+0.05*target), 4)
+                elif self.ACT_TYPE == ActionType.ONE_D_PID:
+                    state = self._getDroneStateVector(k)
+                    res, _, _ = self.ctrl[k].computeControl(control_timestep=self.CTRL_TIMESTEP,
+                                                            cur_pos=state[0:3],
+                                                            cur_quat=state[3:7],
+                                                            cur_vel=state[10:13],
+                                                            cur_ang_vel=state[13:16],
+                                                            target_pos=state[0:3]+0.1*np.array([0,0,target[0]])
+                                                            )
+                    rpm[k,:] = res
+                elif self.ACT_TYPE == ActionType.TWO_D_RPM:
+                    #if the urdf file is correct and the axis are: x -> forward, y -> left, z -> up
+                    #then the following is:
+                    rpm[k,0] = self.HOVER_RPM * (1+0.05*target[1]) #x=0.028; y=-0.028 so it is the front right motor
+                    rpm[k,1] = self.HOVER_RPM * (1+0.05*target[1]) #x=-0.028; y=-0.028 so it is the back right motor
+                    rpm[k,2] = self.HOVER_RPM * (1+0.05*target[0]) #x=-0.028; y=0.028 so it is the back left motor
+                    rpm[k,3] = self.HOVER_RPM * (1+0.05*target[0]) #x=0.028; y=0.028 so it is the front left motor
+                    """
+                    elif self.ACT_TYPE == ActionType.DISCRETE_2D:
+                        action_to_take = np.argmax(action)
+                        strong = 0.01
+                        weak = 0.005
+                        if action_to_take == 0: #STRONG LEFT
+                            rpm[k,:2] = np.repeat(self.HOVER_RPM * (1+strong), 2)
+                            rpm[k,2:] = np.repeat(self.HOVER_RPM * (1-strong), 2)
+                        elif action_to_take == 1: #WEAK LEFT
+                            rpm[k,:2] = np.repeat(self.HOVER_RPM * (1+weak), 2)
+                            rpm[k,2:] = np.repeat(self.HOVER_RPM * (1-weak), 2)
+                        elif action_to_take == 2: #UP
+                            rpm[k,:] = np.repeat(self.HOVER_RPM * (1+weak), 4)
+                        elif action_to_take == 3: #HOVER
+                            rpm[k,:] = np.repeat(self.HOVER_RPM, 4)
+                        elif action_to_take == 4: #DOWN
+                            rpm[k,:] = np.repeat(self.HOVER_RPM * (1-weak), 4)
+                        elif action_to_take == 5: #WEAK RIGHT
+                            rpm[k,:2] = np.repeat(self.HOVER_RPM * (1-weak), 2)
+                            rpm[k,2:] = np.repeat(self.HOVER_RPM * (1+weak), 2)
+                        elif action_to_take == 6: #STRONG RIGHT
+                            rpm[k,:2] = np.repeat(self.HOVER_RPM * (1-strong), 2)
+                            rpm[k,2:] = np.repeat(self.HOVER_RPM * (1+strong), 2)"""   
+                
+                else:
+                    print("[ERROR] in BaseRLAviary._preprocessAction()")
+                    exit()
         return rpm
 
     ################################################################################
@@ -261,19 +354,25 @@ class BaseRLAviary(BaseAviary):
             hi = np.inf
             obs_lower_bound = np.array([[lo,lo,0, lo,lo,lo,lo,lo,lo,lo,lo,lo] for i in range(self.NUM_DRONES)])
             obs_upper_bound = np.array([[hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi,hi] for i in range(self.NUM_DRONES)])
-            #### Add action buffer to observation space ################
-            act_lo = -1
-            act_hi = +1
-            for i in range(self.ACTION_BUFFER_SIZE):
-                if self.ACT_TYPE in [ActionType.RPM, ActionType.VEL]:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
-                elif self.ACT_TYPE==ActionType.PID:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo,act_lo,act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi,act_hi,act_hi] for i in range(self.NUM_DRONES)])])
-                elif self.ACT_TYPE in [ActionType.ONE_D_RPM, ActionType.ONE_D_PID]:
-                    obs_lower_bound = np.hstack([obs_lower_bound, np.array([[act_lo] for i in range(self.NUM_DRONES)])])
-                    obs_upper_bound = np.hstack([obs_upper_bound, np.array([[act_hi] for i in range(self.NUM_DRONES)])])
+            
+            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+            ############################################################
+        elif self.OBS_TYPE == ObservationType.POS:
+            ############################################################
+            lo = -np.inf
+            hi = np.inf
+            #### OBS SPACE OF SIZE 3
+            obs_lower_bound = np.array([[lo,lo,0] for i in range(self.NUM_DRONES)])
+            obs_upper_bound = np.array([[hi,hi,hi] for i in range(self.NUM_DRONES)])
+            return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
+            ############################################################
+        elif self.OBS_TYPE == ObservationType.POS_RPY:
+            ############################################################
+            lo = -np.inf
+            hi = np.inf
+            #### OBS SPACE OF SIZE 6
+            obs_lower_bound = np.array([[lo,lo,0,lo,lo,lo] for i in range(self.NUM_DRONES)])
+            obs_upper_bound = np.array([[hi,hi,hi,hi,hi,hi] for i in range(self.NUM_DRONES)])
             return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
             ############################################################
         else:
@@ -313,10 +412,28 @@ class BaseRLAviary(BaseAviary):
                 obs = self._getDroneStateVector(i)
                 obs_12[i, :] = np.hstack([obs[0:3], obs[7:10], obs[10:13], obs[13:16]]).reshape(12,)
             ret = np.array([obs_12[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
-            #### Add action buffer to observation #######################
-            for i in range(self.ACTION_BUFFER_SIZE):
-                ret = np.hstack([ret, np.array([self.action_buffer[i][j, :] for j in range(self.NUM_DRONES)])])
+
             return ret
             ############################################################
+        elif self.OBS_TYPE == ObservationType.POS:
+            ############################################################
+            #### OBS SPACE OF SIZE 3
+            obs_3 = np.zeros((self.NUM_DRONES,3))
+            for i in range(self.NUM_DRONES):
+                obs = self._getDroneStateVector(i)
+                obs_3[i, :] = obs[0:3].reshape(3,)
+            ret = np.array([obs_3[i, :] for i in range(self.NUM_DRONES)]).astype('float32')
+            return ret
+            ############################################################
+        elif self.OBS_TYPE == ObservationType.POS_RPY:
+            ############################################################
+            #### OBS SPACE OF SIZE 6
+            obs_6 = np.zeros((self.NUM_DRONES,6))
+            for i in range(self.NUM_DRONES):
+                #obs = self._clipAndNormalizeState(self._getDroneStateVector(i))
+                obs = self._getDroneStateVector(i)
+                obs_6[i, :] = np.hstack([obs[0:3], obs[7:10]]).reshape(6,)
+            ret = np.array([obs_6[i, :] for i in range(self.NUM_DRONES)]).astype('float32')    
+            return ret    
         else:
             print("[ERROR] in BaseRLAviary._computeObs()")
