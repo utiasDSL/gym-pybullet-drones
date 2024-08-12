@@ -9,7 +9,7 @@ sys.path.append(sys.path[0].replace("ros2/install/ros2_gym_pybullet_drones/lib/r
 if sys.platform == 'darwin': # macOS
     sys.path.append("/Users/"+os.getlogin()+"/opt/anaconda3/envs/drones/lib/python3.8/site-packages")  
 elif sys.platform == 'linux': # Ubuntu
-    sys.path.append("/home/"+getpass.getuser()+"/anaconda3/envs/drones/lib/python3.8/site-packages")  
+    sys.path.append("/home/"+getpass.getuser()+"/anaconda3/envs/drones/lib/python3.10/site-packages")  
 
 import rclpy
 import random
@@ -44,6 +44,8 @@ class RandomControl(Node):
         self.action_cb_count += 1
         random_rpm13 = random.uniform(.9, 1.1)*self.env.HOVER_RPM
         random_rpm24 = random.uniform(.9, 1.1)*self.env.HOVER_RPM
+        #random_rpm13 = self.env.HOVER_RPM
+        #random_rpm24 = self.env.HOVER_RPM
         msg = Float32MultiArray()
         msg.data = [random_rpm13,random_rpm24,random_rpm13,random_rpm24]
         self.publisher_.publish(msg)

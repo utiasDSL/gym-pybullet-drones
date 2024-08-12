@@ -22,6 +22,7 @@ setup(
         'console_scripts': [
             'aviary_wrapper = ros2_gym_pybullet_drones.aviary_wrapper:main',
             'random_control = ros2_gym_pybullet_drones.random_control:main',
+            'vision_wrapper = ros2_gym_pybullet_drones.vision_wrapper:main',
         ],
     },
 )

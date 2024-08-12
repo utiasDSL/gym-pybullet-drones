@@ -3,8 +3,10 @@ import numpy as np
 from gym import spaces
 import pkg_resources
 import pybullet as p
+import open3d as o3d
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
+from scipy.spatial.transform import Rotation as R
 
 class VisionAviary(BaseAviary):
     """Multi-drone environment class for control applications using vision."""
@@ -98,39 +100,6 @@ class VisionAviary(BaseAviary):
     
     ################################################################################
     
-    def _addObstacles(self):
-        """Add obstacles to the environment, including multiple cylinders of different colors at fixed positions."""
-        super()._addObstacles()
-        base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
-        cylinder_colors = ['red', 'orange', 'green']
-        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(3)]
-
-        # Fixed positions
-        self.fixed_positions = [
-            (1, 1, 0),
-            (1, 0, 0),
-            (1, -1, 0),
-            (0, 1, 0),
-            (0, 5, 0),
-            (0, -1, 0),
-            (-1, 1, 0),
-            (-1, 0, 0),
-            (-1, -1, 0)
-        ]
-
-        for urdf, pos in zip(cylinders, self.fixed_positions):
-            if os.path.exists(urdf):
-                p.loadURDF(urdf,
-                           pos,
-                           p.getQuaternionFromEuler([0, 0, 0]),
-                           useFixedBase=True,
-                           physicsClientId=self.CLIENT
-                           )
-            else:
-                print(f"File not found: {urdf}")
-
-    ################################################################################
-
     def _observationSpace(self):
         """Returns the observation space of the environment.
 
@@ -205,7 +174,69 @@ class VisionAviary(BaseAviary):
         return obs
 
     ################################################################################
+
+    def _occupancy_generation(self,depth_image):
+
+        if depth_image.dtype != np.float32:
+            depth_image = depth_image.astype(np.float32)
+        
+        width=depth_image.shape[1]
+        height=depth_image.shape[0]
+        aspect = width/height
+        fov = 60    
+        
+        fx = width / (2 * aspect * np.tan(np.radians(fov / 2)))
+        fy = height / (2 * np.tan(np.radians(fov / 2)))
+        intrinsic = o3d.camera.PinholeCameraIntrinsic(
+            width=depth_image.shape[1],
+            height=depth_image.shape[0],
+            fx=fx, fy=fy,
+            cx=depth_image.shape[0] / 2,
+            cy=depth_image.shape[1] / 2
+        )
+        # Extract drone state
+        drone_state = self._getDroneStateVector(0)
+        drone_position = drone_state[:3]  # The first three elements are the position
+        drone_orientation_quat = drone_state[3:7]  # The next four elements are the quaternion
+
+        # Convert quaternion to rotation matrix
+        rotation_matrix = R.from_quat(drone_orientation_quat).as_matrix()
+        axis_adjustment = np.array([[0, -1, 0, 0],
+                                [0, 0, -1, 0],
+                                [1, 0, 0, 0],
+                                [0, 0, 0, 1]])
+        
+
+        # Create the extrinsic transformation matrix
+        extrinsic = np.eye(4)
+        extrinsic[:3, :3] = rotation_matrix
+        extrinsic[:3, 3] = drone_position - np.array([0, -3, 0])
+        extrinsic = axis_adjustment @ extrinsic
+        depth_o3d = o3d.geometry.Image(depth_image)
     
+        # Create point cloud with extrinsic parameters
+        pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, extrinsic)
+        return pcd
+        # voxel_size = 0.05  # Set voxel size as per requirement
+        # voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
+
+        # # Step 4: Create the occupancy grid
+        # min_bound = voxel_grid.get_min_bound()
+        # max_bound = voxel_grid.get_max_bound()
+        # grid_size = np.ceil((max_bound - min_bound) / voxel_size).astype(int)
+        # voxels = voxel_grid.get_voxels()
+        # voxel_indices = np.array([v.grid_index for v in voxels])
+        # occupancy_grid = np.zeros(grid_size, dtype=bool)
+        # for idx in voxel_indices:
+        #     occupancy_grid[idx[0], idx[1], idx[2]] = True
+
+        # # Optional: Save the occupancy grid
+        # #np.save("occupancy_grid.npy", occupancy_grid)
+        # print("Occupancy grid created and saved successfully.")
+        # return occupancy_grid
+
+    ################################################################################
+
     def _preprocessAction(self,
                           action
                           ):
@@ -274,3 +305,34 @@ class VisionAviary(BaseAviary):
 
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
+
+    def _addObstacles(self):
+        """Add obstacles to the environment, including multiple cylinders of different colors at fixed positions."""
+        super()._addObstacles()
+        base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+        cylinder_colors = ['red', 'orange', 'green']
+        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(3)]
+
+        # Fixed positions
+        self.fixed_positions = [
+            (0.5, 0.5, 0.5),
+            (0.5, 0, 0.5),
+            (0.5, -0.5, 0.5),
+            (0, 0.5, 0.5),
+            (0, 5, 0.5),
+            (0, -0.5, 0.5),
+            (-0.5, 0.5, 0.5),
+            (-0.5, 0, 0.5),
+            (-0.5, -0.5, 0.5)
+        ]
+
+        for urdf, pos in zip(cylinders, self.fixed_positions):
+            if os.path.exists(urdf):
+                p.loadURDF(urdf,
+                        pos,
+                        p.getQuaternionFromEuler([0, 0, 0]),
+                        useFixedBase=True,
+                        physicsClientId=self.CLIENT
+                        )
+            else:
+                print(f"File not found: {urdf}")
