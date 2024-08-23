@@ -1,6 +1,6 @@
-"""ROS2 Python wrapper node for class CtrlAviary.
+"""ROS2 Python wrapper node for class VisionAviary.
 
-It creates an environment CtrlAviary and continually calls CtrlAviary.step().
+It creates an environment VisionAviary and continually calls CtrlAviary.step().
 It publishes on topic 'obs' and reads from topic 'action'.
 """
 import sys, os  # See: https://github.com/utiasDSL/gym-pybullet-drones/issues/89
@@ -55,7 +55,7 @@ class AviaryWrapper(Node):
         #### action_callback every timer_period_sec ################
         self.publisher_ = self.create_publisher(Float32MultiArray, 'obs', 1)
         self.dep_pub = self.create_publisher(Image,'depth_image',1)
-        self.pcd_pub = self.create_publisher(PointCloud2,'pcd_gym_pybullet',1)
+        self.pcd_pub = self.create_publisher(PointCloud2,'pcd_gym_pybullet',2)
     #    self.rgb_pub = self.create_publisher(Image,'rgb_image',1)
     #    self.seg_pub = self.create_publisher(Image,'segmentation_image',1)
 
@@ -74,7 +74,7 @@ class AviaryWrapper(Node):
         msg.data = obs["0"]["state"].tolist()
         self.publisher_.publish(msg)
         depth_image = obs["0"]["dep"]
-        pcd = self.env._occupancy_generation(depth_image)
+        pcd = self.env._pcd_generation(depth_image)
         points = np.asarray(pcd.points)
 
         # Create header
