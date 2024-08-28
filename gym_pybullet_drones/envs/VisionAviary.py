@@ -7,6 +7,7 @@ import open3d as o3d
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 from scipy.spatial.transform import Rotation as R
+import cv2
 
 class VisionAviary(BaseAviary):
     """Multi-drone environment class for control applications using vision."""
@@ -76,6 +77,16 @@ class VisionAviary(BaseAviary):
                          vision_attributes=True,
                          output_folder=output_folder
                          )
+        self.VID_WIDTH=int(640)
+        self.VID_HEIGHT=int(480)
+        
+        self.projection_matrix = p.computeProjectionMatrixFOV(fov=90.0,
+                                                            aspect=self.VID_WIDTH/self.VID_HEIGHT,
+                                                            nearVal=0.1,
+                                                            farVal=1000.0
+                                                            )
+        self.near = 0.1
+        self.far = 1000
 
     
     ################################################################################
@@ -175,65 +186,83 @@ class VisionAviary(BaseAviary):
 
     ################################################################################
 
-    def _occupancy_generation(self,depth_image):
+    def _pcd_generation(self,depth_image):
 
         if depth_image.dtype != np.float32:
             depth_image = depth_image.astype(np.float32)
         
-        width=depth_image.shape[1]
-        height=depth_image.shape[0]
-        aspect = width/height
-        fov = 60    
+        depth_image[depth_image == 1.0] = 0.0
+        nearVal = self.L
+        farVal = 1000
+        depth_mm = (2 * nearVal * farVal) / (farVal + nearVal - depth_image * (farVal - nearVal))
         
-        fx = width / (2 * aspect * np.tan(np.radians(fov / 2)))
-        fy = height / (2 * np.tan(np.radians(fov / 2)))
-        intrinsic = o3d.camera.PinholeCameraIntrinsic(
-            width=depth_image.shape[1],
-            height=depth_image.shape[0],
-            fx=fx, fy=fy,
-            cx=depth_image.shape[0] / 2,
-            cy=depth_image.shape[1] / 2
-        )
+        height, width = depth_image.shape
+        #print(width, height)
+        aspect = width/height
+        fov = 90    
+        
+        fx = width / (2*np.tan(np.radians(fov / 2)))
+        fy = height / (2*np.tan(np.radians(fov / 2)))
+        cx = width/2
+        cy = height/2
+        s = 0
+        intrinsic_matrix = np.array([[fx, s, cx],
+                             [0, fy, cy],
+                             [0, 0, 1]])
+
+        intrinsic = o3d.camera.PinholeCameraIntrinsic()
+        intrinsic.intrinsic_matrix = intrinsic_matrix
         # Extract drone state
         drone_state = self._getDroneStateVector(0)
         drone_position = drone_state[:3]  # The first three elements are the position
         drone_orientation_quat = drone_state[3:7]  # The next four elements are the quaternion
-
-        # Convert quaternion to rotation matrix
-        rotation_matrix = R.from_quat(drone_orientation_quat).as_matrix()
-        axis_adjustment = np.array([[0, -1, 0, 0],
-                                [0, 0, -1, 0],
-                                [1, 0, 0, 0],
-                                [0, 0, 0, 1]])
-        
-
         # Create the extrinsic transformation matrix
-        extrinsic = np.eye(4)
-        extrinsic[:3, :3] = rotation_matrix
-        extrinsic[:3, 3] = drone_position - np.array([0, -3, 0])
-        extrinsic = axis_adjustment @ extrinsic
-        depth_o3d = o3d.geometry.Image(depth_image)
+        depth_o3d = o3d.geometry.Image(depth_mm)
+        rot_mat = np.array(p.getMatrixFromQuaternion(drone_orientation_quat)).reshape(3, 3)
+        #### Set target point, camera view and projection matrices #
+        target = np.dot(rot_mat,np.array([1000, 0, 0])) + np.array(drone_position)
+        DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=drone_position+np.array([0, 0, self.L]),
+                                             cameraTargetPosition=target,
+                                             cameraUpVector=[0, 0, 1],
+                                             physicsClientId=self.CLIENT
+                                             )
+        DRONE_CAM_VIEW = self.get_extrinsics(np.array(DRONE_CAM_VIEW).reshape(4,4))
     
-        # Create point cloud with extrinsic parameters
-        pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, extrinsic)
+        pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, DRONE_CAM_VIEW)
         return pcd
-        # voxel_size = 0.05  # Set voxel size as per requirement
-        # voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(pcd, voxel_size=voxel_size)
+    
+    ################################################################################
+    
+    def get_extrinsics(self, view_matrix):
+        Tc = np.array([[1,  0,  0,  0],
+                    [0,  -1,  0,  0],
+                    [0,  0,  -1,  0],
+                    [0,  0,  0,  1]]).reshape(4,4)
+        T = np.linalg.inv(view_matrix) @ Tc
 
-        # # Step 4: Create the occupancy grid
-        # min_bound = voxel_grid.get_min_bound()
-        # max_bound = voxel_grid.get_max_bound()
-        # grid_size = np.ceil((max_bound - min_bound) / voxel_size).astype(int)
-        # voxels = voxel_grid.get_voxels()
-        # voxel_indices = np.array([v.grid_index for v in voxels])
-        # occupancy_grid = np.zeros(grid_size, dtype=bool)
-        # for idx in voxel_indices:
-        #     occupancy_grid[idx[0], idx[1], idx[2]] = True
+        return T
 
-        # # Optional: Save the occupancy grid
-        # #np.save("occupancy_grid.npy", occupancy_grid)
-        # print("Occupancy grid created and saved successfully.")
-        # return occupancy_grid
+    ################################################################################
+
+    def _occupancy_generation(self,depth_image):
+        point_cloud = self._pcd_generation(depth_image)
+        voxel_size = 0.1  # Set voxel size as per requirement
+        voxel_grid = o3d.geometry.VoxelGrid.create_from_point_cloud(point_cloud, voxel_size=voxel_size)
+
+        # Step 4: Create the occupancy grid
+        min_bound = voxel_grid.get_min_bound()
+        max_bound = voxel_grid.get_max_bound()
+        grid_size = np.ceil((max_bound - min_bound) / voxel_size).astype(int)
+        voxels = voxel_grid.get_voxels()
+        voxel_indices = np.array([v.grid_index for v in voxels])
+        occupancy_grid = np.zeros(grid_size, dtype=bool)
+        for idx in voxel_indices:
+            occupancy_grid[idx[0], idx[1], idx[2]] = True
+
+        # Optional: Save the occupancy grid
+        #np.save("occupancy_grid.npy", occupancy_grid)
+        print("Occupancy grid created and saved successfully.")
+        return occupancy_grid
 
     ################################################################################
 

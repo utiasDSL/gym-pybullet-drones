@@ -38,7 +38,7 @@ class BaseAviary(gym.Env):
                  user_debug_gui=True,
                  vision_attributes=False,
                  dynamics_attributes=False,
-                 output_folder='results'
+                 output_folder='/home/astik/gym_pybullet_drones/results'
                  ):
         """Initialization of a generic aviary environment.
 
@@ -133,13 +133,23 @@ class BaseAviary(gym.Env):
             self.rgb = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0], 4)))
             self.dep = np.ones(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
             self.seg = np.zeros(((self.NUM_DRONES, self.IMG_RES[1], self.IMG_RES[0])))
+            self.dir = False
             if self.IMG_CAPTURE_FREQ%self.AGGR_PHY_STEPS != 0:
                 print("[ERROR] in BaseAviary.__init__(), aggregate_phy_steps incompatible with the desired video capture frame rate ({:f}Hz)".format(self.IMG_FRAME_PER_SEC))
                 exit()
             if self.RECORD:
-                # TODO: This doesn't appear to work in general 
+                # TODO: This doesn't appear to work in general
+                self.FRAME_NUM = 0
                 self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
-                os.makedirs(os.path.dirname(self.ONBOARD_IMG_PATH), exist_ok=True)
+                # Check if the directory exists and create it if it doesn't
+                try:
+                    os.makedirs(self.ONBOARD_IMG_PATH, exist_ok=True)
+                    print(f"Directory created successfully: {self.ONBOARD_IMG_PATH}")
+                    self.dir = True
+                except OSError as e:
+                    print(f"Error creating directory {self.ONBOARD_IMG_PATH}: {e}")
+                    # Handle the error or exit if necessary
+                    exit()
         #### Create attributes for dynamics control inputs #########
         self.DYNAMICS_ATTR = dynamics_attributes
         if self.DYNAMICS_ATTR:
@@ -190,7 +200,7 @@ class BaseAviary(gym.Env):
                                                                     upAxisIndex=2,
                                                                     physicsClientId=self.CLIENT
                                                                     )
-                self.CAM_PRO = p.computeProjectionMatrixFOV(fov=60.0,
+                self.CAM_PRO = p.computeProjectionMatrixFOV(fov=90.0,
                                                             aspect=self.VID_WIDTH/self.VID_HEIGHT,
                                                             nearVal=0.1,
                                                             farVal=1000.0
@@ -282,12 +292,12 @@ class BaseAviary(gym.Env):
                                                      flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
                                                      physicsClientId=self.CLIENT
                                                      )
-            (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(os.path.join(self.IMG_PATH, "frame_"+str(self.FRAME_NUM)+".png"))
+            (Image.fromarray(np.reshape(rgb, (h, w, 4)), 'RGBA')).save(os.path.join(self.ONBOARD_IMG_PATH, "frame_"+str(self.FRAME_NUM)+".png"))
             #### Save the depth or segmentation view instead #######
             # dep = ((dep-np.min(dep)) * 255 / (np.max(dep)-np.min(dep))).astype('uint8')
-            # (Image.fromarray(np.reshape(dep, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            # (Image.fromarray(np.reshape(dep, (h, w)))).save(self.ONBOARD_IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
             # seg = ((seg-np.min(seg)) * 255 / (np.max(seg)-np.min(seg))).astype('uint8')
-            # (Image.fromarray(np.reshape(seg, (h, w)))).save(self.IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
+            # (Image.fromarray(np.reshape(seg, (h, w)))).save(self.ONBOARD_IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
             self.FRAME_NUM += 1
         #### Read the GUI's input parameters #######################
         if self.GUI and self.USER_DEBUG:
@@ -506,10 +516,17 @@ class BaseAviary(gym.Env):
                                                 fileName=os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), "output.mp4"),
                                                 physicsClientId=self.CLIENT
                                                 )
-        if self.RECORD and not self.GUI:
+        if self.RECORD and not self.GUI and not self.dir:
             self.FRAME_NUM = 0
-            self.IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"), '')
-            os.makedirs(os.path.dirname(self.IMG_PATH), exist_ok=True)
+            self.ONBOARD_IMG_PATH = os.path.join(self.OUTPUT_FOLDER, "recording_" + datetime.now().strftime("%m.%d.%Y_%H.%M.%S"))
+            # Check if the directory exists and create it if it doesn't
+            try:
+                os.makedirs(self.ONBOARD_IMG_PATH, exist_ok=True)
+                print(f"Directory created successfully: {self.ONBOARD_IMG_PATH}")
+            except OSError as e:
+                print(f"Error creating directory {self.ONBOARD_IMG_PATH}: {e}")
+                # Handle the error or exit if necessary
+                exit()
     
     ################################################################################
 
@@ -572,8 +589,8 @@ class BaseAviary(gym.Env):
                                              cameraUpVector=[0, 0, 1],
                                              physicsClientId=self.CLIENT
                                              )
-        DRONE_CAM_PRO =  p.computeProjectionMatrixFOV(fov=60.0,
-                                                      aspect=1.0,
+        DRONE_CAM_PRO =  p.computeProjectionMatrixFOV(fov=90.0,
+                                                      aspect=self.VID_WIDTH/self.VID_HEIGHT,
                                                       nearVal=self.L,
                                                       farVal=1000.0
                                                       )

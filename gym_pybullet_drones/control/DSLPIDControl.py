@@ -135,6 +135,78 @@ class DSLPIDControl(BaseControl):
         return rpm, pos_e, computed_target_rpy[2] - cur_rpy[2]
     
     ################################################################################
+    
+    def computeControl_user(self,
+                       control_timestep,
+                       cur_quat,
+                       cur_ang_vel,
+                       stick_pitch,
+                       stick_roll,
+                       stick_yaw,
+                       max_pitch_angle=10,  # Maximum pitch angle in degrees
+                       max_roll_angle=10,   # Maximum roll angle in degrees
+                       max_yaw_rate=45,     # Maximum yaw rate in degrees per second
+                       target_throttle=0,
+                       ):
+        """
+        Computes the PID control action (as RPMs) for a single drone.
+
+        This method sequentially calls `_dslPIDPositionControl()` and `_dslPIDAttitudeControl()`.
+        Parameter `cur_ang_vel` is unused.
+
+        Parameters
+        ----------
+        control_timestep : float
+            The time step at which control is computed.
+        cur_quat : ndarray
+            (4,1)-shaped array of floats containing the current orientation as a quaternion.
+        cur_ang_vel : ndarray
+            (3,1)-shaped array of floats containing the current angular velocity.
+        stick_pitch : float
+            Normalized stick input for pitch [-1, 1].
+        stick_roll : float
+            Normalized stick input for roll [-1, 1].
+        stick_yaw : float
+            Normalized stick input for yaw [-1, 1].
+        max_pitch_angle : float, optional
+            Maximum pitch angle (degrees).
+        max_roll_angle : float, optional
+            Maximum roll angle (degrees).
+        max_yaw_rate : float, optional
+            Maximum yaw rate (degrees per second).
+        target_throttle : float, optional
+            Normalized throttle value received from user.
+
+        Returns
+        -------
+        ndarray
+            (4,1)-shaped array of integers containing the RPMs to apply to each of the 4 motors.
+        ndarray
+            (3,1)-shaped array of floats containing the current XYZ position error.
+        float
+            The current yaw error.
+        """
+        self.control_counter += 1
+
+        # Map stick inputs to desired roll, pitch, yaw
+        target_roll = stick_roll * max_roll_angle
+        target_pitch = stick_pitch * max_pitch_angle
+        target_yaw_rate = stick_yaw * max_yaw_rate
+        target_throttle = (target_throttle+1)*30000
+        # Convert the RPY to a numpy array
+        target_rpy = np.array([target_roll, target_pitch, 0])  # Yaw might be handled as a rate
+
+        # Call the attitude control method with the mapped target RPY and target_yaw_rate
+        rpm = self._dslPIDAttitudeControl(control_timestep,
+                                        target_throttle,
+                                        cur_quat,
+                                        target_rpy,
+                                        np.array([0, 0, target_yaw_rate])
+                                        )
+
+        cur_rpy = p.getEulerFromQuaternion(cur_quat)
+        return rpm, target_rpy[2] - cur_rpy[2]
+    ################################################################################
 
     def _dslPIDPositionControl(self,
                                control_timestep,
