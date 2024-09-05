@@ -186,12 +186,11 @@ class VisionAviary(BaseAviary):
 
     ################################################################################
 
-    def _pcd_generation(self,depth_image):
+    def _pcd_generation(self,depth_image, rgb_image=None):
 
         if depth_image.dtype != np.float32:
             depth_image = depth_image.astype(np.float32)
         
-        depth_image[depth_image == 1.0] = 0.0
         nearVal = self.L
         farVal = 1000
         depth_mm = (2 * nearVal * farVal) / (farVal + nearVal - depth_image * (farVal - nearVal))
@@ -227,8 +226,17 @@ class VisionAviary(BaseAviary):
                                              physicsClientId=self.CLIENT
                                              )
         DRONE_CAM_VIEW = self.get_extrinsics(np.array(DRONE_CAM_VIEW).reshape(4,4))
-    
-        pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, DRONE_CAM_VIEW)
+        if rgb_image is not None:
+            rgb_o3d = o3d.geometry.Image(rgb_image.astype(np.uint8))  # Convert RGB to Open3D Image
+            rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
+                rgb_o3d, depth_o3d)
+            pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd_image, intrinsic, DRONE_CAM_VIEW)
+        else:
+            pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, DRONE_CAM_VIEW)
+        
+        distances = np.linalg.norm(np.asarray(pcd.points), axis=1)
+        indices = np.where((distances >= 0.15) & (distances <= farVal))[0]
+        pcd = pcd.select_by_index(indices)
         return pcd
     
     ################################################################################
@@ -341,7 +349,7 @@ class VisionAviary(BaseAviary):
         base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
         cylinder_colors = ['red', 'orange', 'green']
         cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(3)]
-
+        # obstacles = os.path.join(base_path, "gate.urdf")
         # Fixed positions
         self.fixed_positions = [
             (0.5, 0.5, 0.5),
@@ -355,6 +363,8 @@ class VisionAviary(BaseAviary):
             (-0.5, -0.5, 0.5)
         ]
 
+        # obstacle_pos = (0.0, 0.0, 0.0)
+
         for urdf, pos in zip(cylinders, self.fixed_positions):
             if os.path.exists(urdf):
                 p.loadURDF(urdf,
@@ -365,3 +375,12 @@ class VisionAviary(BaseAviary):
                         )
             else:
                 print(f"File not found: {urdf}")
+
+        # if os.path.exists(obstacles):
+        #     p.loadURDF(obstacles,
+        #                 obstacle_pos,
+        #                 p.getQuaternionFromEuler([0, 0, 0]),
+        #                 useFixedBase=True,
+        #                 physicsClientId=self.CLIENT)
+        # else:
+        #     print(f"File not found: {obstacles}")

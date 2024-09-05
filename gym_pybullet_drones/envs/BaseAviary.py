@@ -977,14 +977,14 @@ class BaseAviary(gym.Env):
         #            p.getQuaternionFromEuler([0,0,0]),
         #            physicsClientId=self.CLIENT
         #            )
-        base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+#        base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
         #cylinder_colors = ['red', 'orange', 'green']
-        cylinder_colors = ['red']
-        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(1)]
+#        cylinder_colors = ['red']
+#        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(1)]
 
         # Fixed positions
-        self.fixed_positions = [
-            (0.5, 0.5, 0.5)
+#        self.fixed_positions = [
+#            (0.5, 0.5, 0.5)
             # (0.5, 0, 0.5),
             # (0.5, -0.5, 0.5),
             # (0, 0.5, 0.5),
@@ -993,18 +993,18 @@ class BaseAviary(gym.Env):
             # (-0.5, 0.5, 0.5),
             # (-0.5, 0, 0.5),
             # (-0.5, -0.5, 0.5)
-        ]
+#        ]
 
-        for urdf, pos in zip(cylinders, self.fixed_positions):
-            if os.path.exists(urdf):
-                p.loadURDF(urdf,
-                        pos,
-                        p.getQuaternionFromEuler([0, 0, 0]),
-                        useFixedBase=True,
-                        physicsClientId=self.CLIENT
-                        )
-            else:
-                print(f"File not found: {urdf}")
+        # for urdf, pos in zip(cylinders, self.fixed_positions):
+        #     if os.path.exists(urdf):
+        #         p.loadURDF(urdf,
+        #                 pos,
+        #                 p.getQuaternionFromEuler([0, 0, 0]),
+        #                 useFixedBase=True,
+        #                 physicsClientId=self.CLIENT
+        #                 )
+        #     else:
+        #         print(f"File not found: {urdf}")
     
     ################################################################################
     

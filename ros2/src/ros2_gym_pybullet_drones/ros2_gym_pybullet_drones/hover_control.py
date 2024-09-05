@@ -44,8 +44,8 @@ class HoverControl(Node):
         self.obs_subscription  # prevent unused variable warning
         self.R = 0.3
         self.H = 0.1
-        self.INIT_XYZS = np.array([[self.R * np.cos(np.pi / 2), self.R * np.sin(np.pi / 2) - self.R, self.H]])
-        self.INIT_RPYS = np.array([[0, 0, 0]])
+        self.INIT_XYZS = np.array([[0, -self.R, self.H]])
+        self.INIT_RPYS = np.array([[0, 0, np.pi/2]])
         PERIOD = 10
         self.control_freq_hz = 50
         self.NUM_WP = self.control_freq_hz * PERIOD

@@ -41,18 +41,20 @@ class AviaryWrapper(Node):
         self.R = 0.3
         self.H = 0.1
         self.INIT_XYZS = np.array([[0, -self.R, self.H]])
+        self.INIT_RPYS = np.array([[0, 0, np.pi/2]])
+
 
         self.env = VisionAviary(drone_model=DroneModel.CF2X,
                            num_drones=1,
                            initial_xyzs=self.INIT_XYZS,
-                           initial_rpys=None,
+                           initial_rpys=self.INIT_RPYS,
                            physics=Physics.PYB,
                            neighbourhood_radius=np.inf,
                            freq=timer_freq_hz,
                            aggregate_phy_steps=1,
-                           gui=True,
+                           gui=False,
                            record=False,
-                           obstacles=False,
+                           obstacles=True,
                            user_debug_gui=False
                            )
         #### Initialize an action with the RPMs at hover ###########
@@ -124,9 +126,11 @@ class AviaryWrapper(Node):
 
         self.publisher_.publish(msg)
         depth_image = obs["0"]["dep"]
+        rgb_image = obs["0"]["rgb"]
+
         pcd = self.env._pcd_generation(depth_image)
         points = np.asarray(pcd.points)
-        #points = self.env._pcd_generation_opencv(depth_image)
+        # points = self.env._pcd_generation_opencv(depth_image)
         # Create header
         header = Header()
         header.stamp = self.get_clock().now().to_msg()
@@ -145,7 +149,6 @@ class AviaryWrapper(Node):
         # Publish the PointCloud2 message
         self.pcd_pub.publish(pointcloud_msg)
 
-        rgb_image = obs["0"]["rgb"]
 
     #    seg_image = obs["0"]["seg"]
         if depth_image.dtype != np.float32:
