@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>rrt_path_finder</name>
+  <version>0.0.1</version>
+  <description>RRT Planner with ROS 2 Humble</description>
+
+  <maintainer email="41.astiksrivastava@gmail.com">Astik Srivastava</maintainer>
+
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Build and Export Dependencies -->
+  <build_export_depend>rclcpp</build_export_depend>
+  <build_export_depend>nav_msgs</build_export_depend>
+  <build_export_depend>sensor_msgs</build_export_depend>
+  <build_export_depend>visualization_msgs</build_export_depend>
+  <build_export_depend>pcl_conversions</build_export_depend>
+  <build_export_depend>PCL</build_export_depend>
+  <build_export_depend>tf2_ros</build_export_depend>
+  <build_export_depend>tf2_sensor_msgs</build_export_depend>
+  <build_export_depend>tf2_geometry_msgs</build_export_depend>
+
+  <!-- Execution Dependencies -->
+  <exec_depend>rclcpp</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>visualization_msgs</exec_depend>
+  <exec_depend>pcl_conversions</exec_depend>
+  <exec_depend>PCL</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf2_sensor_msgs</exec_depend>
+  <exec_depend>tf2_geometry_msgs</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>
