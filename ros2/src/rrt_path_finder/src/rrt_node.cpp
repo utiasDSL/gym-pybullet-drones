@@ -15,12 +15,13 @@
 #include <geometry_msgs/msg/pose_stamped.hpp>
 #include <visualization_msgs/msg/marker_array.hpp>
 #include <visualization_msgs/msg/marker.hpp>
+#include "std_msgs/msg/float32_multi_array.hpp"
 
 #include "rrt_path_finder/corridor_finder.h"
 
 #include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
-#include <tf2_sensor_msgs/tf2_sensor_msgs.h>
+#include <tf2_sensor_msgs/tf2_sensor_msgs.hpp>
 
 using namespace std;
 using namespace Eigen;
@@ -35,24 +36,28 @@ public:
     {
         // Parameters
         this->declare_parameter("plan_rate", 10.0);
-        this->declare_parameter("safety_margin", 0.65);
-        this->declare_parameter("search_margin", 0.35);
-        this->declare_parameter("max_radius", 10.0);
+        // safety_margin=1.0, search_margin=0.5, max_radius=1.5, sample_range=10.0
+        // rrt.setPt(startPt=start_point, endPt=end_point, xl=-5, xh=15, yl=-5, yh=15, zl=0.0, zh=1,
+        //      local_range=10, max_iter=1000, sample_portion=0.1, goal_portion=0.05)
+
+        this->declare_parameter("safety_margin", 1.0);
+        this->declare_parameter("search_margin", 0.50);
+        this->declare_parameter("max_radius", 1.0);
         this->declare_parameter("sensing_range", 10.0);
         this->declare_parameter("refine_portion", 0.80);
-        this->declare_parameter("sample_portion", 0.25);
+        this->declare_parameter("sample_portion", 0.1);
         this->declare_parameter("goal_portion", 0.05);
-        this->declare_parameter("path_find_limit", 0.05);
+        this->declare_parameter("path_find_limit", 5.0);
         this->declare_parameter("max_samples", 3000);
-        this->declare_parameter("stop_horizon", 0.50);
+        this->declare_parameter("stop_horizon", 0.5);
         this->declare_parameter("commit_time", 1.0);
 
-        this->declare_parameter("x_l", -50.0);
-        this->declare_parameter("x_h", 50.0);
-        this->declare_parameter("y_l", -50.0);
-        this->declare_parameter("y_h", 50.0);
-        this->declare_parameter("z_l", 0.5);
-        this->declare_parameter("z_h", 3.0);
+        this->declare_parameter("x_l", -5.0);
+        this->declare_parameter("x_h", 15.0);
+        this->declare_parameter("y_l", -5.0);
+        this->declare_parameter("y_h", 15.0);
+        this->declare_parameter("z_l", 0.0);
+        this->declare_parameter("z_h", 1.0);
 
         this->declare_parameter("target_x", 0.0);
         this->declare_parameter("target_y", 0.0);
@@ -83,9 +88,14 @@ public:
         _z_l = this->get_parameter("z_l").as_double();
         _z_h = this->get_parameter("z_h").as_double();
 
+
+        // Set parameters for RRT planner once
+        setRRTPlannerParams();
+
         // Publishers
         // _vis_corridor_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("flight_corridor", 1);
         _vis_rrt_star_pub = this->create_publisher<visualization_msgs::msg::Marker>("rrt_tree", 1);
+        _vis_corridor_pub = this->create_publisher<visualization_msgs::msg::MarkerArray>("viscorridor", 1);
 
         // Add the RRT waypoints publisher
         _rrt_waypoints_pub = this->create_publisher<nav_msgs::msg::Path>("rrt_waypoints", 1);
@@ -93,6 +103,8 @@ public:
         // Subscribers
         _odom_sub = this->create_subscription<nav_msgs::msg::Odometry>(
             "odometry", 1, std::bind(&PointCloudPlanner::rcvOdometryCallBack, this, std::placeholders::_1));
+        _obs_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
+        "obs", 1, std::bind(&PointCloudPlanner::rcvObsCallback, this, std::placeholders::_1));
         _dest_pts_sub = this->create_subscription<nav_msgs::msg::Path>(
             "waypoints", 1, std::bind(&PointCloudPlanner::rcvWaypointsCallBack, this, std::placeholders::_1));
         _map_sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(
@@ -108,12 +120,14 @@ private:
     // Visualization Publishers
     // rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _vis_corridor_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr _vis_rrt_star_pub;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _vis_corridor_pub;
 
     // RRT waypoints publisher
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _rrt_waypoints_pub;
 
     // Subscribers
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odom_sub;
+    rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr _obs_sub;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr _dest_pts_sub;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _map_sub;
 
@@ -132,7 +146,7 @@ private:
     int _max_samples;
 
     // RRT Path Planner
-    safeRegionRrtStar _rrtPathPlaner;
+    safeRegionRrtStar _rrtPathPlanner;
 
     // Variables for target position, trajectory, odometry, etc.
     Eigen::Vector3d _start_pos, _end_pos, _start_vel, _start_acc, _commit_target;
@@ -155,8 +169,23 @@ private:
         _is_target_receive = true;
         _is_target_arrive = false;
         _is_traj_exist = false;
+        //RCLCPP_WARN(this->get_logger(), "Waypoint received");
     }
 
+    // Initializing rrt parameters
+    void setRRTPlannerParams()
+    {
+        _rrtPathPlanner.setParam(_safety_margin, _search_margin, _max_radius, _sensing_range);
+    }
+
+    // Observation callback (for simulation only)
+    void rcvObsCallback(const std_msgs::msg::Float32MultiArray obs_msg)
+    {
+        _start_pos(0) = obs_msg.data[0];
+        _start_pos(1) = obs_msg.data[1];
+        _start_pos(2) = obs_msg.data[2];
+        //RCLCPP_WARN(this->get_logger(), "Start Pos: %f: %f: %f", _start_pos(0), _start_pos(1), _start_pos(2));
+    }
     void rcvOdometryCallBack(const nav_msgs::msg::Odometry::SharedPtr odom_msg)
     {
         _odom = *odom_msg;
@@ -173,8 +202,9 @@ private:
 
         if (_is_target_receive)
         {
-            _rrtPathPlaner.setStartPt(_start_pos, _end_pos);
+            _rrtPathPlanner.setStartPt(_start_pos, _end_pos);
         }
+        // RCLCPP_DEBUG(this->get_logger(), "waypoint callback called");
     }
 
     void rcvPointCloudCallBack(const sensor_msgs::msg::PointCloud2::SharedPtr pointcloud_msg)
@@ -185,24 +215,26 @@ private:
         // Transform the point cloud from camera frame to map frame
         sensor_msgs::msg::PointCloud2 cloud_transformed;
 
-        try
-        {
-            tf_buffer_.transform(*pointcloud_msg, cloud_transformed, "map", tf2::durationFromSec(0.1));
-        }
-        catch (tf2::TransformException &ex)
-        {
-            RCLCPP_WARN(this->get_logger(), "Could not transform point cloud: %s", ex.what());
-            return;
-        }
+        // try
+        // {
+        //     tf_buffer_.transform(*pointcloud_msg, cloud_transformed, "map", tf2::durationFromSec(0.1));
+        // }
+        // catch (tf2::TransformException &ex)
+        // {
+        //     RCLCPP_WARN(this->get_logger(), "Could not transform point cloud: %s", ex.what());
+        //     return;
+        // }
 
         pcl::PointCloud<pcl::PointXYZ> cloud_input;
-        pcl::fromROSMsg(cloud_transformed, cloud_input);
-
+        //pcl::fromROSMsg(cloud_transformed, cloud_input);
+        pcl::fromROSMsg(*pointcloud_msg, cloud_input);
         if (cloud_input.points.empty())
             return;
 
         _is_has_map = true;
-        _rrtPathPlaner.setInput(cloud_input);
+        _rrtPathPlanner.setInput(cloud_input);
+        //RCLCPP_WARN(this->get_logger(), "Point Cloud received");
+        
     }
 
     // Function to publish RRT waypoints
@@ -224,11 +256,13 @@ private:
         }
 
         _rrt_waypoints_pub->publish(path_msg);
+        //RCLCPP_WARN(this->get_logger(),"rrt path published");
     }
 
     void visRrt(const std::vector<NodePtr>& nodes)
     {
         // Create Marker messages for visualization
+        //RCLCPP_WARN(this->get_logger(),"rrt path visualizer called");
         visualization_msgs::msg::Marker line_list, root;
 
         root.header.frame_id = line_list.header.frame_id = "map";  // No leading slash in ROS2
@@ -285,8 +319,45 @@ private:
         // Publish the markers
         _vis_rrt_star_pub->publish(root);
         _vis_rrt_star_pub->publish(line_list);
-    }
+        // RCLCPP_WARN(this->get_logger(),"rrt path visualized");
 
+    }
+    void publishCorridorVisualization(const std::vector<Eigen::Vector3d>& path, const std::vector<double>& radii)
+    {
+        visualization_msgs::msg::MarkerArray corridor_markers;
+
+        for (size_t i = 0; i < path.size(); ++i)
+        {
+            visualization_msgs::msg::Marker marker;
+            marker.header.frame_id = "map";
+            marker.header.stamp = this->now();
+            marker.ns = "corridor";
+            marker.id = static_cast<int>(i);
+            marker.type = visualization_msgs::msg::Marker::SPHERE;
+            marker.action = visualization_msgs::msg::Marker::ADD;
+            
+            // Set position of the marker
+            marker.pose.position.x = path[i].x();
+            marker.pose.position.y = path[i].y();
+            marker.pose.position.z = path[i].z();
+
+            // Set scale (diameter based on radius)
+            double diameter = 2.0 * radii[i]; // Radius to diameter
+            marker.scale.x = diameter;
+            marker.scale.y = diameter;
+            marker.scale.z = diameter;
+
+            // Set color and transparency
+            marker.color.a = 0.5;  // Transparency
+            marker.color.r = 0.0;
+            marker.color.g = 1.0;
+            marker.color.b = 0.0;
+
+            corridor_markers.markers.push_back(marker);
+        }
+
+        _vis_corridor_pub->publish(corridor_markers);
+    }
 
     std::vector<Eigen::Vector3d> matrixToVector(const Eigen::MatrixXd& path_matrix)
     {
@@ -302,30 +373,38 @@ private:
         return path_vector;
     }
 
+    std::vector<double> radiusMatrixToVector(const Eigen::Matrix<double, -1, 1>& eigen_matrix)
+    {
+        std::vector<double> vec(eigen_matrix.data(), eigen_matrix.data() + eigen_matrix.size());
+        return vec;
+    }
+
 
 
     // Function to plan the initial trajectory using RRT
     void planInitialTraj()
     {
-        _rrtPathPlaner.reset();
+        _rrtPathPlanner.reset();
 
         // Set parameters for the RRT planner
-        _rrtPathPlaner.setParam(_safety_margin, _search_margin, _max_radius, _sensing_range);
+        // safety_margin=1.0, search_margin=0.5, max_radius=1.5, sample_range=10.0
 
-        _rrtPathPlaner.setPt(_start_pos, _end_pos, _x_l, _x_h, _y_l, _y_h, _z_l, _z_h,
+        _rrtPathPlanner.setPt(_start_pos, _end_pos, _x_l, _x_h, _y_l, _y_h, _z_l, _z_h,
                              _max_radius, _max_samples, _stop_time, _time_commit);
 
-        _rrtPathPlaner.SafeRegionExpansion(_path_find_limit);
-        auto [path, radius] = _rrtPathPlaner.getPath();
+        _rrtPathPlanner.SafeRegionExpansion(_path_find_limit);
+        auto [path, radius] = _rrtPathPlanner.getPath();
 
-        if (_rrtPathPlaner.getPathExistStatus())
+        if (_rrtPathPlanner.getPathExistStatus())
         {
             // Publish the RRT waypoints
             std::vector<Eigen::Vector3d> path_vector = matrixToVector(path);
+            std::vector<double> radius_vector = radiusMatrixToVector(radius);
             publishRRTWaypoints(path_vector);
+            publishCorridorVisualization(path_vector, radius_vector);
 
             // Temporary setting root based on distance
-            _rrtPathPlaner.resetRoot(_replan_distance);
+            _rrtPathPlanner.resetRoot(_replan_distance);
 
             // Update trajectory existence status
             _is_traj_exist = true;
@@ -334,24 +413,21 @@ private:
         {
             RCLCPP_WARN(this->get_logger(), "No path found in initial trajectory planning");
         }
-        visRrt(_rrtPathPlaner.getTree()); 
+        visRrt(_rrtPathPlanner.getTree()); 
     }
 
     // Function to plan the incremental trajectory
     void planIncrementalTraj()
     {
-        if (_rrtPathPlaner.getGlobalNaviStatus())
+        if (_rrtPathPlanner.getGlobalNaviStatus())
         {
-            visRrt(_rrtPathPlaner.getTree()); 
+            visRrt(_rrtPathPlanner.getTree()); 
             return; // No further planning required if global navigation is complete
         }
 
-        // Set parameters for the RRT planner
-        _rrtPathPlaner.setParam(_safety_margin, _search_margin, _max_radius, _sensing_range);
-
         if (_is_target_arrive)
         {
-            if (!_rrtPathPlaner.getPathExistStatus())
+            if (!_rrtPathPlanner.getPathExistStatus())
             {
                 RCLCPP_WARN(this->get_logger(), "Reached committed target but no feasible path exists");
                 _is_traj_exist = false;
@@ -360,12 +436,14 @@ private:
             else
             {
                 // Reset the root of the RRT planner
-                _rrtPathPlaner.resetRoot(_replan_distance);
-
+                _rrtPathPlanner.resetRoot(_replan_distance);
+                RCLCPP_WARN(this->get_logger(), "Trajectory replan triggered");
                 // Get the updated path and publish it
-                auto [path, radius] = _rrtPathPlaner.getPath();
+                auto [path, radius] = _rrtPathPlanner.getPath();
                 std::vector<Eigen::Vector3d> path_vector = matrixToVector(path);
+                std::vector<double> radius_vector = radiusMatrixToVector(radius);
                 publishRRTWaypoints(path_vector);
+                publishCorridorVisualization(path_vector, radius_vector);
 
                 // Further processing or visualization here
             }
@@ -373,15 +451,19 @@ private:
         else
         {
             // Continue refining and evaluating the path
-            _rrtPathPlaner.SafeRegionRefine(_refine_portion);
-            _rrtPathPlaner.SafeRegionEvaluate(_goal_portion);
+            _rrtPathPlanner.SafeRegionRefine(_refine_portion);
+            _rrtPathPlanner.SafeRegionEvaluate(_goal_portion);
 
             // Get the updated path and publish it
-            auto [path, radius] = _rrtPathPlaner.getPath();
+            auto [path, radius] = _rrtPathPlanner.getPath();
             std::vector<Eigen::Vector3d> path_vector = matrixToVector(path);
+            std::vector<double> radius_vector = radiusMatrixToVector(radius);
             publishRRTWaypoints(path_vector);
+            publishCorridorVisualization(path_vector, radius_vector);
+            
         }
-        visRrt(_rrtPathPlaner.getTree()); 
+        //RCLCPP_DEBUG(this->get_logger(),"Traj updated");
+        visRrt(_rrtPathPlanner.getTree()); 
 
     }
 
@@ -389,8 +471,13 @@ private:
     void planningCallBack()
     {
         if (!_is_target_receive || !_is_has_map)
+        {
+            RCLCPP_DEBUG(this->get_logger(), "No target or map received. _is_target_receive: %s, _is_has_map: %s", 
+                    _is_target_receive ? "true" : "false", 
+                    _is_has_map ? "true" : "false");
             return;
-
+        }
+        //RCLCPP_WARN(this->get_logger(),"rrt path planner called");
         if (!_is_traj_exist)
         {
             planInitialTraj();

@@ -141,7 +141,7 @@ void safeRegionRrtStar::clearBranchW(NodePtr node_delete) // Weak branch cut: if
 void safeRegionRrtStar::clearBranchS(NodePtr node_delete) // Strong branch cut: no matter how, cut all nodes in this branch
 {     
     for( auto nodeptr: node_delete->nxtNode_ptr ){
-        if( nodeptr->valid)
+        if(nodeptr->valid)
             invalidSet.push_back(nodeptr);
             nodeptr->valid = false;
             clearBranchS(nodeptr);
@@ -759,7 +759,7 @@ void safeRegionRrtStar::SafeRegionExpansion( double time_limit )
     root_node = new Node(start_pt, radiusSearch( start_pt ), 0.0, min_distance); 
 
     recordNode(root_node);
-
+    std::cout<<"Radius of start point: "<<root_node->radius<<std::endl;
     float pos[3] = {(float)root_node->coord(0), (float)root_node->coord(1), (float)root_node->coord(2)};
     kd_insertf(kdTree_, pos, root_node);
     int iter_count;
@@ -767,21 +767,41 @@ void safeRegionRrtStar::SafeRegionExpansion( double time_limit )
     for( iter_count = 0; iter_count < max_samples; iter_count ++)
     {     
         auto time_in_expand = clock.now();
-        if( (time_in_expand - time_bef_expand).seconds() > time_limit ) break;
+        if( (time_in_expand - time_bef_expand).seconds() > time_limit )
+        {
+            std::cout<<"Time expired before path found, breaking!!!"<<std::endl;
+            break;
+        } 
         
         Vector3d   pt_sample = genSample();
             
         NodePtr node_nearst_ptr = findNearstVertex(pt_sample);
         
-        if(!node_nearst_ptr->valid || node_nearst_ptr == NULL ) continue;
+        if(!node_nearst_ptr->valid || node_nearst_ptr == NULL )
+        {
+            continue;
+        } 
                   
         NodePtr node_new_ptr = genNewNode(pt_sample, node_nearst_ptr); 
         
-        if( node_new_ptr->coord(2) < z_l  || node_new_ptr->radius < safety_margin ) continue;
+        if( node_new_ptr->coord(2) < z_l  || node_new_ptr->radius < safety_margin )
+        {
+            bool op1 = node_new_ptr->coord(2) < z_l;
+            bool op2 = node_new_ptr->radius < safety_margin;
+            if(op2 == true)
+            {
+                std::cout<<"radius: "<<node_new_ptr->radius<<" safety margin: "<<safety_margin<<std::endl;
+            }
+            // std::cout<<"node_new_ptr->coord(2) < z_l: "<<op1<<" node_new_ptr->radius < safety_margin: "<<op2<<std::endl;
+            continue;
+        }
            
         treeRewire(node_new_ptr, node_nearst_ptr);  
         
-        if( ! node_new_ptr->valid) continue;
+        if( ! node_new_ptr->valid)
+        {
+            continue;
+        }
 
         if(checkEnd( node_new_ptr ))
         {
@@ -798,6 +818,7 @@ void safeRegionRrtStar::SafeRegionExpansion( double time_limit )
         kd_insertf(kdTree_, pos, node_new_ptr);
 
         recordNode(node_new_ptr);
+        std::cout<<"new node added: x: "<<pos[0]<<" y: "<<pos[1]<<" z: "<<pos[2]<<" radius: "<<node_new_ptr->radius<<std::endl;
         treePrune(node_new_ptr);      
 
         if( int(invalidSet.size()) >= cach_size) removeInvalid();

@@ -20,6 +20,7 @@
   <build_export_depend>tf2_ros</build_export_depend>
   <build_export_depend>tf2_sensor_msgs</build_export_depend>
   <build_export_depend>tf2_geometry_msgs</build_export_depend>
+  <build_export_depend>std_msgs</build_export_depend>
 
   <!-- Execution Dependencies -->
   <exec_depend>rclcpp</exec_depend>
@@ -31,6 +32,8 @@
   <exec_depend>tf2_ros</exec_depend>
   <exec_depend>tf2_sensor_msgs</exec_depend>
   <exec_depend>tf2_geometry_msgs</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
 
   <export>
     <build_type>ament_cmake</build_type>

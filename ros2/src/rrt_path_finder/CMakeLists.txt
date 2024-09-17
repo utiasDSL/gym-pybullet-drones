@@ -17,6 +17,7 @@ find_package(PCL REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_sensor_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 
 # Include the include/ directory and PCL include directories
 include_directories(
@@ -45,6 +46,7 @@ ament_target_dependencies(rrt_node
   tf2_ros
   tf2_sensor_msgs
   tf2_geometry_msgs
+  std_msgs
 )
 
 # Link the PCL libraries
