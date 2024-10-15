@@ -10,6 +10,9 @@ from rrt_python.corridor_finder import RRT_start
 import sensor_msgs_py.point_cloud2 as pc2
 from geometry_msgs.msg import Pose, PoseStamped
 from std_msgs.msg import Header
+import tf2_ros
+import tf2_py
+from scipy.spatial.transform import Rotation as R
 
 class PointCloudPlanner(Node):
     def __init__(self):
@@ -28,11 +31,11 @@ class PointCloudPlanner(Node):
         self.declare_parameter('max_samples', 3000)
         self.declare_parameter('stop_horizon', 0.5)
         self.declare_parameter('commit_time', 1.0)
-        self.declare_parameter('x_l', -105.0)
-        self.declare_parameter('x_h', 105.0)
-        self.declare_parameter('y_l', -105.0)
-        self.declare_parameter('y_h', 105.0)
-        self.declare_parameter('z_l', 0.0)
+        self.declare_parameter('x_l', -10.0)
+        self.declare_parameter('x_h', 0.0)
+        self.declare_parameter('y_l', -10.0)
+        self.declare_parameter('y_h', 10.0)
+        self.declare_parameter('z_l', 0.1)
         self.declare_parameter('z_h', 1.0)
 
         # Read the parameters
@@ -65,13 +68,15 @@ class PointCloudPlanner(Node):
         self._vis_subscribed_pcd = self.create_publisher(PointCloud2,'pcd_rrt_vis',2)
 
         # Subscribers
-        self._odom_sub = self.create_subscription(Odometry, 'odometry', self.rcv_odometry_callback, 1)
         self._obs_sub = self.create_subscription(Float32MultiArray, 'obs', self.rcv_obs_callback, 1)
         self._dest_pts_sub = self.create_subscription(Path, 'waypoints', self.rcv_waypoints_callback, 1)
         self._map_sub = self.create_subscription(PointCloud2, 'pcd_gym_pybullet', self.rcv_pointcloud_callback, 1)
 
         # Timer for planning
         self._planning_timer = self.create_timer(1.0 / self._planning_rate, self.planning_callback)
+
+        self._path = None
+        self._radius = None
 
         # Path Planning Variables
         self._start_pos = np.zeros(3)
@@ -81,6 +86,12 @@ class PointCloudPlanner(Node):
         self._is_target_receive = False
         self._is_has_map = False
 
+        # Transform listener
+        self.tf_buffer = tf2_ros.Buffer()
+        self.tf_listener = tf2_ros.TransformListener(self.tf_buffer, self)
+
+        self.commit_target = None
+
     def rcv_waypoints_callback(self, msg):
         if not msg.poses or msg.poses[0].pose.position.z < 0.0:
             return
@@ -88,6 +99,8 @@ class PointCloudPlanner(Node):
         self._end_pos[0] = msg.poses[0].pose.position.x
         self._end_pos[1] = msg.poses[0].pose.position.y
         self._end_pos[2] = msg.poses[0].pose.position.z
+
+        self.commit_target = self._end_pos
 
         self._is_target_receive = True
         self._is_target_arrive = False
@@ -98,58 +111,84 @@ class PointCloudPlanner(Node):
         self._start_pos[1] = msg.data[1]
         self._start_pos[2] = msg.data[2]
 
-    def rcv_odometry_callback(self, msg):
-        self._start_pos[0] = msg.pose.pose.position.x
-        self._start_pos[1] = msg.pose.pose.position.y
-        self._start_pos[2] = msg.pose.pose.position.z
-
         if self._is_target_receive:
             self.rrtPathPlanner.setStartPt(self._start_pos, self._end_pos)
 
+        if self._is_traj_exist and self.rrtPathPlanner.getDis(self._start_pos, self.commit_target) < 0.5:
+            self._is_target_arrive = True
+
     def rcv_pointcloud_callback(self, msg):
-        if not msg.data:
-            return
+        try:
+            # Get the transform between 'map' and the point cloud's frame
+            transform = self.tf_buffer.lookup_transform('ground_link', msg.header.frame_id, rclpy.time.Time())
 
-        # Convert PointCloud2 to numpy array
-        # point_cloud_list = list(pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True))
-        # point_cloud = np.array([[point[0], point[1], point[2]] for point in point_cloud_list])
-        
-        points_list = []
+            # Extract translation and rotation (quaternion)
+            translation = (transform.transform.translation.x,
+                        transform.transform.translation.y,
+                        transform.transform.translation.z)
+            quaternion = (transform.transform.rotation.x,
+                        transform.transform.rotation.y,
+                        transform.transform.rotation.z,
+                        transform.transform.rotation.w)
 
-        for point in pc2.read_points(msg, skip_nans=True):
-            points_list.append([point[0], point[1], point[2]])  # X, Y, Z coordinates
+            # Convert quaternion to rotation matrix using scipy
+            rotation_matrix = R.from_quat(quaternion).as_matrix()
 
-        # Convert to numpy array
-        points_array = np.array(points_list)
+            # Transform points
+            points_list = []
+            for point in pc2.read_points(msg, field_names=("x", "y", "z"), skip_nans=True):
+                # Apply rotation and translation
+                rotated_point = np.dot(rotation_matrix, np.array([point[0], point[1], point[2]]))
+                transformed_point = rotated_point + np.array(translation)
+                points_list.append(transformed_point)
 
-        self._is_has_map = True
-        self.rrtPathPlanner.setInput(points_array)
-        
-        header = Header()
-        header.stamp = self.get_clock().now().to_msg()
-        header.frame_id = "map"
+            # Convert list to numpy array
+            points_array = np.array(points_list, dtype=np.float32)
 
-        # Define fields for PointCloud2
-        fields = [
-            PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
-            PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
-            PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)
-        ]   
+            # Set the transformed point cloud as input to your planner
+            self.rrtPathPlanner.setInput(points_array)
+            self._is_has_map = True
+            
+            header = Header()
+            header.stamp = self.get_clock().now().to_msg()
+            header.frame_id = "ground_link"
 
-        # Create PointCloud2 message
-        pointcloud_msg = pc2.create_cloud(header, fields, points_array)
-        self._vis_subscribed_pcd.publish(pointcloud_msg)
+            # Define fields for PointCloud2
+            fields = [
+                PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+                PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+                PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)
+            ]   
+
+            # Create PointCloud2 message
+            pointcloud_msg = pc2.create_cloud(header, fields, points_array)
+
+            # Publish the PointCloud2 message
+            self._vis_subscribed_pcd.publish(pointcloud_msg)
+
+
+        except Exception as e:
+            self.get_logger().error(f"Transform error: {str(e)}")
+
+    def quaternion_to_rotation_matrix(self, qx, qy, qz, qw):
+        # Compute the rotation matrix from the quaternion
+        rotation_matrix = np.array([
+            [1 - 2 * qy ** 2 - 2 * qz ** 2, 2 * qx * qy - 2 * qz * qw, 2 * qx * qz + 2 * qy * qw],
+            [2 * qx * qy + 2 * qz * qw, 1 - 2 * qx ** 2 - 2 * qz ** 2, 2 * qy * qz - 2 * qx * qw],
+            [2 * qx * qz - 2 * qy * qw, 2 * qy * qz + 2 * qx * qw, 1 - 2 * qx ** 2 - 2 * qy ** 2]
+        ])
+        return rotation_matrix
 
 
     def publish_rrt_waypoints(self, path):
         path_msg = Path()
         path_msg.header.stamp = self.get_clock().now().to_msg()
-        path_msg.header.frame_id = "map"
+        path_msg.header.frame_id = "ground_link"
 
         for point in path:
             pose = PoseStamped()
             pose.header.stamp = self.get_clock().now().to_msg()
-            pose.header.frame_id = "map"
+            pose.header.frame_id = "ground_link"
             pose.pose.position.x = point[0]
             pose.pose.position.y = point[1]
             pose.pose.position.z = point[2]
@@ -162,7 +201,7 @@ class PointCloudPlanner(Node):
 
         for i, point in enumerate(path):
             marker = Marker()
-            marker.header.frame_id = "map"
+            marker.header.frame_id = "ground_link"
             marker.header.stamp = self.get_clock().now().to_msg()
             marker.ns = "corridor"
             marker.id = i
@@ -199,7 +238,7 @@ class PointCloudPlanner(Node):
             # Skip visualizing nodes, only visualize branches (paths)
             if node.preNode is not None:
                 branch_marker = Marker()
-                branch_marker.header.frame_id = "map"
+                branch_marker.header.frame_id = "ground_link"
                 branch_marker.header.stamp = self.get_clock().now().to_msg()
                 branch_marker.ns = "rrt_branches"
                 branch_marker.id = marker_id
@@ -237,34 +276,38 @@ class PointCloudPlanner(Node):
         self.rrtPathPlanner.setPt(self._start_pos, self._end_pos, self._x_l, self._x_h, self._y_l, self._y_h,
                                   self._z_l, self._z_h, 10.0, self._max_samples, self._sample_portion,
                                   self._goal_portion)
-        self.rrtPathPlanner.safeRegionExplansion(self._path_find_limit)
+        self.rrtPathPlanner.safeRegionExpansion(0.1)
 
-        path, radius = self.rrtPathPlanner.getPath()
+        self._path, self._radius = self.rrtPathPlanner.getPath()
         if self.rrtPathPlanner.getPathExistStatus():
-            self.publish_rrt_waypoints(path)
-            self.publish_corridor_visualization(path, radius)
+            self.publish_rrt_waypoints(self._path)
+            self.publish_corridor_visualization(self._path, self._radius)
             self.publish_rrt_tree()  # New function to visualize the RRT tree
             self._is_traj_exist = True
         else:
-            self.get_logger().warn("No path found in initial trajectory planning")
-
+            self.get_logger().warn("No path found in initial trajectory planning: giving hover command")
+            path_hover = []
+            path_hover.append(self._start_pos)
+            self.publish_rrt_waypoints(path_hover)
     def plan_incremental_traj(self):
         if self._is_target_arrive:
             if not self.rrtPathPlanner.getPathExistStatus():
                 self.get_logger().warn("Reached committed target but no feasible path exists")
                 self._is_traj_exist = False
             else:
-                self.rrtPathPlanner.resetRoot(self._max_radius)
-                path, radius = self.rrtPathPlanner.getPath()
-                self.publish_rrt_waypoints(path)
-                self.publish_corridor_visualization(path, radius)
+                self.commit_target = self.getcommittedtarget()
+                self.rrtPathPlanner.resetRoot(self.commit_target)
+                self._path, self._radius = self.rrtPathPlanner.getPath()
+                self.publish_rrt_waypoints(self._path)
+                self.publish_corridor_visualization(self._path, self._radius)
                 self.publish_rrt_tree()  # New function to visualize the RRT tree
 
         else:
-            self.rrtPathPlanner.safeRegionRefine(self._refine_portion)
-            path, radius = self.rrtPathPlanner.getPath()
-            self.publish_rrt_waypoints(path)
-            self.publish_corridor_visualization(path, radius)
+            self.rrtPathPlanner.safeRegionRefine(0.08)
+            self.rrtPathPlanner.safeRegionEvaluate(0.08)
+            self._path, self._radius = self.rrtPathPlanner.getPath()
+            self.publish_rrt_waypoints(self._path)
+            self.publish_corridor_visualization(self._path, self._radius)
             self.publish_rrt_tree()  # New function to visualize the RRT tree
 
 
@@ -273,11 +316,18 @@ class PointCloudPlanner(Node):
             self.get_logger().debug("No target or map received.")
             return
 
-        self.plan_initial_traj()
-        #if not self._is_traj_exist:
-            # self.plan_initial_traj()
-        # else:
-            # self.plan_incremental_traj()
+        if not self._is_traj_exist:
+            self.plan_initial_traj()
+        else:
+            self.plan_incremental_traj()
+    
+    def getcommittedtarget(self):
+        for i in range(0,len(self._path)):
+            if i < len(self._path)-1 and self.rrtPathPlanner.getDis(self._path[i],self._start_pos) > 6 and self.rrtPathPlanner.getDis(self._path[i+1], self._start_pos) < 7:
+                return self._path[i]
+        
+        return self._path[len(self._path)-1]
+        
 
 def main(args=None):
     rclpy.init(args=args)

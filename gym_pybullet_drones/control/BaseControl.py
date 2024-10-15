@@ -17,7 +17,8 @@ class BaseControl(object):
 
     def __init__(self,
                  drone_model: DroneModel,
-                 g: float=9.8
+                 g: float=9.8,
+                 m: float=1.0
                  ):
         """Common control classes __init__ method.
 

@@ -218,24 +218,50 @@ class VisionAviary(BaseAviary):
         # Create the extrinsic transformation matrix
         depth_o3d = o3d.geometry.Image(depth_mm)
         rot_mat = np.array(p.getMatrixFromQuaternion(drone_orientation_quat)).reshape(3, 3)
-        #### Set target point, camera view and projection matrices #
-        target = np.dot(rot_mat,np.array([1000, 0, 0])) + np.array(drone_position)
-        DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=drone_position+np.array([0, 0, self.L]),
-                                             cameraTargetPosition=target,
-                                             cameraUpVector=[0, 0, 1],
-                                             physicsClientId=self.CLIENT
-                                             )
-        DRONE_CAM_VIEW = self.get_extrinsics(np.array(DRONE_CAM_VIEW).reshape(4,4))
+        # #### Set target point, camera view and projection matrices #
+        # target = np.dot(rot_mat,np.array([1000, 0, 0])) + np.array(drone_position)
+        # DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=drone_position+np.array([0, 0, self.L]),
+        #                                      cameraTargetPosition=target,
+        #                                      cameraUpVector=[0, 0, 1],
+        #                                      physicsClientId=self.CLIENT
+        #                                      )
+        # DRONE_CAM_VIEW = self.get_extrinsics(np.array(DRONE_CAM_VIEW).reshape(4,4))
+        rotation_matrix = np.array(p.getMatrixFromQuaternion(drone_orientation_quat)).reshape(3, 3)
+
+        # Construct the 4x4 transformation matrix (from drone frame to world frame)
+        drone_transform = np.eye(4)
+        drone_transform[0:3, 0:3] = rotation_matrix  # Set rotation
+        drone_transform[0:3, 3] = drone_position     # Set translation
+
+        # Apply the combined rotation to the extrinsic matrix
+        combined_rotation1 = np.array([
+            [0, 0, 1, 0],
+            [0, 1, 0, 0],
+            [-1, 0, 0, 0],
+            [0, 0, 0, 1]
+        ])
+        combined_rotation2 = np.array([
+            [1, 0, 0, 0],
+            [0, 0, 1, 0],
+            [0, -1, 0, 0],
+            [0, 0, 0, 1]
+        ])
+        drone_transform = combined_rotation2 @ combined_rotation1 @ drone_transform
+
+        # Invert the transformation matrix to get the extrinsic matrix
+        # This is because extrinsic matrix is world-to-drone frame
+        extrinsic = np.linalg.inv(drone_transform)
+        # extrinsic = self.get_extrinsics(extrinsic)
         if rgb_image is not None:
             rgb_o3d = o3d.geometry.Image(rgb_image.astype(np.uint8))  # Convert RGB to Open3D Image
             rgbd_image = o3d.geometry.RGBDImage.create_from_color_and_depth(
                 rgb_o3d, depth_o3d)
-            pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd_image, intrinsic, DRONE_CAM_VIEW)
+            pcd = o3d.geometry.PointCloud.create_from_rgbd_image(rgbd_image, intrinsic, extrinsic)
         else:
-            pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, DRONE_CAM_VIEW)
+            pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, extrinsic)
         
         distances = np.linalg.norm(np.asarray(pcd.points), axis=1)
-        indices = np.where((distances >= 0.15) & (distances <= farVal))[0]
+        indices = np.where((distances >= 1.25) & (distances <= farVal))[0]
         pcd = pcd.select_by_index(indices)
         return pcd
     
@@ -347,7 +373,7 @@ class VisionAviary(BaseAviary):
         """Add obstacles to the environment, including multiple cylinders of different colors at fixed positions."""
         super()._addObstacles()
         base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
-        cylinder_colors = ['red', 'orange', 'green']
+        cylinder_colors = ['red']
         cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(3)]
         # obstacles = os.path.join(base_path, "gate.urdf")
         # Fixed positions

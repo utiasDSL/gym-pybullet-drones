@@ -18,7 +18,8 @@ class DSLPIDControl(BaseControl):
 
     def __init__(self,
                  drone_model: DroneModel,
-                 g: float=9.8
+                 g: float=9.8, 
+                 m: float=1.0,
                  ):
         """Common control classes __init__ method.
 
@@ -30,13 +31,15 @@ class DSLPIDControl(BaseControl):
             The gravitational acceleration in m/s^2.
 
         """
-        super().__init__(drone_model=drone_model, g=g)
+        super().__init__(drone_model=drone_model, g=g, m=m)
         if self.DRONE_MODEL != DroneModel.CF2X and self.DRONE_MODEL != DroneModel.CF2P:
             print("[ERROR] in DSLPIDControl.__init__(), DSLPIDControl requires DroneModel.CF2X or DroneModel.CF2P")
             exit()
-        self.P_COEFF_FOR = np.array([.4, .4, 1.25])
+        
+        self.P_COEFF_VEL = np.array([1.0, 1.0, 0.0])
+        self.P_COEFF_FOR = np.array([.22, .22, 0.75])
         self.I_COEFF_FOR = np.array([.05, .05, .05])
-        self.D_COEFF_FOR = np.array([.2, .2, .5])
+        self.D_COEFF_FOR = np.array([.25, .2, .7])
         self.P_COEFF_TOR = np.array([70000., 70000., 60000.])
         self.I_COEFF_TOR = np.array([.0, .0, 500.])
         self.D_COEFF_TOR = np.array([20000., 20000., 12000.])
@@ -44,6 +47,11 @@ class DSLPIDControl(BaseControl):
         self.PWM2RPM_CONST = 4070.3
         self.MIN_PWM = 20000
         self.MAX_PWM = 65535
+        self.vel_sp = np.array([0, 0, 0])
+        self.acc_sp = np.array([0, 0, 0])
+        self.g = g
+        self.m = m
+        self.prev_vel = np.array([0, 0, 0])
         if self.DRONE_MODEL == DroneModel.CF2X:
             self.MIXER_MATRIX = np.array([ [.5, -.5,  -1], [.5, .5, 1], [-.5,  .5,  -1], [-.5, -.5, 1] ])
         elif self.DRONE_MODEL == DroneModel.CF2P:
@@ -265,10 +273,69 @@ class DSLPIDControl(BaseControl):
         target_rotation = (np.vstack([target_x_ax, target_y_ax, target_z_ax])).transpose()
         #### Target rotation #######################################
         target_euler = (Rotation.from_matrix(target_rotation)).as_euler('XYZ', degrees=False)
+        target_euler = np.clip(target_euler, -np.pi/6, np.pi/6)
         if np.any(np.abs(target_euler) > math.pi):
             print("\n[ERROR] ctrl it", self.control_counter, "in Control._dslPIDPositionControl(), values outside range [-pi,pi]")
         return thrust, target_euler, pos_e
     
+    ################################################################################
+
+    def z_pos_control(self,
+                      control_timestep,
+                      cur_pos,
+                      target_pos,
+                    ):
+        pos_z_error = target_pos[2] - cur_pos[2]
+        self.vel_sp[2] += self.P_COEFF_VEL[2]*pos_z_error
+
+    ################################################################################
+
+    def xy_pos_control(self, control_timestep, cur_pos, target_pos):
+        pos_xy_error = target_pos[0:2] - cur_pos[0:2]
+        self.vel_sp[0] += self.P_COEFF_VEL[0]*pos_xy_error[0]
+        self.vel_sp[1] += self.P_COEFF_FOR[1]*pos_xy_error[1]
+
+    ################################################################################
+
+    def saturateVel(self):
+        self.vel_sp = np.clip(self.vel_sp, -5, 5)
+
+    ################################################################################
+
+    def _arduPIDPositionControl(self,
+                                control_timestep,
+                                cur_pos,
+                                cur_quat,
+                                cur_vel,
+                                target_pos,
+                                target_rpy,
+                                target_vel):
+        self.z_pos_control(control_timestep, cur_pos, target_pos)
+        self.xy_pos_control(control_timestep, cur_pos, target_pos)
+        self.saturateVel()
+
+        # Velocity control implementation
+        vel_error = target_vel - cur_vel
+        pos_e = target_pos - cur_pos
+        thrust_z_sp = self.P_COEFF_FOR[2]*vel_error[2] - self.D_COEFF_FOR[2]*(cur_vel[2] - self.prev_vel[2])/control_timestep + self.g
+        thrust_xy_sp = self.P_COEFF_FOR[0:2]*vel_error[0:2] - self.D_COEFF_FOR[0:2]*(cur_vel[0:2] - self.prev_vel[0:2])/control_timestep
+        cur_rotation = np.array(p.getMatrixFromQuaternion(cur_quat)).reshape(3, 3)
+        self.prev_vel = cur_vel
+        target_thrust = np.array([thrust_xy_sp[0],thrust_xy_sp[1],thrust_z_sp]).flatten()
+        scalar_thrust = max(0., np.dot(target_thrust, cur_rotation[:,2]))
+        thrust = (math.sqrt(scalar_thrust / (4*self.KF)) - self.PWM2RPM_CONST) / self.PWM2RPM_SCALE
+        target_z_ax = target_thrust / np.linalg.norm(target_thrust)
+        target_x_c = np.array([math.cos(target_rpy[2]), math.sin(target_rpy[2]), 0])
+        target_y_ax = np.cross(target_z_ax, target_x_c) / np.linalg.norm(np.cross(target_z_ax, target_x_c))
+        target_x_ax = np.cross(target_y_ax, target_z_ax)
+        target_rotation = (np.vstack([target_x_ax, target_y_ax, target_z_ax])).transpose()
+        #### Target rotation #######################################
+        target_euler = (Rotation.from_matrix(target_rotation)).as_euler('XYZ', degrees=False)
+        target_euler = np.clip(target_euler, -np.pi/6, np.pi/6)
+        if np.any(np.abs(target_euler) > math.pi):
+            print("\n[ERROR] ctrl it", self.control_counter, "in Control._dslPIDPositionControl(), values outside range [-pi,pi]")
+        return thrust, target_euler, pos_e
+
     ################################################################################
 
     def _dslPIDAttitudeControl(self,

@@ -34,7 +34,7 @@ class RRT_start:
         self.safety_Margin = safety_margin
         self.search_Margin = search_margin
         self.max_Radius = max_radius
-        self.sample_Range = sample_range
+        self.sample_range = sample_range
         
         # Tree for rrt
         self.rrtTree = KDTree(dim = 3)
@@ -221,7 +221,7 @@ class RRT_start:
 
         self.best_distance -= cost_reduction
 
-    def safeRegionExplansion(self, time_limit):
+    def safeRegionExpansion(self, time_limit):
         time_bef_expand = time.time()
         self.commit_root = self.startPt
         self.root = Node()
@@ -277,7 +277,7 @@ class RRT_start:
     def safeRegionRefine(self, time_limit):
         #   Every time the refine function is called, new samples are continuously generated and the tree is continuously rewired, hope to get a better solution
         #   The refine process is mainly same as the initialization of the tree
-
+        print("in refine")
         time_bef_refine = time.time()
         pos = np.array([0, 0, 0])
         while True:
@@ -325,15 +325,15 @@ class RRT_start:
         if self.path_exist_status == False:
             print("[WARNING] no path exists")
             return
-        
+        print("in evaluate")
         time_bef_evaluation = time.time()
         fail_node_list = []
         while True:
-            for i in range(0, len(self.pathList())):
+            for i in range(0, len(self.pathList)):
                 ptr = self.pathList[i]
                 pre_ptr = ptr.preNode
                 
-                if not pre_ptr:
+                if pre_ptr:
                     update_radius = self.checkRadius(ptr.coordinates)
                     ret = self.checkNodeUpdate(update_radius, ptr.radius) # -1: not qualified, 0: shrink, 1: no difference, continue
                     old_radius = ptr.radius
@@ -810,7 +810,7 @@ class RRT_start:
 
     def checkEnd(self, node):
         distance = self.getDis(node, self.endPt)
-        if distance + 0.1 < node.radius:
+        if distance < node.radius:
             return True
         
         # print("node far away from endpt: ", distance, " node radius: ", node.radius)
