@@ -60,6 +60,14 @@ class KDTree:
             if abs(diff) < best_dist:
                 best_node, best_dist = self._nearest(node.left, point, depth + 1, best_node, best_dist)
 
+        if best_node == None:
+            print("[KDTREE debug] best node is coming out to be none")
+            if self.root == None:
+                print("[KDTREE debug] root also none")
+                print("[KDTREE debug] size: ",self.size())
+            else:
+                best_node = self.root
+                print("[KDTREE debug] best node set to root", self.root.data.coordinates)
         return best_node, best_dist
 
     def nearest_range(self, point, range_dist):
@@ -102,6 +110,16 @@ class KDTree:
         self._clear_rec(node.right)
         # Now that the children are cleared, we can delete this node
         del node
+    
+    def size(self):
+        """Returns the number of nodes in the tree."""
+        return self._size_rec(self.root)
+
+    def _size_rec(self, node):
+        """Recursive helper function to count the nodes."""
+        if node is None:
+            return 0
+        return 1 + self._size_rec(node.left) + self._size_rec(node.right)
 
 
 # Example usage
@@ -113,7 +131,6 @@ if __name__ == "__main__":
     kdtree.insert([3.1, 2.9, 3.1], "point_4")
     kdtree.insert([5.4, 2.8, 1.9], "point_2")
     kdtree.insert([3.5, 7.3, 4.1], "point_3")
-
     # Find the nearest neighbor to the point [3, 3, 3]
     nearest_node, nearest_dist = kdtree.nearest(np.array([3, 3, 3]))
     print(f"Nearest point: {nearest_node.pos}, Distance: {nearest_dist}, Data: {nearest_node.data}")
@@ -123,3 +140,6 @@ if __name__ == "__main__":
     print("number of nodes in range: ",len(nodes_in_range))
     for node in nodes_in_range:
         print(f"Point in range: {node.pos}, Data: {node.data}")
+    
+    print('kdtree size',kdtree.size())
+

@@ -26,7 +26,8 @@ import open3d as o3d
 from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
 import tf2_ros
-from geometry_msgs.msg import TransformStamped
+from geometry_msgs.msg import TransformStamped, Pose, PoseStamped
+
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.VisionAviary import VisionAviary
@@ -46,7 +47,7 @@ class AviaryWrapper(Node):
         timer_period_sec = 1/timer_freq_hz
         self.R = 0.3
         self.H = 0.5
-        self.INIT_XYZS = np.array([[0, -self.R, self.H]])
+        self.INIT_XYZS = np.array([[-2, -self.R, self.H]])
         self.INIT_RPYS = np.array([[0, 0, 0]])
 
 
@@ -60,7 +61,7 @@ class AviaryWrapper(Node):
                            aggregate_phy_steps=1,
                            gui=True,
                            record=False,
-                           obstacles=False,
+                           obstacles=True,
                            user_debug_gui=False
                            )
         #### Initialize an action with the RPMs at hover ###########
@@ -73,6 +74,7 @@ class AviaryWrapper(Node):
         self.dep_pub = self.create_publisher(Image,'depth_image',1)
         self.pcd_pub = self.create_publisher(PointCloud2,'pcd_gym_pybullet',2)
         self.rgb_pub = self.create_publisher(Image,'rgb_image',1)
+        self.goal_pub = self.create_publisher(Path,'waypoints',1)
     #    self.seg_pub = self.create_publisher(Image,'segmentation_image',1)
 
         self.bridge = CvBridge()
@@ -94,6 +96,7 @@ class AviaryWrapper(Node):
 
         # Call a timer to publish the marker array at a lower rate than the main loop
         self.trajectory_timer = self.create_timer(1.0, self.publish_trajectory)
+        self.is_goal_sent = False
 
     
     def publish_trajectory(self):
@@ -248,6 +251,18 @@ class AviaryWrapper(Node):
                 self.current_wp = self.waypoints[self.wp_idx]
             else:
                 self.current_wp = np.array(self.pos)
+        goal = Path()
+        goal.header.stamp = self.get_clock().now().to_msg()
+        goal.header.frame_id = "map"
+
+        goal_pose = PoseStamped()
+        goal_pose.header.stamp = self.get_clock().now().to_msg()
+        goal_pose.header.frame_id = "ground_link"
+        goal_pose.pose.position.x = 10.0
+        goal_pose.pose.position.y = 0.0
+        goal_pose.pose.position.z = 0.5
+        goal.poses.append(goal_pose)
+        self.goal_pub.publish(goal)
 
 
     #### Read the waypoint

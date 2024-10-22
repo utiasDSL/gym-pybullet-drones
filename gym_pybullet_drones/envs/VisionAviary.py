@@ -226,12 +226,12 @@ class VisionAviary(BaseAviary):
         #                                      physicsClientId=self.CLIENT
         #                                      )
         # DRONE_CAM_VIEW = self.get_extrinsics(np.array(DRONE_CAM_VIEW).reshape(4,4))
-        rotation_matrix = np.array(p.getMatrixFromQuaternion(drone_orientation_quat)).reshape(3, 3)
+        rotation_matrix = np.array(p.getMatrixFromQuaternion(drone_orientation_quat)).reshape(3, 3).T
 
         # Construct the 4x4 transformation matrix (from drone frame to world frame)
         drone_transform = np.eye(4)
         drone_transform[0:3, 0:3] = rotation_matrix  # Set rotation
-        drone_transform[0:3, 3] = drone_position     # Set translation
+        drone_transform[0:3, 3] = np.zeros((3,))     # Set translation
 
         # Apply the combined rotation to the extrinsic matrix
         combined_rotation1 = np.array([
@@ -374,7 +374,7 @@ class VisionAviary(BaseAviary):
         super()._addObstacles()
         base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
         cylinder_colors = ['red']
-        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(3)]
+        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(9)]
         # obstacles = os.path.join(base_path, "gate.urdf")
         # Fixed positions
         self.fixed_positions = [

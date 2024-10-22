@@ -68,7 +68,6 @@ class RRT_start:
         self.max_samples = 0
         self.inlier_ratio = 0
         self.goal_ratio = 0
-        self.safety_Margin = 0
         self.rotation_inf = np.eye(3)
         self.translation_inf = np.zeros(3)
         self.eng = random.Random()
@@ -88,6 +87,7 @@ class RRT_start:
         
         self.cach_size = 100
         self.best_distance = np.inf
+        self._root_reset = False
 
 
 
@@ -199,6 +199,8 @@ class RRT_start:
             self.clearBranchW(node)
 
         self.removeInvalid()
+        self._root_reset = True
+        print("root reset to: ",commitTarget)
 
     def solutionUpdate(self, cost_reduction, target):
         for node in self.nodeList:
@@ -223,14 +225,23 @@ class RRT_start:
 
     def safeRegionExpansion(self, time_limit):
         time_bef_expand = time.time()
-        self.commit_root = self.startPt
-        self.root = Node()
-        self.root.coordinates = self.startPt
-        self.root.radius = self.radiusSearch(self.startPt)
-        self.root.f = self.min_distance
-
-        self.recordNode(self.root)
-        self.rrtTree.insert(self.root.coordinates, self.root)
+        if not self._root_reset:
+            self.commit_root = self.startPt
+            self.root = Node()
+            self.root.coordinates = self.startPt
+            self.root.radius = self.radiusSearch(self.startPt)
+            self.root.f = self.min_distance
+            self.recordNode(self.root)
+            self.rrtTree.insert(self.root.coordinates, self.root)
+        else:
+            self.rrtTree.clear()
+            self.root.coordinates = self.commit_root
+            self.root.radius = self.radiusSearch(self.commit_root)
+            self.root.f = self.min_distance
+            self.recordNode(self.root)
+            self.rrtTree.insert(self.root.coordinates, self.root)
+        if self.rrtTree.root.data == self.root:
+            print("root inserted in rrtTree")
         print("root inserted:")
         for i in range(0, self.max_samples):
             time_in_expand = time.time()
@@ -262,6 +273,8 @@ class RRT_start:
 
             pos = node_new_ptr.coordinates
             self.rrtTree.insert(pos, node_new_ptr)
+            print("[NEW NODE DEBUG] dist - (n1+n2):",self.getDis(node_new_ptr,node_new_ptr.preNode) - (node_new_ptr.radius+node_new_ptr.preNode.radius))
+
             # print("coordinates: ", node_new_ptr.coordinates, "radius: ", node_new_ptr.radius)
             # print("node valid? ", node_new_ptr.valid)
 
@@ -296,6 +309,7 @@ class RRT_start:
                 continue
 
             self.treeRewire(node_new_ptr, node_nearest_ptr)
+            print("[REWIRE NODE DEBUG] dist - (n1+n2):",self.getDis(node_new_ptr,node_new_ptr.preNode) - (node_new_ptr.radius+node_new_ptr.preNode.radius))
 
             if not node_new_ptr.valid:
                 continue
@@ -310,6 +324,7 @@ class RRT_start:
             
             pos = node_new_ptr.coordinates
             self.rrtTree.insert(pos, node_new_ptr)
+            print("[REFINE DEBUG] node inserted in tree")
 
             self.recordNode(node_new_ptr)
             self.treePrune(node_new_ptr)
@@ -343,20 +358,24 @@ class RRT_start:
                         # The node ptr now does't have enough volume for the robot to pass, the node should be deleted from the tree;
                         # all its child nodes should be put in the rewire list
                         ptr.valid = False # Delete this node
+                        if ptr in self.endList:
+                            print("[EVALUATE DEBUG] endlist ptr invalid, radius: ",ptr.radius," safety_margin: ",self.safety_Margin)
                         self.invalidSet.append(ptr)
                         self.clearBranchS(ptr)
                         fail_node_list.append([ptr.coordinates, old_radius])
 
                     else:
                         # Test whether the node disconnected with its parent and all children
-                        # If disconnect with parent, delete it, if discoonect with a child, delete the child
-                        if self.checkNodeRelation(self.getDis(ptr, pre_ptr), ptr, pre_ptr):
+                        # If disconnect with parent, delete it, if discoonect with a child, delete the child\
+                        print("pre check node relation [evaluate]")
+                        if self.checkNodeRelation(self.getDis(ptr, pre_ptr), ptr, pre_ptr) != -1:
                             # the child is disconnected with its parent
-                            if ptr.valid:
-                                ptr.valid = False
-                                self.invalidSet.append(ptr)
-                                self.clearBranchS(ptr)
-                                fail_node_list.append([ptr.coordinates, old_radius])
+                            print("[evaluate debug node validity set to false in evaluate]")
+                            # if ptr.valid:
+                            #     ptr.valid = False
+                            #     self.invalidSet.append(ptr)
+                            #     self.clearBranchS(ptr)
+                            #     fail_node_list.append([ptr.coordinates, old_radius])
                         else:
                             childList = ptr.childNodes
                             for childnode in childList:
@@ -373,20 +392,21 @@ class RRT_start:
             isbreak = True
             for ptr in self.pathList:
                 isbreak = isbreak and ptr.valid
-            
+                            
             if isbreak:
+                print("[evaluate debug breaking from evaluate loop], path_exist_status = ",self.getPathExistStatus())
                 break
 
             feasibleEndList = []
             for endptr in self.endList:
-                if not endptr.valid or not self.checkEnd(endptr):
+                if not endptr.valid or not self.checkEnd(endptr):                        
                     continue
                 else:
                     feasibleEndList.append(endptr)
 
             self.endList = feasibleEndList
             time_in_evaluate = time.time()
-            
+            print("time in evaluate: ", time_in_evaluate - time_bef_evaluation)
             if len(feasibleEndList) == 0 or (time_in_evaluate - time_bef_evaluation) > time_limit:
                 self.path_exist_status = False
                 self.informStatus = False
@@ -466,6 +486,7 @@ class RRT_start:
             dis = self.getDis(near_ptr_node, new_ptr)
             
             # Determine the relation (res) between the nearby node and the new node
+            # print("node relation called in rewire [rewire debug]")
             res = self.checkNodeRelation(dis, near_ptr_node, new_ptr)
             near_ptr_node.rel_id = res  # Store relation temporarily
             near_ptr_node.rel_dis = dis  # Store distance temporarily
@@ -639,6 +660,7 @@ class RRT_start:
                 feasibleEndList.append(endnode)
 
         if len(feasibleEndList) == 0:
+            print("path_exist set to false in trace")
             self.path_exist_status = False
             self.best_distance = False
             self.informStatus = False
@@ -678,7 +700,7 @@ class RRT_start:
 
         # Now traverse the path again to populate path_matrix and radius_matrix
         while ptr is not None:
-            print("ptr coordinates: ", ptr.coordinates, ptr.radius)
+            # print("ptr coordinates: ", ptr.coordinates, ptr.radius)
             self.path_matrix[-(idx+1), :] = ptr.coordinates  # Fill the Path matrix in reverse order
             self.radius_matrix[-(idx+1)] = ptr.radius  # Fill the Radius vector in reverse order
             self.pathList.append(ptr)
@@ -754,20 +776,25 @@ class RRT_start:
 
         if isinstance(node, Node):
             radius, index = self.pcd.query(np.array(node.coordinates), 1)
-            radius = np.sqrt(radius) - self.search_Margin
+            radius = radius - self.search_Margin
             return min(radius, self.max_Radius)
         
         else:
+            if np.array(node).any() == np.inf or np.array(node).any() == np.nan:
+                print(np.array(node))
             radius, index = self.pcd.query(np.array(node), 1)
-            radius = np.sqrt(radius) - self.search_Margin
+            radius = radius - self.search_Margin
             return min(radius, self.max_Radius)
 
     def genNewNode(self, node_vec, node_nearest):
         dis = self.getDis(node_vec, node_nearest)
         center = np.zeros(3)
         if dis > node_nearest.radius:
-            steer_dis = node_nearest.radius/dis
-            center = node_nearest.coordinates + (node_vec - node_nearest.coordinates)*steer_dis
+            # steer_dis = node_nearest.radius/dis
+            # center = node_nearest.coordinates + (node_vec - node_nearest.coordinates)*steer_dis
+            # new logic
+            steer_dis = node_nearest.radius
+            center = node_nearest.coordinates + (node_vec - node_nearest.coordinates)/dis*steer_dis
         else:
             center = node_vec
         
@@ -788,6 +815,9 @@ class RRT_start:
             nearest_node, nearest_dist = self.rrtTree.nearest(node.coordinates)
         else:
             nearest_node, nearest_dist = self.rrtTree.nearest(node)
+        
+        if nearest_node == None:
+            print("[KDTREE Debug] size: ", self.rrtTree.size())
         return nearest_node.data
 
     # def findNearest(self, node): # function initialized but not implemented
@@ -810,7 +840,7 @@ class RRT_start:
 
     def checkEnd(self, node):
         distance = self.getDis(node, self.endPt)
-        if distance < node.radius:
+        if distance + 0.1 < node.radius:
             return True
         
         # print("node far away from endpt: ", distance, " node radius: ", node.radius)
@@ -825,11 +855,17 @@ class RRT_start:
             return 1    # for no difference, nothing should be changed
 
     def checkNodeRelation(self, dis, node1, node2):
-        if dis+node2.radius == node1.radius:
-            return 1
-        elif (dis+0.1) < 0.95*(node1.radius + node2.radius):
+        if (dis) < (node1.radius + node2.radius):
+            #print("ret -1")
+            #print("dis: ",dis," n1: ",node1.radius,"n2: ",node2.radius," dist diff:", (dis+0.1) - 0.95*(node1.radius + node2.radius))
             return -1
+        elif dis+node2.radius == node1.radius:
+            #print("ret 1")
+            #print("dis: ",dis," n1: ",node1.radius,"n2: ",node2.radius," dist diff:", (dis+0.1) - 0.95*(node1.radius + node2.radius))
+            return 1
         else:
+            #print("ret 0")
+            #print("dis: ",dis," n1: ",node1.radius,"n2: ",node2.radius,"dist diff:", (dis+0.1) - 0.95*(node1.radius + node2.radius))
             return 0
 
     def isSuccessor(self, curNode, nearNode):
