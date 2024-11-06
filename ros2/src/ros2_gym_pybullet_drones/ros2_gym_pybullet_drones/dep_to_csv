@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+
+import rclpy
+from rclpy.node import Node
+
+import csv
+import numpy as np
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import time
+
+class DepToCSV(Node):
+
+    def __init__(self):
+        super().__init__('dep_to_csv')
+        self.subscription = self.create_subscription(
+            Image,
+            '/depth_image',  # Replace with your actual topic
+            self.dep_callback,
+            10)
+        self.subscription  # Prevent unused variable warning
+        self.bridge = CvBridge()  # To convert ROS Image messages to OpenCV images
+        self.counter = 0  # Counter to track the number of depth images saved
+
+    def dep_callback(self, depth_image_msg):
+        # Convert the ROS Image message to a numpy array
+        depth_image = self.bridge.imgmsg_to_cv2(depth_image_msg, desired_encoding='passthrough')
+        
+        # Flatten the 2D depth image into a 1D array
+        depth_array = depth_image.flatten()
+
+        # Save to CSV with a unique name
+        file_name = f'/home/astik/pcd_outputs/dep_images/dep_{self.counter:04d}.csv'  # Change this path as needed
+        with open(file_name, 'w') as file:
+            writer = csv.writer(file)
+            writer.writerow(["Depth"])  # Write the header
+            for depth in depth_array:
+                writer.writerow([depth])
+
+        self.get_logger().info(f'Depth image saved to {file_name}')
+
+        # Increment the counter for the next file
+        self.counter += 1
+
+        # Ensure the callback is invoked at 2 Hz
+        time.sleep(0.5)
+
+def main(args=None):
+    rclpy.init(args=args)
+    dep_to_csv_node = DepToCSV()
+    rclpy.spin(dep_to_csv_node)
+
+    # Destroy the node explicitly
+    dep_to_csv_node.destroy_node()
+    rclpy.shutdown()
+
+if __name__ == '__main__':
+    main()

@@ -300,11 +300,27 @@ class BaseAviary(gym.Env):
             # (Image.fromarray(np.reshape(seg, (h, w)))).save(self.ONBOARD_IMG_PATH+"frame_"+str(self.FRAME_NUM)+".png")
             self.FRAME_NUM += 1
         #### Read the GUI's input parameters #######################
+        if self.GUI and self.NUM_DRONES == 1:            
+                position = self.pos[0,:]
+                rot_mat = np.array(p.getMatrixFromQuaternion(self.quat[0, :])).reshape(3, 3)
+                #### Set target point, camera view and projection matrices #
+                target = np.dot(rot_mat,np.array([0, 0, 0.1])) + np.array(self.pos[0, :])
+                camera_distance = 0.5
+                camera_yaw = -90
+                camera_pitch = -30
+                p.resetDebugVisualizerCamera(cameraDistance=camera_distance,
+                                                cameraYaw=camera_yaw,
+                                                cameraPitch=camera_pitch,
+                                                cameraTargetPosition=target,
+                                                physicsClientId=self.CLIENT)
         if self.GUI and self.USER_DEBUG:
             current_input_switch = p.readUserDebugParameter(self.INPUT_SWITCH, physicsClientId=self.CLIENT)
             if current_input_switch > self.last_input_switch:
                 self.last_input_switch = current_input_switch
                 self.USE_GUI_RPM = True if self.USE_GUI_RPM == False else False
+            
+            
+            
         if self.USE_GUI_RPM:
             for i in range(4):
                 self.gui_input[i] = p.readUserDebugParameter(int(self.SLIDERS[i]), physicsClientId=self.CLIENT)

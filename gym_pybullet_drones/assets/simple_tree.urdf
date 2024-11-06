@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<robot name="simple_tree">
+
+  <!-- Tree Trunk -->
+  <link name="trunk">
+    <visual>
+      <geometry>
+        <cylinder length="2.0" radius="0.2"/>
+      </geometry>
+      <material name="brown">
+        <color rgba="0.55 0.27 0.07 1"/>
+      </material>
+      <origin xyz="0 0 1" rpy="0 0 0"/>
+    </visual>
+  </link>
+
+  <!-- Tree Canopy (top sphere representing leaves) -->
+  <link name="canopy">
+    <visual>
+      <geometry>
+        <sphere radius="1.0"/>
+      </geometry>
+      <material name="green">
+        <color rgba="0 0.8 0 1"/>
+      </material>
+      <origin xyz="0 0 1.25" rpy="0 0 0"/>
+    </visual>
+  </link>
+
+  <!-- Connecting Trunk and Canopy -->
+  <joint name="trunk_to_canopy" type="fixed">
+    <parent link="trunk"/>
+    <child link="canopy"/>
+    <origin xyz="0 0 1.25" rpy="0 0 0"/>
+  </joint>
+
+
+</robot>

@@ -273,7 +273,7 @@ class RRT_start:
 
             pos = node_new_ptr.coordinates
             self.rrtTree.insert(pos, node_new_ptr)
-            print("[NEW NODE DEBUG] dist - (n1+n2):",self.getDis(node_new_ptr,node_new_ptr.preNode) - (node_new_ptr.radius+node_new_ptr.preNode.radius))
+            # print("[NEW NODE DEBUG] dist - (n1+n2):",self.getDis(node_new_ptr,node_new_ptr.preNode) - (node_new_ptr.radius+node_new_ptr.preNode.radius))
 
             # print("coordinates: ", node_new_ptr.coordinates, "radius: ", node_new_ptr.radius)
             # print("node valid? ", node_new_ptr.valid)
@@ -309,7 +309,7 @@ class RRT_start:
                 continue
 
             self.treeRewire(node_new_ptr, node_nearest_ptr)
-            print("[REWIRE NODE DEBUG] dist - (n1+n2):",self.getDis(node_new_ptr,node_new_ptr.preNode) - (node_new_ptr.radius+node_new_ptr.preNode.radius))
+            # print("[REWIRE NODE DEBUG] dist - (n1+n2):",self.getDis(node_new_ptr,node_new_ptr.preNode) - (node_new_ptr.radius+node_new_ptr.preNode.radius))
 
             if not node_new_ptr.valid:
                 continue
@@ -324,7 +324,7 @@ class RRT_start:
             
             pos = node_new_ptr.coordinates
             self.rrtTree.insert(pos, node_new_ptr)
-            print("[REFINE DEBUG] node inserted in tree")
+            # print("[REFINE DEBUG] node inserted in tree")
 
             self.recordNode(node_new_ptr)
             self.treePrune(node_new_ptr)
@@ -367,7 +367,7 @@ class RRT_start:
                     else:
                         # Test whether the node disconnected with its parent and all children
                         # If disconnect with parent, delete it, if discoonect with a child, delete the child\
-                        print("pre check node relation [evaluate]")
+                        # print("pre check node relation [evaluate]")
                         if self.checkNodeRelation(self.getDis(ptr, pre_ptr), ptr, pre_ptr) != -1:
                             # the child is disconnected with its parent
                             print("[evaluate debug node validity set to false in evaluate]")
@@ -394,7 +394,7 @@ class RRT_start:
                 isbreak = isbreak and ptr.valid
                             
             if isbreak:
-                print("[evaluate debug breaking from evaluate loop], path_exist_status = ",self.getPathExistStatus())
+                # print("[evaluate debug breaking from evaluate loop], path_exist_status = ",self.getPathExistStatus())
                 break
 
             feasibleEndList = []
@@ -855,7 +855,7 @@ class RRT_start:
             return 1    # for no difference, nothing should be changed
 
     def checkNodeRelation(self, dis, node1, node2):
-        if (dis) < (node1.radius + node2.radius):
+        if (dis+0.1) < 0.95*(node1.radius + node2.radius):
             #print("ret -1")
             #print("dis: ",dis," n1: ",node1.radius,"n2: ",node2.radius," dist diff:", (dis+0.1) - 0.95*(node1.radius + node2.radius))
             return -1

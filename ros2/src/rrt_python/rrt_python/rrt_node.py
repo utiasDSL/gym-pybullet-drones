@@ -8,19 +8,21 @@ from visualization_msgs.msg import Marker, MarkerArray
 from std_msgs.msg import Float32MultiArray
 from rrt_python.corridor_finder import RRT_start
 import sensor_msgs_py.point_cloud2 as pc2
-from geometry_msgs.msg import Pose, PoseStamped
+from geometry_msgs.msg import Pose, PoseStamped, Point, Vector3
 from std_msgs.msg import Header
 import tf2_ros
 import tf2_py
 from scipy.spatial.transform import Rotation as R
-
+from rrt_python.trajectory import Trajectory
+import time
+from custom_interface.msg import TrajMsg
 class PointCloudPlanner(Node):
     def __init__(self):
         super().__init__('point_cloud_planner')
         
         # Declare and read parameters
         self.declare_parameter('plan_rate', 10.0)
-        self.declare_parameter('safety_margin', 1.5)
+        self.declare_parameter('safety_margin', 1.0)
         self.declare_parameter('search_margin', 0.50)
         self.declare_parameter('max_radius', 1.5)
         self.declare_parameter('sensing_range', 10.0)
@@ -32,9 +34,9 @@ class PointCloudPlanner(Node):
         self.declare_parameter('stop_horizon', 0.5)
         self.declare_parameter('commit_time', 1.0)
         self.declare_parameter('x_l', 0.0)
-        self.declare_parameter('x_h', 10.0)
-        self.declare_parameter('y_l', -1.0)
-        self.declare_parameter('y_h', 1.0)
+        self.declare_parameter('x_h', 200.0)
+        self.declare_parameter('y_l', -5.0)
+        self.declare_parameter('y_h', 5.0)
         self.declare_parameter('z_l', 0.1)
         self.declare_parameter('z_h', 1.0)
 
@@ -67,6 +69,7 @@ class PointCloudPlanner(Node):
         self._vis_rrt_tree_pub = self.create_publisher(MarkerArray, 'rrt_tree_visualization', 1)
         self._vis_subscribed_pcd = self.create_publisher(PointCloud2,'pcd_rrt_vis',1)
         self.path_visualizer = self.create_publisher(MarkerArray,'vis_rrt_wp',1)
+        self.traj_publisher = self.create_publisher(TrajMsg, 'Trajectory',1)
 
         # Subscribers
         self._obs_sub = self.create_subscription(Float32MultiArray, 'obs', self.rcv_obs_callback, 1)
@@ -95,6 +98,25 @@ class PointCloudPlanner(Node):
         self.commit_target_reached = False
         self._waypoint_callback_triggered = False
 
+        trajSelect = np.zeros(4)
+
+        # Select Control Type             (0: xyz_pos,                  1: xy_vel_z_pos,            2: xyz_vel,            3: xyz_pos with geometric)
+        ctrlType = "xyz_pos"   
+        # Select Position Trajectory Type (0: hover,                    1: pos_waypoint_timed,      2: pos_waypoint_interp,    
+        #                                  3: minimum velocity          4: minimum accel,           5: minimum jerk,           6: minimum snap
+        #                                  7: minimum accel_stop        8: minimum jerk_stop        9: minimum snap_stop
+        #                                 10: minimum jerk_full_stop   11: minimum snap_full_stop
+        #                                 12: pos_waypoint_arrived     13: pos_waypoint_arrived_wait
+        trajSelect[0] = 5       
+        # Select Yaw Trajectory Type      (0: none                      1: yaw_waypoint_timed,      2: yaw_waypoint_interp     3: follow          4: zero)
+        trajSelect[1] = 3           
+        # Select if waypoint time is used, or if average speed is used to calculate waypoint time   (0: waypoint time,   1: average speed)
+        trajSelect[2] = 1
+        v_avg = 1 # m/s
+        self.traj = Trajectory(ctrlType, trajSelect, v_avg)
+        self._psi = 0
+        traj_msg = TrajMsg()
+
     def rcv_waypoints_callback(self, msg):
         if not msg.poses or msg.poses[0].pose.position.z < 0.0:
             return
@@ -118,7 +140,7 @@ class PointCloudPlanner(Node):
         self._start_pos[0] = msg.data[0]
         self._start_pos[1] = msg.data[1]
         self._start_pos[2] = msg.data[2]
-
+        self._psi = msg.data[9]
         if self._is_target_receive:
             self.rrtPathPlanner.setStartPt(self._start_pos, self._end_pos)
         
@@ -164,22 +186,22 @@ class PointCloudPlanner(Node):
             #     print("Traj not existing, reverting to expansion")
             #     self.is_traj_exist = False
 
-            # header = Header()
-            # header.stamp = self.get_clock().now().to_msg()
-            # header.frame_id = "ground_link"
+            header = Header()
+            header.stamp = self.get_clock().now().to_msg()
+            header.frame_id = "ground_link"
 
-            # # Define fields for PointCloud2
-            # fields = [
-            #     PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
-            #     PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
-            #     PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)
-            # ]   
+            # Define fields for PointCloud2
+            fields = [
+                PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+                PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+                PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1)
+            ]   
 
-            # # Create PointCloud2 message
-            # pointcloud_msg = pc2.create_cloud(header, fields, points_array)
+            # Create PointCloud2 message
+            pointcloud_msg = pc2.create_cloud(header, fields, points_array)
 
-            # # Publish the PointCloud2 message
-            # self._vis_subscribed_pcd.publish(pointcloud_msg)
+            # Publish the PointCloud2 message
+            self._vis_subscribed_pcd.publish(pointcloud_msg)
 
 
         except Exception as e:
@@ -199,11 +221,12 @@ class PointCloudPlanner(Node):
         path_msg = Path()
         path_msg.header.stamp = self.get_clock().now().to_msg()
         path_msg.header.frame_id = "ground_link"
-
+        commit_wp_list = []
         
         if len(path) > 4:
             for i in range(0,5):
                 point = path[i]
+                commit_wp_list.append(point)
                 pose = PoseStamped()
                 pose.header.stamp = self.get_clock().now().to_msg()
                 pose.header.frame_id = "ground_link"
@@ -214,6 +237,7 @@ class PointCloudPlanner(Node):
         else:
             for i in range(0,len(path)):
                 point = path[i]
+                commit_wp_list.append(point)
                 pose = PoseStamped()
                 pose.header.stamp = self.get_clock().now().to_msg()
                 pose.header.frame_id = "ground_link"
@@ -223,6 +247,27 @@ class PointCloudPlanner(Node):
                 path_msg.poses.append(pose)
 
         self._rrt_waypoints_pub.publish(path_msg)
+
+    def publish_rrt_traj(self, sDes):
+        traj_msg = TrajMsg()
+        traj_msg.header.stamp = self.get_clock().now().to_msg()
+        traj_msg.header.frame_id = "ground_link"
+        pos_sp    = sDes[0:3]
+        vel_sp    = sDes[3:6]
+        acc_sp    = sDes[6:9]
+        eul_sp    = sDes[12:15]
+        jerk_sp   = sDes[19:22]
+        snap_sp   = sDes[22:25]
+        
+        traj_msg.position = Point(x=pos_sp[0], y=pos_sp[1], z=pos_sp[2])
+        traj_msg.velocity = Vector3(x=vel_sp[0], y=vel_sp[1], z=vel_sp[2])
+        traj_msg.acceleration = Vector3(x=acc_sp[0], y=acc_sp[1], z=acc_sp[2])
+        traj_msg.jerk = Vector3(x=jerk_sp[0], y=jerk_sp[1], z=jerk_sp[2])
+        traj_msg.snap = Vector3(x=snap_sp[0], y=snap_sp[1], z=snap_sp[2])
+
+        # Publish the message
+        self.traj_publisher.publish(traj_msg)
+
 
     def publish_corridor_visualization(self, path, radii):
         corridor_markers = MarkerArray()
@@ -345,9 +390,13 @@ class PointCloudPlanner(Node):
         print("path get status: ",self.rrtPathPlanner.getPathExistStatus())
         if self.rrtPathPlanner.getPathExistStatus():
             self._path, self._radius = self.rrtPathPlanner.getPath()
-            self.commit_target = self.getcommittedtarget()
+            self.commit_target, self.wps = self.getcommittedtarget()
+            self.t_assign = time.time()
+            self.traj.set_coefficients(self.wps)
             self.commit_target_assigned = True
             self.rrtPathPlanner.resetRoot(self.commit_target)
+            sdes =  self.traj.desiredState(0, 0.01, self._start_pos, self._psi)
+            self.publish_rrt_traj(sdes)
             self.publish_rrt_waypoints(self._path)
             self.complete_path_visualizer(self._path)
             self.publish_corridor_visualization(self._path, self._radius)
@@ -370,7 +419,11 @@ class PointCloudPlanner(Node):
                 print("[incremental cb if 2] self._is_traj_exist", self._is_traj_exist)
 
             else:
-                self.commit_target = self.getcommittedtarget()
+                self.commit_target, self.wps = self.getcommittedtarget()
+                self.traj.set_coefficients(self.wps)
+                self.t_assign = time.time()
+                sdes =  self.traj.desiredState(0, 0.01, self._start_pos, self._psi)
+                self.publish_rrt_traj(sdes)
                 self.rrtPathPlanner.resetRoot(self.commit_target)
                 self._path, self._radius = self.rrtPathPlanner.getPath()
                 self.publish_rrt_waypoints(self._path)
@@ -381,8 +434,11 @@ class PointCloudPlanner(Node):
         else:
             print("in evaluate/refine loop")
             print('Path exist status: ',self.rrtPathPlanner.getPathExistStatus())
-            self.rrtPathPlanner.safeRegionRefine(1.0)
-            self.rrtPathPlanner.safeRegionEvaluate(10.0)
+            self.rrtPathPlanner.safeRegionRefine(0.05)
+            self.rrtPathPlanner.safeRegionEvaluate(0.05)
+            del_t = time.time()-self.t_assign
+            sdes = self.traj.desiredState(del_t, 0.01, self._start_pos, self._psi)
+            self.publish_rrt_traj(sdes)
             if self.rrtPathPlanner.getPathExistStatus():
                 self._path, self._radius = self.rrtPathPlanner.getPath()
             
@@ -414,12 +470,17 @@ class PointCloudPlanner(Node):
         #         print("commit_target_set: ", self._path[i],", distance: ", self.rrtPathPlanner.getDis(self._start_pos, self._path[i]))
         #         return self._path[i]
         k = len(self._path)-1
+        wps = []
         if k+1 > 4:
-            print("commit target set as: ",self._path[4][0],self._path[4][1],self._path[4][2])
-            return self._path[4]
+            print("commit target set as: ",self._path[2][0],self._path[2][1],self._path[2][2])
+            for i in range(0,5):
+                wps.append(self._path[i])
+            return self._path[4], wps
         else:
             print("commit target set as: ",self._path[k][0],self._path[k][1],self._path[k][2])
-            return self._path[k]        
+            for i in range(0,k+1):
+                wps.append(self._path[i])
+            return self._path[k], wps        
 
 def main(args=None):
     rclpy.init(args=args)

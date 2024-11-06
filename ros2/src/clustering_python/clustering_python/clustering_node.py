@@ -38,7 +38,7 @@ class PointCloudProcessing(Node):
         self.publisher_ = self.create_publisher(BoundingBox3DArray, 'pcd_bounding_boxes', 10)
         timer_period_sec = 0.1
         self.timer = self.create_timer(timer_period_sec, self.step_callback)
-        self.marker_publisher_ = self.create_publisher(Marker, 'visualization_marker', 10)  # Marker publisher for RViz
+        self.marker_publisher_ = self.create_publisher(Marker, '_vis_bounding_boxes', 10)  # Marker publisher for RViz
 
     def point_cloud_callback(self, point_cloud_ros2):
         # Assign the NumPy array to the point cloud
@@ -46,7 +46,7 @@ class PointCloudProcessing(Node):
 
     def step_callback(self):
 
-        pcd_downsampled = self.pcd_og.voxel_down_sample(voxel_size=0.05)
+        pcd_downsampled = self.pcd_og.voxel_down_sample(voxel_size=0.005)
         outlier_cloud, inlier_cloud, = self.ransac(pcd_downsampled, distance_threshold=0.1, ransac_n=3, num_iterations=2000)
 
 
@@ -185,8 +185,8 @@ class PointCloudProcessing(Node):
 
         # Find the maximum cluster label to get the total number of clusters
         max_label = labels.max()
-        if max_label > 0:
-            print(f"\nPoint cloud has {max_label + 1} clusters")
+        
+        print(f"\nPoint cloud has {max_label + 1} clusters")
 
         # Generate colors for the clusters using a colormap
         #colors = plt.get_cmap("hsv")(labels / (max_label if max_label > 0 else 1))

@@ -36,12 +36,12 @@ class AviaryWrapper(Node):
         super().__init__('aviary_wrapper')
         self.step_cb_count = 0
         self.get_action_cb_count = 0
-        timer_freq_hz = 240
+        timer_freq_hz = 400
         timer_period_sec = 1/timer_freq_hz
         self.R = 0.3
-        self.H = 0.1
+        self.H = 0.5
         self.INIT_XYZS = np.array([[0, -self.R, self.H]])
-        self.INIT_RPYS = np.array([[0, 0, np.pi/2]])
+        self.INIT_RPYS = np.array([[0, 0, np.pi]])
 
 
         self.env = VisionAviary(drone_model=DroneModel.CF2X,
@@ -54,7 +54,7 @@ class AviaryWrapper(Node):
                            aggregate_phy_steps=1,
                            gui=False,
                            record=False,
-                           obstacles=True,
+                           obstacles=False,
                            user_debug_gui=False
                            )
         #### Initialize an action with the RPMs at hover ###########
@@ -74,7 +74,7 @@ class AviaryWrapper(Node):
         self.action_subscription = self.create_subscription(Float32MultiArray, 'action', self.get_action_callback, 1)
         self.action_subscription  # prevent unused variable warning
 
-    def broadcast_transform(self, x,y,z,qx,qy,qz,qw):
+    def broadcast_transform(self, x,y,z,qx,qy,qz,qw, frame_name, parent_name):
         # Assuming you have the drone's position and orientation as (x, y, z) and (qx, qy, qz, qw)
         drone_position = [x, y, z]  # Replace with actual drone position
         drone_orientation = [qx, qy, qz, qw]  # Replace with actual drone orientation
@@ -84,8 +84,8 @@ class AviaryWrapper(Node):
 
         # Set the timestamp and frame IDs
         t.header.stamp = self.get_clock().now().to_msg()
-        t.header.frame_id = "map"  # Global reference frame
-        t.child_frame_id = "base_link"  # Frame representing the drone body
+        t.header.frame_id = parent_name  # Global reference frame
+        t.child_frame_id = frame_name  # Frame representing the drone body
 
         # Set the translation and rotation
         t.transform.translation.x = drone_position[0]
@@ -106,23 +106,25 @@ class AviaryWrapper(Node):
         msg = Float32MultiArray()
         msg.data = obs["0"]["state"].tolist()
 
-        self.broadcast_transform(msg.data[0], msg.data[1], msg.data[2], msg.data[3], msg.data[4], msg.data[5], msg.data[6])
-        t_cam = TransformStamped()
+        self.broadcast_transform(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, "ground_link", "map")
+        self.broadcast_transform(msg.data[0], msg.data[1], msg.data[2], msg.data[3], msg.data[4], msg.data[5], msg.data[6], "base_link", "map")
 
-        t_cam.header.stamp = self.get_clock().now().to_msg()
-        t_cam.header.frame_id = "base_link"
-        t_cam.child_frame_id = "camera_link"
+        # t_cam = TransformStamped()
 
-        # Assuming the camera is fixed on the drone with a known offset
-        t_cam.transform.translation.x = 0.039700
-        t_cam.transform.translation.y = 0.0
-        t_cam.transform.translation.z = 0.0
-        t_cam.transform.rotation.x = 0.0
-        t_cam.transform.rotation.y = 0.0
-        t_cam.transform.rotation.z = 0.0
-        t_cam.transform.rotation.w = 1.0
+        # t_cam.header.stamp = self.get_clock().now().to_msg()
+        # t_cam.header.frame_id = "base_link"
+        # t_cam.child_frame_id = "camera_link"
 
-        self.tf_broadcaster.sendTransform(t_cam)
+        # # Assuming the camera is fixed on the drone with a known offset
+        # t_cam.transform.translation.x = 0.039700
+        # t_cam.transform.translation.y = 0.0
+        # t_cam.transform.translation.z = 0.0
+        # t_cam.transform.rotation.x = 0.0
+        # t_cam.transform.rotation.y = 0.0
+        # t_cam.transform.rotation.z = 0.0
+        # t_cam.transform.rotation.w = 0.0
+
+        # self.tf_broadcaster.sendTransform(t_cam)
 
         self.publisher_.publish(msg)
         depth_image = obs["0"]["dep"]
@@ -134,7 +136,7 @@ class AviaryWrapper(Node):
         # Create header
         header = Header()
         header.stamp = self.get_clock().now().to_msg()
-        header.frame_id = "camera_link"
+        header.frame_id = "base_link"
 
         # Define fields for PointCloud2
         fields = [

@@ -35,7 +35,7 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
-
+from custom_interface.msg import TrajMsg
 class AviaryWrapper(Node):
 
     #### Initialize the node ###################################
@@ -61,7 +61,7 @@ class AviaryWrapper(Node):
                            aggregate_phy_steps=1,
                            gui=True,
                            record=False,
-                           obstacles=False,
+                           obstacles=True,
                            user_debug_gui=False
                            )
         #### Initialize an action with the RPMs at hover ###########
@@ -81,8 +81,9 @@ class AviaryWrapper(Node):
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
         self.timer = self.create_timer(timer_period_sec, self.step_callback)
         #### Subscribe to topic 'waypoints' ###########################
-        self.wp_subs = self.create_subscription(Path, 'rrt_waypoints', self.get_waypoint_callback, 1)
-        self.pos = self.INIT_XYZS
+        # self.wp_subs = self.create_subscription(Path, 'rrt_waypoints', self.get_waypoint_callback, 1)
+        self.traj_subs = self.create_subscription(TrajMsg,'Trajectory', self.get_trajectory_callback, 1)
+        self.pos = self.INIT_XYZS.flatten()
         self.waypoints = []
         self.prev_wp = []
         self.current_wp = None
@@ -97,6 +98,8 @@ class AviaryWrapper(Node):
         # Call a timer to publish the marker array at a lower rate than the main loop
         self.trajectory_timer = self.create_timer(1.0, self.publish_trajectory)
         self.is_goal_sent = False
+        self.des_pos = self.INIT_XYZS.flatten()
+        self.des_vel = np.zeros(3)
 
     
     def publish_trajectory(self):
@@ -177,11 +180,6 @@ class AviaryWrapper(Node):
         self.broadcast_transform(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, "ground_link", "map")
         self.broadcast_transform(msg.data[0], msg.data[1], msg.data[2], msg.data[3], msg.data[4], msg.data[5], msg.data[6], "base_link", "ground_link")
 
-        if self.waypoints == [] or self.waypoints is None:
-            print("no waypoint received")
-            self.action = np.ones(4)*self.env.HOVER_RPM
-            self.current_wp = self.pos
-
         self.publisher_.publish(msg)
         depth_image = obs["0"]["dep"]
         rgb_image = obs["0"]["rgb"]
@@ -226,31 +224,17 @@ class AviaryWrapper(Node):
     #    ros_seg_image = self.bridge.cv2_to_imgmsg(seg_image, encoding='32FC1')
         self.dep_pub.publish(ros_dep_image)
         self.rgb_pub.publish(ros_rgb_image)
-    #    self.seg_pub.publish(ros_seg_image)
-        distance_to_wp = np.linalg.norm(np.array(self.pos) - np.array(self.current_wp))
-
-    #    self.get_logger().info('current waypoint: "%f", "%f", "%f", distance = "%f"' % (self.current_wp[0], self.current_wp[1], self.current_wp[2], distance_to_wp))
-        target_diff = np.array(self.current_wp) - np.array(self.pos)
-        target_yaw = math.atan2(target_diff[1], target_diff[0])
-        norm_xy = np.linalg.norm(target_diff[0:2])
-        target_velocity = np.array([target_diff[0]/norm_xy, target_diff[1]/norm_xy, target_diff[2]*self.p_z]).flatten()
 
         action_em = {}
         action_em['0'], _, _ = self.ctrl.computeControlFromState(
                 control_timestep=1/200,
                 state=obs["0"]["state"],
-                target_pos=self.current_wp.flatten(),
+                target_pos=self.des_pos,
+                target_vel=self.des_vel,
                 target_rpy=np.array([0, 0, 0]).reshape(3,1)
             )
         self.action = action_em['0'].tolist()
-        if distance_to_wp < 0.3:  # Threshold to consider waypoint reached
-            #print("waypoint change triggered")
-            if self.wp_idx < len(self.waypoints) - 1:
-                self.wp_idx += 1
-                #print('waypoint index: ', self.wp_idx, len(self.waypoints))
-                self.current_wp = self.waypoints[self.wp_idx]
-            else:
-                self.current_wp = np.array(self.pos)
+        
         goal = Path()
         goal.header.stamp = self.get_clock().now().to_msg()
         goal.header.frame_id = "map"
@@ -265,29 +249,12 @@ class AviaryWrapper(Node):
         self.goal_pub.publish(goal)
 
 
-    #### Read the waypoint
-    def get_waypoint_callback(self, msg):
-        """Callback to handle updates to the path."""
-        # Update waypoints based on the incoming path message
-        self.waypoints = [
-            np.asarray([pose.pose.position.x, pose.pose.position.y, pose.pose.position.z])
-            for pose in msg.poses
-        ]
-        # Reset waypoint index if new path received
-        if self.waypoints:
-            if not np.array_equal(self.waypoints, self.prev_wp):
-                self.prev_wp = self.waypoints
-                mind = 1000000000
-                for i in range(0, len(self.waypoints)):
-                    dist = np.linalg.norm(np.array(self.pos) - np.array(self.waypoints[i]))
-                    if dist < mind:
-                        mind = dist
-                        self.current_wp = self.waypoints[i]
-                        self.wp_idx = i
-
-        else:
-            self.current_wp = np.array([0.0, 10.0, 0.5]).flatten()
-
+    #### Read the Trajectory (pos, vel, acc, jerk, snap)
+    def get_trajectory_callback(self, msg):
+        self.des_pos = np.array([[msg.position.x, msg.position.y, msg.position.z]]).flatten()
+        print('des pos: ',self.des_pos)
+        self.des_vel = np.array([[msg.velocity.x, msg.velocity.y, msg.velocity.z]]).flatten()
+        print('des vel',self.des_vel)
 ############################################################
 def main(args=None):
     rclpy.init(args=args)

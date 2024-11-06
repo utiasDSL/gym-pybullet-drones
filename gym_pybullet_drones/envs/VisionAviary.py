@@ -7,7 +7,7 @@ import open3d as o3d
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics, ImageType
 from scipy.spatial.transform import Rotation as R
-import cv2
+import random
 
 class VisionAviary(BaseAviary):
     """Multi-drone environment class for control applications using vision."""
@@ -369,44 +369,86 @@ class VisionAviary(BaseAviary):
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
+    # def _addObstacles(self):
+    #     """Add obstacles to the environment, including multiple cylinders of different colors at fixed positions."""
+    #     super()._addObstacles()
+    #     base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+    #     cylinder_colors = ['red']
+    #     cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(9)]
+    #     # obstacles = os.path.join(base_path, "gate.urdf")
+    #     # Fixed positions
+    #     self.fixed_positions = [
+    #         (1.0, 1.0, 0.5),
+    #         (1.0, 0, 0.5),
+    #         (1.0, -1.0, 0.5),
+    #         (0, 1.0, 0.5),
+    #         (0, 5, 0.5),
+    #         (0, -1.0, 0.5),
+    #         (-1.0, 1.0, 0.5),
+    #         (-1.0, 0, 0.5),
+    #         (-1.0, -1.0, 0.5)
+    #     ]
+
+    #     # obstacle_pos = (0.0, 0.0, 0.0)
+
+    #     for urdf, pos in zip(cylinders, self.fixed_positions):
+    #         if os.path.exists(urdf):
+    #             p.loadURDF(urdf,
+    #                     pos,
+    #                     p.getQuaternionFromEuler([0, 0, 0]),
+    #                     useFixedBase=True,
+    #                     physicsClientId=self.CLIENT
+    #                     )
+    #         else:
+    #             print(f"File not found: {urdf}")
+
+    #     # if os.path.exists(obstacles):
+    #     #     p.loadURDF(obstacles,
+    #     #                 obstacle_pos,
+    #     #                 p.getQuaternionFromEuler([0, 0, 0]),
+    #     #                 useFixedBase=True,
+    #     #                 physicsClientId=self.CLIENT)
+    #     # else:
+    #     #     print(f"File not found: {obstacles}")
     def _addObstacles(self):
-        """Add obstacles to the environment, including multiple cylinders of different colors at fixed positions."""
-        super()._addObstacles()
+        """Add a 'forest' of trees as obstacles to the environment.
+        
+        Parameters
+        ----------
+        num_trees : int, optional
+            The number of trees to add to the environment.
+        x_bounds : tuple, optional
+            The x-axis bounds within which trees will be randomly placed.
+        y_bounds : tuple, optional
+            The y-axis bounds within which trees will be randomly placed.
+        """
+        # Call the parent class _addObstacles (if needed)
+        # super()._addObstacles()
+
+        # Load the tree URDF file
+        num_trees= 100
+        x_bounds=(-10, 100)
+        y_bounds=(-10, 10)
+        
         base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
-        cylinder_colors = ['red']
-        cylinders = [os.path.join(base_path, f"{color}_cylinder.urdf") for color in cylinder_colors for _ in range(9)]
-        # obstacles = os.path.join(base_path, "gate.urdf")
-        # Fixed positions
-        self.fixed_positions = [
-            (0.5, 0.5, 0.5),
-            (0.5, 0, 0.5),
-            (0.5, -0.5, 0.5),
-            (0, 0.5, 0.5),
-            (0, 5, 0.5),
-            (0, -0.5, 0.5),
-            (-0.5, 0.5, 0.5),
-            (-0.5, 0, 0.5),
-            (-0.5, -0.5, 0.5)
-        ]
+        tree_urdf = os.path.join(base_path, "simple_tree.urdf")
 
-        # obstacle_pos = (0.0, 0.0, 0.0)
+        # Add trees randomly within the specified bounds
+        for _ in range(num_trees):
+            # Generate random x and y coordinates within the specified bounds
+            x_pos = random.uniform(x_bounds[0], x_bounds[1])
+            y_pos = random.uniform(y_bounds[0], y_bounds[1])
 
-        for urdf, pos in zip(cylinders, self.fixed_positions):
-            if os.path.exists(urdf):
-                p.loadURDF(urdf,
+            # Randomly place the tree at this location, z is fixed (0 for ground level)
+            pos = (x_pos, y_pos, 0.0)
+
+            # Load the tree URDF at the generated position
+            if os.path.exists(tree_urdf):
+                p.loadURDF(tree_urdf,
                         pos,
-                        p.getQuaternionFromEuler([0, 0, 0]),
+                        p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
                         useFixedBase=True,
-                        physicsClientId=self.CLIENT
-                        )
+                        physicsClientId=self.CLIENT)
             else:
-                print(f"File not found: {urdf}")
+                print(f"File not found: {tree_urdf}")
 
-        # if os.path.exists(obstacles):
-        #     p.loadURDF(obstacles,
-        #                 obstacle_pos,
-        #                 p.getQuaternionFromEuler([0, 0, 0]),
-        #                 useFixedBase=True,
-        #                 physicsClientId=self.CLIENT)
-        # else:
-        #     print(f"File not found: {obstacles}")

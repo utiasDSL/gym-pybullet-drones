@@ -80,7 +80,6 @@ class HoverControl(Node):
             control_timestep = 0.02,
             state=self.current_obs,  # Assuming msg.data contains the state of the drone
             target_pos=np.hstack([self.TARGET_POS[self.wp_counters, 0:2], self.INIT_XYZS[0, 2]]),
-            #target_pos=np.array([[1],[0],[4]]),
             target_rpy=self.INIT_RPYS[0, :]
         )
         # Update waypoint counter
