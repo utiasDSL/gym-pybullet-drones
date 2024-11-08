@@ -1,0 +1,3 @@
+float32[4] request   # Control inputs: [roll, pitch, yaw, throttle]
+---
+float32[7] response  # UAV state: [x, y, z, qx, qy, qz, qw]
