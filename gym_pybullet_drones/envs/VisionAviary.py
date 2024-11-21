@@ -230,9 +230,8 @@ class VisionAviary(BaseAviary):
 
         # Construct the 4x4 transformation matrix (from drone frame to world frame)
         drone_transform = np.eye(4)
-        drone_transform[0:3, 0:3] = rotation_matrix  # Set rotation
-        drone_transform[0:3, 3] = np.zeros((3,))     # Set translation
-
+        #drone_transform[0:3, 0:3] = rotation_matrix  # Set rotation
+        #drone_transform[0:3, 3] = np.zeros((3,))     # Set translation
         # Apply the combined rotation to the extrinsic matrix
         combined_rotation1 = np.array([
             [0, 0, 1, 0],
@@ -261,7 +260,7 @@ class VisionAviary(BaseAviary):
             pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, extrinsic)
         
         distances = np.linalg.norm(np.asarray(pcd.points), axis=1)
-        indices = np.where((distances >= 1.25) & (distances <= farVal))[0]
+        indices = np.where((distances <= farVal))[0]
         pcd = pcd.select_by_index(indices)
         return pcd
     
@@ -424,31 +423,61 @@ class VisionAviary(BaseAviary):
         """
         # Call the parent class _addObstacles (if needed)
         # super()._addObstacles()
-
+        less = False
+        terrain = False
         # Load the tree URDF file
-        num_trees= 100
-        x_bounds=(-10, 100)
-        y_bounds=(-10, 10)
-        
-        base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
-        tree_urdf = os.path.join(base_path, "simple_tree.urdf")
-
-        # Add trees randomly within the specified bounds
-        for _ in range(num_trees):
-            # Generate random x and y coordinates within the specified bounds
-            x_pos = random.uniform(x_bounds[0], x_bounds[1])
-            y_pos = random.uniform(y_bounds[0], y_bounds[1])
-
-            # Randomly place the tree at this location, z is fixed (0 for ground level)
-            pos = (x_pos, y_pos, 0.0)
-
-            # Load the tree URDF at the generated position
+        if terrain:
+            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+            tree_urdf = os.path.join(base_path, "terrain.urdf")
+            pos = (6, 0, 0)
             if os.path.exists(tree_urdf):
-                p.loadURDF(tree_urdf,
-                        pos,
-                        p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
-                        useFixedBase=True,
-                        physicsClientId=self.CLIENT)
+                    p.loadURDF(tree_urdf,
+                            pos,
+                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
+                            useFixedBase=True,
+                            physicsClientId=self.CLIENT)
             else:
                 print(f"File not found: {tree_urdf}")
+        elif not less:
+            num_trees= 100
+            x_bounds=(-10, 100)
+            y_bounds=(-10, 10)
+            
+            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+            tree_urdf = os.path.join(base_path, "simple_tree.urdf")
+
+            # Add trees randomly within the specified bounds
+            for _ in range(num_trees):
+                # Generate random x and y coordinates within the specified bounds
+                x_pos = random.uniform(x_bounds[0], x_bounds[1])
+                y_pos = random.uniform(y_bounds[0], y_bounds[1])
+
+                # Randomly place the tree at this location, z is fixed (0 for ground level)
+                pos = (x_pos, y_pos, 0.0)
+
+                # Load the tree URDF at the generated position
+                if os.path.exists(tree_urdf):
+                    p.loadURDF(tree_urdf,
+                            pos,
+                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
+                            useFixedBase=True,
+                            physicsClientId=self.CLIENT)
+                else:
+                    print(f"File not found: {tree_urdf}")
+        
+        else:
+            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+            tree_urdf = os.path.join(base_path, "simple_tree.urdf")
+            pos = (6, 0, 0)
+            if os.path.exists(tree_urdf):
+                    p.loadURDF(tree_urdf,
+                            pos,
+                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
+                            useFixedBase=True,
+                            physicsClientId=self.CLIENT)
+            else:
+                print(f"File not found: {tree_urdf}")
+
+
+
 

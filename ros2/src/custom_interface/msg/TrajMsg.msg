@@ -10,3 +10,5 @@ geometry_msgs/Vector3 acceleration
 geometry_msgs/Vector3 jerk
 # Snap (x, y, z)
 geometry_msgs/Vector3 snap
+# yaw
+float64 yaw

@@ -36,6 +36,8 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
 from custom_interface.msg import TrajMsg
+
+
 class AviaryWrapper(Node):
 
     #### Initialize the node ###################################
@@ -46,9 +48,10 @@ class AviaryWrapper(Node):
         timer_freq_hz = 400
         timer_period_sec = 1/timer_freq_hz
         self.R = 0.3
-        self.H = 0.5
+        self.H = 1.5
         self.INIT_XYZS = np.array([[-2, -self.R, self.H]])
         self.INIT_RPYS = np.array([[0, 0, 0]])
+        self.des_yaw = 0
 
 
         self.env = VisionAviary(drone_model=DroneModel.CF2X,
@@ -231,7 +234,7 @@ class AviaryWrapper(Node):
                 state=obs["0"]["state"],
                 target_pos=self.des_pos,
                 target_vel=self.des_vel,
-                target_rpy=np.array([0, 0, 0]).reshape(3,1)
+                target_rpy=np.array([0, 0, self.des_yaw]).reshape(3,1)
             )
         self.action = action_em['0'].tolist()
         
@@ -242,9 +245,9 @@ class AviaryWrapper(Node):
         goal_pose = PoseStamped()
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.header.frame_id = "ground_link"
-        goal_pose.pose.position.x = 110.0
+        goal_pose.pose.position.x = 20.0
         goal_pose.pose.position.y = 0.0
-        goal_pose.pose.position.z = 0.5
+        goal_pose.pose.position.z = 1.5
         goal.poses.append(goal_pose)
         self.goal_pub.publish(goal)
 
@@ -255,6 +258,7 @@ class AviaryWrapper(Node):
         print('des pos: ',self.des_pos)
         self.des_vel = np.array([[msg.velocity.x, msg.velocity.y, msg.velocity.z]]).flatten()
         print('des vel',self.des_vel)
+        self.des_yaw = msg.yaw
 ############################################################
 def main(args=None):
     rclpy.init(args=args)

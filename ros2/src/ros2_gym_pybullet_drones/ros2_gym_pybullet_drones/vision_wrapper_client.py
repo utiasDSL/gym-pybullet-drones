@@ -45,8 +45,8 @@ class AviaryWrapper(Node):
         self.get_action_cb_count = 0
         timer_freq_hz = 400
         timer_period_sec = 1/timer_freq_hz
-        self.R = 0.3
-        self.H = 0.5
+        self.R = 0.0
+        self.H = 2.0
         self.INIT_XYZS = np.array([[-2, -self.R, self.H]])
         self.INIT_RPYS = np.array([[0, 0, 0]])
 
@@ -258,9 +258,9 @@ class AviaryWrapper(Node):
         goal_pose = PoseStamped()
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.header.frame_id = "ground_link"
-        goal_pose.pose.position.x = 110.0
+        goal_pose.pose.position.x = 20.0
         goal_pose.pose.position.y = 0.0
-        goal_pose.pose.position.z = 0.5
+        goal_pose.pose.position.z = 2.0
         goal.poses.append(goal_pose)
         self.goal_pub.publish(goal)
 
