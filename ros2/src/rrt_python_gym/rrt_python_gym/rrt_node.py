@@ -447,7 +447,6 @@ class PointCloudPlanner(Node):
             if self.rrtPathPlanner.getPathExistStatus():
                 self._path, self._radius = self.rrtPathPlanner.getPath()
             
-            # self.publish_rrt_waypoints(self._path)
             self.publish_corridor_visualization(self._path, self._radius)
             self.complete_path_visualizer(self._path)
             self.publish_rrt_tree()  # New function to visualize the RRT tree

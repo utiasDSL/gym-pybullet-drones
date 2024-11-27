@@ -35,7 +35,7 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 
 from visualization_msgs.msg import Marker, MarkerArray
 from geometry_msgs.msg import Point
-from custom_interface.msg import TrajMsg
+from custom_interface_gym.msg import TrajMsg
 
 
 class AviaryWrapper(Node):
@@ -64,7 +64,7 @@ class AviaryWrapper(Node):
                            aggregate_phy_steps=1,
                            gui=True,
                            record=False,
-                           obstacles=True,
+                           obstacles=False,
                            user_debug_gui=False
                            )
         #### Initialize an action with the RPMs at hover ###########
@@ -85,7 +85,7 @@ class AviaryWrapper(Node):
         self.timer = self.create_timer(timer_period_sec, self.step_callback)
         #### Subscribe to topic 'waypoints' ###########################
         # self.wp_subs = self.create_subscription(Path, 'rrt_waypoints', self.get_waypoint_callback, 1)
-        self.traj_subs = self.create_subscription(TrajMsg,'Trajectory', self.get_trajectory_callback, 1)
+        self.traj_subs = self.create_subscription(TrajMsg,'rrt_trajectory', self.get_trajectory_callback, 1)
         self.pos = self.INIT_XYZS.flatten()
         self.waypoints = []
         self.prev_wp = []

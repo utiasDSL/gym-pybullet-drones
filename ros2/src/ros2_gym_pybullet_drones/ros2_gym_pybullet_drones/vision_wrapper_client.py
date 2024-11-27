@@ -178,7 +178,7 @@ class AviaryWrapper(Node):
         self.broadcast_transform(msg.data[0], msg.data[1], msg.data[2], msg.data[3], msg.data[4], msg.data[5], msg.data[6], "base_link", "ground_link")
 
         if self.waypoints == [] or self.waypoints is None:
-            print("no waypoint received")
+            # print("no waypoint received")
             self.action = np.ones(4)*self.env.HOVER_RPM
             self.current_wp = self.pos
 
@@ -234,7 +234,7 @@ class AviaryWrapper(Node):
         target_yaw = math.atan2(target_diff[1], target_diff[0])
         norm_xy = np.linalg.norm(target_diff[0:2])
         target_velocity = np.array([target_diff[0]/norm_xy, target_diff[1]/norm_xy, target_diff[2]*self.p_z]).flatten()
-
+        print("[controller debug: ]",self.current_wp)
         action_em = {}
         action_em['0'], _, _ = self.ctrl.computeControlFromState(
                 control_timestep=1/200,

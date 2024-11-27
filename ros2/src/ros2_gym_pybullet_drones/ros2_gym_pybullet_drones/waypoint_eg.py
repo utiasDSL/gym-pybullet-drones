@@ -25,7 +25,7 @@ class waypoint_pub(Node):
     def __init__(self):
         super().__init__('waypoint_pub')  # Initialize the ROS 2 node
         self.wp1 = np.array([
-            [1.0, 0.0, 0.5],
+            [-2.0, -0.3, 1.5],
             [2.0, 0.0, 0.5],
             [3.0, 0.0, 0.5],
             [4.0, 0.0, 0.5],
@@ -94,7 +94,7 @@ class waypoint_pub(Node):
             dist_from_anchor1 = np.linalg.norm(self.wp1[2] - self.current_pos)
 
             self.get_logger().info('Publishing wp1, dist_from_anchor1 = "%f"'%(dist_from_anchor1))
-            if dist_from_anchor1 < 0.5:
+            if dist_from_anchor1 < 0.1:
                 self.wp1_finish = True
         
         else:
@@ -113,7 +113,7 @@ class waypoint_pub(Node):
                 self.path_publisher.publish(path_msg)
                 self.get_logger().info('Publishing wp2')
                 dist_from_anchor2 = np.linalg.norm(self.wp2[4] - self.current_pos)
-                if dist_from_anchor2 < 0.5:
+                if dist_from_anchor2 < 0.1:
                     self.wp2_finish = True
             
             elif not self.wp3_finish:
@@ -131,7 +131,7 @@ class waypoint_pub(Node):
                 self.get_logger().info('Publishing wp3')
                 self.path_publisher.publish(path_msg)
                 dist_from_anchor3 = np.linalg.norm(self.wp3[6] - self.current_pos)
-                if dist_from_anchor3 < 0.5:
+                if dist_from_anchor3 < 0.1:
                     self.wp3_finish = True
             else:
                 for point in self.wp4:

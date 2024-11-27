@@ -17,7 +17,6 @@ void safeRegionRrtStar::setParam( double safety_margin_, double search_margin_, 
     search_margin = search_margin_;
     max_radius    = max_radius_;
     sample_range  = sample_range_;
-    best_distance = inf;
 }
 
 void safeRegionRrtStar::reset()
@@ -153,7 +152,7 @@ void safeRegionRrtStar::treePrune(NodePtr newPtr)
 {     
     NodePtr ptr = newPtr;
     if( ptr->g + ptr->f > best_distance ){ // delete it and all its branches
-        std::cout<<"x:"<<ptr->coord[0]<<" y:"<<ptr->coord[1]<<" z:"<<ptr->coord[2]<<" g:"<<ptr->g<<" f:"<<ptr->f<<" bd:"<<best_distance<<std::endl;
+        // std::cout<<"x:"<<ptr->coord[0]<<" y:"<<ptr->coord[1]<<" z:"<<ptr->coord[2]<<" g:"<<ptr->g<<" f:"<<ptr->f<<" bd:"<<best_distance<<std::endl;
         ptr->invalid_in_prune = true;
         ptr->valid = false;
         invalidSet.push_back(ptr);
@@ -225,11 +224,10 @@ void safeRegionRrtStar::removeInvalid()
 }
 
 void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
-{     
+{   
     NodePtr lstNode = PathList.front();
     
     if(getDis(lstNode, target_coord) < lstNode->radius){
-        std::cout<<"[Path Finder] almost reach the final target, return"<<std::endl;
         global_navi_status = true;
         return;
     }
@@ -469,6 +467,7 @@ void safeRegionRrtStar::treeRewire( NodePtr node_new_ptr, NodePtr node_nearst_pt
             nearPtr->rel_dis = dis;
 
             if( res == 1 ){
+                // std::cout<<"invalid in rewire"<<std::endl;
                 newPtr->invalid_in_rewire = true;
                 newPtr->valid = false;
                 
@@ -617,7 +616,7 @@ void safeRegionRrtStar::tracePath()
     PathList.clear();
 
     while( ptr != NULL ) {
-        std::cout<<"point: "<<ptr->coord[0]<<" : "<<ptr->coord[1]<<" : "<<ptr->coord[2]<<std::endl; 
+        // std::cout<<"point: "<<ptr->coord[0]<<" : "<<ptr->coord[1]<<" : "<<ptr->coord[2]<<std::endl; 
         PathList.push_back( ptr );
         ptr = ptr->preNode_ptr;
         idx ++;
@@ -741,9 +740,9 @@ void safeRegionRrtStar::SafeRegionExpansion( double time_limit )
         
         if( node_new_ptr->coord(2) < z_l  || node_new_ptr->radius < safety_margin )
         {
-            bool a = node_new_ptr->coord(2) < z_l;
-            bool b = node_new_ptr->radius < safety_margin;
-            std::cout<<node_new_ptr->radius<<":"<<safety_margin<<std::endl;
+            // bool a = node_new_ptr->coord(2) < z_l;
+            // bool b = node_new_ptr->radius < safety_margin;
+            // std::cout<<node_new_ptr->radius<<":"<<safety_margin<<std::endl;
             continue;
         }
         
@@ -751,7 +750,7 @@ void safeRegionRrtStar::SafeRegionExpansion( double time_limit )
         
         if( ! node_new_ptr->valid)
         {
-            std::cout<<"if3"<<std::endl;
+            // std::cout<<"if3"<<std::endl;
             continue;
         }
 
@@ -770,7 +769,7 @@ void safeRegionRrtStar::SafeRegionExpansion( double time_limit )
         kd_insertf(kdTree_, pos, node_new_ptr);
 
         recordNode(node_new_ptr);
-        // std::cout<<"inserted node coord: "<<node_new_ptr->coord<<" valid: "<<node_new_ptr->valid<<" radius: "<<node_new_ptr->radius<<std::endl;
+        // std::cout<<"inserted node coord: "<<node_new_ptr->coord[0]<<" : "<<node_new_ptr->coord[1]<<" : "<<node_new_ptr->coord[2]<<std::endl;
         selectedNodeList.push_back(node_new_ptr->coord);
         treePrune(node_new_ptr);      
 
@@ -787,7 +786,7 @@ void safeRegionRrtStar::SafeRegionRefine( double time_limit )
     /*  Every time the refine function is called, new samples are continuously generated and the tree is continuously rewired, hope to get a better solution  */
     /*  The refine process is mainly same as the initialization of the tree  */
     auto time_bef_refine = std::chrono::steady_clock::now();
-
+    std::cout<<"in refine loop"<<std::endl;
     float pos[3];
     while( true )
     {     
@@ -824,7 +823,6 @@ void safeRegionRrtStar::SafeRegionRefine( double time_limit )
 
         recordNode(node_new_ptr);
         treePrune(node_new_ptr);      
-
         if( int(invalidSet.size()) >= cach_size) removeInvalid();
   }
 
@@ -903,7 +901,10 @@ void safeRegionRrtStar::SafeRegionEvaluate( double time_limit )
         for(auto ptr:PathList) 
           isBreak = isBreak && ptr->valid;
 
-        if(isBreak) break;
+        if(isBreak)
+        {
+            break;
+        }
 
         vector<NodePtr> feasibleEndList;                
         for(auto endPtr: EndList)

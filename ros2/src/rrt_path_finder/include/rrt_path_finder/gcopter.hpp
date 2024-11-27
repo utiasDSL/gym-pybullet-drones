@@ -35,7 +35,7 @@
 #include <cfloat>
 #include <iostream>
 #include <vector>
-
+#include "geo_utils.hpp"
 namespace gcopter
 {
 

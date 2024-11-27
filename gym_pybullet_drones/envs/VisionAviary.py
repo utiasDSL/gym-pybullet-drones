@@ -423,7 +423,7 @@ class VisionAviary(BaseAviary):
         """
         # Call the parent class _addObstacles (if needed)
         # super()._addObstacles()
-        less = False
+        less = True
         terrain = False
         # Load the tree URDF file
         if terrain:

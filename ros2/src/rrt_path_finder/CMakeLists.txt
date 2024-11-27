@@ -19,20 +19,24 @@ find_package(tf2_sensor_msgs REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 
-# Include the include/ directory and PCL include directories
+# Manually specify the path to custom_interface_gym if it’s not automatically found
+list(APPEND CMAKE_PREFIX_PATH /home/astik/gym-pybullet-drones/ros2/install/custom_interface_gym/share/custom_interface_gym/cmake)
+find_package(custom_interface_gym REQUIRED)
+
+# Include directories
 include_directories(
   include
   ${PCL_INCLUDE_DIRS}
 )
 
-# Add the source files
+# Add source files
 set(SOURCES
   src/corridor_finder.cpp
   src/kdtree.c
   src/rrt_node.cpp
 )
 
-# Declare the executable and link necessary libraries
+# Declare the executable
 add_executable(rrt_node ${SOURCES})
 
 # Link dependencies
@@ -47,6 +51,7 @@ ament_target_dependencies(rrt_node
   tf2_sensor_msgs
   tf2_geometry_msgs
   std_msgs
+  custom_interface_gym
 )
 
 # Link the PCL libraries
@@ -76,6 +81,7 @@ ament_export_dependencies(
   tf2_ros
   tf2_sensor_msgs
   tf2_geometry_msgs
+  custom_interface_gym
 )
 
 # This is necessary for building the package
