@@ -722,7 +722,7 @@ void safeRegionRrtStar::SafeRegionExpansion( double time_limit )
     for( iter_count = 0; iter_count < max_samples; iter_count ++)
     {     
         auto time_in_expand = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(time_in_expand - time_bef_expand).count();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(time_in_expand - time_bef_expand).count()*0.001;
         if( elapsed > time_limit ) break;
         
         Vector3d   pt_sample = genSample();
@@ -791,8 +791,13 @@ void safeRegionRrtStar::SafeRegionRefine( double time_limit )
     while( true )
     {     
         auto time_in_refine = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(time_in_refine - time_bef_refine).count();
-        if( elapsed > time_limit ) break;
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(time_in_refine - time_bef_refine).count()*0.001;
+        std::cout<<"[refine debug] elapsed: "<<elapsed<<std::endl;
+        if( elapsed > time_limit )
+        {
+            std::cout<<"[refine debug] time in refine loop: "<<elapsed<<" time limit: "<<time_limit<<std::endl;
+            break;
+        } 
         
         Vector3d pt_sample =  genSample();
         NodePtr node_nearst_ptr = findNearstVertex(pt_sample);
@@ -900,9 +905,12 @@ void safeRegionRrtStar::SafeRegionEvaluate( double time_limit )
 
         for(auto ptr:PathList) 
           isBreak = isBreak && ptr->valid;
+        
+        auto time_in_evaluate2 = std::chrono::steady_clock::now();
 
         if(isBreak)
         {
+            std::cout<<"[evaluate debug] break condition reached: time in evaluate: "<<std::chrono::duration_cast<std::chrono::milliseconds>(time_in_evaluate2 - time_bef_evaluate).count()*0.001<<std::endl;
             break;
         }
 
@@ -918,7 +926,7 @@ void safeRegionRrtStar::SafeRegionEvaluate( double time_limit )
 
         EndList = feasibleEndList;
         auto time_in_evaluate = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(time_in_evaluate - time_bef_evaluate).count();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(time_in_evaluate - time_bef_evaluate).count()*0.001;
         if(feasibleEndList.size() == 0 || elapsed > time_limit ){
             path_exist_status = false;
             inform_status = false;
@@ -949,7 +957,7 @@ void safeRegionRrtStar::SafeRegionEvaluate( double time_limit )
     } 
     
     auto time_aft_evaluate = std::chrono::steady_clock::now();
-    double repair_limit = time_limit - std::chrono::duration_cast<std::chrono::seconds>(time_aft_evaluate - time_bef_evaluate).count();
+    double repair_limit = time_limit - std::chrono::duration_cast<std::chrono::milliseconds>(time_aft_evaluate - time_bef_evaluate).count()*0.001;
 
     removeInvalid();
     treeRepair(repair_limit, fail_node_list); /*  This function is optional, better turn on to improve path quality  */
@@ -969,7 +977,7 @@ void safeRegionRrtStar::treeRepair(double time_limit, vector< pair<Vector3d, dou
     for(int i = 0; i < repairSize; i++)
     {   
         auto time_in_repair = std::chrono::steady_clock::now();
-        auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(time_in_repair - time_bef_repair).count();
+        auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(time_in_repair - time_bef_repair).count()*0.001;
 
         if(elapsed > time_limit ) break;
 
