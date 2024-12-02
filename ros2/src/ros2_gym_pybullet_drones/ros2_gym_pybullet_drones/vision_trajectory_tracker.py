@@ -27,7 +27,7 @@ from sensor_msgs.msg import PointCloud2, PointField
 from std_msgs.msg import Header
 import tf2_ros
 from geometry_msgs.msg import TransformStamped, Pose, PoseStamped
-
+from nav_msgs.msg import Odometry
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.VisionAviary import VisionAviary
@@ -74,6 +74,7 @@ class AviaryWrapper(Node):
         #### Declare publishing on 'obs' and create a timer to call 
         #### action_callback every timer_period_sec ################
         self.publisher_ = self.create_publisher(Float32MultiArray, 'obs', 1)
+        self.odom_publisher = self.create_publisher(Odometry, 'odom', 1)
         self.dep_pub = self.create_publisher(Image,'depth_image',1)
         self.pcd_pub = self.create_publisher(PointCloud2,'pcd_gym_pybullet',2)
         self.rgb_pub = self.create_publisher(Image,'rgb_image',1)
@@ -173,15 +174,38 @@ class AviaryWrapper(Node):
 
         obs, reward, done, info = self.env.step({"0": self.action})
         msg = Float32MultiArray()
+        
         msg.data = obs["0"]["state"].tolist()
         self.pos = np.array(obs["0"]["state"].tolist()[0:3])
+        self.quat = np.array(obs["0"]["state"].tolist()[3:7])
+        self.vel = np.array(obs["0"]["state"].tolist()[10:13])
+        self.ang_vel = np.array(obs["0"]["state"].tolist()[13:16])
         
         self.x_hist.append(self.pos[0])
         self.y_hist.append(self.pos[1])
         self.z_hist.append(self.pos[2])
+
         
         self.broadcast_transform(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, "ground_link", "map")
         self.broadcast_transform(msg.data[0], msg.data[1], msg.data[2], msg.data[3], msg.data[4], msg.data[5], msg.data[6], "base_link", "ground_link")
+        odom = Odometry()
+        odom.header.frame_id = "ground_link"
+        odom.header.stamp = self.get_clock().now().to_msg()
+        odom._pose._pose.position.x = self.pos[0]
+        odom._pose._pose.position.y = self.pos[1]
+        odom._pose._pose.position.z = self.pos[2]
+        odom._pose._pose.orientation.w = -self.quat[3]
+        odom._pose._pose.orientation.x = self.quat[2]
+        odom._pose._pose.orientation.y = -self.quat[1]
+        odom._pose._pose.orientation.z = self.quat[0]
+        odom._twist._twist.linear.x = self.vel[0]
+        odom._twist._twist.linear.y = self.vel[1]
+        odom._twist._twist.linear.z = self.vel[2]
+        odom._twist._twist.angular.x = self.ang_vel[0]
+        odom._twist._twist.angular.y = self.ang_vel[1]
+        odom._twist._twist.angular.z = self.ang_vel[2]
+        self.odom_publisher.publish(odom)
+
 
         self.publisher_.publish(msg)
         depth_image = obs["0"]["dep"]

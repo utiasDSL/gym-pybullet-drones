@@ -34,7 +34,7 @@ class trajectory_pub(Node):
         self.wp_subs = self.create_subscription(Path, 'rrt_waypoints', self.get_waypoint_callback, 1)
         self.obs_subscription = self.create_subscription(Float32MultiArray, 'obs', self.get_obs_callback, 1)
 
-        self.traj_publisher = self.create_publisher(TrajMsg, 'Trajectory',1)
+        self.traj_publisher = self.create_publisher(TrajMsg, 'rrt_trajectory',1)
         self._planning_timer = self.create_timer(1.0 / self._planning_rate, self.step)
         trajSelect = np.zeros(4)
 
@@ -86,6 +86,7 @@ class trajectory_pub(Node):
         
         del_t = time.time()-self.t_assign
         sDes =  self.traj.desiredState(del_t, 0.01, self._start_pos, self._psi)
+        print("step function called, del_t = ",del_t)
         traj_msg = TrajMsg()
         traj_msg.header.stamp = self.get_clock().now().to_msg()
         traj_msg.header.frame_id = "ground_link"
@@ -102,6 +103,7 @@ class trajectory_pub(Node):
         traj_msg.jerk = Vector3(x=jerk_sp[0], y=jerk_sp[1], z=jerk_sp[2])
         traj_msg.snap = Vector3(x=snap_sp[0], y=snap_sp[1], z=snap_sp[2])
         traj_msg.yaw = 0.0
+        print("trajectory published: des_pos: ", pos_sp[0], pos_sp[1], pos_sp[2])
         self.traj_publisher.publish(traj_msg)
     
 def main(args=None):
