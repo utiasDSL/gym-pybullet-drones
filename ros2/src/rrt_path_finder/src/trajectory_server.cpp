@@ -67,9 +67,12 @@ public:
     }
     void trajectoryCallback(const custom_interface_gym::msg::DesTrajectory::SharedPtr msg)
     {
+        std::cout<<"in trajectory callback"<<std::endl;
+
         switch (msg->action)
         {
         case custom_interface_gym::msg::DesTrajectory::ACTION_ADD:
+            std::cout<<"case 1"<<std::endl;
             handleAddTrajectory(msg);
             break;
         default:
@@ -81,7 +84,14 @@ public:
 
     void handleAddTrajectory(const custom_interface_gym::msg::DesTrajectory::SharedPtr msg)
     {
-        if(msg->trajectory_id < trajectory_id) return;
+        if(msg->trajectory_id < trajectory_id)
+        {
+            std::cout<<"backward trajectory invalid"<<std::endl;
+            return;
+        }
+        std::cout<<"in handle add trajectory callback"<<std::endl;
+        has_trajectory = true;
+        is_aborted = false;
         _traj.clear();
         trajectory_id = msg->trajectory_id;
         _start_time = msg->header.stamp;
@@ -93,25 +103,26 @@ public:
 
         std::vector<double> array_msg_traj;
         array_msg_traj = msg->matrices_flat;
+
         for (int i = 0; i < segment_durations.size(); ++i) 
         {
-                // Map the corresponding slice of the concatenated vector to an Eigen matrix
-                Eigen::Map<const Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic>> matrix(
-                    array_msg_traj.data() + i * 3*6, // Starting point in the vector
-                    3,                                   // Number of rows
-                    6                             // Number of columns
-                );
-                // Store the matrix in the output vector
-                current_coefficients.push_back(matrix);
-                std::chrono::duration<double> duration_in_sec(segment_durations[i]);
+            Eigen::Map<const Eigen::Matrix<double, 3, 6, Eigen::RowMajor>> matrix(
+            array_msg_traj.data() + i * 3 * 6); // Starting point in the vector
 
-                // Create rclcpp::Duration from the std::chrono::duration
-                rclcpp::Duration rcl_duration(duration_in_sec);
+            // Store the matrix in the output vector
+            current_coefficients.push_back(matrix);
 
-                // Add the duration to _final_time
-                _final_time += rcl_duration;
+            std::chrono::duration<double> duration_in_sec(segment_durations[i]);
+            rclcpp::Duration rcl_duration(duration_in_sec);
+
+            // Add the duration to _final_time
+            _final_time += rcl_duration;
         }
-        
+        // for (auto mat : current_coefficients)
+        // {
+        //     std::cout<<"######## mat #########"<<std::endl;
+        //     std::cout<<mat<<std::endl;
+        // }
         _traj.setParameters(segment_durations, current_coefficients);
 
         // RCLCPP_WARN(this->get_logger(), "Added trajectory with %lu segments.", msg->num_segment);
@@ -139,9 +150,9 @@ public:
             traj_msg.header.frame_id = "ground_link"; 
 
             // Set position
-            traj_msg.position.x = current_pos[0];
-            traj_msg.position.y = current_pos[1];
-            traj_msg.position.z = current_pos[2];
+            traj_msg.position.x = -2.0;
+            traj_msg.position.y = 0.0;
+            traj_msg.position.z = 1.5;
 
             // Set velocity
             traj_msg.velocity.x = 0;
@@ -166,7 +177,6 @@ public:
 
             return;
         }
-
         // Get elapsed time
         double elapsed = (this->get_clock()->now() - _start_time).seconds();
 
@@ -178,12 +188,11 @@ public:
         }
 
         Eigen::Vector3d des_pos = _traj.getPos(elapsed);
-            
         Eigen::Vector3d des_vel = _traj.getVel(elapsed);
         Eigen::Vector3d des_Acc = _traj.getAcc(elapsed);
         Eigen::Vector3d des_jerk = _traj.getJer(elapsed);
         
-        std::cout<<"elapsed: "<<elapsed<<std::endl;
+        // std::cout<<"elapsed: "<<elapsed<<std::endl;
         custom_interface_gym::msg::TrajMsg traj_msg;
         traj_msg.header.stamp = rclcpp::Clock().now();
         traj_msg.header.frame_id = "ground_link"; 
