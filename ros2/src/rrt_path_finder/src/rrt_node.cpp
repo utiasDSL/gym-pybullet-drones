@@ -7,6 +7,7 @@
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/voxel_grid.h>
 
 #include <rclcpp/rclcpp.hpp>
 #include <nav_msgs/msg/path.hpp>
@@ -17,6 +18,7 @@
 #include <visualization_msgs/msg/marker.hpp>
 #include "std_msgs/msg/float32_multi_array.hpp"
 #include "custom_interface_gym/msg/traj_msg.hpp"
+#include "custom_interface_gym/msg/des_trajectory.hpp"
 #include "rrt_path_finder/corridor_finder.h"
 
 #include <tf2_ros/transform_listener.h>
@@ -47,7 +49,7 @@ public:
 
         this->declare_parameter("safety_margin", 1.00);
         this->declare_parameter("search_margin", 1.00);
-        this->declare_parameter("max_radius", 2.0);
+        this->declare_parameter("max_radius", 5.0);
         this->declare_parameter("sensing_range", 6.0);
         this->declare_parameter("local_range",2.0);
         this->declare_parameter("refine_portion", 0.80);
@@ -111,7 +113,8 @@ public:
 
         // Add the RRT waypoints publisher
         _rrt_waypoints_pub = this->create_publisher<nav_msgs::msg::Path>("rrt_waypoints", 1);
-        _rrt_traj_pub = this->create_publisher<custom_interface_gym::msg::TrajMsg>("rrt_trajectory",1);
+        // _rrt_traj_pub = this->create_publisher<custom_interface_gym::msg::TrajMsg>("rrt_command",1);
+        _rrt_des_traj_pub = this->create_publisher<custom_interface_gym::msg::DesTrajectory>("des_trajectory",1);
 
         // Subscribers
         _obs_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
@@ -140,7 +143,8 @@ private:
 
     // RRT waypoints publisher
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr _rrt_waypoints_pub;
-    rclcpp::Publisher<custom_interface_gym::msg::TrajMsg>::SharedPtr _rrt_traj_pub;
+    // rclcpp::Publisher<custom_interface_gym::msg::TrajMsg>::SharedPtr _rrt_traj_pub;
+    rclcpp::Publisher<custom_interface_gym::msg::DesTrajectory>::SharedPtr _rrt_des_traj_pub;
 
     // Subscribers
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odom_sub;
@@ -169,8 +173,11 @@ private:
     float smoothingEps = 0.01;
     float relcostto1 = 0.00001;
     int _max_samples;
-    double _commit_time = 1.0;
+    double _commit_distance = 6.0;
+    double max_vel = 0.5;
     float threshold = 0.1;
+    int trajectory_id = 0;
+    int order = 5;
     // RRT Path Planner
     safeRegionRrtStar _rrtPathPlanner;
     gcopter::GCOPTER_PolytopeSFC _gCopter;
@@ -191,6 +198,7 @@ private:
     bool _is_target_arrive = false;
     bool _is_target_receive = false;
     bool _is_has_map = false;
+    bool _is_complete = false;
 
 
     // ROS 2-compatible callback functions
@@ -227,7 +235,17 @@ private:
         if(_rrtPathPlanner.getDis(_start_pos, _commit_target) < threshold)
         {
             _is_target_arrive = true;
+            if(_rrtPathPlanner.getDis(_start_pos, _end_pos) < threshold)
+            {
+                _is_complete = true;
+            }
         }
+        else
+        {
+            std::cout<<"[commit debug] distance to commit target: "<<_rrtPathPlanner.getDis(_start_pos, _commit_target)<<std::endl;
+            std::cout<<"[commit debug] distance to endgoal: "<<_rrtPathPlanner.getDis(_start_pos, _end_pos)<<std::endl;
+        }
+        
         //RCLCPP_WARN(this->get_logger(), "Start Pos: %f: %f: %f", _start_pos(0), _start_pos(1), _start_pos(2));
     }
 
@@ -256,8 +274,15 @@ private:
             return;
 
         _is_has_map = true;
-        _rrtPathPlanner.setInput(cloud_input);
-        for (const auto& point : cloud_input.points)
+
+            pcl::VoxelGrid<pcl::PointXYZ> voxel_grid_filter;
+        voxel_grid_filter.setInputCloud(cloud_input.makeShared());
+        voxel_grid_filter.setLeafSize(0.1f, 0.1f, 0.1f); // Set the leaf size (adjust as needed, e.g., 10 cm)
+        pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
+        voxel_grid_filter.filter(cloud_filtered);
+        
+        _rrtPathPlanner.setInput(cloud_filtered);
+        for (const auto& point : cloud_filtered.points)
         {
             Eigen::Vector3d eigen_point(point.x, point.y, point.z);
             pcd_points.push_back(eigen_point);
@@ -293,11 +318,11 @@ private:
 
     void convexCover(const Eigen::MatrixXd &path, 
                         const double &range,
+                        const double &progress,
                         const double eps)
     {
         Eigen::Vector3d lowCorner(_x_l, _y_l, _z_l);
         Eigen::Vector3d highCorner(_x_h, _y_h, _z_h);
-        double progress = _max_radius;
         hpolys.clear();
         int n = int(path.rows());
         Eigen::Matrix<double, 6, 4> bd = Eigen::Matrix<double, 6, 4>::Zero();
@@ -422,7 +447,7 @@ private:
         Eigen::VectorXd penaltyWeights(5);
         Eigen::VectorXd physicalParams(6);
         std::vector<float> chiVec = {10000, 10000, 10000, 10000, 100000};
-        magnitudeBounds(0) = 4.0;
+        magnitudeBounds(0) = max_vel;
         magnitudeBounds(1) = 2.1;
         magnitudeBounds(2) = 1.05;
         magnitudeBounds(3) = 2.0;
@@ -441,76 +466,85 @@ private:
         int quadratureRes = 16;
         float weightT = 20.0;
         float smoothingEps = 0.01;
-        float relcostto1 = 0.00001;
+        float relcostto1 = 0.1;
         _traj.clear();
+        auto t1 = std::chrono::steady_clock::now();
         if (!_gCopter.setup(weightT, iniState, finState, hpolys, INFINITY, smoothingEps, quadratureRes, magnitudeBounds, penaltyWeights, physicalParams))
         {
             std::cout<<"gcopter returned false during setup, traj exist set to false"<<std::endl;
             _is_traj_exist = false;
+            custom_interface_gym::msg::DesTrajectory des_traj_msg;
+            des_traj_msg.header.stamp = rclcpp::Clock().now();
+            des_traj_msg.header.frame_id = "ground_link";
+            des_traj_msg.action = des_traj_msg.ACTION_WARN_IMPOSSIBLE;
+            _rrt_des_traj_pub->publish(des_traj_msg);
+            return;
         }
         if (std::isinf(_gCopter.optimize(_traj, relcostto1)))
         {
             std::cout<<"gcopter optimization cost is infinity, traj exist set to false"<<std::endl;
             _is_traj_exist = false;
+            custom_interface_gym::msg::DesTrajectory des_traj_msg;
+            des_traj_msg.header.stamp = rclcpp::Clock().now();
+            des_traj_msg.header.frame_id = "ground_link";
+            des_traj_msg.action = des_traj_msg.ACTION_WARN_IMPOSSIBLE;
+            _rrt_des_traj_pub->publish(des_traj_msg);
+            return;
         }
         if (_traj.getPieceNum() > 0)
         {
-            std::cout<<"trajectory successfully generated, traj exist set to true"<<std::endl;
             trajstamp = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(trajstamp - t1).count()*0.001;
+            std::cout<<"trajectory successfully generated, traj exist set to true. time taken for trajectory generation: "<<elapsed<<std::endl;
             _is_traj_exist = true;
+            custom_interface_gym::msg::DesTrajectory des_traj_msg;
+            des_traj_msg.header.stamp = rclcpp::Clock().now();
+            des_traj_msg.header.frame_id = "ground_link";
+            des_traj_msg.trajectory_id = trajectory_id++;
+            des_traj_msg.action = des_traj_msg.ACTION_ADD;
+            des_traj_msg.num_order = order;
+            des_traj_msg.num_segment = _traj.getPieceNum();
+            Eigen::VectorXd durations = _traj.getDurations();
+            std::vector<double> durations_vec(durations.data(), durations.data() + durations.size());
+            auto coefficient_mat = _traj.getCoefficientMatrices();
+            for(int i=0; i<_traj.getPieceNum(); i++)
+            {
+                des_traj_msg.duration_vector.push_back(durations_vec[i]);
+                for(int j=0; j<coefficient_mat[i].rows(); j++)
+                {
+                    for(int k=0; k<coefficient_mat[i].cols(); k++)
+                    {
+                        des_traj_msg.matrices_flat.push_back(coefficient_mat[i](j, k));
+                    }
+                }
+            }
+            des_traj_msg.debug_info = "trajectory_id: "+std::to_string(trajectory_id);
+            _rrt_des_traj_pub->publish(des_traj_msg);
+            std::cout<<"[GCOPTER debug] desired trajectory published"<<std::endl;
+            return;
         }
     }
 
-    void traj_publish(double elapsed)
+    void traj_publish()
     {
         if(_is_traj_exist)
         {
+            double elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - trajstamp).count()*0.001;
+            
             std::cout<<"in traj publish: traj exist is true"<<std::endl;
             Eigen::Vector3d des_pos = _traj.getPos(elapsed);
+            
             Eigen::Vector3d des_vel = _traj.getVel(elapsed);
             Eigen::Vector3d des_Acc = _traj.getAcc(elapsed);
             Eigen::Vector3d des_jerk = _traj.getJer(elapsed);
+            if(_is_complete)
+            {
+                des_pos = _end_pos;
+                des_vel.x() = 0;
+                des_vel.y() = 0;
+                des_vel.z() = 0;
+            }
             std::cout<<"elapsed: "<<elapsed<<std::endl;
-            custom_interface_gym::msg::TrajMsg traj_msg;
-            traj_msg.header.stamp = rclcpp::Clock().now();
-            traj_msg.header.frame_id = "ground_link"; 
-
-            // Set position
-            traj_msg.position.x = des_pos.x();
-            traj_msg.position.y = des_pos.y();
-            traj_msg.position.z = des_pos.z();
-
-            // Set velocity
-            traj_msg.velocity.x = 0; //des_vel.x();
-            traj_msg.velocity.y = 0; //des_vel.y();
-            traj_msg.velocity.z = 0; //des_vel.z();
-
-            // Set acceleration
-            traj_msg.acceleration.x = des_Acc.x();
-            traj_msg.acceleration.y = des_Acc.y();
-            traj_msg.acceleration.z = des_Acc.z();
-
-            // Set jerk
-            traj_msg.jerk.x = des_jerk.x();
-            traj_msg.jerk.y = des_jerk.y();
-            traj_msg.jerk.z = des_jerk.z();
-
-            // Set yaw 
-            Eigen::Vector3d direction = des_pos - _start_pos;    // Vector from start_pos to des_pos
-            double yaw = std::atan2(direction.y(), direction.x()); // Yaw in radians
-            traj_msg.yaw = yaw;
-
-            // Publish the message
-            _rrt_traj_pub->publish(traj_msg); // Replace traj_publisher_ with your actual publisher variable
-        }
-        else
-        {
-            std::cout<<" in traj publish, traj exist is false"<<std::endl;
-            Eigen::Vector3d des_pos = _start_pos;
-            Eigen::Vector3d des_vel(0.0, 0.0, 0.0);
-            Eigen::Vector3d des_Acc(0.0, 0.0, 0.0);
-            Eigen::Vector3d des_jerk(0.0, 0.0, 0.0);
-
             custom_interface_gym::msg::TrajMsg traj_msg;
             traj_msg.header.stamp = rclcpp::Clock().now();
             traj_msg.header.frame_id = "ground_link"; 
@@ -536,17 +570,59 @@ private:
             traj_msg.jerk.z = des_jerk.z();
 
             // Set yaw 
+            Eigen::Vector3d direction = des_pos - _start_pos;    // Vector from start_pos to des_pos
+            double yaw = std::atan2(direction.y(), direction.x()); // Yaw in radians
+            traj_msg.yaw = 0; //yaw;
+
+            // Publish the message
+            // _rrt_traj_pub->publish(traj_msg); 
+        }
+        else
+        {
+            std::cout<<" in traj publish, traj exist is false"<<std::endl;
+            Eigen::Vector3d des_pos = _start_pos;
+            Eigen::Vector3d des_vel(0.0, 0.0, 0.0);
+            Eigen::Vector3d des_Acc(0.0, 0.0, 0.0);
+            Eigen::Vector3d des_jerk(0.0, 0.0, 0.0);
+
+            custom_interface_gym::msg::TrajMsg traj_msg;
+            traj_msg.header.stamp = rclcpp::Clock().now();
+            traj_msg.header.frame_id = "ground_link"; 
+
+            // Set position
+            traj_msg.position.x = des_pos.x();
+            traj_msg.position.y = des_pos.y();
+            traj_msg.position.z = des_pos.z();
+
+            // Set velocity
+            traj_msg.velocity.x = 0; //des_vel.x();
+            traj_msg.velocity.y = 0; //des_vel.y();
+            traj_msg.velocity.z = 0; //des_vel.z();
+
+            // Set acceleration
+            traj_msg.acceleration.x = des_Acc.x();
+            traj_msg.acceleration.y = des_Acc.y();
+            traj_msg.acceleration.z = des_Acc.z();
+
+            // Set jerk
+            traj_msg.jerk.x = des_jerk.x();
+            traj_msg.jerk.y = des_jerk.y();
+            traj_msg.jerk.z = des_jerk.z();
+
+            // Set yaw 
             traj_msg.yaw = 0;
 
             // Publish the message
-            _rrt_traj_pub->publish(traj_msg); // Replace traj_publisher_ with your actual publisher variable
+            // _rrt_traj_pub->publish(traj_msg); 
 
         }
+
     }
 
     void getCommitTarget()
     {
-        _commit_target = _traj.getPos(_commit_time);
+        _commit_target = _traj.getPos(_commit_distance/max_vel);
+        if(_rrtPathPlanner.getDis(_start_pos, _commit_target) > _rrtPathPlanner.getDis(_start_pos, _end_pos)) _commit_target = _end_pos;
         std::cout<<"[commit target] set to"<<_commit_target[0]<<" : "<<_commit_target[1]<<" : "<<_commit_target[2]<<std::endl;
     }
 
@@ -568,9 +644,9 @@ private:
         {
             // Generate trajectory
             std::cout<<"[Initial planning] initial path found"<<std::endl;
-            convexCover(_path, 1.0, 1.0e-6);
-            shortCut();
             std::cout<<"hpolys size: "<<hpolys.size()<<std::endl;
+            convexCover(_path, 1.0, 5.0, 1.0e-6);
+            shortCut();
             traj_generation(_path);
             if(_is_traj_exist)
             {
@@ -585,7 +661,11 @@ private:
         {
             RCLCPP_WARN(this->get_logger(), "No path found in initial trajectory planning");
             _is_traj_exist = false;
-            std::cout<<"rrt path not found in initial planner, traj exist = false"<<std::endl;
+            custom_interface_gym::msg::DesTrajectory des_traj_msg;
+            des_traj_msg.header.stamp = rclcpp::Clock().now();
+            des_traj_msg.header.frame_id = "ground_link";
+            des_traj_msg.action = des_traj_msg.ACTION_WARN_IMPOSSIBLE;
+            _rrt_des_traj_pub->publish(des_traj_msg);
         }
         visRrt(_rrtPathPlanner.getTree()); 
         visRRTPath(_path);
@@ -597,6 +677,11 @@ private:
         if (_rrtPathPlanner.getGlobalNaviStatus())
         {
             visRrt(_rrtPathPlanner.getTree()); 
+            custom_interface_gym::msg::DesTrajectory des_traj_msg;
+            des_traj_msg.header.stamp = rclcpp::Clock().now();
+            des_traj_msg.header.frame_id = "ground_link";
+            des_traj_msg.action = des_traj_msg.ACTION_WARN_FINAL;
+            _rrt_des_traj_pub->publish(des_traj_msg);
             return; // No further planning required if global navigation is complete
         }
 
@@ -606,7 +691,11 @@ private:
             {
                 RCLCPP_WARN(this->get_logger(), "Reached committed target but no feasible path exists");
                 _is_traj_exist = false;
-                std::cout<<"rrt path not found in incremental planner, traj exist = false"<<std::endl;
+                custom_interface_gym::msg::DesTrajectory des_traj_msg;
+                des_traj_msg.header.stamp = rclcpp::Clock().now();
+                des_traj_msg.header.frame_id = "ground_link";
+                des_traj_msg.action = des_traj_msg.ACTION_WARN_IMPOSSIBLE;
+                _rrt_des_traj_pub->publish(des_traj_msg);
                 return;
             }
             else
@@ -644,7 +733,7 @@ private:
             {
                 std::cout<<"[Incremental planner] in refine and evaluate loop: Path updated"<<std::endl;
                 std::tie(_path, _radius) = _rrtPathPlanner.getPath();
-                convexCover(_path, 1.0, 1e-6);
+                convexCover(_path, 1.0, 5.0, 1e-6);
                 shortCut();
                 _path_vector = matrixToVector(_path);
                 // publishRRTWaypoints(path_vector);
@@ -678,13 +767,15 @@ private:
         }
         else
         {
+            auto time_bef_incremental = std::chrono::steady_clock::now();
             std::cout<<"[planning callback] Incremental planner"<<std::endl;
             planIncrementalTraj();
+            double elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_bef_incremental).count();
+            double elapsed = elapsed_ms/1000;
+            std::cout<<"elapsed time in incremental planner: "<<elapsed<<std::endl;
         }
-        double elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - trajstamp).count();
-        double elapsed = elapsed_ms/1000;
-        std::cout<<"elapsed time from traj_generation to current time: "<<elapsed<<std::endl;
-        traj_publish(elapsed);
+        
+        // traj_publish();
     }
 
     bool checkEndOfCommittedPath()

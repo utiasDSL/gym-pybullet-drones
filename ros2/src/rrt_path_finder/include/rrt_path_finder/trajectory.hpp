@@ -335,6 +335,16 @@ public:
         }
     }
 
+    inline void setParameters(const std::vector<double> &durs, const std::vector<typename Piece<D>::CoefficientMat> &cMats)
+    {
+        int N = std::min(durs.size(), cMats.size());
+        pieces.reserve(N);
+        for(int i=0; i<N; i++)
+        {
+            pieces.emplace_back(durs[i], cMats[i]);
+        }
+    }
+
     inline int getPieceNum() const
     {
         return pieces.size();
@@ -561,6 +571,17 @@ public:
             feasible = feasible && pieces[i].checkMaxAccRate(maxAccRate);
         }
         return feasible;
+    }
+
+    inline std::vector<typename Piece<D>::CoefficientMat> getCoefficientMatrices() const
+    {
+        std::vector<typename Piece<D>::CoefficientMat> coeffMats;
+        coeffMats.reserve(pieces.size());
+        for (const auto &piece : pieces)
+        {
+            coeffMats.push_back(piece.getCoeffMat());
+        }
+        return coeffMats;
     }
 };
 

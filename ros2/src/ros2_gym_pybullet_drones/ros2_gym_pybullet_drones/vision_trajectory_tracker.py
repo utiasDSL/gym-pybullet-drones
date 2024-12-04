@@ -47,9 +47,9 @@ class AviaryWrapper(Node):
         self.get_action_cb_count = 0
         timer_freq_hz = 400
         timer_period_sec = 1/timer_freq_hz
-        self.R = 0.3
+        self.R = 0.0
         self.H = 1.5
-        self.INIT_XYZS = np.array([[-2, -self.R, self.H]])
+        self.INIT_XYZS = np.array([[-2, self.R, self.H]])
         self.INIT_RPYS = np.array([[0, 0, 0]])
         self.des_yaw = 0
 
@@ -64,7 +64,7 @@ class AviaryWrapper(Node):
                            aggregate_phy_steps=1,
                            gui=True,
                            record=False,
-                           obstacles=False,
+                           obstacles=True,
                            user_debug_gui=False
                            )
         #### Initialize an action with the RPMs at hover ###########
@@ -86,7 +86,7 @@ class AviaryWrapper(Node):
         self.timer = self.create_timer(timer_period_sec, self.step_callback)
         #### Subscribe to topic 'waypoints' ###########################
         # self.wp_subs = self.create_subscription(Path, 'rrt_waypoints', self.get_waypoint_callback, 1)
-        self.traj_subs = self.create_subscription(TrajMsg,'rrt_trajectory', self.get_trajectory_callback, 1)
+        self.traj_subs = self.create_subscription(TrajMsg,'rrt_command', self.get_trajectory_callback, 1)
         self.pos = self.INIT_XYZS.flatten()
         self.waypoints = []
         self.prev_wp = []

@@ -792,7 +792,6 @@ void safeRegionRrtStar::SafeRegionRefine( double time_limit )
     {     
         auto time_in_refine = std::chrono::steady_clock::now();
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(time_in_refine - time_bef_refine).count()*0.001;
-        std::cout<<"[refine debug] elapsed: "<<elapsed<<std::endl;
         if( elapsed > time_limit )
         {
             std::cout<<"[refine debug] time in refine loop: "<<elapsed<<" time limit: "<<time_limit<<std::endl;
