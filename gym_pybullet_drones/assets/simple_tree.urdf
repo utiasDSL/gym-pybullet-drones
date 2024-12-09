@@ -12,6 +12,12 @@
       </material>
       <origin xyz="0 0 1" rpy="0 0 0"/>
     </visual>
+    <collision>
+      <geometry>
+        <cylinder length="2.0" radius="0.2"/>
+      </geometry>
+      <origin xyz="0 0 1" rpy="0 0 0"/>
+    </collision>
   </link>
 
   <!-- Tree Canopy (top sphere representing leaves) -->
@@ -25,6 +31,12 @@
       </material>
       <origin xyz="0 0 1.25" rpy="0 0 0"/>
     </visual>
+    <collision>
+      <geometry>
+        <sphere radius="1.0"/>
+      </geometry>
+      <origin xyz="0 0 1.25" rpy="0 0 0"/>
+    </collision>
   </link>
 
   <!-- Connecting Trunk and Canopy -->
@@ -33,6 +45,5 @@
     <child link="canopy"/>
     <origin xyz="0 0 1.25" rpy="0 0 0"/>
   </joint>
-
 
 </robot>

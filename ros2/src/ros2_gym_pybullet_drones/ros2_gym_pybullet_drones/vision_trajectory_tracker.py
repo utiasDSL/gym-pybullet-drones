@@ -269,7 +269,7 @@ class AviaryWrapper(Node):
         goal_pose = PoseStamped()
         goal_pose.header.stamp = self.get_clock().now().to_msg()
         goal_pose.header.frame_id = "ground_link"
-        goal_pose.pose.position.x = 20.0
+        goal_pose.pose.position.x = 50.0
         goal_pose.pose.position.y = 0.0
         goal_pose.pose.position.z = 1.5
         goal.poses.append(goal_pose)

@@ -68,6 +68,28 @@ namespace voxel_map
         std::vector<Eigen::Vector3i> surf;
 
     public:
+        inline void setParameters(const Eigen::Vector3i &size, const Eigen::Vector3d &origin, const double &voxScale)
+        {
+            std::cout<<"[VOXEL Debug]: parameters set"<<std::endl;
+            mapSize = size;
+            o = origin;
+            scale = voxScale;
+            voxNum = mapSize.prod();
+            step[0] = 1;
+            step[1] = mapSize(0);
+            step[2] = mapSize(1) * mapSize(0);
+            oc = o + Eigen::Vector3d::Constant(0.5 * scale);
+            bounds = (mapSize.array() - 1) * step.array();
+            stepScale = step.cast<double>().cwiseInverse() * scale;
+            voxels = std::vector<uint8_t>(voxNum, Unoccupied);
+        }
+        inline void reset()
+        {
+            // Clear all voxel data and reset to default state
+            voxels = std::vector<uint8_t>(voxNum, Unoccupied); // Reset all voxels to Unoccupied
+            surf.clear(); // Clear the surface points
+            std::cout << "[VOXEL DEBUG] Voxel map reset: all voxels set to Unoccupied and surface cleared." << std::endl;
+        }
         inline Eigen::Vector3i getSize(void) const
         {
             return mapSize;
@@ -181,8 +203,10 @@ namespace voxel_map
         inline void getSurf(std::vector<Eigen::Vector3d> &points) const
         {
             points.reserve(surf.size());
+            // std::cout<<"surface size: "<<surf.size()<<std::endl;
+            std::cout<<"[VOXEL DEBUG] pcd_points size after reserve: "<<points.size()<<std::endl;
             for (const Eigen::Vector3i &id : surf)
-            {
+            {   
                 points.push_back(id.cast<double>().cwiseProduct(stepScale) + oc);
             }
             return;

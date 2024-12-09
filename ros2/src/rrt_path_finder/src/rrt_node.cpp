@@ -30,6 +30,7 @@
 #include "rrt_path_finder/trajectory.hpp"
 #include "rrt_path_finder/geo_utils.hpp"
 #include "rrt_path_finder/quickhull.hpp"
+#include "rrt_path_finder/voxel_map.hpp"
 
 using namespace std;
 using namespace Eigen;
@@ -47,8 +48,8 @@ public:
         // rrt.setPt(startPt=start_point, endPt=end_point, xl=-5, xh=15, yl=-5, yh=15, zl=0.0, zh=1,
         //      local_range=10, max_iter=1000, sample_portion=0.1, goal_portion=0.05)
 
-        this->declare_parameter("safety_margin", 1.00);
-        this->declare_parameter("search_margin", 1.00);
+        this->declare_parameter("safety_margin", 1.20);
+        this->declare_parameter("search_margin", 0.50);
         this->declare_parameter("max_radius", 5.0);
         this->declare_parameter("sensing_range", 6.0);
         this->declare_parameter("local_range",2.0);
@@ -64,7 +65,7 @@ public:
         this->declare_parameter("x_h", 75.0);
         this->declare_parameter("y_l", -75.0);
         this->declare_parameter("y_h", 75.0);
-        this->declare_parameter("z_l", -3.0);
+        this->declare_parameter("z_l", 0.0);
         this->declare_parameter("z_h", 6.0);
 
         this->declare_parameter("target_x", 0.0);
@@ -96,7 +97,9 @@ public:
         _z_l = this->get_parameter("z_l").as_double();
         _z_h = this->get_parameter("z_h").as_double();
 
-
+        Eigen::Vector3i xyz((_x_h-_x_l)/voxelWidth, (_y_h-_y_l)/voxelWidth, (_z_h-_z_l)/voxelWidth);
+        Eigen::Vector3d offset(_x_l, _y_l, _z_l);
+        V_map = voxel_map::VoxelMap(xyz, offset, voxelWidth);
         // Set parameters for RRT planner once
         setRRTPlannerParams();
 
@@ -182,8 +185,12 @@ private:
     safeRegionRrtStar _rrtPathPlanner;
     gcopter::GCOPTER_PolytopeSFC _gCopter;
     Trajectory<5> _traj;
-
-
+    voxel_map::VoxelMap V_map;
+    float local_range = 2.0, sample_portion=0.25, goal_portion=0.05;
+    int max_iter=100000;
+    float voxelWidth = 0.25;
+    float dilateRadius = 1.0;
+    float leafsize = 0.4;
     // Variables for target position, trajectory, odometry, etc.
     Eigen::Vector3d _start_pos, _end_pos, _start_vel, _start_acc;
     Eigen::Vector3d _commit_target{0.0, 0.0, 0.0};
@@ -232,19 +239,23 @@ private:
         _start_pos(1) = obs_msg.data[1];
         _start_pos(2) = obs_msg.data[2];
         
+        _start_vel(0) = obs_msg.data[10];
+        _start_vel(1) = obs_msg.data[11];
+        _start_vel(2) = obs_msg.data[12];
         if(_rrtPathPlanner.getDis(_start_pos, _commit_target) < threshold)
         {
             _is_target_arrive = true;
-            if(_rrtPathPlanner.getDis(_start_pos, _end_pos) < threshold)
-            {
-                _is_complete = true;
-            }
         }
         else
         {
             std::cout<<"[commit debug] distance to commit target: "<<_rrtPathPlanner.getDis(_start_pos, _commit_target)<<std::endl;
             std::cout<<"[commit debug] distance to endgoal: "<<_rrtPathPlanner.getDis(_start_pos, _end_pos)<<std::endl;
         }
+        if(_rrtPathPlanner.getDis(_start_pos, _end_pos) < _safety_margin)
+        {
+            _is_complete = true;   
+        }
+        checkSafeTrajectory(_commit_distance / max_vel);
         
         //RCLCPP_WARN(this->get_logger(), "Start Pos: %f: %f: %f", _start_pos(0), _start_pos(1), _start_pos(2));
     }
@@ -274,20 +285,54 @@ private:
             return;
 
         _is_has_map = true;
+        std::cout<<"size of subscribed pcd: "<<cloud_input.points.size()<<std::endl;
+        pcd_points.clear();
+        V_map.reset();
+        int i = 0;
+        for (const auto &point : cloud_input.points) {
+                // Check for invalid points (NaN or Inf)
+                if (std::isnan(point.x) || std::isinf(point.x) ||
+                    std::isnan(point.y) || std::isinf(point.y) ||
+                    std::isnan(point.z) || std::isinf(point.z)) {
+                    continue;
+                }
+                i++;
+                // Mark voxel as occupied
+                V_map.setOccupied(Eigen::Vector3d(point.x, point.y, point.z));
+            }
+        int dilateSteps = std::ceil(dilateRadius / V_map.getScale());
+        V_map.dilate(dilateSteps);
+        V_map.getSurf(pcd_points);
+        std::cout<<"points inserted in V_map: "<<i<<std::endl;
+        std::cout<<" pcd point size after getsurf(): "<<pcd_points.size()<<std::endl;
 
-            pcl::VoxelGrid<pcl::PointXYZ> voxel_grid_filter;
-        voxel_grid_filter.setInputCloud(cloud_input.makeShared());
-        voxel_grid_filter.setLeafSize(0.1f, 0.1f, 0.1f); // Set the leaf size (adjust as needed, e.g., 10 cm)
-        pcl::PointCloud<pcl::PointXYZ> cloud_filtered;
-        voxel_grid_filter.filter(cloud_filtered);
-        
-        _rrtPathPlanner.setInput(cloud_filtered);
-        for (const auto& point : cloud_filtered.points)
+        pcl::PointCloud<pcl::PointXYZ>::Ptr V_map_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>());
+        std::cout<<"pcd_points size: "<<pcd_points.size()<<std::endl;
+        for(auto point : pcd_points)
         {
-            Eigen::Vector3d eigen_point(point.x, point.y, point.z);
-            pcd_points.push_back(eigen_point);
+            pcl::PointXYZ pcd_point;
+            pcd_point.x = point(0);
+            pcd_point.y = point(1);
+            pcd_point.z = point(2);
+            V_map_cloud->points.push_back(pcd_point);
+
         }
-        _vis_map_pub->publish(cloud_transformed);
+
+
+        pcl::VoxelGrid<pcl::PointXYZ> voxel_grid_filter;
+        voxel_grid_filter.setInputCloud(V_map_cloud);
+        voxel_grid_filter.setLeafSize(leafsize, leafsize, leafsize); // Set the leaf size (adjust as needed, e.g., 10 cm)
+        voxel_grid_filter.filter(*filtered_cloud);
+        
+        std::cout<<"filtered pcd size: "<<filtered_cloud->points.size()<<std::endl;
+
+        _rrtPathPlanner.setInput(cloud_input);
+            sensor_msgs::msg::PointCloud2 filtered_cloud_msg;
+        pcl::toROSMsg(*filtered_cloud, filtered_cloud_msg);
+        filtered_cloud_msg.header.frame_id = "ground_link"; // Set appropriate frame ID
+        filtered_cloud_msg.header.stamp = this->get_clock()->now();
+        _vis_map_pub->publish(filtered_cloud_msg);
         
         //RCLCPP_WARN(this->get_logger(), "Point Cloud received");
         
@@ -440,7 +485,7 @@ private:
         // GCopter parameters
         Eigen::Matrix3d iniState;
         Eigen::Matrix3d finState;
-        iniState << front, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
+        iniState << front, _start_vel, Eigen::Vector3d::Zero();
         finState << back, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
         Eigen::VectorXd magnitudeBounds(5);
         Eigen::VectorXd penaltyWeights(5);
@@ -506,11 +551,11 @@ private:
             Eigen::VectorXd durations = _traj.getDurations();
             std::vector<double> durations_vec(durations.data(), durations.data() + durations.size());
             auto coefficient_mat = _traj.getCoefficientMatrices();
-            // for (auto mat : coefficient_mat)
-            // {
-            //     std::cout<<"######## mat #########"<<std::endl;
-            //     std::cout<<mat<<std::endl;
-            // }
+            for (auto mat : coefficient_mat)
+            {
+                std::cout<<"######## mat #########"<<std::endl;
+                std::cout<<mat<<std::endl;
+            }
             for(int i=0; i<_traj.getPieceNum(); i++)
             {
                 des_traj_msg.duration_vector.push_back(durations_vec[i]);
@@ -577,6 +622,8 @@ private:
             des_traj_msg.header.frame_id = "ground_link";
             des_traj_msg.action = des_traj_msg.ACTION_WARN_IMPOSSIBLE;
             _rrt_des_traj_pub->publish(des_traj_msg);
+            visRrt(_rrtPathPlanner.getTree()); 
+
         }
         visRrt(_rrtPathPlanner.getTree()); 
         visRRTPath(_path);
@@ -587,12 +634,13 @@ private:
     {
         if (_rrtPathPlanner.getGlobalNaviStatus())
         {
-            visRrt(_rrtPathPlanner.getTree()); 
-            custom_interface_gym::msg::DesTrajectory des_traj_msg;
-            des_traj_msg.header.stamp = rclcpp::Clock().now();
-            des_traj_msg.header.frame_id = "ground_link";
-            des_traj_msg.action = des_traj_msg.ACTION_WARN_FINAL;
-            _rrt_des_traj_pub->publish(des_traj_msg);
+        //     visRrt(_rrtPathPlanner.getTree()); 
+        //     custom_interface_gym::msg::DesTrajectory des_traj_msg;
+        //     des_traj_msg.header.stamp = rclcpp::Clock().now();
+        //     des_traj_msg.header.frame_id = "ground_link";
+        //     des_traj_msg.action = des_traj_msg.ACTION_WARN_FINAL;
+        //     _rrt_des_traj_pub->publish(des_traj_msg);
+            RCLCPP_WARN(this->get_logger(), "Almost reached final goal");
             return; // No further planning required if global navigation is complete
         }
 
@@ -667,6 +715,16 @@ private:
     // Planning Callback (Core Path Planning Logic)
     void planningCallBack()
     {
+        if(_is_complete)
+        {
+            RCLCPP_WARN(this->get_logger(),"Reached GOAL");
+            custom_interface_gym::msg::DesTrajectory des_traj_msg;
+            des_traj_msg.header.stamp = rclcpp::Clock().now();
+            des_traj_msg.header.frame_id = "ground_link";
+            des_traj_msg.action = des_traj_msg.ACTION_WARN_FINAL;
+            _rrt_des_traj_pub->publish(des_traj_msg);
+            return;
+        }
         if (!_is_target_receive || !_is_has_map)
         {
             RCLCPP_DEBUG(this->get_logger(), "No target or map received. _is_target_receive: %s, _is_has_map: %s", 
@@ -685,6 +743,23 @@ private:
             planIncrementalTraj();
         }
         
+    }
+
+    bool checkSafeTrajectory(double check_time)
+    {   
+        if(!_is_traj_exist) return false;
+        double T = 0.01;
+        for(double t = T; t < check_time; t += T)
+        {
+            auto pos_t = _traj.getPos(t);
+            if(_rrtPathPlanner.checkTrajPtCol(pos_t))
+            {
+                RCLCPP_WARN(this->get_logger(), "UNSAFE Trajectory: reverting to new generation");
+                _is_traj_exist = false;
+                return false;
+            }
+        }
+        return true;
     }
 
     bool checkEndOfCommittedPath()
@@ -896,7 +971,7 @@ private:
             p2.z = path_matrix(i,2);
             point_vis.points.push_back(p1);
             point_vis.points.push_back(p2);
-            point_vis.scale.x = 0.01; // Line width
+            point_vis.scale.x = 0.05; // Line width
             point_vis.color.a = 0.8; // Transparency
             point_vis.color.r = 1.0; // Red
             point_vis.color.g = 0.64; // Green
