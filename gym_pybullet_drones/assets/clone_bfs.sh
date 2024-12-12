@@ -26,6 +26,9 @@ git clone https://github.com/betaflight/betaflight temp/
 # (https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52) 
 # from Betaflight's `SIMULATOR_BUILD`
 cd temp/
+
+git checkout cafe727 #latest commit at the time of writing the gym-pybullet-drones Readme
+
 sed -i "s/delayMicroseconds_real(50);/\/\/delayMicroseconds_real(50);/g" ./src/main/main.c
 
 # Prepare

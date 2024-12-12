@@ -102,7 +102,7 @@ def run(
                 float(row["v_z"]),
             ]),
         } for row in csv_reader])
-    with open("../assets/beta.csv", mode='r') as csv_file:
+    with open("../assets/beta-traj.csv", mode='r') as csv_file:
         csv_reader = csv.DictReader(csv_file)
         trajectory2 = iter(reversed([{
             "pos": np.array([
