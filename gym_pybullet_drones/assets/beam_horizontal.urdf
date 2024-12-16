@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<robot name="block">
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="1.5 0.5 0.5"/> <!-- Dimensions: 0.5x0.5x0.2 -->
+      </geometry>
+      <material name="brown">
+        <color rgba="0.82 0.71 0.55 1.0"/> <!-- Brown color -->
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.5 0.5 0.2"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.0"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+  </link>
+</robot>
