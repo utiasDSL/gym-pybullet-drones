@@ -107,8 +107,8 @@ inline double safeRegionRrtStar::getDis(const Vector3d & p1, const Vector3d & p2
 
 inline double safeRegionRrtStar::radiusSearch( Vector3d & search_Pt)
 {     
-    if(getDis(search_Pt, start_pt) > sample_range + max_radius )
-       return max_radius - search_margin;
+    // if(getDis(search_Pt, start_pt) > sample_range + max_radius )
+    //    return max_radius - search_margin;
 
     pcl::PointXYZ searchPoint;
     searchPoint.x = search_Pt(0);
@@ -124,18 +124,23 @@ inline double safeRegionRrtStar::radiusSearch( Vector3d & search_Pt)
 }
 
 void safeRegionRrtStar::clearBranchW(NodePtr node_delete) // Weak branch cut: if a child of a node is on the current best path, keep the child
-{     
+{   
+    // std::cout<<"[root debug] seg check w 1"<<std::endl;
     for( auto nodeptr: node_delete->nxtNode_ptr ){
         if( nodeptr->best ) continue;
         else
         {
-            if(nodeptr->valid)
-              invalidSet.push_back(nodeptr);
-            
-            nodeptr->valid = false;
-            clearBranchW(nodeptr);
+            if(nodeptr != NULL)
+            {
+                if(nodeptr->valid)
+                invalidSet.push_back(nodeptr);
+                
+                nodeptr->valid = false;
+                clearBranchW(nodeptr);
+            }
         }
     }
+    // std::cout<<"[root debug] seg check w 2"<<std::endl;
 }
 
 void safeRegionRrtStar::clearBranchS(NodePtr node_delete) // Strong branch cut: no matter how, cut all nodes in this branch
@@ -162,9 +167,12 @@ void safeRegionRrtStar::treePrune(NodePtr newPtr)
 
 void safeRegionRrtStar::removeInvalid()
 {     
+    // std::cout<<"[root debug] seg check 7"<<std::endl;
+
     vector<NodePtr> UpdateNodeList;
     vector<NodePtr> UpdateEndList;
     kd_clear(kdTree_);
+    // std::cout<<"[root debug] seg check 8"<<std::endl;
 
     for(auto nodeptr:NodeList){ // Go through all nodes, record all valid ones
         if(nodeptr->valid){
@@ -178,11 +186,13 @@ void safeRegionRrtStar::removeInvalid()
         }
     }
 
+    // std::cout<<"[root debug] seg check 9"<<std::endl;
     NodeList.clear();
     EndList.clear();
 
     NodeList = UpdateNodeList;
     EndList  = UpdateEndList;
+    // std::cout<<"[root debug] seg check 10"<<std::endl;
 
     // Now we should deal with all invalid nodes, broken all its related connections
     for(int i = 0; i < int(invalidSet.size()); i++ ){
@@ -201,6 +211,7 @@ void safeRegionRrtStar::removeInvalid()
             }
         }
     }
+    // std::cout<<"[root debug] seg check 11"<<std::endl;
 
     vector<NodePtr> deleteList;
     for(int i = 0; i < int(invalidSet.size()); i++ ){
@@ -214,23 +225,28 @@ void safeRegionRrtStar::removeInvalid()
 
         deleteList.push_back(nodeptr);
     }
+    // std::cout<<"[root debug] seg check 12"<<std::endl;
 
     invalidSet.clear();
     for(int i = 0; i < int(deleteList.size()); i++)
     {
         NodePtr ptr = deleteList[i];
-        delete ptr;
+        if(ptr!=NULL) delete ptr;
     }
+    // std::cout<<"[root debug] seg check 13"<<std::endl;
+
 }
 
 void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
 {   
+    // std::cout<<"[root debug] seg check 1"<<std::endl;
     NodePtr lstNode = PathList.front();
     
     if(getDis(lstNode, target_coord) < lstNode->radius){
         global_navi_status = true;
         return;
     }
+    // std::cout<<"[root debug] seg check 2"<<std::endl;
 
     double cost_reduction = 0;
 
@@ -239,6 +255,7 @@ void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
     
     for(auto nodeptr:NodeList)
         nodeptr->best = false;
+    // std::cout<<"[root debug] seg check 3"<<std::endl;
 
     bool delete_root = false;
     for(auto nodeptr: PathList){
@@ -257,13 +274,16 @@ void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
             cutList.push_back(nodeptr);
         }
     }
-    
+    // std::cout<<"[root debug] seg check 4"<<std::endl;
+
     solutionUpdate(cost_reduction, target_coord);
-    
+    // std::cout<<"[root debug] seg check 5"<<std::endl;
+
     for(auto nodeptr:cutList){
         invalidSet.push_back(nodeptr);
         clearBranchW(nodeptr);
     }
+    // std::cout<<"[root debug] seg check 6"<<std::endl;
 
     removeInvalid();
 }

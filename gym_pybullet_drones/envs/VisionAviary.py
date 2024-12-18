@@ -423,24 +423,10 @@ class VisionAviary(BaseAviary):
         """
         # Call the parent class _addObstacles (if needed)
         # super()._addObstacles()
-        less = True
-        terrain = False
-        # Load the tree URDF file
-        if terrain:
-            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
-            tree_urdf = os.path.join(base_path, "terrain.urdf")
-            pos = (6, 0, 0)
-            if os.path.exists(tree_urdf):
-                    p.loadURDF(tree_urdf,
-                            pos,
-                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
-                            useFixedBase=True,
-                            physicsClientId=self.CLIENT)
-            else:
-                print(f"File not found: {tree_urdf}")
-        elif not less:
-            num_trees= 100
-            x_bounds=(-10, 100)
+        less = False
+        if not less:
+            num_trees= 60
+            x_bounds=(0.5, 55.5)
             y_bounds=(-10, 10)
             
             base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
@@ -468,7 +454,7 @@ class VisionAviary(BaseAviary):
         else:
             base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
             tree_urdf = os.path.join(base_path, "simple_tree.urdf")
-            pos = (6, 0, 0)
+            pos = (0, 0, 0)
             if os.path.exists(tree_urdf):
                     p.loadURDF(tree_urdf,
                             pos,

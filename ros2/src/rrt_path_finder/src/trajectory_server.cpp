@@ -33,6 +33,7 @@ private:
     std::vector<Eigen::Matrix<double, 3, 6>> current_coefficients;  // Vector of (3, D+1) matrices for each trajectory segment
     std::vector<double> segment_durations;
     Eigen::Vector3d current_pos{-2.0, 0.0, 1.5};
+    Eigen::Vector3d last_safe_pos = current_pos;
     Eigen::Vector3d end_pos;
     bool _is_target_receive = false;
     bool _is_goal_arrive = false;
@@ -153,6 +154,7 @@ public:
         //     std::cout<<mat<<std::endl;
         // }
         _traj.setParameters(segment_durations, current_coefficients);
+        std::cout<<"in handle add trajectory callback, traj set successfully"<<std::endl;
 
         // RCLCPP_WARN(this->get_logger(), "Added trajectory with %lu segments.", msg->num_segment);
         
@@ -160,7 +162,6 @@ public:
 
     void handleAbortTrajectory()
     {
-        if(_abort_hover_set) return;
         has_trajectory = false;
         is_aborted = true;
         current_pos[0] = _odom.pose.pose.position.x;
@@ -181,15 +182,14 @@ public:
     {
         if (!has_trajectory || is_aborted)
         {
-            _abort_hover_set = true;
             custom_interface_gym::msg::TrajMsg traj_msg;
             traj_msg.header.stamp = rclcpp::Clock().now();
             traj_msg.header.frame_id = "ground_link"; 
 
             // Set position
-            traj_msg.position.x = current_pos[0];
-            traj_msg.position.y = current_pos[1];
-            traj_msg.position.z = current_pos[2];
+            traj_msg.position.x = last_safe_pos[0];
+            traj_msg.position.y = last_safe_pos[1];
+            traj_msg.position.z = last_safe_pos[2];
             std::cout<<"[ABORT setting] current position: "<<current_pos[0]<<":"<<current_pos[1]<<":"<<current_pos[2]<<std::endl;
 
             // Set velocity
@@ -266,7 +266,7 @@ public:
         Eigen::Vector3d des_vel = _traj.getVel(elapsed);
         Eigen::Vector3d des_Acc = _traj.getAcc(elapsed);
         Eigen::Vector3d des_jerk = _traj.getJer(elapsed);
-        
+        last_safe_pos = des_pos;
         // std::cout<<"elapsed: "<<elapsed<<std::endl;
         custom_interface_gym::msg::TrajMsg traj_msg;
         traj_msg.header.stamp = rclcpp::Clock().now();

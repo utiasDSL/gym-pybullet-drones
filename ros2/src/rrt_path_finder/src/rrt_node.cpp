@@ -48,10 +48,10 @@ public:
         // rrt.setPt(startPt=start_point, endPt=end_point, xl=-5, xh=15, yl=-5, yh=15, zl=0.0, zh=1,
         //      local_range=10, max_iter=1000, sample_portion=0.1, goal_portion=0.05)
 
-        this->declare_parameter("safety_margin", 1.20);
-        this->declare_parameter("search_margin", 0.50);
-        this->declare_parameter("max_radius", 5.0);
-        this->declare_parameter("sensing_range", 6.0);
+        this->declare_parameter("safety_margin", 0.7);
+        this->declare_parameter("search_margin", 0.2);
+        this->declare_parameter("max_radius", 2.0);
+        this->declare_parameter("sensing_range", 60.0);
         this->declare_parameter("local_range",2.0);
         this->declare_parameter("refine_portion", 0.80);
         this->declare_parameter("sample_portion", 0.25);
@@ -61,12 +61,12 @@ public:
         this->declare_parameter("stop_horizon", 0.5);
         this->declare_parameter("commit_time", 1.0);
 
-        this->declare_parameter("x_l", -75.0);
-        this->declare_parameter("x_h", 75.0);
-        this->declare_parameter("y_l", -75.0);
-        this->declare_parameter("y_h", 75.0);
+        this->declare_parameter("x_l", -60.0);
+        this->declare_parameter("x_h", 60.0);
+        this->declare_parameter("y_l", -60.0);
+        this->declare_parameter("y_h", 60.0);
         this->declare_parameter("z_l", 0.0);
-        this->declare_parameter("z_h", 6.0);
+        this->declare_parameter("z_h", 3.0);
 
         this->declare_parameter("target_x", 0.0);
         this->declare_parameter("target_y", 0.0);
@@ -111,6 +111,7 @@ public:
         _vis_map_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("_vis_pcd", 1);
         _vis_mesh_pub = this->create_publisher<visualization_msgs::msg::Marker>("_vis_mesh", 10);
         _vis_edge_pub = this->create_publisher<visualization_msgs::msg::Marker>("_vis_edge", 10);
+        _vis_commit_target = this->create_publisher<visualization_msgs::msg::Marker>("_vis_commit_target", 10);
 
         _vis_trajectory_pub = this->create_publisher<sensor_msgs::msg::PointCloud2>("_vis_trajectory", 10);
 
@@ -120,12 +121,15 @@ public:
         _rrt_des_traj_pub = this->create_publisher<custom_interface_gym::msg::DesTrajectory>("des_trajectory",10);
 
         // Subscribers
-        _obs_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
-        "obs", 1, std::bind(&PointCloudPlanner::rcvObsCallback, this, std::placeholders::_1));
+        // _obs_sub = this->create_subscription<std_msgs::msg::Float32MultiArray>(
+        // "obs", 1, std::bind(&PointCloudPlanner::rcvObsCallback, this, std::placeholders::_1));
+
         _dest_pts_sub = this->create_subscription<nav_msgs::msg::Path>(
             "waypoints", 1, std::bind(&PointCloudPlanner::rcvWaypointsCallBack, this, std::placeholders::_1));
         _map_sub = this->create_subscription<sensor_msgs::msg::PointCloud2>(
             "pcd_gym_pybullet", 1, std::bind(&PointCloudPlanner::rcvPointCloudCallBack, this, std::placeholders::_1));
+        _odometry_sub = this->create_subscription<nav_msgs::msg::Odometry>(
+            "odom", 10, std::bind(&PointCloudPlanner::rcvOdomCallback, this, std::placeholders::_1));
 
         // Timer for planning
         _planning_timer = this->create_wall_timer(
@@ -139,6 +143,8 @@ private:
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _vis_rrt_tree_pub;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _vis_rrt_path_pub;
     rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr _vis_corridor_pub;
+    rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr _vis_commit_target;
+
     rclcpp::Publisher<sensor_msgs::msg::PointCloud2>::SharedPtr _vis_map_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr _vis_mesh_pub;
     rclcpp::Publisher<visualization_msgs::msg::Marker>::SharedPtr _vis_edge_pub;
@@ -150,10 +156,10 @@ private:
     rclcpp::Publisher<custom_interface_gym::msg::DesTrajectory>::SharedPtr _rrt_des_traj_pub;
 
     // Subscribers
-    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odom_sub;
-    rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr _obs_sub;
+    // rclcpp::Subscription<std_msgs::msg::Float32MultiArray>::SharedPtr _obs_sub;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr _dest_pts_sub;
     rclcpp::Subscription<sensor_msgs::msg::PointCloud2>::SharedPtr _map_sub;
+    rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr _odometry_sub;
 
     // Timer
     rclcpp::TimerBase::SharedPtr _planning_timer;
@@ -169,16 +175,16 @@ private:
     
     std::vector<Eigen::MatrixX4d> hpolys; // Matrix to store hyperplanes
     std::vector<Eigen::Vector3d> pcd_points; // Datastructure to hold pointcloud points in a vector
-    std::chrono::time_point<std::chrono::steady_clock> trajstamp; // timestamp for when trajectory is generated
-
+    std::chrono::time_point<std::chrono::steady_clock> trajstamp = std::chrono::steady_clock::now(); // timestamp for when trajectory is generated
+    std::chrono::time_point<std::chrono::steady_clock> obsvstamp = std::chrono::steady_clock::now();
     int quadratureRes = 16;
     float weightT = 20.0;
     float smoothingEps = 0.01;
     float relcostto1 = 0.00001;
     int _max_samples;
-    double _commit_distance = 6.0;
+    double _commit_distance = 8.0;
     double max_vel = 0.5;
-    float threshold = 0.5;
+    float threshold = 0.8;
     int trajectory_id = 0;
     int order = 5;
     // RRT Path Planner
@@ -188,11 +194,11 @@ private:
     voxel_map::VoxelMap V_map;
     float local_range = 2.0, sample_portion=0.25, goal_portion=0.05;
     int max_iter=100000;
-    float voxelWidth = 0.25;
-    float dilateRadius = 1.0;
+    float voxelWidth = 0.15;
+    float dilateRadius = 0.3;
     float leafsize = 0.4;
     // Variables for target position, trajectory, odometry, etc.
-    Eigen::Vector3d _start_pos, _end_pos, _start_vel, _start_acc;
+    Eigen::Vector3d _start_pos, _end_pos, _start_vel, _last_vel{0.0, 0.0, 0.0}, _start_acc;
     Eigen::Vector3d _commit_target{0.0, 0.0, 0.0};
 
     Eigen::MatrixXd _path;
@@ -232,18 +238,20 @@ private:
         _rrtPathPlanner.reset();
     }
 
-    // Observation callback (for simulation only)
-    void rcvObsCallback(const std_msgs::msg::Float32MultiArray obs_msg)
+    void rcvOdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
-        _start_pos(0) = obs_msg.data[0];
-        _start_pos(1) = obs_msg.data[1];
-        _start_pos(2) = obs_msg.data[2];
-        
-        _start_vel(0) = obs_msg.data[10];
-        _start_vel(1) = obs_msg.data[11];
-        _start_vel(2) = obs_msg.data[12];
+        _odom = *msg;
+        _start_pos[0] = _odom.pose.pose.position.x;
+        _start_pos[1] = _odom.pose.pose.position.y;
+        _start_pos[2] = _odom.pose.pose.position.z;
+
+        _start_vel[0] = _odom.twist.twist.linear.x;
+        _start_vel[1] = _odom.twist.twist.linear.y;
+        _start_vel[2] = _odom.twist.twist.linear.z;
+
         if(_rrtPathPlanner.getDis(_start_pos, _commit_target) < threshold)
         {
+            obsvstamp = std::chrono::steady_clock::now();
             _is_target_arrive = true;
         }
         else
@@ -256,8 +264,8 @@ private:
             _is_complete = true;   
         }
         checkSafeTrajectory(_commit_distance / max_vel);
-        
-        //RCLCPP_WARN(this->get_logger(), "Start Pos: %f: %f: %f", _start_pos(0), _start_pos(1), _start_pos(2));
+        // RCLCPP_WARN(this->get_logger(), "Received odometry: position(x: %.2f, y: %.2f, z: %.2f)",
+               // _odom.pose.pose.position.x, _odom.pose.pose.position.y, _odom.pose);
     }
 
     void rcvPointCloudCallBack(const sensor_msgs::msg::PointCloud2::SharedPtr pointcloud_msg)
@@ -307,7 +315,6 @@ private:
         std::cout<<" pcd point size after getsurf(): "<<pcd_points.size()<<std::endl;
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr V_map_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>());
         std::cout<<"pcd_points size: "<<pcd_points.size()<<std::endl;
         for(auto point : pcd_points)
         {
@@ -319,17 +326,9 @@ private:
 
         }
 
-
-        pcl::VoxelGrid<pcl::PointXYZ> voxel_grid_filter;
-        voxel_grid_filter.setInputCloud(V_map_cloud);
-        voxel_grid_filter.setLeafSize(leafsize, leafsize, leafsize); // Set the leaf size (adjust as needed, e.g., 10 cm)
-        voxel_grid_filter.filter(*filtered_cloud);
-        
-        std::cout<<"filtered pcd size: "<<filtered_cloud->points.size()<<std::endl;
-
-        _rrtPathPlanner.setInput(cloud_input);
+        _rrtPathPlanner.setInput(*V_map_cloud);
             sensor_msgs::msg::PointCloud2 filtered_cloud_msg;
-        pcl::toROSMsg(*filtered_cloud, filtered_cloud_msg);
+        pcl::toROSMsg(*V_map_cloud, filtered_cloud_msg);
         filtered_cloud_msg.header.frame_id = "ground_link"; // Set appropriate frame ID
         filtered_cloud_msg.header.stamp = this->get_clock()->now();
         _vis_map_pub->publish(filtered_cloud_msg);
@@ -477,16 +476,12 @@ private:
 
     void traj_generation()
     {
-        Eigen::Vector3d front(_start_pos[0],_start_pos[1],_start_pos[2]);
-
-        Eigen::Vector3d back(_end_pos[0], _end_pos[1], _end_pos[2]);
-
 
         // GCopter parameters
         Eigen::Matrix3d iniState;
         Eigen::Matrix3d finState;
-        iniState << front, _start_vel, Eigen::Vector3d::Zero();
-        finState << back, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
+        iniState << _start_pos, _start_vel, _start_acc;
+        finState << _end_pos, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
         Eigen::VectorXd magnitudeBounds(5);
         Eigen::VectorXd penaltyWeights(5);
         Eigen::VectorXd physicalParams(6);
@@ -539,7 +534,10 @@ private:
         {
             trajstamp = std::chrono::steady_clock::now();
             auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(trajstamp - t1).count()*0.001;
-            std::cout<<"trajectory successfully generated, traj exist set to true. time taken for trajectory generation: "<<elapsed<<std::endl;
+            auto elapsed2 = std::chrono::duration_cast<std::chrono::milliseconds>(trajstamp - obsvstamp).count()*0.001;
+
+            std::cout<<"[GCOPTER Debug] trajectory successfully generated, traj exist set to true. time taken for trajectory generation: "<<elapsed<<std::endl;
+
             _is_traj_exist = true;
             custom_interface_gym::msg::DesTrajectory des_traj_msg;
             des_traj_msg.header.stamp = rclcpp::Clock().now();
@@ -551,11 +549,11 @@ private:
             Eigen::VectorXd durations = _traj.getDurations();
             std::vector<double> durations_vec(durations.data(), durations.data() + durations.size());
             auto coefficient_mat = _traj.getCoefficientMatrices();
-            for (auto mat : coefficient_mat)
-            {
-                std::cout<<"######## mat #########"<<std::endl;
-                std::cout<<mat<<std::endl;
-            }
+            // for (auto mat : coefficient_mat)
+            // {
+            //     std::cout<<"######## mat #########"<<std::endl;
+            //     std::cout<<mat<<std::endl;
+            // }
             for(int i=0; i<_traj.getPieceNum(); i++)
             {
                 des_traj_msg.duration_vector.push_back(durations_vec[i]);
@@ -569,8 +567,7 @@ private:
                 }
             }
             des_traj_msg.debug_info = "trajectory_id: "+std::to_string(trajectory_id-1);
-            _rrt_des_traj_pub->publish(des_traj_msg);
-            std::cout<<"[GCOPTER debug] desired trajectory published coefficients:"<<std::endl;
+            _rrt_des_traj_pub->publish(des_traj_msg);            
             // std::cout<<std::endl;
             return;
         }
@@ -579,7 +576,7 @@ private:
     void getCommitTarget()
     {
         _commit_target = _traj.getPos(_commit_distance/max_vel);
-        if(_rrtPathPlanner.getDis(_start_pos, _commit_target) > _rrtPathPlanner.getDis(_start_pos, _end_pos)) _commit_target = _end_pos;
+        // if(_rrtPathPlanner.getDis(_start_pos, _commit_target) > _rrtPathPlanner.getDis(_start_pos, _end_pos)) _commit_target = _end_pos;
         std::cout<<"[commit target] set to"<<_commit_target[0]<<" : "<<_commit_target[1]<<" : "<<_commit_target[2]<<std::endl;
     }
 
@@ -601,7 +598,7 @@ private:
         {
             // Generate trajectory
             std::cout<<"[Initial planning] initial path found"<<std::endl;
-            convexCover(_path, 1.0, 5.0, 1.0e-6);
+            convexCover(_path, 3.0, _safety_margin, 1.0e-6);
             shortCut();
             traj_generation();
             if(_is_traj_exist)
@@ -627,6 +624,7 @@ private:
         }
         visRrt(_rrtPathPlanner.getTree()); 
         visRRTPath(_path);
+        visCommitTarget();
     }
 
     // Function to plan the incremental trajectory
@@ -696,7 +694,7 @@ private:
             {
                 // std::cout<<"[Incremental planner] in refine and evaluate loop: Path updated"<<std::endl;
                 std::tie(_path, _radius) = _rrtPathPlanner.getPath();
-                convexCover(_path, 1.0, 5.0, 1e-6);
+                convexCover(_path, 3.0, _safety_margin, 1e-6);
                 shortCut();
                 _path_vector = matrixToVector(_path);
                 // publishRRTWaypoints(path_vector);
@@ -709,6 +707,7 @@ private:
         //RCLCPP_DEBUG(this->get_logger(),"Traj updated");
         visRrt(_rrtPathPlanner.getTree());
         visRRTPath(_path); 
+        visCommitTarget();
 
     }
 
@@ -740,8 +739,13 @@ private:
         }
         else
         {
+            auto time_start_ref = std::chrono::steady_clock::now();
             planIncrementalTraj();
-        }
+            auto time_end_ref = std::chrono::steady_clock::now();
+
+            double elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_end_ref - time_start_ref).count()*0.001;
+            std::cout<<"[planning callback] time taken in incremental planning: "<<elapsed_ms<<std::endl;
+        }   
         
     }
 
@@ -982,27 +986,24 @@ private:
         _vis_rrt_path_pub->publish(path_visualizer);
     }
 
-    void publishCorridorVisualization(const std::vector<Eigen::Vector3d>& path, const std::vector<double>& radii)
+    void visCommitTarget()
     {
-        visualization_msgs::msg::MarkerArray corridor_markers;
-
-        for (size_t i = 0; i < path.size(); ++i)
-        {
+        
             visualization_msgs::msg::Marker marker;
             marker.header.frame_id = "ground_link";
             marker.header.stamp = this->now();
             marker.ns = "corridor";
-            marker.id = static_cast<int>(i);
+            marker.id = 0;
             marker.type = visualization_msgs::msg::Marker::SPHERE;
             marker.action = visualization_msgs::msg::Marker::ADD;
             
             // Set position of the marker
-            marker.pose.position.x = path[i].x();
-            marker.pose.position.y = path[i].y();
-            marker.pose.position.z = path[i].z();
+            marker.pose.position.x = _commit_target.x();
+            marker.pose.position.y = _commit_target.y();
+            marker.pose.position.z = _commit_target.z();
 
             // Set scale (diameter based on radius)
-            double diameter = 2.0 * radii[i]; // Radius to diameter
+            double diameter = 2.0 * 0.25; // Radius to diameter
             marker.scale.x = diameter;
             marker.scale.y = diameter;
             marker.scale.z = diameter;
@@ -1013,10 +1014,7 @@ private:
             marker.color.g = 1.0;
             marker.color.b = 0.0;
 
-            corridor_markers.markers.push_back(marker);
-        }
-
-        _vis_corridor_pub->publish(corridor_markers);
+            _vis_commit_target->publish(marker);
     }
 
     std::vector<Eigen::Vector3d> matrixToVector(const Eigen::MatrixXd& path_matrix)
