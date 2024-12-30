@@ -85,6 +85,8 @@ class VisionAviary(BaseAviary):
                                                             nearVal=0.1,
                                                             farVal=1000.0
                                                             )
+        self.obs = obstacles
+        self.dynamic_obstacles = []
         self.near = 0.1
         self.far = 1000
 
@@ -193,10 +195,10 @@ class VisionAviary(BaseAviary):
         
         nearVal = self.L
         farVal = 1000
+        clip_distance = 25
         depth_mm = (2 * nearVal * farVal) / (farVal + nearVal - depth_image * (farVal - nearVal))
         
         height, width = depth_image.shape
-        #print(width, height)
         aspect = width/height
         fov = 90    
         
@@ -218,20 +220,10 @@ class VisionAviary(BaseAviary):
         # Create the extrinsic transformation matrix
         depth_o3d = o3d.geometry.Image(depth_mm)
         rot_mat = np.array(p.getMatrixFromQuaternion(drone_orientation_quat)).reshape(3, 3)
-        # #### Set target point, camera view and projection matrices #
-        # target = np.dot(rot_mat,np.array([1000, 0, 0])) + np.array(drone_position)
-        # DRONE_CAM_VIEW = p.computeViewMatrix(cameraEyePosition=drone_position+np.array([0, 0, self.L]),
-        #                                      cameraTargetPosition=target,
-        #                                      cameraUpVector=[0, 0, 1],
-        #                                      physicsClientId=self.CLIENT
-        #                                      )
-        # DRONE_CAM_VIEW = self.get_extrinsics(np.array(DRONE_CAM_VIEW).reshape(4,4))
         rotation_matrix = np.array(p.getMatrixFromQuaternion(drone_orientation_quat)).reshape(3, 3).T
 
         # Construct the 4x4 transformation matrix (from drone frame to world frame)
         drone_transform = np.eye(4)
-        #drone_transform[0:3, 0:3] = rotation_matrix  # Set rotation
-        #drone_transform[0:3, 3] = np.zeros((3,))     # Set translation
         # Apply the combined rotation to the extrinsic matrix
         combined_rotation1 = np.array([
             [0, 0, 1, 0],
@@ -260,7 +252,7 @@ class VisionAviary(BaseAviary):
             pcd = o3d.geometry.PointCloud.create_from_depth_image(depth_o3d, intrinsic, extrinsic)
         
         distances = np.linalg.norm(np.asarray(pcd.points), axis=1)
-        indices = np.where((distances <= farVal))[0]
+        indices = np.where((distances <= clip_distance))[0]
         pcd = pcd.select_by_index(indices)
         return pcd
     
@@ -368,6 +360,123 @@ class VisionAviary(BaseAviary):
         """
         return {"answer": 42} #### Calculated by the Deep Thought supercomputer in 7.5M years
 
+    ################################################################################
+
+    def step(self,
+             action):
+        """Overrides the step method to include dynamic obstacle updates."""
+        # if self.obs:
+        #     self._updateDynamicObstacles()  # Update dynamic obstacle positions
+        return super().step(action)
+
+    ################################################################################
+
+    def _addObstacles(self):
+        """Add a 'forest' of trees as obstacles to the environment.
+        
+        Parameters
+        ----------
+        num_trees : int, optional
+            The number of trees to add to the environment.
+        x_bounds : tuple, optional
+            The x-axis bounds within which trees will be randomly placed.
+        y_bounds : tuple, optional
+            The y-axis bounds within which trees will be randomly placed.
+        """
+        # Call the parent class _addObstacles (if needed)
+        # super()._addObstacles()
+        less = False
+        if not less:
+            num_trees= 30
+            x_bounds=(0.5, 55.5)
+            y_bounds=(-10, 10)
+            
+            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+            tree_urdf = os.path.join(base_path, "simple_tree.urdf")
+
+            # Add trees randomly within the specified bounds
+            for _ in range(num_trees):
+                # Generate random x and y coordinates within the specified bounds
+                x_pos = random.uniform(x_bounds[0], x_bounds[1])
+                y_pos = random.uniform(y_bounds[0], y_bounds[1])
+
+                # Randomly place the tree at this location, z is fixed (0 for ground level)
+                pos = (x_pos, y_pos, 0.0)
+
+                # Load the tree URDF at the generated position
+                if os.path.exists(tree_urdf):
+                    p.loadURDF(tree_urdf,
+                            pos,
+                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
+                            useFixedBase=True,
+                            physicsClientId=self.CLIENT)
+                else:
+                    print(f"File not found: {tree_urdf}")
+        
+        else:
+            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+            tree_urdf = os.path.join(base_path, "simple_tree.urdf")
+            pos = (0.5, 0, 0)
+            if os.path.exists(tree_urdf):
+                    p.loadURDF(tree_urdf,
+                            pos,
+                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
+                            useFixedBase=True,
+                            physicsClientId=self.CLIENT)
+            else:
+                print(f"File not found: {tree_urdf}")
+
+
+    def _addDynamicObstacles(self, num_obstacles=1, x_bounds=(0, 10), y_bounds=(-10, 10), velocity_range=(-1, 1)):
+        """Adds dynamic obstacles that move with velocity profiles."""
+        base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
+        obstacle_urdf = os.path.join(base_path, "red_cylinder.urdf")
+        for _ in range(num_obstacles):
+            # Generate random initial positions within bounds
+            x_pos = 3
+            y_pos = 0.0
+            z_pos = 0.5  # Fixed height for the obstacles
+            pos = (x_pos, y_pos, z_pos)
+
+            # Generate random velocity components
+            velocity = [
+                1.5,
+                0.0,
+                0.0  # Obstacles move in the XY plane only
+            ]
+
+            if os.path.exists(obstacle_urdf):
+                obstacle_id = p.loadURDF(obstacle_urdf,
+                                         pos,
+                                         p.getQuaternionFromEuler([0, 0, 0]),
+                                         useFixedBase=False,
+                                         physicsClientId=self.CLIENT)
+                self.dynamic_obstacles.append({
+                    "id": obstacle_id,
+                    "velocity": velocity
+                })
+            else:
+                print(f"File not found: {obstacle_urdf}")
+
+    def _updateDynamicObstacles(self):
+        """Updates the positions of dynamic obstacles based on their velocities."""
+        # print("[vision aviary debug] obstacle position update called")
+        for obstacle in self.dynamic_obstacles:
+            obstacle_id = obstacle["id"]
+            velocity = obstacle["velocity"]
+
+            # Get the current position of the obstacle
+            pos, _ = p.getBasePositionAndOrientation(obstacle_id, physicsClientId=self.CLIENT)
+            new_pos = [pos[0] + velocity[0] / self.SIM_FREQ,
+                       pos[1] + velocity[1] / self.SIM_FREQ,
+                       pos[2] + velocity[2] / self.SIM_FREQ]
+            print("obstacle id: ", obstacle_id, " position: ",new_pos)
+            # Set the new position of the obstacle
+            p.resetBasePositionAndOrientation(obstacle_id,
+                                              new_pos,
+                                              p.getQuaternionFromEuler([0, 0, 0]),
+                                              physicsClientId=self.CLIENT)
+
     # def _addObstacles(self):
     #     """Add obstacles to the environment, including multiple cylinders of different colors at fixed positions."""
     #     super()._addObstacles()
@@ -409,61 +518,6 @@ class VisionAviary(BaseAviary):
     #     #                 physicsClientId=self.CLIENT)
     #     # else:
     #     #     print(f"File not found: {obstacles}")
-    def _addObstacles(self):
-        """Add a 'forest' of trees as obstacles to the environment.
-        
-        Parameters
-        ----------
-        num_trees : int, optional
-            The number of trees to add to the environment.
-        x_bounds : tuple, optional
-            The x-axis bounds within which trees will be randomly placed.
-        y_bounds : tuple, optional
-            The y-axis bounds within which trees will be randomly placed.
-        """
-        # Call the parent class _addObstacles (if needed)
-        # super()._addObstacles()
-        less = False
-        if not less:
-            num_trees= 60
-            x_bounds=(0.5, 55.5)
-            y_bounds=(-10, 10)
-            
-            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
-            tree_urdf = os.path.join(base_path, "simple_tree.urdf")
-
-            # Add trees randomly within the specified bounds
-            for _ in range(num_trees):
-                # Generate random x and y coordinates within the specified bounds
-                x_pos = random.uniform(x_bounds[0], x_bounds[1])
-                y_pos = random.uniform(y_bounds[0], y_bounds[1])
-
-                # Randomly place the tree at this location, z is fixed (0 for ground level)
-                pos = (x_pos, y_pos, 0.0)
-
-                # Load the tree URDF at the generated position
-                if os.path.exists(tree_urdf):
-                    p.loadURDF(tree_urdf,
-                            pos,
-                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
-                            useFixedBase=True,
-                            physicsClientId=self.CLIENT)
-                else:
-                    print(f"File not found: {tree_urdf}")
-        
-        else:
-            base_path = pkg_resources.resource_filename('gym_pybullet_drones', 'assets')
-            tree_urdf = os.path.join(base_path, "simple_tree.urdf")
-            pos = (0, 0, 0)
-            if os.path.exists(tree_urdf):
-                    p.loadURDF(tree_urdf,
-                            pos,
-                            p.getQuaternionFromEuler([0, 0, 0]),  # No rotation
-                            useFixedBase=True,
-                            physicsClientId=self.CLIENT)
-            else:
-                print(f"File not found: {tree_urdf}")
-
 
 
 

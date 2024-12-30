@@ -93,6 +93,11 @@ void safeRegionRrtStar::setInput(pcl::PointCloud<pcl::PointXYZ> cloud_in)
     kdtreeForMap.setInputCloud( cloud_in.makeShared() );    
 }
 
+void safeRegionRrtStar::setInputforCollision(pcl::PointCloud<pcl::PointXYZ> cloud_in)
+{
+    kdtreeForCollisionPred.setInputCloud(cloud_in.makeShared());
+}
+
 inline double safeRegionRrtStar::getDis(const NodePtr node1, const NodePtr node2){
       return sqrt(pow(node1->coord(0) - node2->coord(0), 2) + pow(node1->coord(1) - node2->coord(1), 2) + pow(node1->coord(2) - node2->coord(2), 2) );
 }
@@ -107,8 +112,8 @@ inline double safeRegionRrtStar::getDis(const Vector3d & p1, const Vector3d & p2
 
 inline double safeRegionRrtStar::radiusSearch( Vector3d & search_Pt)
 {     
-    // if(getDis(search_Pt, start_pt) > sample_range + max_radius )
-    //    return max_radius - search_margin;
+    if(getDis(search_Pt, start_pt) > sample_range + max_radius )
+       return max_radius - search_margin;
 
     pcl::PointXYZ searchPoint;
     searchPoint.x = search_Pt(0);
@@ -123,24 +128,48 @@ inline double safeRegionRrtStar::radiusSearch( Vector3d & search_Pt)
     return min(radius, double(max_radius));
 }
 
+inline double safeRegionRrtStar::radiusSearchCollisionPred( Vector3d & search_Pt)
+{     
+    if(getDis(search_Pt, start_pt) > sample_range + max_radius )
+       return max_radius - search_margin;
+
+    pcl::PointXYZ searchPoint;
+    searchPoint.x = search_Pt(0);
+    searchPoint.y = search_Pt(1);
+    searchPoint.z = search_Pt(2);
+
+    pointIdxRadiusSearch.clear();
+    pointRadiusSquaredDistance.clear();
+
+    kdtreeForCollisionPred.nearestKSearch(searchPoint, 1, pointIdxRadiusSearch, pointRadiusSquaredDistance);
+    double radius = sqrt(pointRadiusSquaredDistance[0]) - search_margin;
+    return min(radius, double(max_radius));
+}
+
 void safeRegionRrtStar::clearBranchW(NodePtr node_delete) // Weak branch cut: if a child of a node is on the current best path, keep the child
-{   
-    // std::cout<<"[root debug] seg check w 1"<<std::endl;
-    for( auto nodeptr: node_delete->nxtNode_ptr ){
-        if( nodeptr->best ) continue;
-        else
+{   // std::cout<<"clear branch seg1"<<std::endl;
+    if (!node_delete) {
+        std::cerr << "[Error] Node to delete is null in clearBranchW()" << std::endl;
+        return;
+    }
+    // std::cout<<"clear branch seg2, nxt-ptr size: "<<node_delete->nxtNode_ptr.size()<<std::endl;
+    
+    if (!node_delete->nxtNode_ptr.empty())
+    {
+        for (auto nodeptr : node_delete->nxtNode_ptr) 
         {
-            if(nodeptr != NULL)
-            {
-                if(nodeptr->valid)
-                invalidSet.push_back(nodeptr);
-                
+            if (!nodeptr->best) {
+                // std::cout<<"clear branch seg5"<<std::endl;
+                if (nodeptr->valid) {
+                    // std::cout<<"clear branch seg6"<<std::endl;
+                    invalidSet.push_back(nodeptr);
+                }
+                // std::cout<<"clear branch seg7"<<std::endl;
                 nodeptr->valid = false;
                 clearBranchW(nodeptr);
             }
         }
     }
-    // std::cout<<"[root debug] seg check w 2"<<std::endl;
 }
 
 void safeRegionRrtStar::clearBranchS(NodePtr node_delete) // Strong branch cut: no matter how, cut all nodes in this branch
@@ -254,18 +283,26 @@ void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
     vector<NodePtr> cutList;
     
     for(auto nodeptr:NodeList)
+    {
         nodeptr->best = false;
+    }
     // std::cout<<"[root debug] seg check 3"<<std::endl;
 
     bool delete_root = false;
     for(auto nodeptr: PathList){
-        if( (!delete_root) && (getDis(nodeptr, target_coord) < (nodeptr->radius - 0.1) ) ){ 
+        if( (!delete_root) && (getDis(nodeptr, target_coord) < (nodeptr->radius) ) ){ 
             // now the committed target is contained in this node's sphere
             delete_root = true;
             nodeptr->best   = true;
             nodeptr->preNode_ptr = NULL;
             cost_reduction = nodeptr->g; 
+            if(root_node->coord == nodeptr->coord || getDis(nodeptr, root_node) < (root_node->radius))
+            {
+                std::cout<<"[possible error resetroot] root from previous iteration selcted for next iteration"<<std::endl;
+            }
             root_node = nodeptr;
+            std::cout<<"[segmentation error debug] commit target: "<<target_coord.transpose()<<std::endl;
+            std::cout<<"[segmentation error debug] new root node: "<<root_node->coord.transpose()<<std::endl;
             continue;
         }
         if( delete_root ){
@@ -423,7 +460,7 @@ inline NodePtr safeRegionRrtStar::genNewNode( Vector3d & pt_sample, NodePtr node
 
 bool safeRegionRrtStar::checkTrajPtCol(Vector3d & pt)
 {     
-    if(radiusSearch(pt) < 0.0 ) return true;
+    if(radiusSearchCollisionPred(pt) < 0.0 ) return true;
     else return false;
 }
 
@@ -806,7 +843,7 @@ void safeRegionRrtStar::SafeRegionRefine( double time_limit )
     /*  Every time the refine function is called, new samples are continuously generated and the tree is continuously rewired, hope to get a better solution  */
     /*  The refine process is mainly same as the initialization of the tree  */
     auto time_bef_refine = std::chrono::steady_clock::now();
-    std::cout<<"in refine loop"<<std::endl;
+    // std::cout<<"in refine loop"<<std::endl;
     float pos[3];
     while( true )
     {     
@@ -814,7 +851,7 @@ void safeRegionRrtStar::SafeRegionRefine( double time_limit )
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(time_in_refine - time_bef_refine).count()*0.001;
         if( elapsed > time_limit )
         {
-            std::cout<<"[refine debug] time in refine loop: "<<elapsed<<" time limit: "<<time_limit<<std::endl;
+            // std::cout<<"[refine debug] time in refine loop: "<<elapsed<<" time limit: "<<time_limit<<std::endl;
             break;
         } 
         
@@ -859,7 +896,7 @@ void safeRegionRrtStar::SafeRegionEvaluate( double time_limit )
 {   
     /*  The re-evaluate of the RRT*, find the best feasble path (corridor) by lazy-evaluzation  */
     if(path_exist_status == false){
-        std::cout<<"[path re-evaluate] no path exists. "<<std::endl;
+        // std::cout<<"[path re-evaluate] no path exists. "<<std::endl;
         return;
     }
     
@@ -929,7 +966,7 @@ void safeRegionRrtStar::SafeRegionEvaluate( double time_limit )
 
         if(isBreak)
         {
-            std::cout<<"[evaluate debug] break condition reached: time in evaluate: "<<std::chrono::duration_cast<std::chrono::milliseconds>(time_in_evaluate2 - time_bef_evaluate).count()*0.001<<std::endl;
+            // std::cout<<"[evaluate debug] break condition reached: time in evaluate: "<<std::chrono::duration_cast<std::chrono::milliseconds>(time_in_evaluate2 - time_bef_evaluate).count()*0.001<<std::endl;
             break;
         }
 

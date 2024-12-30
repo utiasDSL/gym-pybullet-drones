@@ -15,6 +15,8 @@ class safeRegionRrtStar
 {
 	private:
 		pcl::search::KdTree<pcl::PointXYZ> kdtreeForMap;
+		pcl::search::KdTree<pcl::PointXYZ> kdtreeForCollisionPred;
+
 		pcl::search::KdTree<pcl::PointXYZ> kdtreeAddMap;
 		pcl::search::KdTree<pcl::PointXYZ> kdtreeDelMap;
 		//pcl::PointCloud<pcl::PointXYZ> CloudIn;
@@ -81,6 +83,7 @@ class safeRegionRrtStar
 		void reset();
 		void setParam( double safety_margin_, double search_margin_, double max_radius_, double sample_range_ );
 		void setInput(pcl::PointCloud<pcl::PointXYZ> CloudIn);
+		void setInputforCollision(pcl::PointCloud<pcl::PointXYZ> CloudIn);
 		void setPt( Eigen::Vector3d startPt, Eigen::Vector3d endPt, double xl, double xh, double yl, double yh, double zl, double zh,
 					double local_range, int max_iter, double sample_portion, double goal_portion );
 		void setStartPt( Eigen::Vector3d startPt, Eigen::Vector3d endPt);
@@ -112,6 +115,7 @@ class safeRegionRrtStar
 		inline double getDis(const Eigen::Vector3d & p1, const Eigen::Vector3d & p2);
 		inline Eigen::Vector3d genSample();
 		inline double radiusSearch(Eigen::Vector3d & pt);
+		inline double radiusSearchCollisionPred(Eigen::Vector3d & pt);
 		inline NodePtr genNewNode( Eigen::Vector3d & pt, NodePtr node_nearst_ptr );
 		inline NodePtr findNearstVertex( Eigen::Vector3d & pt );
 		inline NodePtr findNearst( Eigen::Vector3d & pt );

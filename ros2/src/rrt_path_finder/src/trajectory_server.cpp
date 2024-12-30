@@ -74,6 +74,10 @@ public:
     void rcvOdomCallback(const nav_msgs::msg::Odometry::SharedPtr msg)
     {
         _odom = *msg;
+        current_pos[0] = _odom.pose.pose.position.x;
+        current_pos[1] = _odom.pose.pose.position.y;
+        current_pos[2] = _odom.pose.pose.position.z;
+
         // RCLCPP_WARN(this->get_logger(), "Received odometry: position(x: %.2f, y: %.2f, z: %.2f)",
                // _odom.pose.pose.position.x, _odom.pose.pose.position.y, _odom.pose);
     }
@@ -164,18 +168,12 @@ public:
     {
         has_trajectory = false;
         is_aborted = true;
-        current_pos[0] = _odom.pose.pose.position.x;
-        current_pos[1] = _odom.pose.pose.position.y;
-        current_pos[2] = _odom.pose.pose.position.z;
         RCLCPP_WARN(this->get_logger(), "Trajectory aborted.");
     }
 
     void handleFinalTrajectory()
     {
         _is_goal_arrive = true;
-        current_pos[0] = _odom.pose.pose.position.x;
-        current_pos[1] = _odom.pose.pose.position.y;
-        current_pos[2] = _odom.pose.pose.position.z;
     }
 
     void commandCallback()
@@ -293,9 +291,12 @@ public:
         traj_msg.jerk.z = des_jerk.z();
 
         // Set yaw 
-        // Eigen::Vector3d direction = des_pos - _start_pos;    // Vector from start_pos to des_pos
-        // double yaw = std::atan2(direction.y(), direction.x()); // Yaw in radians
-        traj_msg.yaw = 0;
+        Eigen::Vector3d direction = des_pos - current_pos;    // Vector from start_pos to des_pos
+        double yaw = std::atan2(direction.y(), direction.x()); // Yaw in radians
+        traj_msg.yaw = 0.0;
+        std::cout<<"[Traj follow] current position: "<<current_pos[0]<<":"<<current_pos[1]<<":"<<current_pos[2]<<std::endl;
+        std::cout<<"[Traj follow] command position: "<<des_pos[0]<<":"<<des_pos[1]<<":"<<des_pos[2]<<std::endl;
+        std::cout<<"[Traj follow] command yaw: "<<yaw<<std::endl;
 
         // Publish the message
         command_pub->publish(traj_msg); // Replace traj_publisher_ with your actual publisher variable

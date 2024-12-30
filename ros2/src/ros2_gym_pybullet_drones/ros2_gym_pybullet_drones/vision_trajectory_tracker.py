@@ -97,6 +97,11 @@ class AviaryWrapper(Node):
         self.y_hist = []
         self.z_hist = []
 
+        self.alpha = 0.1  # Filter factor, adjust for smoothing
+        self.prev_des_yaw = 0.0  # Initialize the previous yaw value
+        self.yaw_rate_max = 1.0  # Maximum yaw rate in radians per second
+        self.prev_yaw = 0.0  # Previous yaw value for rate calculation
+
         self.marker_pub = self.create_publisher(MarkerArray, '/trajectory_marker_array', 10)
 
         # Call a timer to publish the marker array at a lower rate than the main loop
@@ -275,6 +280,27 @@ class AviaryWrapper(Node):
         goal.poses.append(goal_pose)
         self.goal_pub.publish(goal)
 
+    def apply_low_pass_filter(self, desired_yaw):
+        """Apply low-pass filter to the desired yaw."""
+        filtered_yaw = self.alpha * desired_yaw + (1 - self.alpha) * self.prev_des_yaw
+        self.prev_des_yaw = filtered_yaw
+        return filtered_yaw
+
+    def apply_rate_limiting(self, desired_yaw):
+        """Apply rate-limiting to the yaw."""
+        dt = 0.01
+        # Calculate the desired change in yaw
+        yaw_diff = desired_yaw - self.prev_yaw
+        max_yaw_diff = self.yaw_rate_max * dt  # Maximum allowable yaw change in this timestep
+
+        # Limit the yaw change to the maximum allowable rate
+        if abs(yaw_diff) > max_yaw_diff:
+            yaw_diff = np.sign(yaw_diff) * max_yaw_diff
+
+        # Update the previous yaw and time
+        self.prev_yaw += yaw_diff
+        
+        return self.prev_yaw
 
     #### Read the Trajectory (pos, vel, acc, jerk, snap)
     def get_trajectory_callback(self, msg):
@@ -282,7 +308,12 @@ class AviaryWrapper(Node):
         print('des pos: ',self.des_pos)
         self.des_vel = np.array([[msg.velocity.x, msg.velocity.y, msg.velocity.z]]).flatten()
         print('des vel',self.des_vel)
-        self.des_yaw = msg.yaw
+        # filtered_yaw = self.apply_low_pass_filter(msg.yaw)
+        # self.des_yaw = self.apply_rate_limiting(filtered_yaw)
+        self.des_yaw = msg.yaw*180/3.14
+        print('des yaw',self.des_yaw)
+
+
 ############################################################
 def main(args=None):
     rclpy.init(args=args)

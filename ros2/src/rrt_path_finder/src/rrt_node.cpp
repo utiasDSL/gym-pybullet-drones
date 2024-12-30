@@ -46,13 +46,12 @@ public:
         // Parameters
         // safety_margin=1.0, search_margin=0.5, max_radius=1.5, sample_range=10.0
         // rrt.setPt(startPt=start_point, endPt=end_point, xl=-5, xh=15, yl=-5, yh=15, zl=0.0, zh=1,
-        //      local_range=10, max_iter=1000, sample_portion=0.1, goal_portion=0.05)
+        //      max_iter=1000, sample_portion=0.1, goal_portion=0.05)
 
-        this->declare_parameter("safety_margin", 0.7);
-        this->declare_parameter("search_margin", 0.2);
+        this->declare_parameter("safety_margin", 0.9);
+        this->declare_parameter("search_margin", 0.5);
         this->declare_parameter("max_radius", 2.0);
-        this->declare_parameter("sensing_range", 60.0);
-        this->declare_parameter("local_range",2.0);
+        this->declare_parameter("sample_range", 27.0);
         this->declare_parameter("refine_portion", 0.80);
         this->declare_parameter("sample_portion", 0.25);
         this->declare_parameter("goal_portion", 0.05);
@@ -61,11 +60,11 @@ public:
         this->declare_parameter("stop_horizon", 0.5);
         this->declare_parameter("commit_time", 1.0);
 
-        this->declare_parameter("x_l", -60.0);
-        this->declare_parameter("x_h", 60.0);
-        this->declare_parameter("y_l", -60.0);
-        this->declare_parameter("y_h", 60.0);
-        this->declare_parameter("z_l", 0.0);
+        this->declare_parameter("x_l", -70.0);
+        this->declare_parameter("x_h", 70.0);
+        this->declare_parameter("y_l", -70.0);
+        this->declare_parameter("y_h", 70.0);
+        this->declare_parameter("z_l", -0.5);
         this->declare_parameter("z_h", 3.0);
 
         this->declare_parameter("target_x", 0.0);
@@ -80,9 +79,7 @@ public:
         _safety_margin = this->get_parameter("safety_margin").as_double();
         _search_margin = this->get_parameter("search_margin").as_double();
         _max_radius = this->get_parameter("max_radius").as_double();
-        _sensing_range = this->get_parameter("sensing_range").as_double();
-        _local_range = this->get_parameter("local_range").as_double();
-        _replan_distance = this->get_parameter("sensing_range").as_double();
+        _sample_range = this->get_parameter("sample_range").as_double();
         _refine_portion = this->get_parameter("refine_portion").as_double();
         _sample_portion = this->get_parameter("sample_portion").as_double();
         _goal_portion = this->get_parameter("goal_portion").as_double();
@@ -169,13 +166,16 @@ private:
     tf2_ros::TransformListener tf_listener_;
 
     // Path Planning Parameters
-    double _planning_rate, _safety_margin, _search_margin, _max_radius, _sensing_range, _local_range, _replan_distance;
+    double _planning_rate, _safety_margin, _search_margin, _max_radius, _sample_range, _replan_distance;
     double _refine_portion, _sample_portion, _goal_portion, _path_find_limit, _stop_time, _time_commit;
     double _x_l, _x_h, _y_l, _y_h, _z_l, _z_h;  // For random map simulation: map boundary
     
     std::vector<Eigen::MatrixX4d> hpolys; // Matrix to store hyperplanes
     std::vector<Eigen::Vector3d> pcd_points; // Datastructure to hold pointcloud points in a vector
-    std::chrono::time_point<std::chrono::steady_clock> trajstamp = std::chrono::steady_clock::now(); // timestamp for when trajectory is generated
+    // std::chrono::time_point<std::chrono::steady_clock> trajstamp = std::chrono::steady_clock::now(); // timestamp for when trajectory is generated
+    // std::chrono::time_point<std::chrono::steady_clock> odom_time = std::chrono::steady_clock::now();
+    rclcpp::Time trajstamp;
+    rclcpp::Time odom_time;
     std::chrono::time_point<std::chrono::steady_clock> obsvstamp = std::chrono::steady_clock::now();
     int quadratureRes = 16;
     float weightT = 20.0;
@@ -187,15 +187,15 @@ private:
     float threshold = 0.8;
     int trajectory_id = 0;
     int order = 5;
+    double convexCoverRange = 3.0;
     // RRT Path Planner
     safeRegionRrtStar _rrtPathPlanner;
     gcopter::GCOPTER_PolytopeSFC _gCopter;
     Trajectory<5> _traj;
     voxel_map::VoxelMap V_map;
-    float local_range = 2.0, sample_portion=0.25, goal_portion=0.05;
     int max_iter=100000;
-    float voxelWidth = 0.15;
-    float dilateRadius = 0.3;
+    float voxelWidth = 0.25;
+    float dilateRadius = 0.5;
     float leafsize = 0.4;
     // Variables for target position, trajectory, odometry, etc.
     Eigen::Vector3d _start_pos, _end_pos, _start_vel, _last_vel{0.0, 0.0, 0.0}, _start_acc;
@@ -234,7 +234,7 @@ private:
     // Initializing rrt parameters
     void setRRTPlannerParams()
     {
-        _rrtPathPlanner.setParam(_safety_margin, _search_margin, _max_radius, _sensing_range);
+        _rrtPathPlanner.setParam(_safety_margin, _search_margin, _max_radius, _sample_range);
         _rrtPathPlanner.reset();
     }
 
@@ -248,22 +248,29 @@ private:
         _start_vel[0] = _odom.twist.twist.linear.x;
         _start_vel[1] = _odom.twist.twist.linear.y;
         _start_vel[2] = _odom.twist.twist.linear.z;
+        // odom_time = std::chrono::steady_clock::time_point(
+        //     std::chrono::seconds(_odom.header.stamp.sec) +
+        //     std::chrono::nanoseconds(_odom.header.stamp.nanosec)
+        // );
 
+        odom_time = rclcpp::Time(_odom.header.stamp.sec, _odom.header.stamp.nanosec);
         if(_rrtPathPlanner.getDis(_start_pos, _commit_target) < threshold)
         {
-            obsvstamp = std::chrono::steady_clock::now();
+            // obsvstamp = std::chrono::steady_clock::now();
             _is_target_arrive = true;
         }
         else
         {
+            _is_target_arrive = false;
+
             std::cout<<"[commit debug] distance to commit target: "<<_rrtPathPlanner.getDis(_start_pos, _commit_target)<<std::endl;
-            std::cout<<"[commit debug] distance to endgoal: "<<_rrtPathPlanner.getDis(_start_pos, _end_pos)<<std::endl;
+            // std::cout<<"[commit debug] distance to endgoal: "<<_rrtPathPlanner.getDis(_start_pos, _end_pos)<<std::endl;
         }
         if(_rrtPathPlanner.getDis(_start_pos, _end_pos) < _safety_margin)
         {
             _is_complete = true;   
         }
-        checkSafeTrajectory(_commit_distance / max_vel);
+        checkSafeTrajectory();
         // RCLCPP_WARN(this->get_logger(), "Received odometry: position(x: %.2f, y: %.2f, z: %.2f)",
                // _odom.pose.pose.position.x, _odom.pose.pose.position.y, _odom.pose);
     }
@@ -293,7 +300,7 @@ private:
             return;
 
         _is_has_map = true;
-        std::cout<<"size of subscribed pcd: "<<cloud_input.points.size()<<std::endl;
+        // std::cout<<"size of subscribed pcd: "<<cloud_input.points.size()<<std::endl;
         pcd_points.clear();
         V_map.reset();
         int i = 0;
@@ -311,11 +318,11 @@ private:
         int dilateSteps = std::ceil(dilateRadius / V_map.getScale());
         V_map.dilate(dilateSteps);
         V_map.getSurf(pcd_points);
-        std::cout<<"points inserted in V_map: "<<i<<std::endl;
-        std::cout<<" pcd point size after getsurf(): "<<pcd_points.size()<<std::endl;
+        // std::cout<<"points inserted in V_map: "<<i<<std::endl;
+        // std::cout<<" pcd point size after getsurf(): "<<pcd_points.size()<<std::endl;
 
         pcl::PointCloud<pcl::PointXYZ>::Ptr V_map_cloud(new pcl::PointCloud<pcl::PointXYZ>());
-        std::cout<<"pcd_points size: "<<pcd_points.size()<<std::endl;
+        // std::cout<<"pcd_points size: "<<pcd_points.size()<<std::endl;
         for(auto point : pcd_points)
         {
             pcl::PointXYZ pcd_point;
@@ -327,6 +334,7 @@ private:
         }
 
         _rrtPathPlanner.setInput(*V_map_cloud);
+        _rrtPathPlanner.setInputforCollision(cloud_input);
             sensor_msgs::msg::PointCloud2 filtered_cloud_msg;
         pcl::toROSMsg(*V_map_cloud, filtered_cloud_msg);
         filtered_cloud_msg.header.frame_id = "ground_link"; // Set appropriate frame ID
@@ -480,7 +488,7 @@ private:
         // GCopter parameters
         Eigen::Matrix3d iniState;
         Eigen::Matrix3d finState;
-        iniState << _start_pos, _start_vel, _start_acc;
+        iniState << _start_pos, _start_vel, Eigen::Vector3d::Zero();
         finState << _end_pos, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
         Eigen::VectorXd magnitudeBounds(5);
         Eigen::VectorXd penaltyWeights(5);
@@ -505,7 +513,7 @@ private:
         int quadratureRes = 16;
         float weightT = 20.0;
         float smoothingEps = 0.01;
-        float relcostto1 = 0.1;
+        float relcostto1 = 1e-3;
         _traj.clear();
         auto t1 = std::chrono::steady_clock::now();
         if (!_gCopter.setup(weightT, iniState, finState, hpolys, INFINITY, smoothingEps, quadratureRes, magnitudeBounds, penaltyWeights, physicalParams))
@@ -532,9 +540,10 @@ private:
         }
         if (_traj.getPieceNum() > 0)
         {
-            trajstamp = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(trajstamp - t1).count()*0.001;
-            auto elapsed2 = std::chrono::duration_cast<std::chrono::milliseconds>(trajstamp - obsvstamp).count()*0.001;
+            // trajstamp = std::chrono::steady_clock::now();
+            trajstamp = rclcpp::Clock().now();
+            auto t2 = std::chrono::steady_clock::now();
+            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()*0.001;
 
             std::cout<<"[GCOPTER Debug] trajectory successfully generated, traj exist set to true. time taken for trajectory generation: "<<elapsed<<std::endl;
 
@@ -577,19 +586,15 @@ private:
     {
         _commit_target = _traj.getPos(_commit_distance/max_vel);
         // if(_rrtPathPlanner.getDis(_start_pos, _commit_target) > _rrtPathPlanner.getDis(_start_pos, _end_pos)) _commit_target = _end_pos;
-        std::cout<<"[commit target] set to"<<_commit_target[0]<<" : "<<_commit_target[1]<<" : "<<_commit_target[2]<<std::endl;
+        // std::cout<<"[commit target] set to"<<_commit_target[0]<<" : "<<_commit_target[1]<<" : "<<_commit_target[2]<<std::endl;
     }
 
     // Function to plan the initial trajectory using RRT
     void planInitialTraj()
     {
         _rrtPathPlanner.reset();
-
-        // Set parameters for the RRT planner
-        // safety_margin=1.0, search_margin=0.5, max_radius=1.5, sample_range=10.0
-
         _rrtPathPlanner.setPt(_start_pos, _end_pos, _x_l, _x_h, _y_l, _y_h, _z_l, _z_h,
-                             _local_range, _max_samples, _sample_portion, _goal_portion);
+                             _sample_range, _max_samples, _sample_portion, _goal_portion);
         _rrtPathPlanner.SafeRegionExpansion(0.05);
         std::tie(_path, _radius) = _rrtPathPlanner.getPath();
         _path_vector = matrixToVector(_path);
@@ -598,7 +603,7 @@ private:
         {
             // Generate trajectory
             std::cout<<"[Initial planning] initial path found"<<std::endl;
-            convexCover(_path, 3.0, _safety_margin, 1.0e-6);
+            convexCover(_path, convexCoverRange, _safety_margin, 1.0e-6);
             shortCut();
             traj_generation();
             if(_is_traj_exist)
@@ -619,7 +624,6 @@ private:
             des_traj_msg.header.frame_id = "ground_link";
             des_traj_msg.action = des_traj_msg.ACTION_WARN_IMPOSSIBLE;
             _rrt_des_traj_pub->publish(des_traj_msg);
-            visRrt(_rrtPathPlanner.getTree()); 
 
         }
         visRrt(_rrtPathPlanner.getTree()); 
@@ -627,17 +631,10 @@ private:
         visCommitTarget();
     }
 
-    // Function to plan the incremental trajectory
     void planIncrementalTraj()
     {
         if (_rrtPathPlanner.getGlobalNaviStatus())
         {
-        //     visRrt(_rrtPathPlanner.getTree()); 
-        //     custom_interface_gym::msg::DesTrajectory des_traj_msg;
-        //     des_traj_msg.header.stamp = rclcpp::Clock().now();
-        //     des_traj_msg.header.frame_id = "ground_link";
-        //     des_traj_msg.action = des_traj_msg.ACTION_WARN_FINAL;
-        //     _rrt_des_traj_pub->publish(des_traj_msg);
             RCLCPP_WARN(this->get_logger(), "Almost reached final goal");
             return; // No further planning required if global navigation is complete
         }
@@ -659,8 +656,10 @@ private:
             {
                 // Reset the root of the RRT planner
                 // Get the updated path and publish it
-                // std::tie(_path, _radius) = _rrtPathPlanner.getPath();
-                std::cout<<"[Incremental planner] reached committed target"<<std::endl;
+                std::tie(_path, _radius) = _rrtPathPlanner.getPath();
+                convexCover(_path, convexCoverRange, _safety_margin, 1e-6);
+                shortCut();
+                // std::cout<<"[Incremental planner] reached committed target"<<std::endl;
                 traj_generation();
                 if(_is_traj_exist)
                 {
@@ -685,7 +684,7 @@ private:
             // std::cout<<"[Incremental planner] in refine and evaluate loop"<<std::endl;
             auto time_start_ref = std::chrono::steady_clock::now();
             // Continue refining and evaluating the path
-            _rrtPathPlanner.SafeRegionRefine(0.08);
+            _rrtPathPlanner.SafeRegionRefine(0.12);
             _rrtPathPlanner.SafeRegionEvaluate(0.02);
             auto time_end_ref = std::chrono::steady_clock::now();
 
@@ -694,8 +693,8 @@ private:
             {
                 // std::cout<<"[Incremental planner] in refine and evaluate loop: Path updated"<<std::endl;
                 std::tie(_path, _radius) = _rrtPathPlanner.getPath();
-                convexCover(_path, 3.0, _safety_margin, 1e-6);
-                shortCut();
+                // convexCover(_path, 1.0, _safety_margin, 1e-6);
+                // shortCut();
                 _path_vector = matrixToVector(_path);
                 // publishRRTWaypoints(path_vector);
             }
@@ -734,7 +733,7 @@ private:
         //RCLCPP_WARN(this->get_logger(),"rrt path planner called");
         if (_is_traj_exist == false)
         {
-            std::cout<<"[planning callback] Iniial planner: traj_exist = "<<_is_traj_exist<<std::endl;
+            // std::cout<<"[planning callback] Iniial planner: traj_exist = "<<_is_traj_exist<<std::endl;
             planInitialTraj();
         }
         else
@@ -744,16 +743,20 @@ private:
             auto time_end_ref = std::chrono::steady_clock::now();
 
             double elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(time_end_ref - time_start_ref).count()*0.001;
-            std::cout<<"[planning callback] time taken in incremental planning: "<<elapsed_ms<<std::endl;
+            // std::cout<<"[planning callback] time taken in incremental planning: "<<elapsed_ms<<std::endl;
         }   
         
     }
 
-    bool checkSafeTrajectory(double check_time)
+    bool checkSafeTrajectory()
     {   
+        auto delta_t = (odom_time - trajstamp).seconds();
+        // std::cout<<"[safety debug] delta T: "<<delta_t<<std::endl;
+
         if(!_is_traj_exist) return false;
-        double T = 0.01;
-        for(double t = T; t < check_time; t += T)
+        double T = max(0.0, delta_t);
+        // std::cout<<"[safety debug] checking safe trajectory, delta t = "<<T<<std::endl;
+        for(double t = T; t < T+1.0; t += 0.01)
         {
             auto pos_t = _traj.getPos(t);
             if(_rrtPathPlanner.checkTrajPtCol(pos_t))
@@ -955,6 +958,32 @@ private:
     {
         visualization_msgs::msg::MarkerArray path_visualizer;
         int marker_id = 0;
+        
+        visualization_msgs::msg::Marker point_vis_og;
+            point_vis_og.header.frame_id = "ground_link";
+            point_vis_og.header.stamp = this->get_clock()->now();
+            point_vis_og.ns = "rrt_path";
+            point_vis_og.id = marker_id++;
+            point_vis_og.type = visualization_msgs::msg::Marker::LINE_STRIP;
+            point_vis_og.action = visualization_msgs::msg::Marker::ADD;
+
+            geometry_msgs::msg::Point p1, p2;
+            p1.x = path_matrix(0,0);
+            p1.y = path_matrix(0,1);
+            p1.z = path_matrix(0,2);
+
+            p2.x = path_matrix(1,0);
+            p2.y = path_matrix(1,1);
+            p2.z = path_matrix(1,2);
+            point_vis_og.points.push_back(p1);
+            point_vis_og.points.push_back(p2);
+            point_vis_og.scale.x = 0.05; // Line width
+            point_vis_og.color.a = 0.8; // Transparency
+            point_vis_og.color.r = 1.0; // Red
+            point_vis_og.color.g = 0.64; // Green
+            point_vis_og.color.b = 0.0; // Blue (for branches)
+            path_visualizer.markers.push_back(point_vis_og);
+
         for(int i=1; i < path_matrix.rows(); i++)
         {
             visualization_msgs::msg::Marker point_vis;
