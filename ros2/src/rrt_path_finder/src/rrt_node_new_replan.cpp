@@ -51,7 +51,7 @@ public:
         this->declare_parameter("safety_margin", 0.5);
         this->declare_parameter("search_margin", 0.4);
         this->declare_parameter("max_radius", 2.0);
-        this->declare_parameter("sample_range", 27.0);
+        this->declare_parameter("sample_range", 20.0);
         this->declare_parameter("refine_portion", 0.80);
         this->declare_parameter("sample_portion", 0.25);
         this->declare_parameter("goal_portion", 0.05);
@@ -185,7 +185,7 @@ private:
     float relcostto1 = 0.00001;
     int _max_samples;
     double _commit_distance = 10.0;
-    double max_vel = 0.5;
+    double max_vel = 0.6;
     float threshold = 0.8;
     int trajectory_id = 0;
     int order = 5;
@@ -383,7 +383,7 @@ private:
         {
             for(int i=0; i<_path_vector.size(); i++)
             {
-                if(r < _commit_distance)
+                if(r < _commit_distance && _radius[i] > _safety_margin)
                 {
                     corridor_points.push_back(_path_vector[i]);
                     r += _radius[i];

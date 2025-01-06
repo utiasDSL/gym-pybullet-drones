@@ -772,8 +772,8 @@ class RRT_start:
 
 
     def radiusSearch(self, node):
-        if self.getDis(node, self.startPt) > self.sample_range + self.max_Radius:
-            return self.max_Radius - self.search_Margin
+        # if self.getDis(node, self.startPt) > self.sample_range + self.max_Radius:
+        #     return self.max_Radius - self.search_Margin
 
         if isinstance(node, Node):
             radius, index = self.pcd.query(np.array(node.coordinates), 1)
