@@ -72,7 +72,10 @@ set(SOURCES_TRAJECTORY_SERVER
 # Declare the executable for trajectory_server
 add_executable(trajectory_server ${SOURCES_TRAJECTORY_SERVER})
 
-# Link dependencies for trajectory_server (SAME AS rrt_node)
+# Link the PCL libraries for trajectory_server (SAME AS rrt_node)
+target_link_libraries(trajectory_server ${PCL_LIBRARIES})
+
+# Link dependencies for trajectory_server
 ament_target_dependencies(trajectory_server
   rclcpp
   nav_msgs
@@ -87,14 +90,35 @@ ament_target_dependencies(trajectory_server
   custom_interface_gym
 )
 
-# Link the PCL libraries for trajectory_server (SAME AS rrt_node)
-target_link_libraries(trajectory_server ${PCL_LIBRARIES})
+set(SOURCES_NEW_REPLAN
+  src/corridor_finder.cpp
+  src/kdtree.c
+  src/rrt_node_new_replan.cpp
+)
+
+# Declare the executable for rrt_node_new_replan
+add_executable(new_replan ${SOURCES_NEW_REPLAN})
+
+# Link dependencies for new_replan
+ament_target_dependencies(new_replan
+  rclcpp
+  nav_msgs
+  sensor_msgs
+  visualization_msgs
+  pcl_conversions
+  PCL
+  tf2_ros
+  tf2_sensor_msgs
+  tf2_geometry_msgs
+  std_msgs
+  custom_interface_gym
+)
 
 # Ensure C++17 and C99 standards for trajectory_server (SAME AS rrt_node)
 target_compile_features(trajectory_server PUBLIC c_std_99 cxx_std_17)
 
 # Install targets
-install(TARGETS rrt_node trajectory_server
+install(TARGETS rrt_node trajectory_server new_replan
   DESTINATION lib/${PROJECT_NAME}
 )
 

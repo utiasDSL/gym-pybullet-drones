@@ -60,6 +60,7 @@ class trajectory_pub(Node):
         self.psi = 0
         self.replan = True
         self.t_assign = time.time()
+        self.callback_counter = 0
 
 
     def get_waypoint_callback(self, msg):
@@ -72,6 +73,7 @@ class trajectory_pub(Node):
             self.wp_list = wp_list
             self.traj.set_coefficients(wp_list)
             self.t_assign = time.time()
+            self.callback_counter += 1
         
 
         
@@ -103,7 +105,9 @@ class trajectory_pub(Node):
         traj_msg.jerk = Vector3(x=jerk_sp[0], y=jerk_sp[1], z=jerk_sp[2])
         traj_msg.snap = Vector3(x=snap_sp[0], y=snap_sp[1], z=snap_sp[2])
         traj_msg.yaw = eul_sp[2]
-        print("trajectory published: des_pos: ", pos_sp[0], pos_sp[1], pos_sp[2])
+        if self.callback_counter > 1:
+            traj_msg.hover = True
+        print("trajectory published: des_pos: ", pos_sp[0], pos_sp[1], pos_sp[2],": hover? ", traj_msg.hover)
         self.traj_publisher.publish(traj_msg)
     
 def main(args=None):

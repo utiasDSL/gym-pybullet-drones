@@ -37,8 +37,13 @@ class DSLPIDControl(BaseControl):
             exit()
         
         self.P_COEFF_VEL = np.array([1.0, 1.0, 0.0])
-        self.P_COEFF_FOR = np.array([.22, .22, 0.75])
+        self.P_COEFF_FOR = np.array([.10, .10, 0.5])
         self.I_COEFF_FOR = np.array([.05, .05, .05])
+
+
+
+
+        
         self.D_COEFF_FOR = np.array([.25, .2, .7])
         self.P_COEFF_TOR = np.array([70000., 70000., 60000.])
         self.I_COEFF_TOR = np.array([.0, .0, 500.])
@@ -273,9 +278,9 @@ class DSLPIDControl(BaseControl):
         target_rotation = (np.vstack([target_x_ax, target_y_ax, target_z_ax])).transpose()
         #### Target rotation #######################################
         target_euler = (Rotation.from_matrix(target_rotation)).as_euler('XYZ', degrees=False)
-        target_euler[0] = np.clip(target_euler[0], -np.pi/12, np.pi/12)
-        target_euler[2] = np.clip(target_euler[1], -np.pi/12, np.pi/12)
-        target_euler[2] = np.clip(target_euler[2], -np.pi, np.pi)
+        # target_euler[0] = np.clip(target_euler[0], -np.pi/12, np.pi/12)
+        # target_euler[2] = np.clip(target_euler[1], -np.pi/12, np.pi/12)
+        # target_euler[2] = np.clip(target_euler[2], -np.pi, np.pi)
         if np.any(np.abs(target_euler) > math.pi):
             print("\n[ERROR] ctrl it", self.control_counter, "in Control._dslPIDPositionControl(), values outside range [-pi,pi]")
         return thrust, target_euler, pos_e

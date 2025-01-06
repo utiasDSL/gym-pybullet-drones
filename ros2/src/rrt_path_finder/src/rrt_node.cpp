@@ -272,7 +272,7 @@ private:
         {
             _is_complete = true;   
         }
-        // checkSafeTrajectory();
+        checkSafeTrajectory();
         // RCLCPP_WARN(this->get_logger(), "Received odometry: position(x: %.2f, y: %.2f, z: %.2f)",
                // _odom.pose.pose.position.x, _odom.pose.pose.position.y, _odom.pose);
     }

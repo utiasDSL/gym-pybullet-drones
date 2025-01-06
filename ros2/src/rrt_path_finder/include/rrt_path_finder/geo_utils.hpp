@@ -61,6 +61,23 @@ namespace geo_utils
         return minmaxsd < 0.0 && !std::isinf(minmaxsd);
     }
 
+    inline bool checkInterior(const Eigen::MatrixX4d& hPolys, const Eigen::Vector3d& query) 
+    {
+        // Loop through all the half-space inequalities
+        for (int i = 0; i < hPolys.rows(); ++i) {
+            Eigen::Vector3d normal = hPolys.row(i).head<3>(); // Extract the normal vector
+            double d = hPolys(i, 3); // Extract the distance term
+
+            // Check if the query point satisfies the inequality
+            if (normal.dot(query) + d > -1e-5) {
+                // If even one inequality is violated, the point is outside
+                return false;
+            }
+        }
+        // If all inequalities are satisfied, the point is inside
+        return true;
+    }
+
     inline bool overlap(const Eigen::MatrixX4d &hPoly0,
                         const Eigen::MatrixX4d &hPoly1,
                         const double eps = 1.0e-6)
