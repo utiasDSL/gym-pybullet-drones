@@ -195,7 +195,7 @@ class VisionAviary(BaseAviary):
         
         nearVal = self.L
         farVal = 1000
-        clip_distance = 25
+        clip_distance = 20
         depth_mm = (2 * nearVal * farVal) / (farVal + nearVal - depth_image * (farVal - nearVal))
         
         height, width = depth_image.shape

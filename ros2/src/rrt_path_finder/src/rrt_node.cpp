@@ -48,8 +48,8 @@ public:
         // rrt.setPt(startPt=start_point, endPt=end_point, xl=-5, xh=15, yl=-5, yh=15, zl=0.0, zh=1,
         //      max_iter=1000, sample_portion=0.1, goal_portion=0.05)
 
-        this->declare_parameter("safety_margin", 0.9);
-        this->declare_parameter("search_margin", 0.5);
+        this->declare_parameter("safety_margin", 0.6);
+        this->declare_parameter("search_margin", 0.4);
         this->declare_parameter("max_radius", 2.0);
         this->declare_parameter("sample_range", 27.0);
         this->declare_parameter("refine_portion", 0.80);
@@ -64,8 +64,10 @@ public:
         this->declare_parameter("x_h", 70.0);
         this->declare_parameter("y_l", -70.0);
         this->declare_parameter("y_h", 70.0);
-        this->declare_parameter("z_l", -0.5);
-        this->declare_parameter("z_h", 3.0);
+        this->declare_parameter("z_l", -0.0);
+        this->declare_parameter("z_l2", -3.0);
+
+        this->declare_parameter("z_h", 6.0);
 
         this->declare_parameter("target_x", 0.0);
         this->declare_parameter("target_y", 0.0);
@@ -93,9 +95,9 @@ public:
         _y_h = this->get_parameter("y_h").as_double();
         _z_l = this->get_parameter("z_l").as_double();
         _z_h = this->get_parameter("z_h").as_double();
-
-        Eigen::Vector3i xyz((_x_h-_x_l)/voxelWidth, (_y_h-_y_l)/voxelWidth, (_z_h-_z_l)/voxelWidth);
-        Eigen::Vector3d offset(_x_l, _y_l, _z_l);
+        _z_l2 = this->get_parameter("z_l2").as_double();
+        Eigen::Vector3i xyz((_x_h-_x_l)/voxelWidth, (_y_h-_y_l)/voxelWidth, (_z_h-_z_l2)/voxelWidth);
+        Eigen::Vector3d offset(_x_l, _y_l, _z_l2);
         V_map = voxel_map::VoxelMap(xyz, offset, voxelWidth);
         // Set parameters for RRT planner once
         setRRTPlannerParams();
@@ -168,7 +170,7 @@ private:
     // Path Planning Parameters
     double _planning_rate, _safety_margin, _search_margin, _max_radius, _sample_range, _replan_distance;
     double _refine_portion, _sample_portion, _goal_portion, _path_find_limit, _stop_time, _time_commit;
-    double _x_l, _x_h, _y_l, _y_h, _z_l, _z_h;  // For random map simulation: map boundary
+    double _x_l, _x_h, _y_l, _y_h, _z_l, _z_h, _z_l2;  // For random map simulation: map boundary
     
     std::vector<Eigen::MatrixX4d> hpolys; // Matrix to store hyperplanes
     std::vector<Eigen::Vector3d> pcd_points; // Datastructure to hold pointcloud points in a vector
@@ -187,15 +189,15 @@ private:
     float threshold = 0.8;
     int trajectory_id = 0;
     int order = 5;
-    double convexCoverRange = 3.0;
+    double convexCoverRange = 1.0;
     // RRT Path Planner
     safeRegionRrtStar _rrtPathPlanner;
     gcopter::GCOPTER_PolytopeSFC _gCopter;
     Trajectory<5> _traj;
     voxel_map::VoxelMap V_map;
     int max_iter=100000;
-    float voxelWidth = 0.25;
-    float dilateRadius = 0.5;
+    float voxelWidth = 0.3;
+    float dilateRadius = 0.6;
     float leafsize = 0.4;
     // Variables for target position, trajectory, odometry, etc.
     Eigen::Vector3d _start_pos, _end_pos, _start_vel, _last_vel{0.0, 0.0, 0.0}, _start_acc;
@@ -263,14 +265,14 @@ private:
         {
             _is_target_arrive = false;
 
-            std::cout<<"[commit debug] distance to commit target: "<<_rrtPathPlanner.getDis(_start_pos, _commit_target)<<std::endl;
+            // std::cout<<"[commit debug] distance to commit target: "<<_rrtPathPlanner.getDis(_start_pos, _commit_target)<<std::endl;
             // std::cout<<"[commit debug] distance to endgoal: "<<_rrtPathPlanner.getDis(_start_pos, _end_pos)<<std::endl;
         }
         if(_rrtPathPlanner.getDis(_start_pos, _end_pos) < _safety_margin)
         {
             _is_complete = true;   
         }
-        checkSafeTrajectory();
+        // checkSafeTrajectory();
         // RCLCPP_WARN(this->get_logger(), "Received odometry: position(x: %.2f, y: %.2f, z: %.2f)",
                // _odom.pose.pose.position.x, _odom.pose.pose.position.y, _odom.pose);
     }
@@ -373,7 +375,7 @@ private:
                         const double &progress,
                         const double eps)
     {
-        Eigen::Vector3d lowCorner(_x_l, _y_l, _z_l);
+        Eigen::Vector3d lowCorner(_x_l, _y_l, _z_l2);
         Eigen::Vector3d highCorner(_x_h, _y_h, _z_h);
         hpolys.clear();
         int n = int(path.rows());
@@ -393,50 +395,68 @@ private:
         valid_pc.reserve(pcd_points.size());
         for (int i = 1; i < n;)
         {
+            bool invalid = false;
             Eigen::Vector3d path_point(path(i, 0), path(i,1), path(i,2));
-            a = b;
-            if ((a - path_point).norm() > progress)
-            {
-                b = (path_point- a).normalized() * progress + a;
-            }
-            else
-            {
-                b = path_point;
-                i++;
-            }
-            bs.emplace_back(b);
+            auto v1 = _end_pos - _start_pos;
+            auto v2 = path_point - _start_pos;
+            auto dot_prod = v1.dot(v2);
+            double norm_a = v1.norm();
+            double norm_b = v2.norm();
 
-            bd(0, 3) = -std::min(std::max(a(0), b(0)) + range, highCorner(0));
-            bd(1, 3) = +std::max(std::min(a(0), b(0)) - range, lowCorner(0));
-            bd(2, 3) = -std::min(std::max(a(1), b(1)) + range, highCorner(1));
-            bd(3, 3) = +std::max(std::min(a(1), b(1)) - range, lowCorner(1));
-            bd(4, 3) = -std::min(std::max(a(2), b(2)) + range, highCorner(2));
-            bd(5, 3) = +std::max(std::min(a(2), b(2)) - range, lowCorner(2));
-
-            valid_pc.clear();
-            for (const Eigen::Vector3d &p : pcd_points)
+            // Calculate the angle in radians
+            double angle_radians = std::acos(dot_prod / (norm_a * norm_b));
+            if(angle_radians > 1.7)
             {
-                if ((bd.leftCols<3>() * p + bd.rightCols<1>()).maxCoeff() < 0.0)
+                // std::cout<<"[cover debug] path point "<<path_point.transpose()<<std::endl;
+                // std::cout<<"[cover debug] current pos "<<_start_pos.transpose()<<std::endl;
+                invalid = true;
+            }
+            if(!invalid)
+            {
+                a = b;
+                if ((a - path_point).norm() > progress)
                 {
-                    valid_pc.emplace_back(p);
+                    b = (path_point- a).normalized() * progress + a;
                 }
-            }
-            Eigen::Map<const Eigen::Matrix<double, 3, -1, Eigen::ColMajor>> pc(valid_pc[0].data(), 3, valid_pc.size());
-
-            firi::firi(bd, pc, a, b, hp);
-
-            if (hpolys.size() != 0)
-            {
-                const Eigen::Vector4d ah(a(0), a(1), a(2), 1.0);
-                if (3 <= ((hp * ah).array() > -eps).cast<int>().sum() +
-                                ((hpolys.back() * ah).array() > -eps).cast<int>().sum())
+                else
                 {
-                    firi::firi(bd, pc, a, a, gap, 1);
-                    hpolys.emplace_back(gap);
+                    b = path_point;
+                    i++;
                 }
-            }
+                bs.emplace_back(b);
 
-            hpolys.emplace_back(hp);
+                bd(0, 3) = -std::min(std::max(a(0), b(0)) + range, highCorner(0));
+                bd(1, 3) = +std::max(std::min(a(0), b(0)) - range, lowCorner(0));
+                bd(2, 3) = -std::min(std::max(a(1), b(1)) + range, highCorner(1));
+                bd(3, 3) = +std::max(std::min(a(1), b(1)) - range, lowCorner(1));
+                bd(4, 3) = -std::min(std::max(a(2), b(2)) + range, highCorner(2));
+                bd(5, 3) = +std::max(std::min(a(2), b(2)) - range, lowCorner(2));
+
+                valid_pc.clear();
+                for (const Eigen::Vector3d &p : pcd_points)
+                {
+                    if ((bd.leftCols<3>() * p + bd.rightCols<1>()).maxCoeff() < 0.0)
+                    {
+                        valid_pc.emplace_back(p);
+                    }
+                }
+                Eigen::Map<const Eigen::Matrix<double, 3, -1, Eigen::ColMajor>> pc(valid_pc[0].data(), 3, valid_pc.size());
+
+                firi::firi(bd, pc, a, b, hp);
+
+                if (hpolys.size() != 0)
+                {
+                    const Eigen::Vector4d ah(a(0), a(1), a(2), 1.0);
+                    if (3 <= ((hp * ah).array() > -eps).cast<int>().sum() +
+                                    ((hpolys.back() * ah).array() > -eps).cast<int>().sum())
+                    {
+                        firi::firi(bd, pc, a, a, gap, 1);
+                        hpolys.emplace_back(gap);
+                    }
+                }
+
+                hpolys.emplace_back(hp);
+            }
         }
 
     }

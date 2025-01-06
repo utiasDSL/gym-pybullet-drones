@@ -114,6 +114,7 @@ class safeRegionRrtStar
 		inline double getDis(const NodePtr node1, const Eigen::Vector3d & pt);
 		inline double getDis(const Eigen::Vector3d & p1, const Eigen::Vector3d & p2);
 		inline Eigen::Vector3d genSample();
+		inline Eigen::Vector3d getRootCoords();
 		inline double radiusSearch(Eigen::Vector3d & pt);
 		inline double radiusSearchCollisionPred(Eigen::Vector3d & pt);
 		inline NodePtr genNewNode( Eigen::Vector3d & pt, NodePtr node_nearst_ptr );

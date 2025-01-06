@@ -79,7 +79,7 @@ class AviaryWrapper(Node):
         self.pcd_pub = self.create_publisher(PointCloud2,'pcd_gym_pybullet',2)
         self.rgb_pub = self.create_publisher(Image,'rgb_image',1)
         self.goal_pub = self.create_publisher(Path,'waypoints',1)
-    #    self.seg_pub = self.create_publisher(Image,'segmentation_image',1)
+        self.seg_pub = self.create_publisher(Image,'segmentation_image',1)
 
         self.bridge = CvBridge()
         self.tf_broadcaster = tf2_ros.TransformBroadcaster(self)
@@ -215,7 +215,7 @@ class AviaryWrapper(Node):
         self.publisher_.publish(msg)
         depth_image = obs["0"]["dep"]
         rgb_image = obs["0"]["rgb"]
-
+        seg_image = obs["0"]["seg"]
         pcd = self.env._pcd_generation(depth_image)
         points = np.asarray(pcd.points)
         # points = self.env._pcd_generation_opencv(depth_image)
@@ -245,6 +245,9 @@ class AviaryWrapper(Node):
         if rgb_image.dtype != np.float32:
             rgb_image = rgb_image.astype(np.float32)
         
+        if seg_image.dtype != np.float32:
+            seg_image = seg_image.astype(np.float32)
+        
         rgb_image_3ch = rgb_image[:, :, :3]
         rgb_image_8uc3 = cv2.convertScaleAbs(rgb_image_3ch, alpha=(255.0/rgb_image_3ch.max()))
         gray_image = cv2.cvtColor(rgb_image_8uc3, cv2.COLOR_RGB2GRAY)
@@ -253,10 +256,10 @@ class AviaryWrapper(Node):
         ros_rgb_image = self.bridge.cv2_to_imgmsg(rgb_image_8uc3, encoding='rgb8')
         #ros_gray_image = self.bridge.cv2_to_imgmsg(gray_image, encoding='mono8')
 
-    #    ros_seg_image = self.bridge.cv2_to_imgmsg(seg_image, encoding='32FC1')
+        ros_seg_image = self.bridge.cv2_to_imgmsg(seg_image, encoding='32FC1')
         self.dep_pub.publish(ros_dep_image)
         self.rgb_pub.publish(ros_rgb_image)
-
+        self.seg_pub.publish(ros_seg_image)
         action_em = {}
         action_em['0'], _, _ = self.ctrl.computeControlFromState(
                 control_timestep=1/200,
@@ -304,14 +307,16 @@ class AviaryWrapper(Node):
 
     #### Read the Trajectory (pos, vel, acc, jerk, snap)
     def get_trajectory_callback(self, msg):
-        self.des_pos = np.array([[msg.position.x, msg.position.y, msg.position.z]]).flatten()
-        print('des pos: ',self.des_pos)
-        self.des_vel = np.array([[msg.velocity.x, msg.velocity.y, msg.velocity.z]]).flatten()
-        print('des vel',self.des_vel)
-        # filtered_yaw = self.apply_low_pass_filter(msg.yaw)
-        # self.des_yaw = self.apply_rate_limiting(filtered_yaw)
-        self.des_yaw = msg.yaw*180/3.14
-        print('des yaw',self.des_yaw)
+        if(msg.hover):
+            # self.des_pos = self.pos
+            self.des_vel = np.array([[0.0, 0.0, 0.0]]).flatten()
+            return
+        else:
+            self.des_pos = np.array([[msg.position.x, msg.position.y, msg.position.z]]).flatten()
+            print('des pos: ',self.des_pos)
+            print('current pos: ',self.pos)
+            self.des_vel = np.array([[msg.velocity.x, msg.velocity.y, msg.velocity.z]]).flatten()
+            self.des_yaw = 0.0
 
 
 ############################################################

@@ -33,7 +33,6 @@ private:
     std::vector<Eigen::Matrix<double, 3, 6>> current_coefficients;  // Vector of (3, D+1) matrices for each trajectory segment
     std::vector<double> segment_durations;
     Eigen::Vector3d current_pos{-2.0, 0.0, 1.5};
-    Eigen::Vector3d last_safe_pos = current_pos;
     Eigen::Vector3d end_pos;
     bool _is_target_receive = false;
     bool _is_goal_arrive = false;
@@ -45,6 +44,7 @@ private:
     rclcpp::Time trajectory_start_time;
     bool has_trajectory;
     bool is_aborted;
+    bool hover_command_sent = false;
     nav_msgs::msg::Odometry _odom;
     rclcpp::Time _final_time = rclcpp::Time(0);
     rclcpp::Time _start_time = rclcpp::Time::max();
@@ -125,6 +125,7 @@ public:
         std::cout<<"in handle add trajectory callback"<<std::endl;
         has_trajectory = true;
         is_aborted = false;
+        hover_command_sent = false;
         _traj.clear();
         trajectory_id = msg->trajectory_id;
         _start_time = msg->header.stamp;
@@ -180,37 +181,19 @@ public:
     {
         if (!has_trajectory || is_aborted)
         {
-            custom_interface_gym::msg::TrajMsg traj_msg;
-            traj_msg.header.stamp = rclcpp::Clock().now();
-            traj_msg.header.frame_id = "ground_link"; 
+            if(hover_command_sent) return;
+            else
+            {
+                hover_command_sent = true;
+                custom_interface_gym::msg::TrajMsg traj_msg;
+                traj_msg.header.stamp = rclcpp::Clock().now();
+                traj_msg.header.frame_id = "ground_link"; 
 
-            // Set position
-            traj_msg.position.x = last_safe_pos[0];
-            traj_msg.position.y = last_safe_pos[1];
-            traj_msg.position.z = last_safe_pos[2];
-            std::cout<<"[ABORT setting] current position: "<<current_pos[0]<<":"<<current_pos[1]<<":"<<current_pos[2]<<std::endl;
+                traj_msg.hover = true;
+                // Publish the message
+                command_pub->publish(traj_msg); // Replace traj_publisher_ with your actual publisher variable
 
-            // Set velocity
-            traj_msg.velocity.x = 0;
-            traj_msg.velocity.y = 0;
-            traj_msg.velocity.z = 0;
-
-            // Set acceleration
-            traj_msg.acceleration.x = 0;
-            traj_msg.acceleration.y = 0;
-            traj_msg.acceleration.z = 0;
-
-            // Set jerk
-            traj_msg.jerk.x = 0;
-            traj_msg.jerk.y = 0;
-            traj_msg.jerk.z = 0;
-
-            // Set yaw 
-            traj_msg.yaw = 0;
-
-            // Publish the message
-            command_pub->publish(traj_msg); // Replace traj_publisher_ with your actual publisher variable
-
+            }
             return;
         }
 
@@ -264,7 +247,6 @@ public:
         Eigen::Vector3d des_vel = _traj.getVel(elapsed);
         Eigen::Vector3d des_Acc = _traj.getAcc(elapsed);
         Eigen::Vector3d des_jerk = _traj.getJer(elapsed);
-        last_safe_pos = des_pos;
         // std::cout<<"elapsed: "<<elapsed<<std::endl;
         custom_interface_gym::msg::TrajMsg traj_msg;
         traj_msg.header.stamp = rclcpp::Clock().now();

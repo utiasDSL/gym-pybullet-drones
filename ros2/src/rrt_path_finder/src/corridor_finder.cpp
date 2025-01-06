@@ -266,16 +266,24 @@ void safeRegionRrtStar::removeInvalid()
 
 }
 
+Eigen::Vector3d safeRegionRrtStar::getRootCoords()
+{
+    return root_node->coord;
+}
+
 void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
 {   
     // std::cout<<"[root debug] seg check 1"<<std::endl;
+    std::cout<<"[root debug] prev root: "<<root_node->coord.transpose()<<std::endl;
+    std::cout<<"[root debug] new root: "<<target_coord.transpose()<<std::endl;
+
     NodePtr lstNode = PathList.front();
     
     if(getDis(lstNode, target_coord) < lstNode->radius){
         global_navi_status = true;
         return;
     }
-    // std::cout<<"[root debug] seg check 2"<<std::endl;
+    std::cout<<"[root debug] seg check 2"<<std::endl;
 
     double cost_reduction = 0;
 
@@ -286,7 +294,7 @@ void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
     {
         nodeptr->best = false;
     }
-    // std::cout<<"[root debug] seg check 3"<<std::endl;
+    std::cout<<"[root debug] seg check 3"<<std::endl;
 
     bool delete_root = false;
     for(auto nodeptr: PathList){
@@ -296,7 +304,7 @@ void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
             nodeptr->best   = true;
             nodeptr->preNode_ptr = NULL;
             cost_reduction = nodeptr->g; 
-            if(root_node->coord == nodeptr->coord || getDis(nodeptr, root_node) < (root_node->radius))
+            if(root_node->coord == nodeptr->coord || getDis(nodeptr, root_node) < (root_node->radius - 0.1))
             {
                 std::cout<<"[possible error resetroot] root from previous iteration selcted for next iteration"<<std::endl;
             }
@@ -310,6 +318,11 @@ void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
             nodeptr->valid = false;
             cutList.push_back(nodeptr);
         }
+    }
+    if(!delete_root)
+    {
+        std::cout<<"############## we are fucked ###############"<<std::endl;
+        std::cout<<"[supposed] new root: "<<target_coord.transpose()<<std::endl;
     }
     // std::cout<<"[root debug] seg check 4"<<std::endl;
 
@@ -460,7 +473,7 @@ inline NodePtr safeRegionRrtStar::genNewNode( Vector3d & pt_sample, NodePtr node
 
 bool safeRegionRrtStar::checkTrajPtCol(Vector3d & pt)
 {     
-    if(radiusSearchCollisionPred(pt) < 0.0 ) return true;
+    if(radiusSearchCollisionPred(pt) < safety_margin ) return true;
     else return false;
 }
 

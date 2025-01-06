@@ -18,3 +18,6 @@ geometry_msgs/Vector3 snap
 
 # Yaw
 float32 yaw
+
+# hover?
+bool hover
