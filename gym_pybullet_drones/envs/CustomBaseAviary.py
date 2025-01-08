@@ -162,10 +162,10 @@ class CustomBaseAviary(gym.Env):
             for i in [p.COV_ENABLE_RGB_BUFFER_PREVIEW, p.COV_ENABLE_DEPTH_BUFFER_PREVIEW,
                       p.COV_ENABLE_SEGMENTATION_MARK_PREVIEW]:
                 p.configureDebugVisualizer(i, 0, physicsClientId=self.CLIENT)
-            p.resetDebugVisualizerCamera(cameraDistance=3,
-                                         cameraYaw=-30,
-                                         cameraPitch=-30,
-                                         cameraTargetPosition=[0, 0, 0],
+            p.resetDebugVisualizerCamera(cameraDistance=4,
+                                         cameraYaw=-90,
+                                         cameraPitch=-70,
+                                         cameraTargetPosition=[0, 2, 0],
                                          physicsClientId=self.CLIENT
                                          )
             ret = p.getDebugVisualizerCamera(physicsClientId=self.CLIENT)
@@ -995,25 +995,38 @@ class CustomBaseAviary(gym.Env):
         #            physicsClientId=self.CLIENT
         #            )
         p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets_obstacles/wall.urdf'),
-                   [4, 4, 0],
+                   [1, 1, 0],
                    p.getQuaternionFromEuler([0, 0, 0]),
                    physicsClientId=self.CLIENT
                    )
+
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets_obstacles/wall.urdf'),
+                   [-1, 2, 0],
+                   p.getQuaternionFromEuler([0, 0, 0]),
+                   physicsClientId=self.CLIENT
+                   )
+
+        p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets_obstacles/wall.urdf'),
+                   [1, 3, 0],
+                   p.getQuaternionFromEuler([0, 0, 0]),
+                   physicsClientId=self.CLIENT
+                   )
+
         p.loadURDF("duck_vhacd.urdf",
                    [-.5, -.5, .05],
                    p.getQuaternionFromEuler([0, 0, 0]),
                    physicsClientId=self.CLIENT
                    )
-        p.loadURDF("cube_no_rotation.urdf",
-                   [-.5, -2.5, .5],
-                   p.getQuaternionFromEuler([0, 0, 0]),
-                   physicsClientId=self.CLIENT
-                   )
-        p.loadURDF("sphere2.urdf",
-                   [0, 2, .5],
-                   p.getQuaternionFromEuler([0, 0, 0]),
-                   physicsClientId=self.CLIENT
-                   )
+        # p.loadURDF("cube_no_rotation.urdf",
+        #            [-.5, -2.5, .5],
+        #            p.getQuaternionFromEuler([0, 0, 0]),
+        #            physicsClientId=self.CLIENT
+        #            )
+        # p.loadURDF("sphere2.urdf",
+        #            [0, 2, .5],
+        #            p.getQuaternionFromEuler([0, 0, 0]),
+        #            physicsClientId=self.CLIENT
+        #            )
 
     ################################################################################
 
