@@ -112,8 +112,8 @@ inline double safeRegionRrtStar::getDis(const Vector3d & p1, const Vector3d & p2
 
 inline double safeRegionRrtStar::radiusSearch( Vector3d & search_Pt)
 {     
-    if(getDis(search_Pt, start_pt) > sample_range + max_radius )
-       return max_radius - search_margin;
+    // if(getDis(search_Pt, start_pt) > sample_range + max_radius )
+    //    return max_radius - search_margin;
 
     pcl::PointXYZ searchPoint;
     searchPoint.x = search_Pt(0);
@@ -130,8 +130,8 @@ inline double safeRegionRrtStar::radiusSearch( Vector3d & search_Pt)
 
 inline double safeRegionRrtStar::radiusSearchCollisionPred( Vector3d & search_Pt)
 {     
-    if(getDis(search_Pt, start_pt) > sample_range + max_radius )
-       return max_radius - search_margin;
+    // if(getDis(search_Pt, start_pt) > sample_range + max_radius )
+    //    return max_radius - search_margin;
 
     pcl::PointXYZ searchPoint;
     searchPoint.x = search_Pt(0);
@@ -297,33 +297,41 @@ void safeRegionRrtStar::resetRoot(Vector3d & target_coord)
     std::cout<<"[root debug] seg check 3"<<std::endl;
 
     bool delete_root = false;
-    for(auto nodeptr: PathList){
-        if( (!delete_root) && (getDis(nodeptr, target_coord) < (nodeptr->radius) ) ){ 
-            // now the committed target is contained in this node's sphere
-            delete_root = true;
-            nodeptr->best   = true;
-            nodeptr->preNode_ptr = NULL;
-            cost_reduction = nodeptr->g; 
-            if(root_node->coord == nodeptr->coord || getDis(nodeptr, root_node) < (root_node->radius - 0.1))
-            {
-                std::cout<<"[possible error resetroot] root from previous iteration selcted for next iteration"<<std::endl;
-            }
-            root_node = nodeptr;
-            std::cout<<"[segmentation error debug] commit target: "<<target_coord.transpose()<<std::endl;
-            std::cout<<"[segmentation error debug] new root node: "<<root_node->coord.transpose()<<std::endl;
-            continue;
-        }
-        if( delete_root ){
-            nodeptr->best  = false;
-            nodeptr->valid = false;
-            cutList.push_back(nodeptr);
-        }
-    }
-    if(!delete_root)
+
+    NodePtr temp_root = NULL;
+    double min_dist = 1000000000.0;
+    int root_index;
+    for(int i=0; i<PathList.size(); i++)
     {
-        std::cout<<"############## we are fucked ###############"<<std::endl;
-        std::cout<<"[supposed] new root: "<<target_coord.transpose()<<std::endl;
+        if(getDis(PathList[i], target_coord) < min_dist)
+        {
+            min_dist = getDis(PathList[i], target_coord);
+            temp_root = PathList[i];
+            root_index = i;
+        }
     }
+    if(root_index < PathList.size() && temp_root != NULL)
+    {
+        std::cout<<"[segmentation error debug] commit target: "<<target_coord.transpose()<<std::endl;
+        PathList[root_index]->best = true;
+        PathList[root_index]->preNode_ptr = NULL;
+        cost_reduction = PathList[root_index]->g;
+        root_node = PathList[root_index];
+        std::cout<<"[segmentation error debug] new root node: "<<root_node->coord.transpose()<<std::endl;
+
+    }
+    else
+    {
+        std::cout<<"########### we are fucked ############"<<std::endl;
+    }
+
+    for(int i=root_index+1; i<PathList.size(); i++)
+    {
+        PathList[i]->best = false;
+        PathList[i]->valid = false;
+        cutList.push_back(PathList[i]);
+    }
+
     // std::cout<<"[root debug] seg check 4"<<std::endl;
 
     solutionUpdate(cost_reduction, target_coord);

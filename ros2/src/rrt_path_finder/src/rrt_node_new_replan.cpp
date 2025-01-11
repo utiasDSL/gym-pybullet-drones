@@ -185,11 +185,13 @@ private:
     float relcostto1 = 0.00001;
     int _max_samples;
     double _commit_distance = 10.0;
-    double max_vel = 0.6;
+    double max_vel = 4.0;
     float threshold = 0.8;
     int trajectory_id = 0;
     int order = 5;
     double convexCoverRange = 1.0;
+    float convexDecompTime = 0.05;
+    float traj_gen_time = 0.1;
     // RRT Path Planner
     safeRegionRrtStar _rrtPathPlanner;
     gcopter::GCOPTER_PolytopeSFC _gCopter;
@@ -265,14 +267,16 @@ private:
         {
             _is_target_arrive = false;
 
-            // std::cout<<"[commit debug] distance to commit target: "<<_rrtPathPlanner.getDis(_start_pos, _commit_target)<<std::endl;
             // std::cout<<"[commit debug] distance to endgoal: "<<_rrtPathPlanner.getDis(_start_pos, _end_pos)<<std::endl;
         }
-        if(_rrtPathPlanner.getDis(_start_pos, _end_pos) < _safety_margin)
+        if(_rrtPathPlanner.getDis(_start_pos, _end_pos) < 1.5)
         {
             _is_complete = true;   
         }
         checkSafeTrajectory();
+        // std::cout<<"[odom callback] distance to commit target: "<<_rrtPathPlanner.getDis(_start_pos, _commit_target)<<std::endl;
+        std::cout<<"[odom callback]  UAV speed: "<<_start_vel.norm()<<std::endl;
+
         // RCLCPP_WARN(this->get_logger(), "Received odometry: position(x: %.2f, y: %.2f, z: %.2f)",
                // _odom.pose.pose.position.x, _odom.pose.pose.position.y, _odom.pose);
     }
@@ -499,13 +503,13 @@ private:
         }
     }
 
-    void traj_generation()
+    void traj_generation(Eigen::Vector3d _traj_start_pos, Eigen::Vector3d _traj_start_vel)
     {
-
+        auto t1 = std::chrono::steady_clock::now();
         // GCopter parameters
         Eigen::Matrix3d iniState;
         Eigen::Matrix3d finState;
-        iniState << _start_pos, _start_vel, Eigen::Vector3d::Zero();
+        iniState << _traj_start_pos, _traj_start_vel, Eigen::Vector3d::Zero();
         finState << _corridor_end_pos, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
         Eigen::VectorXd magnitudeBounds(5);
         Eigen::VectorXd penaltyWeights(5);
@@ -532,7 +536,6 @@ private:
         float smoothingEps = 0.01;
         float relcostto1 = 1e-3;
         _traj.clear();
-        auto t1 = std::chrono::steady_clock::now();
         if (!_gCopter.setup(weightT, iniState, finState, hpolys, INFINITY, smoothingEps, quadratureRes, magnitudeBounds, penaltyWeights, physicalParams))
         {
             std::cout<<"gcopter returned false during setup, traj exist set to false"<<std::endl;
@@ -557,13 +560,10 @@ private:
         }
         if (_traj.getPieceNum() > 0)
         {
-            // trajstamp = std::chrono::steady_clock::now();
-            trajstamp = rclcpp::Clock().now();
             auto t2 = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()*0.001;
-
-            std::cout<<"[GCOPTER Debug] trajectory successfully generated, traj exist set to true. time taken for trajectory generation: "<<elapsed<<std::endl;
-
+            auto elapsed_traj = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()*0.001;
+            traj_gen_time = elapsed_traj;
+            trajstamp = rclcpp::Clock().now();
             _is_traj_exist = true;
             custom_interface_gym::msg::DesTrajectory des_traj_msg;
             des_traj_msg.header.stamp = rclcpp::Clock().now();
@@ -601,7 +601,8 @@ private:
 
     void getCommitTarget()
     {
-        _commit_target = _traj.getPos(_commit_distance/max_vel);
+        // _commit_target = _traj.getPos(_commit_distance/max_vel);
+        _commit_target = _traj.getPos(_traj.getTotalDuration()*0.75);
         // if(_rrtPathPlanner.getDis(_start_pos, _commit_target) > _rrtPathPlanner.getDis(_start_pos, _end_pos)) _commit_target = _end_pos;
         // std::cout<<"[commit target] set to"<<_commit_target[0]<<" : "<<_commit_target[1]<<" : "<<_commit_target[2]<<std::endl;
     }
@@ -625,10 +626,12 @@ private:
             convexCover(corridor_points, convexCoverRange, 1.0e-6);
             shortCut();
             auto t2 = std::chrono::steady_clock::now();
-            auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()*0.001;
-            std::cout<<"[Initial planning] time taken in corridor generation "<<elapsed<<std::endl;
+            auto elapsed_convex = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()*0.001;
 
-            traj_generation();
+            convexDecompTime = elapsed_convex;
+            std::cout<<"[Initial planning] time taken in corridor generation "<<elapsed_convex<<std::endl;
+
+            traj_generation(_start_pos, _start_vel);
             if(_is_traj_exist)
             {
                 getCommitTarget(); // commit_time = 1.0 seconds
@@ -690,7 +693,18 @@ private:
                 auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count()*0.001;
 
                 std::cout<<"[Incremental planner] reached committed target, time taken in corridor generation = "<<elapsed<<std::endl;
-                traj_generation();
+                Eigen::Vector3d new_traj_start_pos = _traj.getPos(_traj.getTotalDuration());
+                Eigen::Vector3d new_traj_start_vel{0.0, 0.0, 0.0};
+                
+                if(1.25*(convexDecompTime + traj_gen_time) < _traj.getTotalDuration()*0.25)
+                {
+                    new_traj_start_pos = _traj.getPos(_traj.getTotalDuration()*0.75 + 1.25*(convexDecompTime + traj_gen_time));
+                    new_traj_start_vel = _traj.getVel(_traj.getTotalDuration()*0.75 + 1.25*(convexDecompTime + traj_gen_time));
+                }
+
+                convexDecompTime = elapsed;
+
+                traj_generation(new_traj_start_pos, new_traj_start_vel);
                 if(_is_traj_exist)
                 {
                     getCommitTarget();
