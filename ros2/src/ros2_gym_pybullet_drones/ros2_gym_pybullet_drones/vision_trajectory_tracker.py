@@ -64,7 +64,7 @@ class AviaryWrapper(Node):
                            aggregate_phy_steps=1,
                            gui=True,
                            record=False,
-                           obstacles=False,
+                           obstacles=True,
                            user_debug_gui=False
                            )
         #### Initialize an action with the RPMs at hover ###########

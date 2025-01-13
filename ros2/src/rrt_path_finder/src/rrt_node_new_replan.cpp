@@ -184,8 +184,8 @@ private:
     float smoothingEps = 0.01;
     float relcostto1 = 0.00001;
     int _max_samples;
-    double _commit_distance = 10.0;
-    double max_vel = 4.0;
+    double _commit_distance = 6.0;
+    double max_vel = 0.7;
     float threshold = 0.8;
     int trajectory_id = 0;
     int order = 5;
@@ -198,13 +198,20 @@ private:
     Trajectory<5> _traj;
     voxel_map::VoxelMap V_map;
     int max_iter=100000;
-    float voxelWidth = 0.3;
-    float dilateRadius = 0.6;
+    float voxelWidth = 0.35;
+    float dilateRadius = 0.7;
     float leafsize = 0.4;
     // Variables for target position, trajectory, odometry, etc.
     Eigen::Vector3d _start_pos, _end_pos, _start_vel, _last_vel{0.0, 0.0, 0.0}, _start_acc;
     Eigen::Vector3d _commit_target{0.0, 0.0, 0.0}, _corridor_end_pos;
 
+
+    // uav physical params
+    float mass = 0.027000;
+    float horizontal_drag_coeff = 0.000001;
+    float vertical_drag_coeff = 0.000001;
+    float t2w = 2.250000;
+    
     Eigen::MatrixXd _path;
     Eigen::VectorXd _radius;
     std::vector<Eigen::Vector3d> _path_vector;
@@ -518,18 +525,18 @@ private:
         magnitudeBounds(0) = max_vel;
         magnitudeBounds(1) = 2.1;
         magnitudeBounds(2) = 1.05;
-        magnitudeBounds(3) = 2.0;
-        magnitudeBounds(4) = 12.0;
+        magnitudeBounds(3) = 0.5*mass*9.8;
+        magnitudeBounds(4) = t2w*mass*9.8;
         penaltyWeights(0) = chiVec[0];
         penaltyWeights(1) = chiVec[1];
         penaltyWeights(2) = chiVec[2];
         penaltyWeights(3) = chiVec[3];
         penaltyWeights(4) = chiVec[4];
-        physicalParams(0) = 0.61;
+        physicalParams(0) = mass;
         physicalParams(1) = 9.8;
-        physicalParams(2) = 0.70;
-        physicalParams(3) = 0.80;
-        physicalParams(4) = 0.01;
+        physicalParams(2) = horizontal_drag_coeff;
+        physicalParams(3) = vertical_drag_coeff;
+        physicalParams(4) = vertical_drag_coeff/10;
         physicalParams(5) = 0.0001;
         int quadratureRes = 16;
         float weightT = 20.0;
@@ -593,19 +600,14 @@ private:
                 }
             }
             des_traj_msg.debug_info = "trajectory_id: "+std::to_string(trajectory_id-1);
-            _rrt_des_traj_pub->publish(des_traj_msg);            
+            _rrt_des_traj_pub->publish(des_traj_msg);
+            _commit_target = _traj.getPos(_traj.getTotalDuration()*0.5);
+            
             // std::cout<<std::endl;
             return;
         }
     }
 
-    void getCommitTarget()
-    {
-        // _commit_target = _traj.getPos(_commit_distance/max_vel);
-        _commit_target = _traj.getPos(_traj.getTotalDuration()*0.75);
-        // if(_rrtPathPlanner.getDis(_start_pos, _commit_target) > _rrtPathPlanner.getDis(_start_pos, _end_pos)) _commit_target = _end_pos;
-        // std::cout<<"[commit target] set to"<<_commit_target[0]<<" : "<<_commit_target[1]<<" : "<<_commit_target[2]<<std::endl;
-    }
 
     // Function to plan the initial trajectory using RRT
     void planInitialTraj()
@@ -634,7 +636,6 @@ private:
             traj_generation(_start_pos, _start_vel);
             if(_is_traj_exist)
             {
-                getCommitTarget(); // commit_time = 1.0 seconds
                 _rrtPathPlanner.resetRoot(_commit_target);
                 visualizePolytope(hpolys);
                 visualizeTrajectory(_traj);
@@ -696,10 +697,10 @@ private:
                 Eigen::Vector3d new_traj_start_pos = _traj.getPos(_traj.getTotalDuration());
                 Eigen::Vector3d new_traj_start_vel{0.0, 0.0, 0.0};
                 
-                if(1.25*(convexDecompTime + traj_gen_time) < _traj.getTotalDuration()*0.25)
+                if(1.25*(convexDecompTime + traj_gen_time) < _traj.getTotalDuration()*0.5)
                 {
-                    new_traj_start_pos = _traj.getPos(_traj.getTotalDuration()*0.75 + 1.25*(convexDecompTime + traj_gen_time));
-                    new_traj_start_vel = _traj.getVel(_traj.getTotalDuration()*0.75 + 1.25*(convexDecompTime + traj_gen_time));
+                    new_traj_start_pos = _traj.getPos(_traj.getTotalDuration()*0.5 + 1.25*(convexDecompTime + traj_gen_time));
+                    new_traj_start_vel = _traj.getVel(_traj.getTotalDuration()*0.5 + 1.25*(convexDecompTime + traj_gen_time));
                 }
 
                 convexDecompTime = elapsed;
@@ -707,7 +708,6 @@ private:
                 traj_generation(new_traj_start_pos, new_traj_start_vel);
                 if(_is_traj_exist)
                 {
-                    getCommitTarget();
                     _rrtPathPlanner.resetRoot(_commit_target);
                 }
                 else
