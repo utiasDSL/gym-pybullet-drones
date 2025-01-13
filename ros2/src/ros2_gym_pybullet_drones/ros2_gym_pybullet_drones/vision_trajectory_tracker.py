@@ -107,7 +107,9 @@ class AviaryWrapper(Node):
         # Call a timer to publish the marker array at a lower rate than the main loop
         self.trajectory_timer = self.create_timer(1.0, self.publish_trajectory)
         self.is_goal_sent = False
+        self.is_hover_pos_set = False
         self.des_pos = self.INIT_XYZS.flatten()
+        self.hover_pos = self.INIT_XYZS.flatten()
         self.des_vel = np.zeros(3)
 
     
@@ -309,14 +311,21 @@ class AviaryWrapper(Node):
     def get_trajectory_callback(self, msg):
         if(msg.hover):
             # self.des_pos = self.pos
-            self.des_vel = np.array([[0.0, 0.0, 0.0]]).flatten()
+            # self.des_vel = np.array([[0.0, 0.0, 0.0]]).flatten()
+            if not self.is_hover_pos_set:
+                self.hover_pos = self.pos + self.vel*0.01
+                print('hover position set')
+                print('current_pos: ',self.pos, 'hover_pos: ',self.hover_pos)
+                self.is_hover_pos_set = True
+            
+            self.des_pos = self.hover_pos
             return
         else:
+            self.is_hover_pos_set = False
             self.des_pos = np.array([[msg.position.x, msg.position.y, msg.position.z]]).flatten()
-            print('des pos: ',self.des_pos)
-            print('current pos: ',self.pos)
             self.des_vel = np.array([[msg.velocity.x, msg.velocity.y, msg.velocity.z]]).flatten()
             self.des_yaw = 0.0
+            
 
 
 ############################################################

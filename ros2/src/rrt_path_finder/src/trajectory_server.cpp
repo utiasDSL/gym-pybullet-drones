@@ -276,9 +276,7 @@ public:
         Eigen::Vector3d direction = des_pos - current_pos;    // Vector from start_pos to des_pos
         double yaw = std::atan2(direction.y(), direction.x()); // Yaw in radians
         traj_msg.yaw = 0.0;
-        std::cout<<"[Traj follow] current position: "<<current_pos[0]<<":"<<current_pos[1]<<":"<<current_pos[2]<<std::endl;
-        std::cout<<"[Traj follow] command position: "<<des_pos[0]<<":"<<des_pos[1]<<":"<<des_pos[2]<<std::endl;
-        std::cout<<"[Traj follow] command yaw: "<<yaw<<std::endl;
+        std::cout<<"[Traj follow] error in position: "<<(current_pos - des_pos).norm()<<std::endl;
 
         // Publish the message
         command_pub->publish(traj_msg); // Replace traj_publisher_ with your actual publisher variable
