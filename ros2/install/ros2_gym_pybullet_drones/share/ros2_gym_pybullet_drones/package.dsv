@@ -1,0 +1,6 @@
+source;share/ros2_gym_pybullet_drones/hook/pythonpath.ps1
+source;share/ros2_gym_pybullet_drones/hook/pythonpath.dsv
+source;share/ros2_gym_pybullet_drones/hook/pythonpath.sh
+source;share/ros2_gym_pybullet_drones/hook/ament_prefix_path.ps1
+source;share/ros2_gym_pybullet_drones/hook/ament_prefix_path.dsv
+source;share/ros2_gym_pybullet_drones/hook/ament_prefix_path.sh

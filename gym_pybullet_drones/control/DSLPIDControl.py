@@ -58,9 +58,19 @@ class DSLPIDControl(BaseControl):
         self.m = m
         self.prev_vel = np.array([0, 0, 0])
         if self.DRONE_MODEL == DroneModel.CF2X:
-            self.MIXER_MATRIX = np.array([ [.5, -.5,  -1], [.5, .5, 1], [-.5,  .5,  -1], [-.5, -.5, 1] ])
+            self.MIXER_MATRIX = np.array([ 
+                                    [-.5, -.5, -1],
+                                    [-.5,  .5,  1],
+                                    [.5, .5, -1],
+                                    [.5, -.5,  1]
+                                    ])
         elif self.DRONE_MODEL == DroneModel.CF2P:
-            self.MIXER_MATRIX = np.array([ [0, -1,  -1], [+1, 0, 1], [0,  1,  -1], [-1, 0, 1] ])
+            self.MIXER_MATRIX = np.array([
+                                    [0, -1,  -1],
+                                    [+1, 0, 1],
+                                    [0,  1,  -1],
+                                    [-1, 0, 1]
+                                    ])
         self.reset()
 
     ################################################################################

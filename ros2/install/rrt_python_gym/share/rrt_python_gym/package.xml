@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>rrt_python_gym</name>  <!-- Make sure this matches your package -->
+  <version>0.0.0</version>
+  <description>ROS2 Point Cloud Planner Node using RRT Path Finding</description>
+
+  <maintainer email="41.astiksrivastava@gmail.com">Astik Srivastava</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- ROS2 Dependencies -->
+  <depend>rclpy</depend>
+  <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_sensor_msgs</depend>
+  <depend>tf2_py</depend> <!-- Added tf2_py for Python tf2 bindings -->
+
+  <!-- External Python Dependencies -->
+  <exec_depend>python3-numpy</exec_depend>
+  <exec_depend>python3-scipy</exec_depend>
+  <exec_depend>python3-pandas</exec_depend>
+  <exec_depend>python3-matplotlib</exec_depend>
+
+  <!-- Build dependencies -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Additional information for users -->
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

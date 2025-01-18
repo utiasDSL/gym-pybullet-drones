@@ -1,0 +1,21 @@
+// generated from rosidl_adapter/resource/srv.idl.em
+// with input from custom_interface_gym/srv/UavControl.srv
+// generated code does not contain a copyright notice
+
+
+module custom_interface_gym {
+  module srv {
+    typedef float float__4[4];
+    struct UavControl_Request {
+      @verbatim (language="comment", text=
+        "Control inputs: [roll, pitch, yaw, throttle]")
+      float__4 request;
+    };
+    typedef float float__7[7];
+    struct UavControl_Response {
+      @verbatim (language="comment", text=
+        "UAV state: [x, y, z, qx, qy, qz, qw]")
+      float__7 response;
+    };
+  };
+};

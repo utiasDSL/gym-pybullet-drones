@@ -1,0 +1,6 @@
+source;share/rrt_python_gym/hook/pythonpath.ps1
+source;share/rrt_python_gym/hook/pythonpath.dsv
+source;share/rrt_python_gym/hook/pythonpath.sh
+source;share/rrt_python_gym/hook/ament_prefix_path.ps1
+source;share/rrt_python_gym/hook/ament_prefix_path.dsv
+source;share/rrt_python_gym/hook/ament_prefix_path.sh

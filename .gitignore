@@ -4,13 +4,14 @@ examples/debug.py
 examples/test.py
 
 # NumPy saves and videos
-files/logs/*.npy
-files/videos/*.mp4
 results/
 tmp/
 
 # Learning results
 experiments/learning/results/save-*
+
+# Betaflight
+betaflight_sitl/
 
 # macOS users
 .DS_Store

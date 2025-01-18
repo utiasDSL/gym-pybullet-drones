@@ -1,5 +1,5 @@
 import numpy as np
-from gym import spaces
+from gymnasium import spaces
 
 from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
@@ -16,8 +16,8 @@ class CtrlAviary(BaseAviary):
                  initial_xyzs=None,
                  initial_rpys=None,
                  physics: Physics=Physics.PYB,
-                 freq: int=240,
-                 aggregate_phy_steps: int=1,
+                 pyb_freq: int = 240,
+                 ctrl_freq: int = 240,
                  gui=False,
                  record=False,
                  obstacles=False,
@@ -40,14 +40,14 @@ class CtrlAviary(BaseAviary):
             (NUM_DRONES, 3)-shaped array containing the initial orientations of the drones (in radians).
         physics : Physics, optional
             The desired implementation of PyBullet physics/custom dynamics.
-        freq : int, optional
-            The frequency (Hz) at which the physics engine steps.
-        aggregate_phy_steps : int, optional
-            The number of physics steps within one call to `BaseAviary.step()`.
+        pyb_freq : int, optional
+            The frequency at which PyBullet steps (a multiple of ctrl_freq).
+        ctrl_freq : int, optional
+            The frequency at which the environment steps.
         gui : bool, optional
             Whether to use PyBullet's GUI.
         record : bool, optional
-            Whether to save a video of the simulation in folder `files/videos/`.
+            Whether to save a video of the simulation.
         obstacles : bool, optional
             Whether to add obstacles to the simulation.
         user_debug_gui : bool, optional
@@ -60,8 +60,8 @@ class CtrlAviary(BaseAviary):
                          initial_xyzs=initial_xyzs,
                          initial_rpys=initial_rpys,
                          physics=physics,
-                         freq=freq,
-                         aggregate_phy_steps=aggregate_phy_steps,
+                         pyb_freq=pyb_freq,
+                         ctrl_freq=ctrl_freq,
                          gui=gui,
                          record=record,
                          obstacles=obstacles,
@@ -76,18 +76,14 @@ class CtrlAviary(BaseAviary):
 
         Returns
         -------
-        dict[str, ndarray]
-            A Dict of Box(4,) with NUM_DRONES entries,
-            indexed by drone Id in string format.
+        spaces.Box
+            An ndarray of shape (NUM_DRONES, 4) for the commanded RPMs.
 
         """
         #### Action vector ######## P0            P1            P2            P3
-        act_lower_bound = np.array([0.,           0.,           0.,           0.])
-        act_upper_bound = np.array([self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM])
-        return spaces.Dict({str(i): spaces.Box(low=act_lower_bound,
-                                               high=act_upper_bound,
-                                               dtype=np.float32
-                                               ) for i in range(self.NUM_DRONES)})
+        act_lower_bound = np.array([[0.,           0.,           0.,           0.] for i in range(self.NUM_DRONES)])
+        act_upper_bound = np.array([[self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM] for i in range(self.NUM_DRONES)])
+        return spaces.Box(low=act_lower_bound, high=act_upper_bound, dtype=np.float32)
     
     ################################################################################
 
@@ -96,38 +92,29 @@ class CtrlAviary(BaseAviary):
 
         Returns
         -------
-        dict[str, dict[str, ndarray]]
-            A Dict with NUM_DRONES entries indexed by Id in string format,
-            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+        spaces.Box
+            The observation space, i.e., an ndarray of shape (NUM_DRONES, 20).
 
         """
         #### Observation vector ### X        Y        Z       Q1   Q2   Q3   Q4   R       P       Y       VX       VY       VZ       WX       WY       WZ       P0            P1            P2            P3
-        obs_lower_bound = np.array([-np.inf, -np.inf, 0.,     -1., -1., -1., -1., -np.pi, -np.pi, -np.pi, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,           0.,           0.,           0.])
-        obs_upper_bound = np.array([np.inf,  np.inf,  np.inf, 1.,  1.,  1.,  1.,  np.pi,  np.pi,  np.pi,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM])
-        return spaces.Dict({str(i): spaces.Dict({"state": spaces.Box(low=obs_lower_bound,
-                                                                     high=obs_upper_bound,
-                                                                     dtype=np.float32
-                                                                     ),
-                                                 "neighbors": spaces.MultiBinary(self.NUM_DRONES)
-                                                 }) for i in range(self.NUM_DRONES)})
+        obs_lower_bound = np.array([[-np.inf, -np.inf, 0.,     -1., -1., -1., -1., -np.pi, -np.pi, -np.pi, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, -np.inf, 0.,           0.,           0.,           0.] for i in range(self.NUM_DRONES)])
+        obs_upper_bound = np.array([[np.inf,  np.inf,  np.inf, 1.,  1.,  1.,  1.,  np.pi,  np.pi,  np.pi,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  np.inf,  self.MAX_RPM, self.MAX_RPM, self.MAX_RPM, self.MAX_RPM] for i in range(self.NUM_DRONES)])
+        return spaces.Box(low=obs_lower_bound, high=obs_upper_bound, dtype=np.float32)
 
     ################################################################################
 
     def _computeObs(self):
         """Returns the current observation of the environment.
 
-        For the value of key "state", see the implementation of `_getDroneStateVector()`,
-        the value of key "neighbors" is the drone's own row of the adjacency matrix.
+        For the value of the state, see the implementation of `_getDroneStateVector()`.
 
         Returns
         -------
-        dict[str, dict[str, ndarray]]
-            A Dict with NUM_DRONES entries indexed by Id in string format,
-            each a Dict in the form {Box(20,), MultiBinary(NUM_DRONES)}.
+        ndarray
+            An ndarray of shape (NUM_DRONES, 20) with the state of each drone.
 
         """
-        adjacency_mat = self._getAdjacencyMatrix()
-        return {str(i): {"state": self._getDroneStateVector(i), "neighbors": adjacency_mat[i, :]} for i in range(self.NUM_DRONES)}
+        return np.array([self._getDroneStateVector(i) for i in range(self.NUM_DRONES)])
 
     ################################################################################
 
@@ -140,7 +127,7 @@ class CtrlAviary(BaseAviary):
 
         Parameters
         ----------
-        action : dict[str, ndarray]
+        action : ndarray
             The (unbounded) input action for each drone, to be translated into feasible RPMs.
 
         Returns
@@ -150,10 +137,7 @@ class CtrlAviary(BaseAviary):
             commanded to the 4 motors of each drone.
 
         """
-        clipped_action = np.zeros((self.NUM_DRONES, 4))
-        for k, v in action.items():
-            clipped_action[int(k), :] = np.clip(np.array(v), 0, self.MAX_RPM)
-        return clipped_action
+        return np.array([np.clip(action[i, :], 0, self.MAX_RPM) for i in range(self.NUM_DRONES)])
 
     ################################################################################
 
@@ -172,8 +156,23 @@ class CtrlAviary(BaseAviary):
 
     ################################################################################
     
-    def _computeDone(self):
-        """Computes the current done value(s).
+    def _computeTerminated(self):
+        """Computes the current terminated value(s).
+
+        Unused as this subclass is not meant for reinforcement learning.
+
+        Returns
+        -------
+        bool
+            Dummy value.
+
+        """
+        return False
+    
+    ################################################################################
+    
+    def _computeTruncated(self):
+        """Computes the current truncated value(s).
 
         Unused as this subclass is not meant for reinforcement learning.
 

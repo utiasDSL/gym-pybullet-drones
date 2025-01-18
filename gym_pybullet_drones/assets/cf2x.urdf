@@ -14,7 +14,7 @@
 
     <!-- links>
       <carlos url="https://arxiv.org/pdf/1608.05786.pdf" />
-      <julian url="http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf" />
+      <julian url="https://www.research-collection.ethz.ch/handle/20.500.11850/214143" />
       <mit url="http://groups.csail.mit.edu/robotics-center/public_papers/Landry15.pdf" />
     </links -->
 
@@ -39,7 +39,7 @@
 
   <link name="prop0_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="0.028 0.028 0"/>
+      <origin rpy="0 0 0" xyz="0.028 -0.028 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
@@ -51,7 +51,7 @@
 
   <link name="prop1_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-0.028 0.028 0"/>
+      <origin rpy="0 0 0" xyz="-0.028 -0.028 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
@@ -63,7 +63,7 @@
 
   <link name="prop2_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="-0.028 -0.028 0"/>
+      <origin rpy="0 0 0" xyz="-0.028 0.028 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>
@@ -75,7 +75,7 @@
 
   <link name="prop3_link">
     <inertial>
-      <origin rpy="0 0 0" xyz="0.028 -0.028 0"/>
+      <origin rpy="0 0 0" xyz="0.028 0.028 0"/>
       <mass value="0"/>
       <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0"/>
     </inertial>

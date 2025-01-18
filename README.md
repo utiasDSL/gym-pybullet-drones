@@ -8,182 +8,88 @@ Please `git pull` frequently and feel free to open new [issues](https://github.c
 
 # gym-pybullet-drones
 
-[Simple](https://en.wikipedia.org/wiki/KISS_principle) OpenAI [Gym environment](https://gym.openai.com/envs/#classic_control) based on [PyBullet](https://github.com/bulletphysics/bullet3) for multi-agent reinforcement learning with quadrotors
+This is a minimalist refactoring of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium), [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327), and SITL [`betaflight`](https://github.com/betaflight/betaflight)/[`crazyflie-firmware`](https://github.com/bitcraze/crazyflie-firmware/).
 
+<<<<<<< HEAD
 - If you are interested in safe control and the companion code of ["Safe Learning in Robotics"](https://www.annualreviews.org/doi/abs/10.1146/annurev-control-042920-020211) and ["Safe Control Gym"](https://ieeexplore.ieee.org/abstract/document/9849119/), check out [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym)
+=======
+> **NOTE**: if you prefer to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]` after cloning the repo, and refer to the corresponding `README.md`'s.
+>>>>>>> 50d1a958def27121bcf63f3cc753049fee8e71e5
 
-<img src="files/readme_images/helix.gif" alt="formation flight" width="350"> <img src="files/readme_images/helix.png" alt="control info" width="450">
+<img src="gym_pybullet_drones/assets/helix.gif" alt="formation flight" width="325"> <img src="gym_pybullet_drones/assets/helix.png" alt="control info" width="425">
 
-- The default `DroneModel.CF2X` dynamics are based on [Bitcraze's Crazyflie 2.x nano-quadrotor](https://www.bitcraze.io/documentation/hardware/crazyflie_2_1/crazyflie_2_1-datasheet.pdf)
+## Installation
 
-- Everything after a `$` is entered on a terminal, everything after `>>>` is passed to a Python interpreter
+Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 14.1.
 
-- To better understand how the PyBullet back-end works, refer to its [Quickstart Guide](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.2ye70wns7io3)
+```sh
+git clone https://github.com/utiasDSL/gym-pybullet-drones.git
+cd gym-pybullet-drones/
 
-- Suggestions and corrections are very welcome in the form of [issues](https://github.com/utiasDSL/gym-pybullet-drones/issues) and [pull requests](https://github.com/utiasDSL/gym-pybullet-drones/pulls), respectively
+conda create -n drones python=3.10
+conda activate drones
 
-> ## Why Reinforcement Learning of Quadrotor Control
+pip3 install --upgrade pip
+pip3 install -e . # if needed, `sudo apt install build-essential` to install `gcc` and build `pybullet`
 
-> A lot of recent RL research for continuous actions has focused on [policy gradient algorithms and actor-critic architectures](https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html). A quadrotor is (i) an easy-to-understand mobile robot platform whose (ii) control can be framed as a continuous states and actions problem but, beyond 1-dimension, (iii) it adds the complexity that many candidate policies lead to unrecoverable states, violating the assumption of the existence of a stationary state distribution on the entailed Markov chain.
-
-## Overview
-
-|                                   | `gym-pybullet-drones` | [AirSim](https://github.com/microsoft/AirSim) | [Flightmare](https://github.com/uzh-rpg/flightmare) |
-|---------------------------------: | :-------------------: | :-------------------------------------------: | :-------------------------------------------------: |
-|                         *Physics* | PyBullet              | FastPhysicsEngine/PhysX                       | *Ad hoc*/Gazebo                                     |
-|                       *Rendering* | PyBullet              | Unreal Engine 4                               | Unity                                               |
-|                        *Language* | Python                | C++/C#                                        | C++/Python                                          |  
-|           *RGB/Depth/Segm. views* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|             *Multi-agent control* | **Yes**               | **Yes**                                       | **Yes**                                             |
-|                   *ROS interface* | ROS2/Python           | ROS/C++                                       | ROS/C++                                             |
-|            *Hardware-In-The-Loop* | No                    | **Yes**                                       | No                                                  |
-|         *Fully steppable physics* | **Yes**               | No                                            | **Yes**                                             |
-|             *Aerodynamic effects* | Drag, downwash, ground| Drag                                          | Drag                                                |
-|          *OpenAI [`Gym`](https://github.com/openai/gym/blob/master/gym/core.py) interface* | **Yes** | **[Yes](https://github.com/microsoft/AirSim/pull/3215)** | **Yes**                                             |
-| *RLlib [`MultiAgentEnv`](https://github.com/ray-project/ray/blob/master/rllib/env/multi_agent_env.py) interface* | **Yes** | No | No                           |
-
-## Performance
-
-Simulation **speed-up with respect to the wall-clock** when using
-
-- *240Hz* (in simulation clock) PyBullet physics for **EACH** drone
-- **AND** *48Hz* (in simulation clock) PID control of **EACH** drone
-- **AND** nearby *obstacles* **AND** a mildly complex *background* (see GIFs)
-- **AND** *24FPS* (in sim. clock), *64x48 pixel* capture of *6 channels* (RGBA, depth, segm.) on **EACH** drone
-
-|                                   | Lenovo P52 (i7-8850H/Quadro P2000) | 2020 MacBook Pro (i7-1068NG7) |
-| --------------------------------: | :--------------------------------: | :---------------------------: |
-| Rendering                         | OpenGL                             | CPU-based TinyRenderer        | 
-| Single drone, **no** vision       | 15.5x                              | 16.8x                         |
-| Single drone **with** vision      | 10.8x                              | 1.3x                          |
-| Multi-drone (10), **no** vision   | 2.1x                               | 2.3x                          |
-| Multi-drone (5) **with** vision   | 2.5x                               | 0.2x                          |
-| 80 drones in 4 env, **no** vision | 0.8x                               | 0.95x                         |
-
-> **Note: use `gui=False` and `aggregate_phy_steps=int(SIM_HZ/CTRL_HZ)` for better performance**
-
-> While it is easy to—consciously or not—[cherry pick](https://en.wikipedia.org/wiki/Cherry_picking) statistics, \~5kHz PyBullet physics (CPU-only) is faster than [AirSim (1kHz)](https://arxiv.org/pdf/1705.05065.pdf) and more accurate than [Flightmare's 35kHz simple single quadcopter dynamics](https://arxiv.org/pdf/2009.00563.pdf)
-
-> Exploiting parallel computation—i.e., multiple (80) drones in multiple (4) environments (see script [`parallelism.sh`](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/performance/parallelism.sh))—achieves PyBullet physics updates at \~20kHz 
-
-> Multi-agent 6-ch. video capture at \~750kB/s with CPU rendering (`(64*48)*(4+4+2)*24*5*0.2`) is comparable to [Flightmare's 240 RGB frames/s](https://arxiv.org/pdf/2009.00563.pdf) (`(32*32)*3*240`)—although in more complex [Unity environments](https://arxiv.org/pdf/2009.00563.pdf)—and up to an order of magnitude faster on Ubuntu, with OpenGL rendering
-
-## Requirements and Installation
-
-The repo was written using *Python 3.7* with [`conda`](https://github.com/JacopoPan/a-minimalist-guide#install-conda) on *macOS 10.15* and tested with *Python 3.8* on *macOS 12*, *Ubuntu 20.04*
-
-### On *macOS* and *Ubuntu*
-
-Major dependencies are [`gym`](https://gym.openai.com/docs/),  [`pybullet`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#), 
-[`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), and [`rllib`](https://docs.ray.io/en/master/rllib.html)
-
-Video recording requires to have [`ffmpeg`](https://ffmpeg.org) installed, on *macOS*
-
-```bash
-$ brew install ffmpeg
 ```
 
-On *Ubuntu*
+## Use
 
-```bash
-$ sudo apt install ffmpeg
+### PID control examples
+
+```sh
+cd gym_pybullet_drones/examples/
+python3 pid.py # position and velocity reference
+python3 pid_velocity.py # desired velocity reference
 ```
 
-<!--
-*macOS* with Apple Silicon (like the M1 Air) can only install grpc with a minimum Python version of 3.9 and these two environment variables set:
+### Downwash effect example
 
-```bash
-$ export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
-$ export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
-```
--->
-
-The repo is structured as a [Gym Environment](https://github.com/openai/gym/blob/master/docs/creating-environments.md)
-and can be installed with `pip install --editable`
-
-```bash
-$ conda create -n drones python=3.8
-$ conda activate drones
-$ pip3 install --upgrade pip
-$ git clone https://github.com/utiasDSL/gym-pybullet-drones.git
-$ cd gym-pybullet-drones/
-$ pip3 install -e .
-```
-<!--
-On Ubuntu and with a GPU available, optionally uncomment [line 203](https://github.com/utiasDSL/gym-pybullet-drones/blob/fab619b119e7deb6079a292a04be04d37249d08c/gym_pybullet_drones/envs/BaseAviary.py#L203) of `BaseAviary.py` to use the [`eglPlugin`](https://docs.google.com/document/d/10sXEhzFRSnvFcl3XxNGhnD4N2SedqwdAvK3dsihxVUA/edit#heading=h.778da594xyte)
--->
-
-### On *Windows*
-
-Check these step-by-step [instructions](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/assignments#on-windows) written by Dr. Karime Pereida for *Windows 10*
-
-### On *Colab*
-
-Try the example scritps:
-[`fly.py`](https://colab.research.google.com/drive/1hJlJElUuveD4U_GDGuNsX8NqDcl3jUGz?usp=sharing),
-[`learn.py`](https://colab.research.google.com/drive/1lLGAET4xx-7gGznanfGe0bQy4H7O9ScL?usp=sharing),
-[`downwash.py`](https://colab.research.google.com/drive/1Oj_RzJ5M_g4KrKFRJvcAhh62GJo78m9F?usp=sharing),
-[`compare.py`](https://colab.research.google.com/drive/1RzY6jG5F7ddknuyssI486TdMnOfq9Cjf?usp=sharing),
-[`ground_effect`](https://colab.research.google.com/drive/1BpLqPXnfk6lKiQ6YSNW74UQJ2MB4KwYJ?usp=sharing), and [`velocity`](https://colab.research.google.com/drive/1KN-fgwF3qjOCSIexHyQKBZ-rirtpt6ng?usp=sharing) contributed by [Spencer Teetaert](https://github.com/spencerteetaert)
-
-## Examples
-
-There are 2 basic template scripts in [`gym_pybullet_drones/examples/`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/examples): `fly.py` and `learn.py`
-
-- `fly.py` [[try it on Colab](https://colab.research.google.com/drive/1hJlJElUuveD4U_GDGuNsX8NqDcl3jUGz?usp=sharing)] runs an independent flight **using PID control** implemented in class [`DSLPIDControl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/control/DSLPIDControl.py)
-
-```bash
-$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
-$ python3 fly.py                             # Try 'python3 fly.py -h' to show the script's customizable parameters
+```sh
+cd gym_pybullet_drones/examples/
+python3 downwash.py
 ```
 
-> Tip: use the GUI's sliders and button `Use GUI RPM` to override the control with interactive inputs
+### Reinforcement learning examples (SB3's PPO)
 
-<img src="files/readme_images/wp.gif" alt="sparse way points flight" width="350"> <img src="files/readme_images/wp.png" alt="control info" width="450">
-
-<img src="files/readme_images/crash.gif" alt="yaw saturation" width="350"> <img src="files/readme_images/crash.png" alt="control info" width="450">
-
-- `learn.py` [[try it on Colab](https://colab.research.google.com/drive/1lLGAET4xx-7gGznanfGe0bQy4H7O9ScL?usp=sharing)] is an **RL example** to take-off using `stable-baselines3`'s [A2C](https://stable-baselines3.readthedocs.io/en/master/modules/a2c.html) or `rllib`'s [PPO](https://docs.ray.io/en/master/rllib-algorithms.html#ppo)
-
-```bash
-$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
-$ python3 learn.py                           # Try 'python3 learn.py -h' to show the script's customizable parameters
+```sh
+cd gym_pybullet_drones/examples/
+python learn.py # task: single drone hover at z == 1.0
+python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
 ```
 
-<img src="files/readme_images/learn1.gif" alt="learning 1" width="400"> <img src="files/readme_images/learn2.gif" alt="learning 2" width="400">
-<img src="files/readme_images/learn3.gif" alt="learning 3" width="400"> <img src="files/readme_images/learn4.gif" alt="learning 4" width="400">
+<img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="375"> <img src="gym_pybullet_drones/assets/marl.gif" alt="marl example" width="375">
 
-Other scripts in folder [`gym_pybullet_drones/examples/`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/gym_pybullet_drones/examples) are
+### utiasDSL `pycffirmware` Python Bindings example (multiplatform, single-drone)
 
-- `downwash.py` [[try it on Colab](https://colab.research.google.com/drive/1Oj_RzJ5M_g4KrKFRJvcAhh62GJo78m9F?usp=sharing)] is a flight script with only 2 drones, to test the downwash model
+Install [`pycffirmware`](https://github.com/utiasDSL/pycffirmware?tab=readme-ov-file#installation) for Ubuntu, macOS, or Windows
 
-```bash
-$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
-$ python3 downwash.py                        # Try 'python3 downwash.py -h' to show the script's customizable parameters
+```sh
+cd gym_pybullet_drones/examples/
+python3 cff-dsl.py
 ```
 
-<img src="files/readme_images/downwash.gif" alt="downwash example" width="350"> <img src="files/readme_images/downwash.png" alt="control info" width="450">
+### Betaflight SITL example (Ubuntu only)
 
-- `compare.py` [[try it on Colab](https://colab.research.google.com/drive/1RzY6jG5F7ddknuyssI486TdMnOfq9Cjf?usp=sharing)] which replays and compare to a trace saved in [`example_trace.pkl`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/files/example_trace.pkl)
-
-```bash
-$ cd gym-pybullet-drones/gym_pybullet_drones/examples/
-$ python3 compare.py                         # Try 'python3 compare.py -h' to show the script's customizable parameters
+```sh
+git clone https://github.com/betaflight/betaflight # use the `master` branch at the time of writing (future release 4.5)
+cd betaflight/ 
+make arm_sdk_install # if needed, `apt install curl``
+make TARGET=SITL # comment out line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
+cp ~/gym-pybullet-drones/gym_pybullet_drones/assets/eeprom.bin ~/betaflight/ # assuming both gym-pybullet-drones/ and betaflight/ were cloned in ~/
+betaflight/obj/main/betaflight_SITL.elf
 ```
 
-<img src="files/readme_images/trace_comparison.gif" alt="pid flight on sine trajectroy" width="350"> <img src="files/readme_images/trace_comparison.png" alt="control info" width="450">
+In another terminal, run the example
 
-## Experiments
-
-Folder [`experiments/learning`](https://github.com/utiasDSL/gym-pybullet-drones/tree/master/experiments/learning) contains scripts with template learning pipelines
-
-For single agent RL problems, using [`stable-baselines3`](https://stable-baselines3.readthedocs.io/en/master/guide/quickstart.html), run the [training script](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/learning/singleagent.py) as
-
-```bash
-$ cd gym-pybullet-drones/experiments/learning/
-$ python3 singleagent.py --env <env> --algo <alg> --obs <ObservationType> --act <ActionType> --cpu <cpu_num>
+```sh
+conda activate drones
+cd gym_pybullet_drones/examples/
+python3 beta.py --num_drones 1 # check the steps in the file's docstrings to use multiple drones
 ```
 
+<<<<<<< HEAD
 Run the [replay script](https://github.com/utiasDSL/gym-pybullet-drones/blob/master/experiments/learning/test_singleagent.py) to visualize the best trained agent(s) as
 
 ```bash
@@ -423,9 +329,11 @@ $ ros2 run ros2_gym_pybullet_drones random_control
 
 - Test and update ROS 2 instrucitons for [Humble Hawksbill](https://docs.ros.org/en/foxy/Releases/Release-Humble-Hawksbill.html)
 
+=======
+>>>>>>> 50d1a958def27121bcf63f3cc753049fee8e71e5
 ## Citation
 
-If you wish, please cite our work [(link)](https://arxiv.org/abs/2103.02142) as
+If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142) ([and original codebase](https://github.com/utiasDSL/gym-pybullet-drones/tree/paper)) as
 
 ```bibtex
 @INPROCEEDINGS{panerati2021learning,
@@ -435,29 +343,42 @@ If you wish, please cite our work [(link)](https://arxiv.org/abs/2103.02142) as
       year={2021},
       volume={},
       number={},
-      pages={},
-      doi={}
+      pages={7512-7519},
+      doi={10.1109/IROS51168.2021.9635857}
 }
 ```
 
 ## References
 
+- Carlos Luis and Jeroome Le Ny (2016) [*Design of a Trajectory Tracking Controller for a Nanoquadcopter*](https://arxiv.org/pdf/1608.05786.pdf)
 - Nathan Michael, Daniel Mellinger, Quentin Lindsey, Vijay Kumar (2010) [*The GRASP Multiple Micro UAV Testbed*](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.169.1687&rep=rep1&type=pdf)
 - Benoit Landry (2014) [*Planning and Control for Quadrotor Flight through Cluttered Environments*](http://groups.csail.mit.edu/robotics-center/public_papers/Landry15)
-- Julian Forster (2015) [*System Identification of the Crazyflie 2.0 Nano Quadrocopter*](http://mikehamer.info/assets/papers/Crazyflie%20Modelling.pdf)
-- Carlos Luis and Jeroome Le Ny (2016) [*Design of a Trajectory Tracking Controller for a Nanoquadcopter*](https://arxiv.org/pdf/1608.05786.pdf)
-- Shital Shah, Debadeepta Dey, Chris Lovett, and Ashish Kapoor (2017) [*AirSim: High-Fidelity Visual and Physical Simulation for Autonomous Vehicles*](https://arxiv.org/pdf/1705.05065.pdf)
-- Eric Liang, Richard Liaw, Philipp Moritz, Robert Nishihara, Roy Fox, Ken Goldberg, Joseph E. Gonzalez, Michael I. Jordan, and Ion Stoica (2018) [*RLlib: Abstractions for Distributed Reinforcement Learning*](https://arxiv.org/pdf/1712.09381.pdf)
+- Julian Forster (2015) [*System Identification of the Crazyflie 2.0 Nano Quadrocopter*](https://www.research-collection.ethz.ch/handle/20.500.11850/214143)
 - Antonin Raffin, Ashley Hill, Maximilian Ernestus, Adam Gleave, Anssi Kanervisto, and Noah Dormann (2019) [*Stable Baselines3*](https://github.com/DLR-RM/stable-baselines3)
 - Guanya Shi, Xichen Shi, Michael O’Connell, Rose Yu, Kamyar Azizzadenesheli, Animashree Anandkumar, Yisong Yue, and Soon-Jo Chung (2019)
 [*Neural Lander: Stable Drone Landing Control Using Learned Dynamics*](https://arxiv.org/pdf/1811.08027.pdf)
-- Mikayel Samvelyan, Tabish Rashid, Christian Schroeder de Witt, Gregory Farquhar, Nantas Nardelli, Tim G. J. Rudner, Chia-Man Hung, Philip H. S. Torr, Jakob Foerster, and Shimon Whiteson (2019) [*The StarCraft Multi-Agent Challenge*](https://arxiv.org/pdf/1902.04043.pdf)
 - C. Karen Liu and Dan Negrut (2020) [*The Role of Physics-Based Simulators in Robotics*](https://www.annualreviews.org/doi/pdf/10.1146/annurev-control-072220-093055)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
 
-Bonus GIF for scrolling this far
+## Core Team WIP
 
-<img src="files/readme_images/2020.gif" alt="formation flight" width="350"> <img src="files/readme_images/2020.png" alt="control info" width="450">
+- [ ] Multi-drone `crazyflie-firmware` SITL support (@spencerteetaert, @JacopoPan)
+- [ ] Use SITL services with steppable simulation (@JacopoPan)
+
+## Desired Contributions/PRs
+
+- [ ] Add motor delay, advanced ESC modeling by implementing a buffer in `BaseAviary._dynamics()`
+- [ ] Replace `rpy` with quaternions (and `ang_vel` with body rates) by editing `BaseAviary._updateAndStoreKinematicInformation()`, `BaseAviary._getDroneStateVector()`, and the `.computeObs()` methods of relevant subclasses
+
+## Troubleshooting
+
+- On Ubuntu, with an NVIDIA card, if you receive a "Failed to create and OpenGL context" message, launch `nvidia-settings` and under "PRIME Profiles" select "NVIDIA (Performance Mode)", reboot and try again.
+
+Run all tests from the top folder with
+
+```sh
+pytest tests/
+```
 
 -----
-> University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab) / [Mitacs](https://www.mitacs.ca/en/projects/multi-agent-reinforcement-learning-decentralized-uavugv-cooperative-exploration)
+> University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)

@@ -1,0 +1,64 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from custom_interface_gym/msg/DesTrajectory.msg
+// generated code does not contain a copyright notice
+
+#include "std_msgs/msg/Header.idl"
+
+module custom_interface_gym {
+  module msg {
+    module DesTrajectory_Constants {
+      @verbatim (language="comment", text=
+        "Action command for the trajectory server." "\n"        "Add a new trajectory")
+      const uint32 ACTION_ADD = 1;
+      @verbatim (language="comment", text=
+        "Abort the current trajectory")
+      const uint32 ACTION_ABORT = 2;
+      @verbatim (language="comment", text=
+        "Warning: trajectory start issue")
+      const uint32 ACTION_WARN_START = 3;
+      @verbatim (language="comment", text=
+        "Warning: trajectory final issue")
+      const uint32 ACTION_WARN_FINAL = 4;
+      @verbatim (language="comment", text=
+        "Warning: impossible trajectory")
+      const uint32 ACTION_WARN_IMPOSSIBLE = 5;
+    };
+    @verbatim (language="comment", text=
+      "Trajectory.msg")
+    struct DesTrajectory {
+      std_msgs::msg::Header header;
+
+      @verbatim (language="comment", text=
+        "Trajectory ID, starts from \"1\".")
+      uint32 trajectory_id;
+
+      @verbatim (language="comment", text=
+        "Action type")
+      uint32 action;
+
+      @verbatim (language="comment", text=
+        "Trajectory order and segments." "\n"
+        "Polynomial order of the trajectory (D)")
+      uint32 num_order;
+
+      @verbatim (language="comment", text=
+        "Number of trajectory segments")
+      uint32 num_segment;
+
+      @verbatim (language="comment", text=
+        "Array of flattened matrices (as a single sequence of float64)" "\n"
+        "Flattened sequence of matrix values")
+      sequence<double> matrices_flat;
+
+      @verbatim (language="comment", text=
+        "Duration for each segment" "\n"
+        "Duration for each segment")
+      sequence<double> duration_vector;
+
+      @verbatim (language="comment", text=
+        "Debugging information" "\n"
+        "Optional debug info (e.g., for warnings or issues)")
+      string debug_info;
+    };
+  };
+};

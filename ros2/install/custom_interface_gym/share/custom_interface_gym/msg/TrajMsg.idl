@@ -1,0 +1,45 @@
+// generated from rosidl_adapter/resource/msg.idl.em
+// with input from custom_interface_gym/msg/TrajMsg.msg
+// generated code does not contain a copyright notice
+
+#include "geometry_msgs/msg/Point.idl"
+#include "geometry_msgs/msg/Vector3.idl"
+#include "std_msgs/msg/Header.idl"
+
+module custom_interface_gym {
+  module msg {
+    @verbatim (language="comment", text=
+      "TrajMsg.msg")
+    struct TrajMsg {
+      std_msgs::msg::Header header;
+
+      @verbatim (language="comment", text=
+        "Position (x, y, z)")
+      geometry_msgs::msg::Point position;
+
+      @verbatim (language="comment", text=
+        "Velocity (x, y, z)")
+      geometry_msgs::msg::Vector3 velocity;
+
+      @verbatim (language="comment", text=
+        "Acceleration (x, y, z)")
+      geometry_msgs::msg::Vector3 acceleration;
+
+      @verbatim (language="comment", text=
+        "Jerk (x, y, z)")
+      geometry_msgs::msg::Vector3 jerk;
+
+      @verbatim (language="comment", text=
+        "Snap (x, y, z)")
+      geometry_msgs::msg::Vector3 snap;
+
+      @verbatim (language="comment", text=
+        "Yaw")
+      float yaw;
+
+      @verbatim (language="comment", text=
+        "hover?")
+      boolean hover;
+    };
+  };
+};

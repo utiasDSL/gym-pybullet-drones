@@ -1,0 +1,8 @@
+msg/DesTrajectory.idl
+msg/DesTrajectory.msg
+msg/TrajMsg.idl
+msg/TrajMsg.msg
+srv/UavControl.idl
+srv/UavControl.srv
+srv/UavControl_Request.msg
+srv/UavControl_Response.msg
