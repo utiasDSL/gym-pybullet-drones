@@ -64,11 +64,10 @@ public:
         this->declare_parameter("x_h", 70.0);
         this->declare_parameter("y_l", -70.0);
         this->declare_parameter("y_h", 70.0);
-        this->declare_parameter("z_l", 0.5);
+        this->declare_parameter("z_l", -0.0);
         this->declare_parameter("z_l2", -3.0);
 
-        this->declare_parameter("z_h", 2.5);
-        this->declare_parameter("z_h2", 3.5);
+        this->declare_parameter("z_h", 3.5);
 
         this->declare_parameter("target_x", 0.0);
         this->declare_parameter("target_y", 0.0);
@@ -96,10 +95,8 @@ public:
         _y_h = this->get_parameter("y_h").as_double();
         _z_l = this->get_parameter("z_l").as_double();
         _z_h = this->get_parameter("z_h").as_double();
-        _z_h2 = this->get_parameter("z_h2").as_double();
-
         _z_l2 = this->get_parameter("z_l2").as_double();
-        Eigen::Vector3i xyz((_x_h-_x_l)/voxelWidth, (_y_h-_y_l)/voxelWidth, (_z_h2-_z_l2)/voxelWidth);
+        Eigen::Vector3i xyz((_x_h-_x_l)/voxelWidth, (_y_h-_y_l)/voxelWidth, (_z_h-_z_l2)/voxelWidth);
         Eigen::Vector3d offset(_x_l, _y_l, _z_l2);
         V_map = voxel_map::VoxelMap(xyz, offset, voxelWidth);
         // Set parameters for RRT planner once
@@ -173,7 +170,7 @@ private:
     // Path Planning Parameters
     double _planning_rate, _safety_margin, _search_margin, _max_radius, _sample_range, _replan_distance;
     double _refine_portion, _sample_portion, _goal_portion, _path_find_limit, _stop_time, _time_commit;
-    double _x_l, _x_h, _y_l, _y_h, _z_l, _z_h, _z_l2, _z_h2;  // For random map simulation: map boundary
+    double _x_l, _x_h, _y_l, _y_h, _z_l, _z_h, _z_l2;  // For random map simulation: map boundary
     
     std::vector<Eigen::MatrixX4d> hpolys; // Matrix to store hyperplanes
     std::vector<Eigen::Vector3d> pcd_points; // Datastructure to hold pointcloud points in a vector
@@ -187,34 +184,27 @@ private:
     float smoothingEps = 0.01;
     float relcostto1 = 0.00001;
     int _max_samples;
-    double _commit_distance = 6.0;
-    double max_vel = 1.2;
+    double _commit_distance = 10.0;
+    double max_vel = 0.7;
     float threshold = 0.8;
     int trajectory_id = 0;
-    int order = 7;
+    int order = 5;
     double convexCoverRange = 1.0;
     float convexDecompTime = 0.05;
     float traj_gen_time = 0.1;
     // RRT Path Planner
     safeRegionRrtStar _rrtPathPlanner;
     gcopter::GCOPTER_PolytopeSFC _gCopter;
-    Trajectory<7> _traj;
+    Trajectory<5> _traj;
     voxel_map::VoxelMap V_map;
     int max_iter=100000;
-    float voxelWidth = 0.35;
-    float dilateRadius = 0.7;
+    float voxelWidth = 0.3;
+    float dilateRadius = 0.6;
     float leafsize = 0.4;
     // Variables for target position, trajectory, odometry, etc.
     Eigen::Vector3d _start_pos, _end_pos, _start_vel, _last_vel{0.0, 0.0, 0.0}, _start_acc;
     Eigen::Vector3d _commit_target{0.0, 0.0, 0.0}, _corridor_end_pos;
 
-
-    // uav physical params
-    float mass = 0.027000;
-    float horizontal_drag_coeff = 0.000001;
-    float vertical_drag_coeff = 0.000001;
-    float t2w = 2.250000;
-    
     Eigen::MatrixXd _path;
     Eigen::VectorXd _radius;
     std::vector<Eigen::Vector3d> _path_vector;
@@ -262,10 +252,6 @@ private:
         _start_vel[0] = _odom.twist.twist.linear.x;
         _start_vel[1] = _odom.twist.twist.linear.y;
         _start_vel[2] = _odom.twist.twist.linear.z;
-
-        auto current_time = rclcpp::Time(_odom.header.stamp.sec, _odom.header.stamp.nanosec);
-        auto del_t = (current_time - odom_time).seconds();
-        _start_acc = (_start_vel - _last_vel)/(del_t);
         // odom_time = std::chrono::steady_clock::time_point(
         //     std::chrono::seconds(_odom.header.stamp.sec) +
         //     std::chrono::nanoseconds(_odom.header.stamp.nanosec)
@@ -416,7 +402,7 @@ private:
                         const double eps)
     {
         Eigen::Vector3d lowCorner(_x_l, _y_l, _z_l2);
-        Eigen::Vector3d highCorner(_x_h, _y_h, _z_h2);
+        Eigen::Vector3d highCorner(_x_h, _y_h, _z_h);
         hpolys.clear();
         int n = int(path.size());
         Eigen::Matrix<double, 6, 4> bd = Eigen::Matrix<double, 6, 4>::Zero();
@@ -517,14 +503,14 @@ private:
         }
     }
 
-    void traj_generation(Eigen::Vector3d _traj_start_pos, Eigen::Vector3d _traj_start_vel, Eigen::Vector3d _traj_start_acc, Eigen::Vector3d _traj_start_jer)
+    void traj_generation(Eigen::Vector3d _traj_start_pos, Eigen::Vector3d _traj_start_vel)
     {
         auto t1 = std::chrono::steady_clock::now();
         // GCopter parameters
-        Eigen::Matrix<double, 3, 4> iniState;
-        Eigen::Matrix<double, 3, 4> finState;
-        iniState << _traj_start_pos, _traj_start_vel, _traj_start_acc, _traj_start_jer;
-        finState << _corridor_end_pos, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
+        Eigen::Matrix3d iniState;
+        Eigen::Matrix3d finState;
+        iniState << _traj_start_pos, _traj_start_vel, Eigen::Vector3d::Zero();
+        finState << _corridor_end_pos, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero();
         Eigen::VectorXd magnitudeBounds(5);
         Eigen::VectorXd penaltyWeights(5);
         Eigen::VectorXd physicalParams(6);
@@ -532,18 +518,18 @@ private:
         magnitudeBounds(0) = max_vel;
         magnitudeBounds(1) = 2.1;
         magnitudeBounds(2) = 1.05;
-        magnitudeBounds(3) = 0.5*mass*9.8;
-        magnitudeBounds(4) = t2w*mass*9.8;
+        magnitudeBounds(3) = 2.0;
+        magnitudeBounds(4) = 12.0;
         penaltyWeights(0) = chiVec[0];
         penaltyWeights(1) = chiVec[1];
         penaltyWeights(2) = chiVec[2];
         penaltyWeights(3) = chiVec[3];
         penaltyWeights(4) = chiVec[4];
-        physicalParams(0) = mass;
+        physicalParams(0) = 0.61;
         physicalParams(1) = 9.8;
-        physicalParams(2) = horizontal_drag_coeff;
-        physicalParams(3) = vertical_drag_coeff;
-        physicalParams(4) = vertical_drag_coeff/10;
+        physicalParams(2) = 0.70;
+        physicalParams(3) = 0.80;
+        physicalParams(4) = 0.01;
         physicalParams(5) = 0.0001;
         int quadratureRes = 16;
         float weightT = 20.0;
@@ -607,14 +593,19 @@ private:
                 }
             }
             des_traj_msg.debug_info = "trajectory_id: "+std::to_string(trajectory_id-1);
-            _rrt_des_traj_pub->publish(des_traj_msg);
-            _commit_target = _traj.getPos(_traj.getTotalDuration()*0.5);
-            
+            _rrt_des_traj_pub->publish(des_traj_msg);            
             // std::cout<<std::endl;
             return;
         }
     }
 
+    void getCommitTarget()
+    {
+        // _commit_target = _traj.getPos(_commit_distance/max_vel);
+        _commit_target = _traj.getPos(_traj.getTotalDuration()*0.75);
+        // if(_rrtPathPlanner.getDis(_start_pos, _commit_target) > _rrtPathPlanner.getDis(_start_pos, _end_pos)) _commit_target = _end_pos;
+        // std::cout<<"[commit target] set to"<<_commit_target[0]<<" : "<<_commit_target[1]<<" : "<<_commit_target[2]<<std::endl;
+    }
 
     // Function to plan the initial trajectory using RRT
     void planInitialTraj()
@@ -640,9 +631,10 @@ private:
             convexDecompTime = elapsed_convex;
             std::cout<<"[Initial planning] time taken in corridor generation "<<elapsed_convex<<std::endl;
 
-            traj_generation(_start_pos, _start_vel, Eigen::Vector3d::Zero(), Eigen::Vector3d::Zero());
+            traj_generation(_start_pos, _start_vel);
             if(_is_traj_exist)
             {
+                getCommitTarget(); // commit_time = 1.0 seconds
                 _rrtPathPlanner.resetRoot(_commit_target);
                 visualizePolytope(hpolys);
                 visualizeTrajectory(_traj);
@@ -703,23 +695,19 @@ private:
                 std::cout<<"[Incremental planner] reached committed target, time taken in corridor generation = "<<elapsed<<std::endl;
                 Eigen::Vector3d new_traj_start_pos = _traj.getPos(_traj.getTotalDuration());
                 Eigen::Vector3d new_traj_start_vel{0.0, 0.0, 0.0};
-                Eigen::Vector3d new_traj_start_acc{0.0, 0.0, 0.0};
-                Eigen::Vector3d new_traj_start_jer{0.0, 0.0, 0.0};
-
                 
-                if(1.25*(convexDecompTime + traj_gen_time) < _traj.getTotalDuration()*0.5)
+                if(1.25*(convexDecompTime + traj_gen_time) < _traj.getTotalDuration()*0.25)
                 {
-                    new_traj_start_pos = _traj.getPos(_traj.getTotalDuration()*0.5 + 1.25*(convexDecompTime + traj_gen_time));
-                    new_traj_start_vel = _traj.getVel(_traj.getTotalDuration()*0.5 + 1.25*(convexDecompTime + traj_gen_time));
-                    new_traj_start_acc = _traj.getAcc(_traj.getTotalDuration()*0.5 + 1.25*(convexDecompTime + traj_gen_time));
-                    new_traj_start_jer = _traj.getJer(_traj.getTotalDuration()*0.5 + 1.25*(convexDecompTime + traj_gen_time));
+                    new_traj_start_pos = _traj.getPos(_traj.getTotalDuration()*0.75 + 1.25*(convexDecompTime + traj_gen_time));
+                    new_traj_start_vel = _traj.getVel(_traj.getTotalDuration()*0.75 + 1.25*(convexDecompTime + traj_gen_time));
                 }
 
                 convexDecompTime = elapsed;
 
-                traj_generation(new_traj_start_pos, new_traj_start_vel, new_traj_start_acc, new_traj_start_jer);
+                traj_generation(new_traj_start_pos, new_traj_start_vel);
                 if(_is_traj_exist)
                 {
+                    getCommitTarget();
                     _rrtPathPlanner.resetRoot(_commit_target);
                 }
                 else
@@ -812,7 +800,7 @@ private:
         if(!_is_traj_exist) return false;
         double T = max(0.0, delta_t);
         // std::cout<<"[safety debug] checking safe trajectory, delta t = "<<T<<std::endl;
-        for(double t = T; t < T+1.5; t += 0.01)
+        for(double t = T; t < T+1.0; t += 0.01)
         {
             auto pos_t = _traj.getPos(t);
             if(_rrtPathPlanner.checkTrajPtCol(pos_t))
@@ -925,7 +913,7 @@ private:
         _vis_edge_pub->publish(edges_marker);  // Publisher for the edges
     }
 
-    void visualizeTrajectory(const Trajectory<7> &traj)
+    void visualizeTrajectory(const Trajectory<5> &traj)
     {
         sensor_msgs::msg::PointCloud2 trajectory_cloud;
         pcl::PointCloud<pcl::PointXYZRGBA>::Ptr traj_points(new pcl::PointCloud<pcl::PointXYZRGBA>());
@@ -1132,5 +1120,3 @@ int main(int argc, char **argv)
     rclcpp::shutdown();
     return 0;
 }
-
-

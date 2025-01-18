@@ -48,12 +48,12 @@ namespace gcopter
         typedef std::vector<PolyhedronH> PolyhedraH;
 
     private:
-        minco::MINCO_S3NU minco;
+        minco::MINCO_S4NU minco;
         flatness::FlatnessMap flatmap;
 
         double rho;
-        Eigen::Matrix3d headPVA;
-        Eigen::Matrix3d tailPVA;
+        Eigen::Matrix<double, 3, 4> headPVA;
+        Eigen::Matrix<double, 3, 4> tailPVA;
 
         PolyhedraV vPolytopes;
         PolyhedraH hPolytopes;
@@ -726,8 +726,8 @@ namespace gcopter
         // physicalParams = [vehicle_mass, gravitational_acceleration, horitonral_drag_coeff,
         //                   vertical_drag_coeff, parasitic_drag_coeff, speed_smooth_factor]^T
         inline bool setup(const double &timeWeight,
-                          const Eigen::Matrix3d &initialPVA,
-                          const Eigen::Matrix3d &terminalPVA,
+                          const Eigen::Matrix<double, 3, 4> &initialPVA,
+                          const Eigen::Matrix<double, 3, 4> &terminalPVA,
                           const PolyhedraH &safeCorridor,
                           const double &lengthPerPiece,
                           const double &smoothingFactor,
@@ -806,7 +806,7 @@ namespace gcopter
             return true;
         }
 
-        inline double optimize(Trajectory<5> &traj,
+        inline double optimize(Trajectory<7> &traj,
                                const double &relCostTol)
         {
             Eigen::VectorXd x(temporalDim + spatialDim);
