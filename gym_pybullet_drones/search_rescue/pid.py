@@ -76,27 +76,6 @@ def run(
         TARGET_POS[i, :] = R*np.cos((i/NUM_WP)*(2*np.pi)+np.pi/2)+INIT_XYZS[0, 0], R*np.sin((i/NUM_WP)*(2*np.pi)+np.pi/2)-R+INIT_XYZS[0, 1], 0
     wp_counters = np.array([int((i*NUM_WP/6)%NUM_WP) for i in range(num_drones)])
 
-    #### Debug trajectory ######################################
-    #### Uncomment alt. target_pos in .computeControlFromState()
-    # INIT_XYZS = np.array([[.3 * i, 0, .1] for i in range(num_drones)])
-    # INIT_RPYS = np.array([[0, 0,  i * (np.pi/3)/num_drones] for i in range(num_drones)])
-    # NUM_WP = control_freq_hz*15
-    # TARGET_POS = np.zeros((NUM_WP,3))
-    # for i in range(NUM_WP):
-    #     if i < NUM_WP/6:
-    #         TARGET_POS[i, :] = (i*6)/NUM_WP, 0, 0.5*(i*6)/NUM_WP
-    #     elif i < 2 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 1 - ((i-NUM_WP/6)*6)/NUM_WP, 0, 0.5 - 0.5*((i-NUM_WP/6)*6)/NUM_WP
-    #     elif i < 3 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 0, ((i-2*NUM_WP/6)*6)/NUM_WP, 0.5*((i-2*NUM_WP/6)*6)/NUM_WP
-    #     elif i < 4 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 0, 1 - ((i-3*NUM_WP/6)*6)/NUM_WP, 0.5 - 0.5*((i-3*NUM_WP/6)*6)/NUM_WP
-    #     elif i < 5 * NUM_WP/6:
-    #         TARGET_POS[i, :] = ((i-4*NUM_WP/6)*6)/NUM_WP, ((i-4*NUM_WP/6)*6)/NUM_WP, 0.5*((i-4*NUM_WP/6)*6)/NUM_WP
-    #     elif i < 6 * NUM_WP/6:
-    #         TARGET_POS[i, :] = 1 - ((i-5*NUM_WP/6)*6)/NUM_WP, 1 - ((i-5*NUM_WP/6)*6)/NUM_WP, 0.5 - 0.5*((i-5*NUM_WP/6)*6)/NUM_WP
-    # wp_counters = np.array([0 for i in range(num_drones)])
-
     #### Create the environment ################################
     env = CtrlAviary(drone_model=drone,
                         num_drones=num_drones,
@@ -160,7 +139,7 @@ def run(
                        )
 
         #### Printout ##############################################
-        env.render()
+        g#env.render()
 
         #### Sync the simulation ###################################
         if gui:

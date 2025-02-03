@@ -73,69 +73,84 @@ def initialize_trajectory(control_frequency_hz, trajectory_period, initial_posit
     return target_positions, waypoint_counters
 
 def run(config: SimulationConfig):
+    # Initialize the initial positions (XYZ) and orientations (RPY) of the drones
     INIT_XYZS, INIT_RPYS = initialize_positions(config.num_drones)
+    
+    # Initialize the trajectory and waypoint counters for each drone
     TARGET_POS, wp_counters = initialize_trajectory(config.control_freq_hz, TRAJECT_PERIOD, INIT_XYZS, config.num_drones)
     
+    # Create the environment (simulation) with the specified configuration
     env = CtrlAviary(
         drone_model=config.drone, num_drones=config.num_drones, initial_xyzs=INIT_XYZS,
         initial_rpys=INIT_RPYS, physics=config.physics, neighbourhood_radius=10,
         pyb_freq=config.simulation_freq_hz, ctrl_freq=config.control_freq_hz, gui=config.gui,
         record=config.record_video, obstacles=config.obstacles, user_debug_gui=config.user_debug_gui
     )
-    PYB_CLIENT = env.getPyBulletClient()
-    #logger = Logger(config.control_freq_hz, config.num_drones, config.output_folder, config.colab)
     
+    # Get the PyBullet client from the environment
+    PYB_CLIENT = env.getPyBulletClient()
+    
+    # Initialize the drone controllers (one per drone)
     controllers = [DSLPIDControl(config.drone) for _ in range(config.num_drones)]
+    
+    # Initialize the action array (for controlling the drones)
     action = np.zeros((config.num_drones, 4))
     
-    # draw aditional objects
-    #utils.drawSquare(p)
-    #grid_map = GridMap(4, 4, p)
-    #grid_map.draw_map()
-    
+    # Start the simulation time
     START = time.time()
+    
+    # Run the simulation for the specified duration (converted to timesteps)
     for i in range(int(config.duration_sec * env.CTRL_FREQ)):
+        # Perform a step in the environment using the current action
         obs, _, _, _, _ = env.step(action)
         
+        # Loop through each drone to compute control inputs based on its state and target
         for j in range(config.num_drones):
             action[j, :], _, _ = controllers[j].computeControlFromState(
                 control_timestep=env.CTRL_TIMESTEP, state=obs[j],
-                target_pos=np.hstack(TARGET_POS[wp_counters[j], :3]),
-                target_rpy=INIT_RPYS[j, :]
+                target_pos=np.hstack(TARGET_POS[wp_counters[j], :3]),  # Target position for the drone
+                target_rpy=INIT_RPYS[j, :]  # Target orientation for the drone
             )
         
+        # Update the waypoint counter, looping back if necessary
         wp_counters = (wp_counters + 1) % len(TARGET_POS)
-        #for j in range(config.num_drones):
-        #    logger.log(j, i / env.CTRL_FREQ, obs[j],
-        #               np.hstack([TARGET_POS[wp_counters[j], :2], INIT_XYZS[j, 2], INIT_RPYS[j, :], np.zeros(6)]))
         
-        # Get mouse click position (returns x, y screen coordinates)
+        # Get mouse events (e.g., click positions) from the GUI
         mouse_events = p.getMouseEvents()
 
+        # Handle mouse events for actions like creating new drones
         for event in mouse_events:
             event_type, mouse_x, mouse_y, button_index, button_state = event
 
-            if event_type == 2 and button_index == 0:  # Click detected and Left button
-                # Get the mouse position (in screen coordinates)
+            if event_type == 2 and button_index == 0:  # Left click detected
+                # Print the mouse click position in screen coordinates
                 print(f"Mouse click position (screen) -> : ({mouse_x}, {mouse_y})")
 
-            if event_type == 2 and button_index == 2:  # Click detected and Right button
-                # creates a new drone with right click
+            if event_type == 2 and button_index == 2:  # Right click detected
+                # Create a new drone with right click
                 controller_new = DSLPIDControl(config.drone)
-                TARGET_POS_NEW = np.array([0, 0, 2])
-                p.loadURDF("cf2x.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
+                TARGET_POS_NEW = np.array([0, 0, 2])  # Set the target position for the new drone
+                # Load a new drone in the simulation with some randomness for position and orientation
+                p.loadURDF("cf2x.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3],
+                           p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), 
+                           physicsClientId=PYB_CLIENT)
+                # Compute the control for the new drone
                 action[j, :], _, _ = controllers[j].computeControlFromState(
                     control_timestep=env.CTRL_TIMESTEP, state=obs[j],
-                    target_pos=TARGET_POS_NEW,
-                    target_rpy=INIT_RPYS[1, :]
-                    )
-        # prints info drones in terminal
+                    target_pos=TARGET_POS_NEW,  # Set the target position for the new drone
+                    target_rpy=INIT_RPYS[1, :]  # Set the target orientation for the new drone
+                )
+        
+        # Optional: render the environment (for visual debugging)
         #env.render()
 
+        # Sync the simulation with the GUI, if GUI mode is enabled
         if config.gui:
             sync(i, START, env.CTRL_TIMESTEP)
     
+    # Close the environment after the simulation finishes
     env.close()
+
     
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary and DSLPIDControl')
