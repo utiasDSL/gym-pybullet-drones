@@ -3,7 +3,7 @@ import argparse
 import numpy as np
 import pybullet as p
 from dataclasses import dataclass
-
+import random
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
@@ -117,8 +117,18 @@ def run(config: SimulationConfig):
 
             if event_type == 2 and button_index == 0:  # Click detected and Left button
                 # Get the mouse position (in screen coordinates)
-                print(f"Mouse click position (screen)->: ({mouse_x}, {mouse_y})")
-            
+                print(f"Mouse click position (screen) -> : ({mouse_x}, {mouse_y})")
+
+            if event_type == 2 and button_index == 2:  # Click detected and Right button
+                # creates a new drone with right click
+                controller_new = DSLPIDControl(config.drone)
+                TARGET_POS_NEW = np.array([0, 0, 2])
+                p.loadURDF("cf2x.urdf", [0+random.gauss(0, 0.3),-0.5+random.gauss(0, 0.3),3], p.getQuaternionFromEuler([random.randint(0,360),random.randint(0,360),random.randint(0,360)]), physicsClientId=PYB_CLIENT)
+                action[j, :], _, _ = controllers[j].computeControlFromState(
+                    control_timestep=env.CTRL_TIMESTEP, state=obs[j],
+                    target_pos=TARGET_POS_NEW,
+                    target_rpy=INIT_RPYS[1, :]
+                    )
         # prints info drones in terminal
         #env.render()
 
@@ -130,7 +140,7 @@ def run(config: SimulationConfig):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Helix flight script using CtrlAviary and DSLPIDControl')
     parser.add_argument('--drone', type=str, default="cf2x")
-    parser.add_argument('--num_drones', type=int, default=4)
+    parser.add_argument('--num_drones', type=int, default=2)
     parser.add_argument('--physics', type=str, default="pyb_gnd_drag_dw")
     parser.add_argument('--gui', type=str2bool, default=True)
     parser.add_argument('--record_video', type=str2bool, default=False)
