@@ -57,7 +57,6 @@ class DroneSimulation:
             
             self.wp_counters = np.array([int((i * NUM_WP / 6) % NUM_WP) for i in range(self.num_drones)])
         
-
     def init_trajectory(self):
         PERIOD = 10
         NUM_WP = self.control_freq_hz * PERIOD
