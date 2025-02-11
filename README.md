@@ -61,8 +61,9 @@ python3 cff-dsl.py
 ### Betaflight SITL example (Ubuntu only)
 
 ```sh
-git clone https://github.com/betaflight/betaflight # use the `master` branch at the time of writing (future release 4.5)
-cd betaflight/ 
+git clone https://github.com/betaflight/betaflight 
+cd betaflight/
+git checkout cafe727 # `master` branch head at the time of writing (future release 4.5)
 make arm_sdk_install # if needed, `apt install curl``
 make TARGET=SITL # comment out line: https://github.com/betaflight/betaflight/blob/master/src/main/main.c#L52
 cp ~/gym-pybullet-drones/gym_pybullet_drones/assets/eeprom.bin ~/betaflight/ # assuming both gym-pybullet-drones/ and betaflight/ were cloned in ~/
