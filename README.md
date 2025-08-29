@@ -45,7 +45,7 @@ python3 downwash.py
 cd gym_pybullet_drones/examples/
 python learn.py # task: single drone hover at z == 1.0
 python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
-python play.py --model_path results/FOLDER_NAME/best_model.zip # play and visualize learned policy after training
+LATEST_MODEL=$(ls -t results | head -n 1) && python play.py --model_path "results/${LATEST_MODEL}/best_model.zip" # play and visualize the most recent learned policy after training
 ```
 
 <img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="375"> <img src="gym_pybullet_drones/assets/marl.gif" alt="marl example" width="375">
