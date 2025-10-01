@@ -11,7 +11,8 @@ import control as ct
 
 
 class MRAC(BaseControl):
-    """Model Reference Adaptive Controller class for Crazyflies."""
+    """Model Reference Adaptive Controller class for Crazyflies.
+        Original Implementation at: https://github.com/caoty777/Quadcoptor-Adaptive-Flight-Control"""
 
     def __init__(self, drone_model: DroneModel, g: float = 9.8):
         super().__init__(drone_model=drone_model, g=g)
