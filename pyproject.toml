@@ -16,9 +16,9 @@ numpy = "^1.24"
 scipy = "^1.10"
 transforms3d = "^0.4.1"
 matplotlib = "^3.7"
-pytest = "^7.3"
+pytest = ">=7.3, <9.0"
 pybullet = "^3.2.5"
-gymnasium = "^0.28"
+gymnasium = "~=0.28"
 stable-baselines3 = "^2.0.0"
 
 [tool.poetry.dev-dependencies]
