@@ -64,7 +64,7 @@ def run(
     #### Obtain the PyBullet Client ID from the environment ####
     PYB_CLIENT = env.getPyBulletClient()
 
-    #### Initialize the logger ################################# TODO Make Logger update in realtime
+    #### Initialize the logger #################################
     logger = Logger(logging_freq_hz=control_freq_hz,
                     num_drones=num_drones,
                     output_folder=output_folder,
