@@ -1,18 +1,19 @@
 import math
 import numpy as np
 import pybullet as p
+import control as ct
 from scipy.spatial.transform import Rotation
 from scipy.linalg import solve_lyapunov
 
 from gym_pybullet_drones.control.BaseControl import BaseControl
 from gym_pybullet_drones.utils.enums import DroneModel
 
-import control as ct
-
 
 class MRAC(BaseControl):
     """Model Reference Adaptive Controller class for Crazyflies.
-        Original Implementation at: https://github.com/caoty777/Quadcoptor-Adaptive-Flight-Control"""
+
+        Based on the implementation of https://github.com/caoty777/Quadcoptor-Adaptive-Flight-Control
+    """
 
     def __init__(self, drone_model: DroneModel, g: float = 9.8):
         super().__init__(drone_model=drone_model, g=g)
@@ -53,11 +54,9 @@ class MRAC(BaseControl):
         self.reset()
 
     def _compute_K(self, psi=0):
-        '''
-        x = x, y, z, phi, theta, psi, x_dot, y_dot, z_dot, p, q, r
-        u = [w1^2, w2^2, w3^2, w4^2] or [thrust, tx, ty, tz]'''
-
-
+        """x = x, y, z, phi, theta, psi, x_dot, y_dot, z_dot, p, q, r
+            u = [w1^2, w2^2, w3^2, w4^2] or [thrust, tx, ty, tz]
+        """
         g = self.g
         m = self.mass
         Ixx = self.Ixx
@@ -71,23 +70,19 @@ class MRAC(BaseControl):
                           [0, 0, 0, -g*np.cos(psi), g*np.sin(psi), 0]])
         a_sub = np.vstack((a_sub, np.zeros((4, 6))))
         
-
         A = np.block([[np.zeros((6,6)), np.eye(6)],
                       [a_sub, np.zeros((6,6))]])
-        
         
         b_sub = np.array([[1/m, 0, 0, 0],
                           [0, 1/Ixx, 0, 0],
                           [0, 0, 1/Iyy, 0],
-                          [0, 0, 0, 1/Izz]]) 
-        
+                          [0, 0, 0, 1/Izz]])    
         # b_sub = np.array([[Ka/m, Ka/m, Ka/m, Ka/m],
         #             [0, -Ka*l/Ixx, 0, Ka*l/Ixx],
         #             [Ka*l/Iyy, 0, -Ka*l/Iyy, 0],
         #             [Km/Izz, -Km/Izz, Km/Izz, -Km/Izz]]) # For direct rpm
         
         B = np.vstack((np.zeros((8, 4)), b_sub))
-
         Q = np.eye(12)*600
         # Q = np.diag((700, 700, 700, 500, 500, 500, 500, 500, 500, 500, 500, 500))
         # R = np.eye(4)*10
@@ -106,13 +101,10 @@ class MRAC(BaseControl):
 
         Kx = -K.T
         Kr = np.eye(4) 
-
         return Kx, Kr
 
     def reset(self):
         super().reset()
-
-
 
     def computeControl(self,
                        control_timestep,
@@ -130,16 +122,13 @@ class MRAC(BaseControl):
         
         if self.control_counter == 0:
             self.Xm = np.hstack((cur_pos, cur_rpy, cur_vel, cur_ang_vel)).reshape(12, 1)
-
         self.control_counter += 1
 
         r = np.hstack((target_pos, target_rpy, target_vel, target_rpy_rates)).reshape(12, 1)
         rt = -self.Kr_ref_gain @ r
 
         X_actual = np.hstack((cur_pos, cur_rpy, cur_vel, cur_ang_vel)).reshape(12, 1)
-
         u = self.Kx.T @ X_actual + self.Kr.T @ rt
-
         e = X_actual - self.Xm # TODO plot X_actual and Xm
         Kx_dot = -self.Gamma_x @ X_actual @ e.T @ self.P @ self.Bm
         Kr_dot = -self.Gamma_r @ rt @ e.T @ self.P @ self.Bm
