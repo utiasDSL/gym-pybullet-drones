@@ -9,7 +9,7 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 > [!TIP]
 > If you are looking for **symbolic dynamics**, check out [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym) instead
 >
-> If you are looking for **PX4/ArduPilot** support, check out [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack) instead
+> If you are looking for **ROS2/PX4/ArduPilot** support, check out [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack) instead
 
 ## Installation
 
