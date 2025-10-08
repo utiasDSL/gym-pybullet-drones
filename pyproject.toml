@@ -18,7 +18,7 @@ transforms3d = "^0.4.1"
 matplotlib = "^3.7"
 pytest = ">=7.3, <9.0"
 pybullet = "^3.2.5"
-gymnasium = "~=0.28"
+gymnasium = "~=1.2"
 stable-baselines3 = "^2.0.0"
 control = "^0.10.2"
 
