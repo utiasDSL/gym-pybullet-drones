@@ -12,7 +12,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-numpy = "^1.24"
+numpy = "^2.2"
 scipy = "^1.10"
 transforms3d = "^0.4.1"
 matplotlib = "^3.7"
