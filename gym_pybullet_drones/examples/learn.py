@@ -76,7 +76,7 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Target cumulative rewards (problem-dependent) ##########
     if DEFAULT_ACT == ActionType.ONE_D_RPM:
-        target_reward = 474.15 if not multiagent else 949.5
+        target_reward = 474. if not multiagent else 949.5
     else:
         target_reward = 467. if not multiagent else 920.
     callback_on_best = StopTrainingOnRewardThreshold(reward_threshold=target_reward,
