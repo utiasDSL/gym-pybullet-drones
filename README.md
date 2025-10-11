@@ -1,15 +1,15 @@
+> [!TIP]
+> For **symbolic dynamics**, check out [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym)
+>
+> For **ROS2, PX4, or ArduPilot** support, check out [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack)
+
 # gym-pybullet-drones
 
-This is a minimalist refactoring of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium), [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327), and SITL [`betaflight`](https://github.com/betaflight/betaflight)/[`crazyflie-firmware`](https://github.com/bitcraze/crazyflie-firmware/).
+This is a minimalist refactoring of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium), [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327), and [`betaflight`](https://github.com/betaflight/betaflight)/[`crazyflie-firmware`](https://github.com/bitcraze/crazyflie-firmware/) SITL.
 
-> **NOTE**: if you prefer to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]` after cloning the repo, and refer to the corresponding `README.md`'s.
+> **NOTE**: if you want to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]`
 
 <img src="gym_pybullet_drones/assets/helix.gif" alt="formation flight" width="325"> <img src="gym_pybullet_drones/assets/helix.png" alt="control info" width="425">
-
-> [!TIP]
-> If you are looking for **symbolic dynamics**, check out [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym) instead
->
-> If you are looking for **ROS2/PX4/ArduPilot** support, check out [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack) instead
 
 ## Installation
 
@@ -55,6 +55,14 @@ LATEST_MODEL=$(ls -t results | head -n 1) && python play.py --model_path "result
 ```
 
 <img src="gym_pybullet_drones/assets/rl.gif" alt="rl example" width="375"> <img src="gym_pybullet_drones/assets/marl.gif" alt="marl example" width="375">
+
+### Run all tests
+
+```sh
+# from the repo's top folder
+cd gym-pybullet-drones/
+pytest tests/
+```
 
 ### utiasDSL `pycffirmware` Python Bindings example (multiplatform, single-drone)
 
@@ -105,7 +113,7 @@ If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 ## References
 
 - Carlos Luis and Jeroome Le Ny (2016) [*Design of a Trajectory Tracking Controller for a Nanoquadcopter*](https://arxiv.org/pdf/1608.05786.pdf)
-- Nathan Michael, Daniel Mellinger, Quentin Lindsey, Vijay Kumar (2010) [*The GRASP Multiple Micro UAV Testbed*](http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.169.1687&rep=rep1&type=pdf)
+- Nathan Michael, Daniel Mellinger, Quentin Lindsey, Vijay Kumar (2010) [*The GRASP Multiple Micro-UAV Testbed*](https://ieeexplore.ieee.org/document/5569026)
 - Benoit Landry (2014) [*Planning and Control for Quadrotor Flight through Cluttered Environments*](http://groups.csail.mit.edu/robotics-center/public_papers/Landry15)
 - Julian Forster (2015) [*System Identification of the Crazyflie 2.0 Nano Quadrocopter*](https://www.research-collection.ethz.ch/handle/20.500.11850/214143)
 - Antonin Raffin, Ashley Hill, Maximilian Ernestus, Adam Gleave, Anssi Kanervisto, and Noah Dormann (2019) [*Stable Baselines3*](https://github.com/DLR-RM/stable-baselines3)
@@ -113,12 +121,6 @@ If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 [*Neural Lander: Stable Drone Landing Control Using Learned Dynamics*](https://arxiv.org/pdf/1811.08027.pdf)
 - C. Karen Liu and Dan Negrut (2020) [*The Role of Physics-Based Simulators in Robotics*](https://www.annualreviews.org/doi/pdf/10.1146/annurev-control-072220-093055)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
-
-Run all tests from the top folder with
-
-```sh
-pytest tests/
-```
 
 -----
 > University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
