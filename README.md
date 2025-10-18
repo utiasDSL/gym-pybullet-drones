@@ -1,7 +1,7 @@
 > [!TIP]
 > For **symbolic dynamics**, check out [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym)
 >
-> For **ROS2, PX4, or ArduPilot** support, check out [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack)
+> For **ROS2, PX4, and ArduPilot** support, check out [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack)
 
 # gym-pybullet-drones
 
