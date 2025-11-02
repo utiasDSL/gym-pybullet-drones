@@ -21,6 +21,7 @@ from datetime import datetime
 import argparse
 import gymnasium as gym
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 from stable_baselines3 import PPO
 from stable_baselines3.common.env_util import make_vec_env
@@ -99,17 +100,23 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
 
     #### Print training progression ############################
     with np.load(filename+'/evaluations.npz') as data:
-        for j in range(data['timesteps'].shape[0]):
-            print(str(data['timesteps'][j])+","+str(data['results'][j][0]))
+        timesteps = data['timesteps']
+        results = data['results'][:, 0] 
+        print("Data from evaluations.npz")
+        for j in range(timesteps.shape[0]):
+            print(f"{timesteps[j]},{results[j]}")
+        if local:
+            plt.plot(timesteps, results, marker='o', linestyle='-', markersize=4)
+            plt.xlabel('Training Steps')
+            plt.ylabel('Episode Reward')
+            plt.grid(True, alpha=0.6)
+            plt.show()
 
     ############################################################
     ############################################################
     ############################################################
     ############################################################
     ############################################################
-
-    if local:
-        input("Press Enter to continue...")
 
     # if os.path.isfile(filename+'/final_model.zip'):
     #     path = filename+'/final_model.zip'
