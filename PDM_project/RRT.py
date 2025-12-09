@@ -84,20 +84,25 @@ class RRT:
 
     def check_collision(self, node, obstacle_list):
         """
-        Checks if the node is inside any spherical obstacle.
-        obstacle_list format: [[x, y, z, radius], ...]
+        Checks if the node is inside any Box obstacle.
+        
+        obstacle_list format: [[center_x, center_y, center_z, half_x, half_y, half_z], ...]
+        
+        Example: A 1x1x1m cube at (0,0,0) would be: [0, 0, 0, 0.5, 0.5, 0.5]
         """
         if node is None:
             return False
 
-        for (ox, oy, oz, size) in obstacle_list:
-            dx_list = [ox - x for x in node.path_x]
-            dy_list = [oy - y for y in node.path_y]
-            dz_list = [oz - z for z in node.path_z]
-            d_list = [dx * dx + dy * dy + dz * dz for (dx, dy, dz) in zip(dx_list, dy_list, dz_list)]
-
-            if min(d_list) <= size ** 2:
-                return True  # Collision
+        for (ox, oy, oz, hx, hy, hz) in obstacle_list:
+            # Iterate through all points in the path (usually just one for basic RRT)
+            for x, y, z in zip(node.path_x, node.path_y, node.path_z):
+                
+                # Check if point is inside the XYZ bounds of the box
+                # We use a small margin (>= instead of >) to catch grazing collisions
+                if (ox - hx <= x <= ox + hx) and \
+                   (oy - hy <= y <= oy + hy) and \
+                   (oz - hz <= z <= oz + hz):
+                    return True  # Collision detected
 
         return False  # Safe
 
