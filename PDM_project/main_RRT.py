@@ -6,7 +6,7 @@ from gym_pybullet_drones.utils.Logger import Logger
 from env_RRT import CustomCtrlAviary
 from RRT import RRT
 import pybullet as p
-import matplotlib.pyplot as plt # Import matplotlib just in case
+import matplotlib.pyplot as plt
 
 def main():
 
