@@ -39,7 +39,7 @@ def main():
     rrt = RRT(
         start=start_pos,
         goal=goal_pos,
-        rand_area=[-1, 5],                 # will be -10, 10
+        rand_area=[-2, 5],                 # will be -10, 10
         obstacle_list=obstacle_list,
         expand_dis=0.2
     )
