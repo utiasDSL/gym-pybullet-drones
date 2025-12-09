@@ -7,9 +7,13 @@ from RRT import RRT  # Import your new RRT file
 import pybullet as p
 
 def main():
-    # 1. SETUP ENV
+
+    # 1. INITIALIZE THE ENVIRONMENT
+    
+    drone_model = DroneModel.CF2X
+
     env = CustomCtrlAviary(
-        drone_model=DroneModel.CF2X,
+        drone_model=drone_model,
         num_drones=1,
         neighbourhood_radius=np.inf,
         physics=Physics.DYN,
@@ -19,28 +23,19 @@ def main():
         user_debug_gui=False
     )
 
-    # Initialize the built-in PID controller
+    # Initialize the controller -- it will be the MPC, now it is the PID
     ctrl = DSLPIDControl(drone_model=DroneModel.CF2X)
 
     # 2. RUN RRT PLANNING (Before simulation starts!)
-    print("Planning path with RRT...")
     
-    # --- STRATEGY: CROSS THE OBSTACLE ---
-    # Start: Before the cube (x=0)
-    # Obstacle: In the middle (x=1)
-    # Goal: Behind the cube (x=2)
+    print("Planning path with RRT...")
     
     start_pos = [0.0, 0.0, 0.5] 
     goal_pos  = [4.0, 4.0, 0.5]
 
-
-    # --- DEFINE OBSTACLES FOR RRT ---
-    # Format: [x, y, z, radius]
-    # We approximate the cubes as spheres for the math.
-    # If the cube is 1x1x1m, a radius of 0.6m covers it safely with a small margin.
-    
+    # obstacle definition
     obstacle_list = [
-        [1.0, 1.0, 0.5, 0.7],  # The cube in front of origin
+        [1.0, 1.0, 0.5, 0.7],
         [1.0, 1.0, 1.5, 0.7],
         [3.0, 3.0, 0.5, 0.7],
         [3.0, 3.0, 1.5, 0.7]
