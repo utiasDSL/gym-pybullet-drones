@@ -40,7 +40,6 @@ def main():
     
     obstacle_list = [
         [1.0, 0.0, 0.5, 0.6],  # The cube in front of origin
-        [1.0, 4.0, 0.0, 0.6]   # The other cube (far away, but good to keep track of)
     ]
 
     rrt = RRT(
