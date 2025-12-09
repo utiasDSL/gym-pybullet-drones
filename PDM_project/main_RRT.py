@@ -4,6 +4,7 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from env_RRT import CustomCtrlAviary
 from RRT import RRT  # Import your new RRT file
+import pybullet as p
 
 def main():
     # 1. SETUP ENV
@@ -17,7 +18,7 @@ def main():
         obstacles=True,
         user_debug_gui=False
     )
-    
+
     # Initialize the built-in PID controller
     ctrl = DSLPIDControl(drone_model=DroneModel.CF2X)
 
@@ -30,7 +31,7 @@ def main():
     # Goal: Behind the cube (x=2)
     
     start_pos = [0.0, 0.0, 0.5] 
-    goal_pos  = [0.0, 8.0, 0.5]
+    goal_pos  = [4.0, 4.0, 0.5]
 
 
     # --- DEFINE OBSTACLES FOR RRT ---
@@ -39,13 +40,16 @@ def main():
     # If the cube is 1x1x1m, a radius of 0.6m covers it safely with a small margin.
     
     obstacle_list = [
-        [1.0, 0.0, 0.5, 0.6],  # The cube in front of origin
+        [1.0, 1.0, 0.5, 0.7],  # The cube in front of origin
+        [1.0, 1.0, 1.5, 0.7],
+        [3.0, 3.0, 0.5, 0.7],
+        [3.0, 3.0, 1.5, 0.7]
     ]
 
     rrt = RRT(
         start=start_pos,
         goal=goal_pos,
-        rand_area=[-1, 3],     # Limit search area so it doesn't fly too far away
+        rand_area=[-2, 5],     # Limit search area so it doesn't fly too far away
         obstacle_list=obstacle_list,
         expand_dis=0.2         # Step size: smaller = more precise around corners
     )
@@ -56,11 +60,22 @@ def main():
         print("RRT could not find a path!")
         env.close()
         return
-    else:
-        print("Path found!", path)
 
-    # 3. SIMULATION LOOP
-    obs, info = env.reset()
+    # --- FIX: RESET FIRST, THEN DRAW ---
+    print("Resetting environment...")
+    obs, info = env.reset() 
+
+    print("Path found! Drawing it...")
+    # Now that the environment is fresh, we draw the lines so they stay
+    for i in range(len(path) - 1):
+        p.addUserDebugLine(
+            lineFromXYZ=path[i],
+            lineToXYZ=path[i+1],
+            lineColorRGB=[1, 0, 0],
+            lineWidth=3,
+            lifeTime=0,
+            physicsClientId=env.CLIENT
+        )
     
     current_waypoint_index = 0
     # Convert path list to numpy array for easier handling
@@ -94,6 +109,7 @@ def main():
             dist_to_target = np.linalg.norm(drone_pos - target)
 
             if dist_to_target < 0.15: # If within 15cm of target
+                print(target)
                 print(f"Reached waypoint {current_waypoint_index}")
                 if current_waypoint_index < len(path) - 1:
                     current_waypoint_index += 1
