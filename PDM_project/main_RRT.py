@@ -30,7 +30,8 @@ def main():
     # Goal: Behind the cube (x=2)
     
     start_pos = [0.0, 0.0, 0.5] 
-    goal_pos  = [2.0, 0.0, 0.5]
+    goal_pos  = [0.0, 8.0, 0.5]
+
 
     # --- DEFINE OBSTACLES FOR RRT ---
     # Format: [x, y, z, radius]
