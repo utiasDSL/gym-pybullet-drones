@@ -3,15 +3,13 @@ import random
 import math
 
 class RRT:
-    """
-    Class for RRT planning in 3D
-    """
+    
+    # Initialize the RRT
     def __init__(self, start, goal, obstacle_list, rand_area, expand_dis=0.5, goal_sample_rate=10, max_iter=500):
         """
         start: [x, y, z]
-        goal: [x, y, z]
-        obstacle_list: list of obstacles [[x,y,z,size], ...] 
-                       (We assume spherical obstacles for simplicity, but you can change to boxes)
+        goal:  [x, y, z]
+        obstacle_list: list of obstacles [[x,y,z,size], ...]
         rand_area: [min, max] for random sampling range
         """
         self.start = Node(start[0], start[1], start[2])
@@ -24,11 +22,13 @@ class RRT:
         self.obstacle_list = obstacle_list
         self.node_list = []
 
+    # Path plan, it returns a list of waypoints [x, y, z] form start to goal
     def plan(self):
-        """Returns a path (list of [x, y, z]) from start to goal"""
+        
         self.node_list = [self.start]
         
         for i in range(self.max_iter):
+
             # 1. Sample a random node
             rnd_node = self.get_random_node()
             
@@ -36,7 +36,7 @@ class RRT:
             nearest_ind = self.get_nearest_node_index(self.node_list, rnd_node)
             nearest_node = self.node_list[nearest_ind]
 
-            # 3. Steer towards it
+            # 3. Steer towards it (move for expand_dis)
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
             # 4. Check Collision
@@ -52,6 +52,7 @@ class RRT:
 
         return None  # Failed to find path
 
+    # Go in the direction of the new node 
     def steer(self, from_node, to_node, extend_length=float("inf")):
         new_node = Node(from_node.x, from_node.y, from_node.z)
         d, theta, phi = self.calc_distance_and_angle(new_node, to_node)
@@ -71,17 +72,19 @@ class RRT:
         new_node.parent = from_node
         return new_node
 
+    # Pick random node
     def get_random_node(self):
         if random.randint(0, 100) > self.goal_sample_rate:
             rnd = Node(
                 random.uniform(self.min_rand, self.max_rand),
                 random.uniform(self.min_rand, self.max_rand),
-                random.uniform(0.1, 2.0)  # Assume height is between 0.1 and 2.0
+                random.uniform(0.1, 2.0)                         # Assume height is between 0.1 and 2.0, will be 0, 10
             )
         else:  # Goal bias
             rnd = Node(self.goal.x, self.goal.y, self.goal.z)
         return rnd
 
+    # Check for collisions with obstacles
     def check_collision(self, node, obstacle_list):
         """
         Checks if the node is inside any Box obstacle.
@@ -94,6 +97,7 @@ class RRT:
             return False
 
         for (ox, oy, oz, hx, hy, hz) in obstacle_list:
+
             # Iterate through all points in the path (usually just one for basic RRT)
             for x, y, z in zip(node.path_x, node.path_y, node.path_z):
                 
@@ -105,7 +109,8 @@ class RRT:
                     return True  # Collision detected
 
         return False  # Safe
-
+    
+    # Retrive the path from start to goal
     def generate_final_course(self, goal_ind):
         path = [[self.goal.x, self.goal.y, self.goal.z]]
         node = self.node_list[goal_ind]
@@ -115,18 +120,21 @@ class RRT:
         path.append([self.start.x, self.start.y, self.start.z])
         return path[::-1] # Return reversed path (start -> goal)
 
+    # Calculate distance to goal
     def calc_dist_to_goal(self, x, y, z):
         dx = x - self.goal.x
         dy = y - self.goal.y
         dz = z - self.goal.z
         return math.sqrt(dx ** 2 + dy ** 2 + dz ** 2)
 
+    # Retrive nearest node index
     def get_nearest_node_index(self, node_list, rnd_node):
         dlist = [(node.x - rnd_node.x)**2 + (node.y - rnd_node.y)**2 + (node.z - rnd_node.z)**2
                  for node in node_list]
         minind = dlist.index(min(dlist))
         return minind
 
+    # Calculate distance and agle to go from a node to the next
     def calc_distance_and_angle(self, from_node, to_node):
         dx = to_node.x - from_node.x
         dy = to_node.y - from_node.y
@@ -136,6 +144,7 @@ class RRT:
         theta = math.atan2(dy, dx) 
         phi = math.acos(dz / d) if d != 0 else 0
         return d, theta, phi
+
 
 class Node:
     def __init__(self, x, y, z):

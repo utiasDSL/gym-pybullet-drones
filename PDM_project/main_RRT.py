@@ -24,8 +24,8 @@ def main():
     control_freq_hz = 240 
     
     # Define start and end positions
-    start_pos = [0.0, 0.0, 0.5] 
-    goal_pos  = [4.0, 4.0, 0.5]
+    start_pos = [0.0, 0.0, 0] 
+    goal_pos  = [4.0, 4.0, 0]
 
     # Define obstacles position and bounding sphere
     obstacle_list = [
@@ -39,7 +39,7 @@ def main():
     rrt = RRT(
         start=start_pos,
         goal=goal_pos,
-        rand_area=[-2, 5],
+        rand_area=[-1, 5],                 # will be -10, 10
         obstacle_list=obstacle_list,
         expand_dis=0.2
     )
