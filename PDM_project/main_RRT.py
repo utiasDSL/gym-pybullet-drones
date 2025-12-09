@@ -2,7 +2,7 @@ import numpy as np
 import time
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
-from our_env import CustomCtrlAviary
+from env_RRT import CustomCtrlAviary
 from RRT import RRT  # Import your new RRT file
 
 def main():
