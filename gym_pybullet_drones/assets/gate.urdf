@@ -1,0 +1,32 @@
+<?xml version="1.0" ?>
+
+<robot name="gate">
+
+  <link name="base_link">
+
+    <inertial>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <mass value="0."/>
+      <inertia ixx="0" ixy="0.0" ixz="0.0" iyy="0" iyz="0.0" izz="0"/>
+    </inertial>
+
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="./tinker.obj" scale=" 0.05 0.05 0.05"/>
+      </geometry>
+      <material name="grey">
+        <color rgba="1.0. 1.0. 0.5. 1"/>
+      </material>
+    </visual>
+
+    <collision concave="yes">
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="./tinker.obj" scale="0.05 0.05 0.05"/>
+      </geometry>
+    </collision>
+
+  </link>
+
+</robot>
