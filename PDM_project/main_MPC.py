@@ -12,7 +12,7 @@ def main():
         drone_model=DroneModel.CF2X,
         num_drones=1,
         neighbourhood_radius=np.inf,
-        physics=Physics.PYB,   # <--- FIX 1: PYB enables collisions. DYN ghosts through them.
+        physics=Physics.PYB,   # PYB enables collisions. DYN ghosts through them.
         gui=True,              
         record=False,
         obstacles=True,        

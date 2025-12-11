@@ -45,12 +45,13 @@ def run(
     # --- 1. DEFINE TRAJECTORY (WAYPOINTS) ---
     # List of points [x, y, z] the drone should visit in order
     waypoints = [
-        np.array([0, 0, 1]),    # Takeoff to 1m
-        np.array([1, 0, 1]),    # Move X+
-        np.array([1, 1, 1]),    # Move Y+
-        np.array([0, 1, 1]),    # Move X-
-        np.array([0, 0, 1])     # Return to center
+        np.array([0, 0, 1,  0, 0, 0]),
+        np.array([1, 0, 1,  0, 0, 0]),
+        np.array([1, 1, 1,  0, 0, 0]),
+        np.array([0, 1, 1,  0, 0, 0]),
+        np.array([0, 0, 1,  0, 0, 0]),
     ]
+
     
     # Indices to track which waypoint each drone is currently targeting
     waypoint_indices = [0] * num_drones
@@ -58,10 +59,12 @@ def run(
     # Initialize Target State variables
     TARGET_POS = np.zeros((num_drones, 3))
     TARGET_RPY = np.zeros((num_drones, 3))
+    TARGET_VEL = np.zeros((num_drones, 3))
 
     # Set initial target for all drones to the first waypoint
     for j in range(num_drones):
-        TARGET_POS[j, :] = waypoints[0]
+        TARGET_POS[j, :] = waypoints[0][:3]
+        TARGET_VEL[j, :] = waypoints[0][3:]
 
     # Initialize Sim
     INIT_XYZS = np.array([[0, 0, 0.1] for _ in range(num_drones)])
@@ -82,8 +85,8 @@ def run(
                         )
     for k in range(len(waypoints) - 1):
         p.addUserDebugLine(
-            waypoints[k].tolist(),
-            waypoints[k+1].tolist(),
+            waypoints[k][:3].tolist(),
+            waypoints[k+1][:3].tolist(),
             [1, 0, 0],          # red
             lineWidth=3,
             lifeTime=0,         # 0 = permanent
@@ -105,9 +108,9 @@ def run(
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
         
         # Step the simulation
-        print("Action at step", i, ":", action)
+        # print("Action at step", i, ":", action)
         obs, reward, terminated, truncated, info = env.step(action)
-        print("Obs at step", i, ":", obs)
+        # print("Obs at step", i, ":", obs)
 
         for j in range(num_drones):
             
@@ -119,11 +122,12 @@ def run(
             dist_to_target = np.linalg.norm(TARGET_POS[j, :] - cur_pos)
             
             # Threshold: How close to get before switching (e.g., 15cm)
-            if dist_to_target < 0.15:
+            if dist_to_target < 0.02:
                 # Move to next waypoint index
                 if waypoint_indices[j] < len(waypoints) - 1:
                     waypoint_indices[j] += 1
-                    TARGET_POS[j, :] = waypoints[waypoint_indices[j]]
+                    TARGET_POS[j, :] = waypoints[waypoint_indices[j]][:3]
+                    TARGET_VEL[j, :] = waypoints[waypoint_indices[j]][3:]
                     print(f"Drone {j} Reached target! Switching to: {TARGET_POS[j, :]}")
 
             # --- 3. COMPUTE CONTROL ---
@@ -131,7 +135,8 @@ def run(
                                             control_timestep=env.CTRL_TIMESTEP,
                                             state=obs[j],
                                             target_pos=TARGET_POS[j, :],
-                                            target_rpy=TARGET_RPY[j, :]
+                                            target_rpy=TARGET_RPY[j, :],
+                                            target_vel=TARGET_VEL[j, :],
                                             )
             
         # Log
@@ -139,7 +144,7 @@ def run(
             logger.log(drone=j,
                     timestamp=i/env.CTRL_FREQ,
                     state=obs[j],
-                    control=np.hstack([TARGET_POS[j, :], TARGET_RPY[j, :], np.zeros(6)])
+                    control=np.hstack([TARGET_POS[j, :], TARGET_RPY[j, :], TARGET_VEL[j, :], np.zeros(3)])
                     )
             
         env.render()

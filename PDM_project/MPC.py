@@ -12,7 +12,7 @@ class MPC_control(BaseControl):
     def __init__(self, drone_model: DroneModel, g: float=9.8):
         super().__init__(drone_model=drone_model, g=g)
 
-        self.T = 10  # Horizon length (steps)
+        self.T = 30  # Horizon length (steps)
         self.dt = 1/48 # Control timestep (match your simulation)
         
         #Get Physics Constants from URDF (via BaseControl)
@@ -103,11 +103,11 @@ class MPC_control(BaseControl):
         self.x_min = np.array([-10, -10,  0, 
                                 -8,  -8, -3, 
                                 -max_angle, -max_angle, -np.inf,
-                                -7, -7, -self.MAX_RPM])
+                                -7, -7, -7]) #ultimo 7 forse self.MAX_RPM
         self.x_max = np.array([10, 10, 10,
                                8, 8, 3,
                                max_angle, max_angle, np.inf,
-                                7, 7, self.MAX_RPM])
+                                7, 7, 7])
         
         self.u_min = np.array([0, -self.MAX_XY_TORQUE, -self.MAX_XY_TORQUE, -self.MAX_Z_TORQUE])   #forse 1*??
         self.u_max = np.array([self.MAX_THRUST, self.MAX_XY_TORQUE, self.MAX_XY_TORQUE, self.MAX_Z_TORQUE])
@@ -139,8 +139,19 @@ class MPC_control(BaseControl):
         # so you don't rebuild the problem every single step (slow!)
 
         # DA CAMBIAREEE
-        weight_input = 10*np.eye(4)    # Weight on the input
-        weight_tracking = 600*np.eye(12) # Weight on the tracking state
+        weight_input = np.diag([
+            4.0,   # thrust cost (largest)
+            1.0,   # roll torque
+            1.0,   # pitch torque
+            0.3    # yaw torque
+        ])
+
+        weight_tracking = np.diag([
+            8, 8, 12,       # position x,y,z  (z is most important)
+            3, 3, 4,        # velocities vx,vy,vz
+            2, 2, 0.5,      # roll, pitch, yaw
+            0.5, 0.5, 0.5   # angular rates p,q,r
+        ])
 
         cost = 0.
         constraints = []
