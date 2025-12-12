@@ -4,9 +4,6 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from env_RRT import CustomCtrlAviary
-# from RRT import RRT
-# from RRTStar import RRTStar
-# from RRTStar_new import RRTStarNew
 from final_RRT import RRTStar
 import pybullet as p
 import matplotlib.pyplot as plt
