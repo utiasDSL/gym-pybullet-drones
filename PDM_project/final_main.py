@@ -4,16 +4,17 @@ from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from env_RRT import CustomCtrlAviary
-from RRT import RRT
-from RRTStar import RRTStar
-from RRTStar_new import RRTStarNew
+# from RRT import RRT
+# from RRTStar import RRTStar
+# from RRTStar_new import RRTStarNew
+from final_RRT import RRTStar
 import pybullet as p
 import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
 
 
-# Checks if the Spline trajectory hits any obstacle
-def check_spline_collision(spline, total_time, obstacle_list, dt=0.05):
+# --- COLLISION CHECK FOR SPLINE TRAJECTORY ---
+def check_spline_collision(spline, total_time, obstacle_list, dt=0.1):
     times = np.arange(0, total_time, dt)
 
     for t in times:
@@ -29,6 +30,7 @@ def check_spline_collision(spline, total_time, obstacle_list, dt=0.05):
     return False 
 
 
+# --- DEFINITION OF MAIN FUNCTION ---
 def main():
 
     # --- STANDARD VARIABLE SETUP ---
@@ -42,7 +44,7 @@ def main():
     user_debug_gui = False
     output_folder = 'results'
     colab = False
-    control_freq_hz = 240 
+    control_freq_hz = 240
     
     start_pos = [0.0, 0.0, 0.1] 
     goal_pos  = [4.0, 4.0, 0.2]
@@ -64,8 +66,8 @@ def main():
 
     for attempt in range(max_retries):
         
-        # 1. Initialize RRT*
-        rrt = RRTStarNew(
+        # 1. Initialize RRT* and path plan
+        rrt = RRTStar(
             start=start_pos, 
             goal=goal_pos, 
             rand_area=[0, 5], 
@@ -78,7 +80,7 @@ def main():
         if path is None:
             continue
 
-        # 2. Generate Spline
+        # 2. Generate Spline and check if it avoids obstacles
         AVG_SPEED = 0.4
         path = np.array(path)
         distances = np.linalg.norm(np.diff(path, axis=0), axis=1)
@@ -88,16 +90,15 @@ def main():
         
         traj_spline = CubicSpline(t_waypoints, path, axis=0)
 
-        # 3. Check found Spline avoids obstacles
         if check_spline_collision(traj_spline, total_time, obstacles):
-            print(f"Attempt {attempt}: Spline hit the wall. Retrying.")
+            print(f"Attempt {attempt}: Spline hit the wall. Trying again.")
         else:
-            print("Safe Spline Trajectory Found.")
+            print("Safe Spline trajectory found.")
             safe_path_found = True
             break
     
     if not safe_path_found:
-        print("Could not find a safe Spline.")
+        print("Could not find a safe trajectory.")
         return
 
     # Initialize environment
@@ -112,11 +113,15 @@ def main():
         user_debug_gui=user_debug_gui
     )
 
-    # Initialize 
+    # Disable rendering to avoid starting glithces
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0, physicsClientId=env.CLIENT)
+
+    # Initialize Logger and Controller
     logger = Logger(logging_freq_hz=control_freq_hz, num_drones=num_drones, output_folder=output_folder, colab=colab)
-    ctrl = DSLPIDControl(drone_model=DroneModel.CF2X)
-    obs, info = env.reset() 
+    ctrl = DSLPIDControl(drone_model=DroneModel.CF2X)       # it will be MPC, now is PID
+
+    # Reset the environment (required)
+    obs, _ = env.reset() 
 
     # Draw RRT* trajectory (RED)
     for i in range(len(path) - 1):
@@ -131,20 +136,26 @@ def main():
         p2 = traj_spline(t + draw_dt)
         p.addUserDebugLine(p1, p2, [0, 0, 1], 3, 0, env.CLIENT)
 
+    # Enable rendering
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1, physicsClientId=env.CLIENT)
     
     step_counter = 0
 
-    print(f"Flying... Duration: {total_time:.2f}s")
+    print(f"Flying duration: {total_time:.2f}s")
 
+    # --- SIMULATION LOOP ---
     try:
+
+        # Simulate drone behaviour
         while True:
             now = step_counter / control_freq_hz
-            if now > total_time: break
+            if now > total_time: 
+                break
 
             target_pos = traj_spline(now)
             target_vel = traj_spline(now, 1)
 
+            # computes the action based on target position and velocity
             action, _, _ = ctrl.computeControlFromState(
                 control_timestep=1/control_freq_hz,
                 state=obs[0],
@@ -153,7 +164,7 @@ def main():
                 target_rpy=np.array([0,0,0])
             )
 
-            obs, reward, terminated, truncated, info = env.step(np.array([action]))
+            obs, _, _, _, _ = env.step(np.array([action]))
             step_counter += 1
 
             control_ref = np.hstack([target_pos, np.zeros(3), np.zeros(6)])
@@ -163,6 +174,7 @@ def main():
     except KeyboardInterrupt:
         print("Exiting")
     
+    # End of simulation and plotting
     env.close()
     logger.save()
     if plot:
@@ -170,5 +182,6 @@ def main():
         plt.show()
 
 
+# --- RUN MAIN FUNCTION ---
 if __name__ == "__main__":
     main()
