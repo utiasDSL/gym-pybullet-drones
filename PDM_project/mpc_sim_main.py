@@ -22,7 +22,7 @@ DEFAULT_USER_DEBUG_GUI = False
 DEFAULT_OBSTACLES = True
 DEFAULT_SIMULATION_FREQ_HZ = 240
 DEFAULT_CONTROL_FREQ_HZ = 48 # Lower control freq is usually better for MPC speed
-DEFAULT_DURATION_SEC = 60
+DEFAULT_DURATION_SEC = 70
 DEFAULT_OUTPUT_FOLDER = 'results'
 DEFAULT_COLAB = False
 
@@ -158,7 +158,7 @@ def run(
                     control=np.hstack([TARGET_POS[j, :], TARGET_RPY[j, :], TARGET_VEL[j, :], np.zeros(3)])
                     )
             
-        env.render()
+#         env.render()
         if gui:
             sync(i, START, env.CTRL_TIMESTEP)
 

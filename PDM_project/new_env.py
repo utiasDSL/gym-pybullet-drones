@@ -24,8 +24,8 @@ class CustomCtrlAviary(CtrlAviary):
         # Define your specific layout here by calling the helper function
         self._add_single_cube([1.0, 0.5, 1.0])
         self._add_single_cube([0.5, 1.0, 1.0])
-        self._add_single_cube([3.0, 3.0, 0.5])
-        self._add_single_cube([3.0, 3.0, 1.5])
+        self._add_single_cube([0.92, 0.5, 1.0])
+        self._add_single_cube([1.0, 0.8, 1.0])
 
         # After creating obstacles, draw their enclosing spheres
         obstacles_info = self.get_obstacles_info()

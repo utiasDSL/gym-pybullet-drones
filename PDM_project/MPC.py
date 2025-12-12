@@ -12,11 +12,21 @@ class MPC_control(BaseControl):
     def __init__(self, drone_model: DroneModel, g: float=9.8):
         super().__init__(drone_model=drone_model, g=g)
 
-        self.T = 30  # Horizon length (steps)
+        self.T = 35  # Horizon length (steps)
         self.dt = 1/48 # Control timestep (match your simulation)
         
         self.A_obs = None
         self.b_obs = None
+
+        self.solver = cp.OSQP
+        self.solver_settings = dict(
+            warm_start=True,
+            eps_abs=1e-3,   # relax tolerances for speed
+            eps_rel=1e-3,
+            max_iter=500,
+            polish=False,
+            verbose=False
+        )
         
         #Get Physics Constants from URDF (via BaseControl)
         self.L = self._getURDFParameter('arm') #arm o lenght?
@@ -273,7 +283,7 @@ class MPC_control(BaseControl):
         
         # 3. Solve
         try:
-            self.problem.solve(solver=cp.OSQP, warm_start=True)
+            self.problem.solve(solver=self.solver, warm_start=True)
         except:
             print("Solver Failed")
         
@@ -283,7 +293,7 @@ class MPC_control(BaseControl):
             self.optimal_u = np.zeros(4) # Fail-safe
         else:
             self.optimal_u = self.u[:, 0].value
-            print("Optimal u:", self.optimal_u)
+    #        print("Optimal u:", self.optimal_u)
 
         # 5. Convert Forces/Torques to RPM
         # Your u is [Thrust, Tx, Ty, Tz]. Convert to RPMs using your model's mixer.
