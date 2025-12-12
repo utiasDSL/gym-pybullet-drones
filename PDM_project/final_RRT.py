@@ -219,7 +219,7 @@ class RRTStar:
         return d, theta, phi
 
 
-# --- NODE CLASS ---
+# --- NODE CLASS DEFINITION ---
 class Node:
     def __init__(self, x, y, z):
         self.x = x
