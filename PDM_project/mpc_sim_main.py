@@ -126,7 +126,7 @@ def run(
             # Get current position of drone j
             cur_pos = obs[j][0:3]
 
-            ctrl[j].convex_region(cur_pos, r_drone, obstacles_center, r_obs)
+            ctrl[j].update_param(cur_pos, r_drone, obstacles_center, r_obs)
             
             # Calculate distance to current target
             dist_to_target = np.linalg.norm(TARGET_POS[j, :] - cur_pos)

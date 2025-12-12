@@ -132,6 +132,9 @@ class MPC_control(BaseControl):
             
         self.x_init_param = cp.Parameter(12)
         self.x_target_param = cp.Parameter(12)
+        self.A_param = cp.Parameter((4, 3)) #da aggiungere numeri di ostacoli
+        self.b_param = cp.Parameter(4)
+
         self._setup_mpc_problem()
             
     def next_x(self):
@@ -173,12 +176,9 @@ class MPC_control(BaseControl):
         self.x = cp.Variable((12, self.T + 1)) # cp.Variable((dim_1, dim_2))
         self.u = cp.Variable((4, self.T))
 
-        if self.A_obs is None:
-            A_stack = None
-            b_stack = None
-        else:
-            A_stack = np.vstack(self.A_obs)      # shape (M, 3)
-            b_stack = np.array(self.b_obs)       # shape (M,)
+        # if self.A_param.value is not None:
+        #     A_stack = np.vstack(self.A_param.value)      # shape (M, 3)
+        #     b_stack = np.array(self.b_param.value)       # shape (M,)
 
 
         # For each stage in k = 0, ..., N-1
@@ -197,9 +197,10 @@ class MPC_control(BaseControl):
             constraints += [self.x[9, k] >= self.x_min[9], self.x[9, k] <= self.x_max[9]]  
             constraints += [self.x[10, k] >= self.x_min[10], self.x[10, k] <= self.x_max[10]]  
             constraints += [self.x[11, k] >= self.x_min[11], self.x[11, k] <= self.x_max[11]]
-            if A_stack is not None: 
+
+            if self.A_param is not None: 
                 #now the obstacles are put into arrays and the line under automatically calculates constraint for each entry of the array so for each obstacle
-                constraints += [A_stack @ self.x[:3, k] <= b_stack]  
+                constraints += [self.A_param @ self.x[:3, k] <= self.b_param]  
 
             if k < self.T-1:
                 constraints += [self.x[:, k+1] == self.A @ self.x[:, k] + self.B @ self.u[:, k] + self.g_vector]
@@ -235,6 +236,9 @@ class MPC_control(BaseControl):
 
         # We return the MPC input and the next state (and also the plan for visualization)
 
+    def update_param(self, cur_pos, r_drone, obstacles_center, r_obs):
+        self.A_param.value, self.b_param.value = self.convex_region(cur_pos, r_drone, obstacles_center, r_obs)
+    
     def computeControl(self, control_timestep,cur_pos, cur_quat, cur_vel, cur_ang_vel, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_rpy_rates=np.zeros(3)):
         
         '''
@@ -264,6 +268,8 @@ class MPC_control(BaseControl):
         # 2. Update Parameters
         self.x_init_param.value = x_current
         self.x_target_param.value = x_target
+
+        #obstacle parameters updated in function above
         
         # 3. Solve
         try:
@@ -357,7 +363,7 @@ class MPC_control(BaseControl):
         return rpms
 
 
-    def get_tangent_plane_3d(self,p, p_obs, r_drone, r_obs, safe_margin=0.1):
+    def get_tangent_plane_3d(self,p, p_obs, r_drone, r_obs, safe_margin=0.05):
     
         p = np.asarray(p, dtype=float).reshape(3,)
         p_obs = np.asarray(p_obs, dtype=float).reshape(3,)
@@ -389,20 +395,25 @@ class MPC_control(BaseControl):
             b_obs = -b_obs
         return A_obs, b_obs
 
-        
-
-            
     def convex_region(self, cur_pos, r_drone, obstacle_list, r_obstacle_list):
-        A_obs=[]
-        b_obs=[]
-        self.A_obs = []
-        self.b_obs = []
-        for i, obstacle  in enumerate(obstacle_list):
-            p_obs=obstacle
-            r_obs=r_obstacle_list[i]
-            A_obs,b_obs = self.get_tangent_plane_3d(cur_pos, p_obs, r_drone, r_obs, safe_margin=0.1)
-            self.A_obs.append(A_obs)
-            self.b_obs.append(b_obs)
+        A_rows = []
+        b_rows = []
+
+        for i, obstacle in enumerate(obstacle_list):
+            p_obs = obstacle
+            r_obs = r_obstacle_list[i]
+            A_i, b_i = self.get_tangent_plane_3d(
+                cur_pos, p_obs, r_drone, r_obs
+            )  # A_i is (3,), b_i is scalar
+            A_rows.append(A_i)
+            b_rows.append(b_i)
+
+        # Stack into proper NumPy arrays
+        A_mat = np.vstack(A_rows)        # shape (n_obs, 3) = (4, 3)
+        b_vec = np.array(b_rows).reshape(-1)  # shape (n_obs,) = (4,)
+
+        return A_mat, b_vec
+
         
 
             
