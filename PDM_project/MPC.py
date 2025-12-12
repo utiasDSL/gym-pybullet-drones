@@ -15,6 +15,9 @@ class MPC_control(BaseControl):
         self.T = 30  # Horizon length (steps)
         self.dt = 1/48 # Control timestep (match your simulation)
         
+        self.A_obs = None
+        self.b_obs = None
+        
         #Get Physics Constants from URDF (via BaseControl)
         self.L = self._getURDFParameter('arm') #arm o lenght?
         self.m = self._getURDFParameter('m')
@@ -133,6 +136,16 @@ class MPC_control(BaseControl):
             
     def next_x(self):
         return self.A.dot(self.x) + self.B.transpose().dot(self.u)
+    
+    def obstacles(self,obstacles_info):
+        p_obs = []
+        r_obs = []
+        
+        for obs in obstacles_info:
+            p_obs.append(obs['pos'])
+            r_obs.append(obs['r'])
+        
+        return p_obs, r_obs
         
     def _setup_mpc_problem(self):
         # Define CVXPY variables, cost functions, and constraints here
@@ -159,7 +172,15 @@ class MPC_control(BaseControl):
         # Create the optimization variables
         self.x = cp.Variable((12, self.T + 1)) # cp.Variable((dim_1, dim_2))
         self.u = cp.Variable((4, self.T))
-    
+
+        if self.A_obs is None:
+            A_stack = None
+            b_stack = None
+        else:
+            A_stack = np.vstack(self.A_obs)      # shape (M, 3)
+            b_stack = np.array(self.b_obs)       # shape (M,)
+
+
         # For each stage in k = 0, ..., N-1
         for k in range(self.T):
             
@@ -175,7 +196,10 @@ class MPC_control(BaseControl):
             constraints += [self.x[8, k] >= self.x_min[8], self.x[8, k] <= self.x_max[8]]  
             constraints += [self.x[9, k] >= self.x_min[9], self.x[9, k] <= self.x_max[9]]  
             constraints += [self.x[10, k] >= self.x_min[10], self.x[10, k] <= self.x_max[10]]  
-            constraints += [self.x[11, k] >= self.x_min[11], self.x[11, k] <= self.x_max[11]]    
+            constraints += [self.x[11, k] >= self.x_min[11], self.x[11, k] <= self.x_max[11]]
+            if A_stack is not None: 
+                #now the obstacles are put into arrays and the line under automatically calculates constraint for each entry of the array so for each obstacle
+                constraints += [A_stack @ self.x[:3, k] <= b_stack]  
 
             if k < self.T-1:
                 constraints += [self.x[:, k+1] == self.A @ self.x[:, k] + self.B @ self.u[:, k] + self.g_vector]
@@ -331,3 +355,56 @@ class MPC_control(BaseControl):
         rpms = np.sqrt(w2_all)
         
         return rpms
+
+
+    def get_tangent_plane_3d(self,p, p_obs, r_drone, r_obs, safe_margin=0.1):
+    
+        p = np.asarray(p, dtype=float).reshape(3,)
+        p_obs = np.asarray(p_obs, dtype=float).reshape(3,)
+
+        # Vector from obstacle to drone
+        v = p - p_obs
+        dist = np.linalg.norm(v)
+
+        # Normal vector
+        n = v / dist   
+
+        # Safety radius
+        R = r_drone + r_obs + safe_margin
+
+        # Closest point on the circulary boundary
+        q = p_obs + R * n   
+
+        # Plane: n^T x = n^T q  (tangent to the sphere at q)
+        # Safe side is "outside": n^T x >= n^T q
+        # Convert to standard form A^T x <= b by multiplying by -1:
+        # (-n)^T x <= -n^T q
+        b_plane = float(n @ q)
+        A_obs = -n
+        b_obs = -b_plane
+
+        # Make sure the *current drone position* is on the feasible side: A^T p <= b
+        if A_obs @ p > b_obs:
+            A_obs = -A_obs
+            b_obs = -b_obs
+        return A_obs, b_obs
+
+        
+
+            
+    def convex_region(self, cur_pos, r_drone, obstacle_list, r_obstacle_list):
+        A_obs=[]
+        b_obs=[]
+        self.A_obs = []
+        self.b_obs = []
+        for i, obstacle  in enumerate(obstacle_list):
+            p_obs=obstacle
+            r_obs=r_obstacle_list[i]
+            A_obs,b_obs = self.get_tangent_plane_3d(cur_pos, p_obs, r_drone, r_obs, safe_margin=0.1)
+            self.A_obs.append(A_obs)
+            self.b_obs.append(b_obs)
+        
+
+            
+        
+        

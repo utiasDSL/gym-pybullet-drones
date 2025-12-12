@@ -80,9 +80,10 @@ def run(
                         ctrl_freq=control_freq_hz,
                         gui=gui,
                         record=record_video,
-                        obstacles=obstacles,
+                        obstacles=True,                             #obstacles=obstacles
                         user_debug_gui=user_debug_gui
                         )
+    
     for k in range(len(waypoints) - 1):
         p.addUserDebugLine(
             waypoints[k][:3].tolist(),
@@ -104,11 +105,18 @@ def run(
     action = np.zeros((num_drones,4))
     START = time.time()
 
+    # get the obstacles information and pass them to the MPC controller
+    all_obstacles = env.get_obstacles_info()
+    obstacles_center, r_obs =  ctrl[0].obstacles(all_obstacles)
+    r_drone = env.drone_radius() 
+    
+
     # --- SIMULATION LOOP ---
     for i in range(0, int(duration_sec*env.CTRL_FREQ)):
         
         # Step the simulation
         # print("Action at step", i, ":", action)
+        
         obs, reward, terminated, truncated, info = env.step(action)
         # print("Obs at step", i, ":", obs)
 
@@ -117,6 +125,8 @@ def run(
             # --- 2. WAYPOINT SWITCHING LOGIC ---
             # Get current position of drone j
             cur_pos = obs[j][0:3]
+
+            ctrl[j].convex_region(cur_pos, r_drone, obstacles_center, r_obs)
             
             # Calculate distance to current target
             dist_to_target = np.linalg.norm(TARGET_POS[j, :] - cur_pos)
@@ -138,6 +148,7 @@ def run(
                                             target_rpy=TARGET_RPY[j, :],
                                             target_vel=TARGET_VEL[j, :],
                                             )
+            
             
         # Log
         for j in range(num_drones):

@@ -10,40 +10,71 @@ class CustomCtrlAviary(CtrlAviary):
     def _addObstacles(self):
         """
         Override BaseAviary._addObstacles().
-        This is called from _housekeeping() if self.OBSTACLES == True.
+        This is called automatically from _housekeeping() if self.OBSTACLES == True.
         """
+        # Initialize a list to keep track of all obstacle IDs
+        self.obstacle_ids = []
+
+        # Define your specific layout here by calling the helper function
+        self._add_single_cube([1.0, 1.0, 0.5])
+        self._add_single_cube([1.0, 1.0, 1.5])
+        self._add_single_cube([3.0, 3.0, 0.5])
+        self._add_single_cube([3.0, 3.0, 1.5])
+
+
+    def _add_single_cube(self, pos):
+        """
+        Helper to add a single cube and store its ID.
+        """
+        obs_id = p.loadURDF(
+            "cube_no_rotation.urdf",
+            pos,
+            p.getQuaternionFromEuler([0, 0, 0]),
+            physicsClientId=self.CLIENT
+        )
+        self.obstacle_ids.append(obs_id)
         
 
-        # Cube in front of origin
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [1.0, 1.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
+    def get_obstacles_info(self):
+        """
+        Returns a list containing the position and dimensions of ALL obstacles.
+        
+        Returns:
+            list of dicts: [{'pos': np.array([x,y,z]), 'dim': np.array([l,w,h])}, ...]
+        """
+        obstacles_info = []
 
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [1.0, 1.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
+        for obs_id in self.obstacle_ids:
+            # Get Position
+            pos, _ = p.getBasePositionAndOrientation(obs_id, physicsClientId=self.CLIENT)
+            
+            # Get Dimensions (Visual Shape)
+            # getVisualShapeData returns a list; we assume the cube has 1 visual shape (index 0)
+            visual_data = p.getVisualShapeData(obs_id, physicsClientId=self.CLIENT)[0]
+            geometry_type = visual_data[2]
+            raw_dimensions = np.array(visual_data[3])
+            
+            # PyBullet returns half-extents for boxes, so multiply by 2 for full length/width/height
+            if geometry_type == p.GEOM_BOX:
+                dimensions = raw_dimensions * 2
+                r_sphere = np.sqrt((dimensions[0]/2)**2 + (dimensions[1]/2)**2 + (dimensions[2]/2)**2)  
+            else:
+                dimensions = raw_dimensions # Fallback for non-box shapes
+                r_sphere = 0.0
 
-        # Cube in front of origin
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [3.0, 3.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
+            obstacles_info.append({
+                'pos': np.array(pos),
+                'r': np.array(r_sphere) #serve np.array?
+            })
+            
+        return obstacles_info
 
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [3.0, 3.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-
+    def drone_radius(self):
+        """Returns an approximate radius of the drone for obstacle avoidance."""
+        radius_drone = 0.6
+        h_drone_cylinder = 0.25
+        r_drone = np.sqrt((radius_drone)**2 + (h_drone_cylinder/2)**2)
+        return r_drone
         '''
         p.loadURDF(
             "cube_no_rotation.urdf",
