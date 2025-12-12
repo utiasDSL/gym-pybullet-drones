@@ -17,14 +17,14 @@ class CustomCtrlAviary(CtrlAviary):
         # Cube in front of origin
         p.loadURDF(
             "cube_no_rotation.urdf",
-            [1.0, 1.0, 0.5],                # position [x, y, z]
+            [1.3, 2.5, 0.5],                # position [x, y, z]
             p.getQuaternionFromEuler([0,0,0]),
             physicsClientId=self.CLIENT
         )
 
         p.loadURDF(
             "cube_no_rotation.urdf",
-            [1.0, 1.0, 1.5],                # position [x, y, z]
+            [1.3, 2.5, 1.5],                # position [x, y, z]
             p.getQuaternionFromEuler([0,0,0]),
             physicsClientId=self.CLIENT
         )
@@ -32,14 +32,14 @@ class CustomCtrlAviary(CtrlAviary):
         # Cube in front of origin
         p.loadURDF(
             "cube_no_rotation.urdf",
-            [3.0, 3.0, 0.5],                # position [x, y, z]
+            [2.5, 1.3, 0.5],                # position [x, y, z]
             p.getQuaternionFromEuler([0,0,0]),
             physicsClientId=self.CLIENT
         )
 
         p.loadURDF(
             "cube_no_rotation.urdf",
-            [3.0, 3.0, 1.5],                # position [x, y, z]
+            [2.5, 1.3, 1.5],                # position [x, y, z]
             p.getQuaternionFromEuler([0,0,0]),
             physicsClientId=self.CLIENT
         )

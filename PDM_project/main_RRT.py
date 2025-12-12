@@ -5,10 +5,15 @@ from gym_pybullet_drones.control.DSLPIDControl import DSLPIDControl
 from gym_pybullet_drones.utils.Logger import Logger
 from env_RRT import CustomCtrlAviary
 from RRT import RRT
+from RRTStar import RRTStar
+from RRTStar_new import RRTStarNew
 import pybullet as p
 import matplotlib.pyplot as plt
 
 def main():
+
+    # Select global planning algorithm
+    alg = 1  # 1 for RRT, 2 for RRT*, 3 for RRT*_new
 
     # Define useful variables
     drone_model = DroneModel.CF2X
@@ -24,26 +29,60 @@ def main():
     control_freq_hz = 240 
     
     # Define start and end positions
-    start_pos = [0.0, 0.0, 0] 
-    goal_pos  = [4.0, 4.0, 0]
+    start_pos = [0.0, 0.0, 0.2] 
+    goal_pos  = [4.0, 4.0, 0.2]
 
     # Define obstacles position and bounding sphere
+    """
     obstacle_list = [
-        [1.0, 1.0, 0.5, 0.6, 0.6, 0.6],
-        [1.0, 1.0, 1.5, 0.6, 0.6, 0.6],
-        [3.0, 3.0, 0.5, 0.6, 0.6, 0.6],
-        [3.0, 3.0, 1.5, 0.6, 0.6, 0.6]
+        [1.0, 3.0, 0.5, 0.6, 0.6, 0.6], 
+        [1.0, 3.0, 1.5, 0.6, 0.6, 0.6],
+        [3.0, 1.0, 0.5, 0.6, 0.6, 0.6],
+        [3.0, 1.0, 1.5, 0.6, 0.6, 0.6],
+        [2.0, 2.0, 0.5, 0.6, 0.6, 0.6],
+        [2.0, 2.0, 1.5, 0.6, 0.6, 0.6],
+    ]
+    """
+
+    obstacle_list = [
+        [1.3, 2.5, 0.5, 0.6, 0.6, 0.6], 
+        [1.3, 2.5, 1.5, 0.6, 0.6, 0.6],
+        [2.5, 1.3, 0.5, 0.6, 0.6, 0.6],
+        [2.5, 1.3, 1.5, 0.6, 0.6, 0.6]
     ]
 
-    # Initialize the RRT
-    rrt = RRT(
-        start=start_pos,
-        goal=goal_pos,
-        rand_area=[-1, 5],                 # will be -10, 10
-        obstacle_list=obstacle_list,
-        expand_dis=0.2
-    )
     
+    # Initialize selected global planning algorithm
+    if alg == 1:
+        # Initialize the RRT
+        rrt = RRT(
+            start=start_pos,
+            goal=goal_pos,
+            rand_area=[-1, 5],                 # will be -10, 10
+            obstacle_list=obstacle_list,
+            expand_dis=0.2
+        )
+    elif alg == 2:
+        # Initialize the RRT*
+        rrt = RRTStar(
+            start=start_pos,
+            goal=goal_pos,
+            rand_area=[-1, 5],                 # will be -10, 10
+            obstacle_list=obstacle_list,
+            expand_dis=0.2
+        )
+    elif alg == 3:
+        rrt = RRTStarNew(
+            start=start_pos,
+            goal=goal_pos,
+            rand_area=[-1, 5],                 # will be -10, 10
+            obstacle_list=obstacle_list,
+            expand_dis=0.2
+        )
+    else:
+        print("Select a valid global planning algorithm")
+        return
+
     # Search for a path by using RRT
     path = rrt.plan()
 
@@ -51,6 +90,23 @@ def main():
     if path is None:
         print("RRT could not find a path")
         return
+
+    # --- ADD THIS: PATH SMOOTHING ---
+    # Inject extra points so the drone has a "smooth curve" to follow
+    # instead of sharp zig-zags.
+    new_path = []
+    path = np.array(path)
+    for i in range(len(path) - 1):
+        p1 = path[i]
+        p2 = path[i+1]
+        dist = np.linalg.norm(p2 - p1)
+        # Add a point every 10cm
+        num_steps = int(dist / 0.10) 
+        for s in range(num_steps):
+            interp_pt = p1 + (p2 - p1) * (s / num_steps)
+            new_path.append(interp_pt)
+    new_path.append(path[-1]) # Add goal
+    path = np.array(new_path)
 
     # Create the environment
     env = CustomCtrlAviary(
@@ -126,7 +182,7 @@ def main():
             drone_pos = obs[0][0:3] 
             dist_to_target = np.linalg.norm(drone_pos - target)
 
-            if dist_to_target < 0.15:
+            if dist_to_target < 0.30:
                 print(f"Reached waypoint {current_waypoint_index}")
                 if current_waypoint_index < len(path) - 1:
                     current_waypoint_index += 1
