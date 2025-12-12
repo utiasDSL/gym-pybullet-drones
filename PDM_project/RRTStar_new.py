@@ -3,7 +3,7 @@ import random
 import math
 
 class RRTStarNew:
-    def __init__(self, start, goal, obstacle_list, rand_area, expand_dis=0.5, goal_sample_rate=10, max_iter=500):
+    def __init__(self, start, goal, obstacle_list, rand_area, expand_dis=0.2, goal_sample_rate=10, max_iter=500):
         self.start = Node(start[0], start[1], start[2])
         self.goal = Node(goal[0], goal[1], goal[2])
         self.min_rand = rand_area[0]
