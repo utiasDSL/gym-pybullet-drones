@@ -172,6 +172,7 @@ def main():
         print("Exiting")
     
     # End of simulation and plotting
+    time.sleep(1)
     env.close()
     logger.save()
     if plot:
