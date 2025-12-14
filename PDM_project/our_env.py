@@ -22,9 +22,6 @@ class CustomCtrlAviary(CtrlAviary):
             physicsClientId=self.CLIENT
         )
 
-        
-
-        
         p.loadURDF(
             "cube_no_rotation.urdf",
             [1.0, 4.0, 0.0],
@@ -32,36 +29,36 @@ class CustomCtrlAviary(CtrlAviary):
             physicsClientId=self.CLIENT
         )
         
-        p.loadURDF(
-            "duck_vhacd.urdf",
-            [-.5, -.5, .05],
-            p.getQuaternionFromEuler([0, 0, 0]),
-            physicsClientId=self.CLIENT
-        )
+        # p.loadURDF(
+        #     "duck_vhacd.urdf",
+        #     [-.5, -.5, .05],
+        #     p.getQuaternionFromEuler([0, 0, 0]),
+        #     physicsClientId=self.CLIENT
+        # )
 
         #Code taken from https://github.com/phuongboi/drone-racing-using-reinforcement-learning
-        g1 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
-                   [0, 1, 0],
-                   p.getQuaternionFromEuler([0, 0, np.pi/2]),
-                   physicsClientId=self.CLIENT
-                   )
-        g2 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
-                   [0.5, 3, 0],
-                   p.getQuaternionFromEuler([0, 0, np.pi/2]),
-                   physicsClientId=self.CLIENT
-                   )
-        g3 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
-                   [-0.5, 5, 0],
-                   p.getQuaternionFromEuler([0, 0, np.pi/2]),
-                   physicsClientId=self.CLIENT
-                   )
-        g4 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
-                   [-0.5, 6, 0],
-                   p.getQuaternionFromEuler([0, 0, np.pi/2]),
-                   physicsClientId=self.CLIENT
-                   )
+        # g1 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
+        #            [0, 1, 0],
+        #            p.getQuaternionFromEuler([0, 0, np.pi/2]),
+        #            physicsClientId=self.CLIENT
+        #            )
+        # g2 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
+        #            [0.5, 3, 0],
+        #            p.getQuaternionFromEuler([0, 0, np.pi/2]),
+        #            physicsClientId=self.CLIENT
+        #            )
+        # g3 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
+        #            [-0.5, 5, 0],
+        #            p.getQuaternionFromEuler([0, 0, np.pi/2]),
+        #            physicsClientId=self.CLIENT
+        #            )
+        # g4 = p.loadURDF(pkg_resources.resource_filename('gym_pybullet_drones', 'assets/gate.urdf'),
+        #            [-0.5, 6, 0],
+        #            p.getQuaternionFromEuler([0, 0, np.pi/2]),
+        #            physicsClientId=self.CLIENT
+        #            )
 
-        self.GATE_IDs = np.array([g1, g2, g3, g4])
+        # self.GATE_IDs = np.array([g1, g2, g3, g4])
         
     '''
     def _preprocessAction(self,
