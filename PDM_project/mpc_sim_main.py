@@ -6,7 +6,7 @@ import pybullet_data
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.envs.CtrlAviary import CtrlAviary
-from MPC import MPC_control
+from PDM_project.MPC_old import MPC_control
 from gym_pybullet_drones.utils.Logger import Logger
 from gym_pybullet_drones.utils.utils import sync, str2bool
 from new_env import CustomCtrlAviary
