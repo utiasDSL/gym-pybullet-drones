@@ -69,8 +69,16 @@ class MPC_control(BaseControl):
         self._setup_mpc_problem()
 
     def _setup_mpc_problem(self):
-        weight_input = np.diag([4.0, 1.0, 1.0, 0.3])
-        weight_tracking = np.diag([8, 8, 12, 3, 3, 4, 2, 2, 0.5, 0.5, 0.5, 0.5])
+        weight_input = np.diag([4.0, 
+                                1.0, 
+                                1.0, 
+                                0.3])
+        #weight_tracking = np.diag([8, 8, 12, 3, 3, 4, 2, 2, 0.5, 0.5, 0.5, 0.5])
+        #We found these weights to perform better in practice for obstacle avoidance as the map is very tiny.
+        weight_tracking = np.diag([15,  15,  6, 
+                                     3,   3,   4, 
+                                     2,   2, 0.5, 
+                                   0.5, 0.5, 0.5])
 
         cost = 0.
         constraints = []
@@ -82,6 +90,7 @@ class MPC_control(BaseControl):
                 constraints += [self.x[:, k+1] == self.A @ self.x[:, k] + self.B @ self.u[:, k] + self.g_vector]
                 constraints += [self.u[:, k] <= [self.MAX_THRUST, self.MAX_XY_TORQUE, self.MAX_XY_TORQUE, self.MAX_Z_TORQUE]]
                 constraints += [self.u[:, k] >= [0, -self.MAX_XY_TORQUE, -self.MAX_XY_TORQUE, -self.MAX_Z_TORQUE]]
+                
             
             # CHANGED: Only add constraints if obstacles exist
             if self.A_param is not None:

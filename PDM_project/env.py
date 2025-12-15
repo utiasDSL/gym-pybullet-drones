@@ -10,12 +10,20 @@ class CustomCtrlAviary(CtrlAviary):
     and visualization from new_env.py.
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, obstacles_pos, *args, **kwargs):
+        if obstacles_pos is None:
+            self.obstacles_pos = np.zeros((0, 3), dtype=float)
+        else:
+            self.obstacles_pos = np.asarray(obstacles_pos, dtype=float)
+            self.obstacles_pos = np.atleast_2d(self.obstacles_pos)
+            if self.obstacles_pos.shape[1] != 3:
+                raise ValueError(f"obstacles_pos must have shape (N,3). Got {self.obstacles_pos.shape}.")
+
         super().__init__(*args, **kwargs)
         # Keep track of visual spheres for debugging
         self.obstacle_sphere_ids = []
         self.drone_sphere_id = None
-
+        
 
     def _addObstacles(self):
         """
@@ -40,12 +48,8 @@ class CustomCtrlAviary(CtrlAviary):
         # Define the maze layout (Your 4 pillars)
         # We use the list of positions you used in RRT
 
-        """
-        self._add_single_cube([1.0, 2.5, 0.5])
-        self._add_single_cube([1.0, 2.5, 1.5])
-        self._add_single_cube([2.5, 1.0, 0.5])
-        self._add_single_cube([2.5, 1.0, 1.5])
-        """
+        for i in range(self.obstacles_pos.shape[0]):
+            self._add_single_cube(self.obstacles_pos[i])
 
         # Visualize the safety spheres (useful for MPC debugging)
         obstacles_info = self.get_obstacles_info()
@@ -54,16 +58,16 @@ class CustomCtrlAviary(CtrlAviary):
 
     def _add_single_cube(self, pos):
         # Helper to add a single cube and store its ID.
-        
+        #self.obstacle_pos = pos
         # Robust path finding using os (fixes the 'file not found' error)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         # Go up two levels to find gym_pybullet_drones if necessary, or adjust relative to project root
-        urdf_path = os.path.join(script_dir, "../gym_pybullet_drones/assets/box.urdf")
+        urdf_path = os.path.join(script_dir, "../gym_pybullet_drones/assets/big_box.urdf")
         
         # Fallback: if running from root, path might differ. Check existence.
         if not os.path.exists(urdf_path):
              # Try simpler path if running from root
-             urdf_path = "./gym_pybullet_drones/assets/box.urdf"
+             urdf_path = "./gym_pybullet_drones/assets/big_box.urdf"
 
         obs_id = p.loadURDF(
             urdf_path,
@@ -79,14 +83,15 @@ class CustomCtrlAviary(CtrlAviary):
         """Returns position and radius of all obstacles for the MPC."""
         obstacles_info = []
 
+        p.performCollisionDetection(physicsClientId=self.CLIENT)
+
         for obs_id in self.obstacle_ids:
             pos, _ = p.getBasePositionAndOrientation(obs_id, physicsClientId=self.CLIENT)
             
             # Get Dimensions to calculate bounding sphere
-            visual_data = p.getVisualShapeData(obs_id, physicsClientId=self.CLIENT)[0]
+            # visual_data = p.getVisualShapeData(obs_id, physicsClientId=self.CLIENT)[0]
             aabb_min, aabb_max = p.getAABB(obs_id, physicsClientId=self.CLIENT)
             extents = np.array(aabb_max) - np.array(aabb_min)
-            
             # Radius is half the diagonal of the bounding box
             r_sphere = 0.5 * np.linalg.norm(extents)
 

@@ -1,7 +1,6 @@
 import numpy as np
 import time
 import pybullet as p
-# import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
@@ -37,7 +36,7 @@ def main():
     physics = Physics.PYB 
     control_freq_hz = 48  
     sim_freq_hz = 240
-    plot = True  # Enable plotting
+    # plot = True  # Enable plotting
     
     start_pos = [0.0, 0.0, 0.1] 
     goal_pos  = [9.0, 12.0, 0.2]
@@ -65,7 +64,7 @@ def main():
     ]
 
     # We add a safety margin to the Half-Extents (indices 3, 4, 5)
-    SAFETY_MARGIN = 0.4  # meters (Drone radius is ~0.1m, so 0.4m gives 0.3m clearance)
+    SAFETY_MARGIN = 0.8  # meters (Drone radius is ~0.1m, so 0.4m gives 0.3m clearance)
     
     rrt_obstacles = []
     for wall in maze_walls:
@@ -98,7 +97,7 @@ def main():
         )
         
         path = rrt.plan()
-        
+
         if path is None: 
             print("  -> No path found.")
             continue
@@ -107,12 +106,17 @@ def main():
 
         path = np.array(path)
         
+        
         # 1. Filter path (Remove duplicates)
         unique_path = [path[0]]
         for p_idx in range(1, len(path)):
             if np.linalg.norm(path[p_idx] - unique_path[-1]) > 0.1:
                 unique_path.append(path[p_idx])
         path = np.array(unique_path)
+
+        # Select 3 random waypoints for obstacle creation
+        new_obstacles_idx = np.random.choice(range(1, path.shape[0] - 3), 3, replace=False)
+        new_obstacles = path[new_obstacles_idx]
 
         
         # 2. Calculate Segment Distances
@@ -125,7 +129,7 @@ def main():
         current_dist = 0
         times = [0.0]
         
-        CRUISE_SPEED = 1.2  # Fast!
+        CRUISE_SPEED = 1.0  # Fast!
         APPROACH_DIST = 2.0 # Start braking 3 meters away
         MIN_SPEED = 0.2     # Arrival speed
 
@@ -187,9 +191,11 @@ def main():
         ctrl_freq=control_freq_hz,
         gui=True,
         obstacles=True,
-        user_debug_gui=False
+        user_debug_gui=False,
+        obstacles_pos=new_obstacles
     )
-    
+
+
     # Hide setup glitches
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 0, physicsClientId=env.CLIENT)
     
@@ -209,13 +215,13 @@ def main():
     for i in range(len(path) - 1):
         p.addUserDebugLine(path[i], path[i+1], [1, 0, 0], 3, 0, env.CLIENT)
     
-    # Draw SPLine trajectory (BLUE)
+    # Draw SPLine trajectory (GREEN)
     draw_dt = 0.2
     times = np.arange(0, total_time, draw_dt)
     for t in times[:-1]:
         p1 = traj_spline(t)
         p2 = traj_spline(t + draw_dt)
-        p.addUserDebugLine(p1, p2, [0, 0, 1], 3, 0, env.CLIENT)
+        p.addUserDebugLine(p1, p2, [0, 1, 0], 3, 0, env.CLIENT)
 
     # Re-enable rendering
     p.configureDebugVisualizer(p.COV_ENABLE_RENDERING, 1, physicsClientId=env.CLIENT)

@@ -17,7 +17,7 @@
         <box size="18.0 3.0 6.0"/>
       </geometry>
       <material name="wall_color">
-        <color rgba="0.5 0.5 0.5 1"/>
+        <color rgba="1 1 1 1"/>
       </material>
     </visual>
     <collision>
