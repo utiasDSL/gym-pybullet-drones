@@ -35,7 +35,7 @@ class CustomCtrlAviary(CtrlAviary):
             useFixedBase=True,         # Important: keeps the maze static
             physicsClientId=self.CLIENT
         )
-        self.obstacle_ids.append(self.maze_id)
+        # self.obstacle_ids.append(self.maze_id)
 
         # Define the maze layout (Your 4 pillars)
         # We use the list of positions you used in RRT

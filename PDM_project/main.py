@@ -1,7 +1,7 @@
 import numpy as np
 import time
 import pybullet as p
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from scipy.interpolate import CubicSpline
 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
@@ -114,6 +114,7 @@ def main():
                 unique_path.append(path[p_idx])
         path = np.array(unique_path)
 
+        
         # 2. Calculate Segment Distances
         segment_vectors = np.diff(path, axis=0)
         segment_dists = np.linalg.norm(segment_vectors, axis=1)
@@ -125,7 +126,7 @@ def main():
         times = [0.0]
         
         CRUISE_SPEED = 1.2  # Fast!
-        APPROACH_DIST = 5.0 # Start braking 3 meters away
+        APPROACH_DIST = 2.0 # Start braking 3 meters away
         MIN_SPEED = 0.2     # Arrival speed
 
         for i, dist in enumerate(segment_dists):
@@ -145,10 +146,23 @@ def main():
             # Time = Distance / Speed
             dt = dist / max(speed, 0.1) # Safety clamp
             times.append(times[-1] + dt)
-            
+
         t_waypoints = np.array(times)
         total_time = t_waypoints[-1]
         
+
+        """
+        # 2. Constant Velocity Calculation (RESTORED)
+        # ---------------------------------------------------------
+        AVG_SPEED = 1.2  # Constant high speed throughout the path
+        
+        distances = np.linalg.norm(np.diff(path, axis=0), axis=1)
+        cum_dist = np.insert(np.cumsum(distances), 0, 0)
+        total_time = cum_dist[-1] / AVG_SPEED
+        t_waypoints = cum_dist / AVG_SPEED
+        # ---------------------------------------------------------
+        """
+
         # 4. Generate Clamped Spline
         # The spline will now naturally slow down at the end because 
         # the timestamps t_waypoints are spaced further apart.
