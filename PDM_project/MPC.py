@@ -4,8 +4,10 @@ import pybullet as p
 from gym_pybullet_drones.control.BaseControl import BaseControl
 from gym_pybullet_drones.utils.enums import DroneModel
 
+
+# --- MPC CONTROLLER CLASS DEFINITION ---
 class MPC_control(BaseControl):
-    # CHANGED: Added num_obstacles argument
+
     def __init__(self, drone_model: DroneModel, num_obstacles=0, g: float=9.8):
         super().__init__(drone_model=drone_model, g=g)
         self.T = 15
@@ -14,12 +16,11 @@ class MPC_control(BaseControl):
         
         self.solver = cp.OSQP
         
-        # NEW SETTINGS (Faster & More tolerant):
         self.solver_settings = dict(
             warm_start=True, 
             eps_abs=1e-2,   # Relaxed absolute tolerance (was 1e-3)
             eps_rel=1e-2,   # Relaxed relative tolerance (was 1e-3)
-            max_iter=500,  # Allow more tries if really needed
+            max_iter=500,   # Allow more tries if really needed
             verbose=False
         )
         
@@ -58,7 +59,7 @@ class MPC_control(BaseControl):
         self.x_init_param = cp.Parameter(12)
         self.x_target_param = cp.Parameter(12)
         
-        # CHANGED: Dynamic initialization of obstacle parameters
+        # Dynamic initialization of obstacle parameters
         if self.num_obstacles > 0:
             self.A_param = cp.Parameter((self.num_obstacles, 3)) 
             self.b_param = cp.Parameter(self.num_obstacles)
@@ -68,12 +69,15 @@ class MPC_control(BaseControl):
 
         self._setup_mpc_problem()
 
+    # Setup of the MPC problem
     def _setup_mpc_problem(self):
         weight_input = np.diag([4.0, 
                                 1.0, 
                                 1.0, 
                                 0.3])
+        
         #weight_tracking = np.diag([8, 8, 12, 3, 3, 4, 2, 2, 0.5, 0.5, 0.5, 0.5])
+
         #We found these weights to perform better in practice for obstacle avoidance as the map is very tiny.
         weight_tracking = np.diag([15,  15,  6, 
                                      3,   3,   4, 
@@ -91,8 +95,7 @@ class MPC_control(BaseControl):
                 constraints += [self.u[:, k] <= [self.MAX_THRUST, self.MAX_XY_TORQUE, self.MAX_XY_TORQUE, self.MAX_Z_TORQUE]]
                 constraints += [self.u[:, k] >= [0, -self.MAX_XY_TORQUE, -self.MAX_XY_TORQUE, -self.MAX_Z_TORQUE]]
                 
-            
-            # CHANGED: Only add constraints if obstacles exist
+            # nOly add constraints if obstacles exist
             if self.A_param is not None:
                 constraints += [self.A_param @ self.x[:3, k] <= self.b_param]
 
@@ -102,11 +105,13 @@ class MPC_control(BaseControl):
         constraints += [self.x[:, 0] == self.x_init_param]
         self.problem = cp.Problem(cp.Minimize(cost), constraints)
 
+    # Update parameters 
     def update_param(self, cur_pos, r_drone, obstacles_center, r_obs):
-        # CHANGED: Guard clause for 0 obstacles
+        # Guard clause for 0 obstacles
         if self.num_obstacles > 0:
             self.A_param.value, self.b_param.value = self.convex_region(cur_pos, r_drone, obstacles_center, r_obs)
 
+    # Convex region for the MPC problem
     def convex_region(self, cur_pos, r_drone, obstacle_list, r_obstacle_list):
         A_rows, b_rows = [], []
         for i, p_obs in enumerate(obstacle_list):
@@ -125,7 +130,9 @@ class MPC_control(BaseControl):
 
         return np.vstack(A_rows), np.array(b_rows).reshape(-1)
 
+    # Compute the control action (RPMs) from the state (control_timestep not necessary)
     def computeControlFromState(self, control_timestep, state, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_rpy_rates=np.zeros(3)):
+        
         # Extract 12-state vector
         pos = state[0:3]
         rpy = state[7:10]
@@ -151,6 +158,7 @@ class MPC_control(BaseControl):
         rpms = self._mix_forces_to_rpm(optimal_u[0], optimal_u[1:])
         return rpms, np.linalg.norm(target_pos - state[0:3]), 0
 
+    # Forces and RPMs
     def _mix_forces_to_rpm(self, thrust, torques):
         t_x, t_y, t_z = torques
         L_eff = self.L / np.sqrt(2) if self.DRONE_MODEL == DroneModel.CF2X else self.L
@@ -165,7 +173,9 @@ class MPC_control(BaseControl):
             k_thrust*thrust + k_roll*t_x + k_pitch*t_y - k_yaw*t_z,
             k_thrust*thrust + k_roll*t_x - k_pitch*t_y + k_yaw*t_z
         ])
+
         return np.sqrt(np.maximum(w2, 0))
     
+    # Compute control function (have a look)
     def computeControl(self, *args, **kwargs):
         pass
