@@ -10,7 +10,7 @@ class MPC_control(BaseControl):
 
     def __init__(self, drone_model: DroneModel, num_obstacles=0, g: float=9.8):
         super().__init__(drone_model=drone_model, g=g)
-        self.T = 15
+        self.T = 20
         self.dt = 1/48
         self.num_obstacles = num_obstacles # Store the count
         
@@ -95,7 +95,7 @@ class MPC_control(BaseControl):
                 constraints += [self.u[:, k] <= [self.MAX_THRUST, self.MAX_XY_TORQUE, self.MAX_XY_TORQUE, self.MAX_Z_TORQUE]]
                 constraints += [self.u[:, k] >= [0, -self.MAX_XY_TORQUE, -self.MAX_XY_TORQUE, -self.MAX_Z_TORQUE]]
                 
-            # nOly add constraints if obstacles exist
+            # Only add constraints if obstacles exist
             if self.A_param is not None:
                 constraints += [self.A_param @ self.x[:3, k] <= self.b_param]
 
@@ -104,7 +104,7 @@ class MPC_control(BaseControl):
 
         constraints += [self.x[:, 0] == self.x_init_param]
         self.problem = cp.Problem(cp.Minimize(cost), constraints)
-
+    
     # Update parameters 
     def update_param(self, cur_pos, r_drone, obstacles_center, r_obs):
         # Guard clause for 0 obstacles

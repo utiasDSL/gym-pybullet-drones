@@ -235,6 +235,22 @@ def main():
 
         # 4. Step environment
         obs, _, _, _, _ = env.step(np.array([action]))
+
+        # Chase camera logic
+        drone_pos = obs[0][0:3]
+        drone_rpy = obs[0][7:10] # Roll, Pitch, Yaw
+        
+        # Convert Yaw from Radians to Degrees for PyBullet
+        yaw_degrees = np.degrees(drone_rpy[2])
+        
+        # Update Camera
+        p.resetDebugVisualizerCamera(
+            cameraDistance=2.0,           # Closer view (2 meters)
+            cameraYaw=yaw_degrees - 90,   # Subtract 90 to look from BEHIND the drone
+            cameraPitch=-30,              # Downward angle
+            cameraTargetPosition=drone_pos,
+            physicsClientId=env.CLIENT
+        )
         
         # 5. Log
         control_ref = np.hstack([target_pos, np.zeros(3), target_vel, np.zeros(3)])
