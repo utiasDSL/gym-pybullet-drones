@@ -1,3 +1,4 @@
+import control
 import cvxpy as cp
 import numpy as np
 import pybullet as p
@@ -79,7 +80,12 @@ class MPC_control(BaseControl):
         #weight_tracking = np.diag([8, 8, 12, 3, 3, 4, 2, 2, 0.5, 0.5, 0.5, 0.5])
 
         #We found these weights to perform better in practice for obstacle avoidance as the map is very tiny.
-        weight_tracking = np.diag([15,  15,  6, 
+        #weight_tracking = np.diag([15,  15,  6, 
+        #                             3,   3,   4, 
+        #                             2,   2, 0.5, 
+        #                           0.5, 0.5, 0.5])
+
+        weight_tracking = np.diag([60,  60,  40, 
                                      3,   3,   4, 
                                      2,   2, 0.5, 
                                    0.5, 0.5, 0.5])
@@ -88,6 +94,9 @@ class MPC_control(BaseControl):
         constraints = []
         self.x = cp.Variable((12, self.T + 1))
         self.u = cp.Variable((4, self.T))
+        P, L, K = control.dare(self.A, self.B, weight_tracking, weight_input)
+        eig_val,eig_vec=np.linalg.eig(P)
+        c=0.01
 
         for k in range(self.T):
             if k < self.T-1:
@@ -101,6 +110,13 @@ class MPC_control(BaseControl):
 
             x_err = self.x[:, k] - self.x_target_param
             cost += cp.quad_form(x_err, weight_tracking) + cp.quad_form(self.u[:, k], weight_input)
+         # ----- Terminal cost -----
+        xT_err = self.x[:, self.T] - self.x_target_param
+        cost += cp.quad_form(xT_err, P)
+        
+        for j in range(len(eig_val)):
+            constraints+= [(self.x[:,self.T]-self.x_target_param)  @ eig_vec[j]/np.linalg.norm(eig_vec[j])<=np.sqrt(c/eig_val[j])]
+            constraints+= [(self.x[:,self.T]-self.x_target_param)  @ eig_vec[j]/np.linalg.norm(eig_vec[j])>=-np.sqrt(c/eig_val[j])]
 
         constraints += [self.x[:, 0] == self.x_init_param]
         self.problem = cp.Problem(cp.Minimize(cost), constraints)
