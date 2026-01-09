@@ -79,7 +79,27 @@ def main():
         [2.0,  13.0, 0.5,  0.5, 0.5, 0.5], # 3. Third obstacle
         [2.0,  13.0, 1.5,  0.5, 0.5, 0.5] # 3. Third obstacle
     ]
+    cube_walls = [
+    [7.0, -1.0, 0.5,  0.5, 0.5, 0.5],
+    [7.0,  0.0, 0.5,  0.5, 0.5, 0.5],
+    [7.0,  0.0, 1.5,  0.5, 0.5, 0.5],
+    [7.0,  1.0, 0.5,  0.5, 0.5, 0.5],
+    [7.0,  1.0, 1.5,  0.5, 0.5, 0.5],
+    [7.0,  1.0, 2.5,  0.5, 0.5, 0.5],
 
+    [2.0,  5.0, 2.5,  0.5, 0.5, 0.5],
+    [2.0,  6.0, 0.5,  0.5, 0.5, 0.5],
+    [2.0,  6.0, 1.5,  0.5, 0.5, 0.5],
+    [2.0,  6.0, 2.5,  0.5, 0.5, 0.5],
+    [2.0,  7.0, 2.5,  0.5, 0.5, 0.5],
+
+    [2.0,  11.0, 0.5,  0.5, 0.5, 0.5],
+    [2.0,  11.0, 1.5,  0.5, 0.5, 0.5],
+    [2.0,  12.0, 0.5,  0.5, 0.5, 0.5],
+    [2.0,  12.0, 1.5,  0.5, 0.5, 0.5],
+    [2.0,  13.0, 0.5,  0.5, 0.5, 0.5],
+    [2.0,  13.0, 1.5,  0.5, 0.5, 0.5],
+]
     # We add a safety margin (sort of boundig box for walls)
     SAFETY_MARGIN = 0.4
     
@@ -137,7 +157,7 @@ def main():
 
         # 2. Select random waypoints for obstacle creation
         # (NOTE: your code uses 8 obstacles; keep as-is)
-        new_obstacles_idx = np.random.choice(range(1, path_candidate.shape[0] - 3), size=8, replace=False)
+        new_obstacles_idx = np.random.choice(range(1, path_candidate.shape[0] - 3), size=5, replace=False)
         new_obstacles_candidate = path_candidate[new_obstacles_idx]
 
         # 3. Calculate Segment Distances
@@ -215,9 +235,10 @@ def main():
     all_obstacles = env.get_obstacles_info()
     num_obstacles = len(all_obstacles)
     print(f"MPC detected {num_obstacles} dynamic obstacles.")
+    print("RRT OBSTACLES (for MPC walls):", len(rrt_obstacles))
 
     # Initialize MPC
-    ctrl = MPC_control(drone_model=drone_model, num_obstacles=num_obstacles)
+    ctrl = MPC_control(drone_model=drone_model, num_obstacles=num_obstacles, static_walls=cube_walls)
 
     logger = Logger(logging_freq_hz=control_freq_hz, num_drones=1, output_folder='results')
 
@@ -275,6 +296,13 @@ def main():
                     "z": float(obs[0][2]),
                     "pos": obs[0][0:3].copy()
                 })
+        # >>> ADDED: build reference horizon for corridor constraint (k=0..T)  (ALWAYS)
+        ref_h = np.zeros((3, ctrl.T + 1))
+        for k in range(ctrl.T + 1):
+            tk = now + k * ctrl.dt           # use MPC dt
+            tk = min(tk, total_time)         # clamp so we don't go past spline end
+            ref_h[:, k] = traj_spline(tk)
+        ctrl.ref_param.value = ref_h
 
 
         # 3. Compute control

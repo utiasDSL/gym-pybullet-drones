@@ -10,12 +10,21 @@ import time
 # --- MPC CONTROLLER CLASS DEFINITION ---
 class MPC_control(BaseControl):
 
-    def __init__(self, drone_model: DroneModel, num_obstacles=0, g: float=9.8):
+    def __init__(self, drone_model: DroneModel, num_obstacles=0, static_walls=None, g: float=9.8):
         super().__init__(drone_model=drone_model, g=g)
         self.T = 20
         self.dt = 1/48
-        self.num_obstacles = num_obstacles # Store the count
-        
+        # >>> CHANGED: keep dynamic obstacles separate from static walls
+        self.num_dyn_obstacles = int(num_obstacles)
+        self.static_walls = [] if static_walls is None else list(static_walls)
+
+        # >>> ADDED: total number of halfspace constraints used in A_param x <= b_param
+        self.num_halfspaces = self.num_dyn_obstacles + len(self.static_walls)
+        #self.num_obstacles = num_obstacles # Store the count
+        print("len(obstacles_center) =", (self.num_dyn_obstacles))
+        print("len(static_walls)     =", len((self.static_walls)))
+        print("num_halfspaces (param)=", self.num_halfspaces)
+
         #self.solver = cp.OSQP
         self.solver = cp.CLARABEL
         
@@ -68,11 +77,12 @@ class MPC_control(BaseControl):
 
         self.x_init_param = cp.Parameter(12)
         self.x_target_param = cp.Parameter(12)
+        self.ref_param = cp.Parameter((3, self.T+1))
         
         # Dynamic initialization of obstacle parameters
-        if self.num_obstacles > 0:
-            self.A_param = cp.Parameter((self.num_obstacles, 3)) 
-            self.b_param = cp.Parameter(self.num_obstacles)
+        if self.num_halfspaces > 0:
+            self.A_param = cp.Parameter((self.num_halfspaces, 3))
+            self.b_param = cp.Parameter(self.num_halfspaces)
         else:
             self.A_param = None
             self.b_param = None
@@ -82,6 +92,9 @@ class MPC_control(BaseControl):
         self.solve_times = []
         self.solve_status = []
         self.solve_iters = []
+        
+        self.VXY_MAX = 5.0   # m/s (start with 0.6–1.2 depending on your map)
+        #self.VZ_MAX  = 2.0   # m/s
 
 
         self._setup_mpc_problem()
@@ -101,7 +114,7 @@ class MPC_control(BaseControl):
         #                             2,   2, 0.5, 
         #                           0.5, 0.5, 0.5])
 
-        weight_tracking = np.diag([80,  80,  50, 
+        weight_tracking = np.diag([15,  15,  6, 
                                      3,   3,   4, 
                                      2,   2, 0.5, 
                                    0.5, 0.5, 0.5])
@@ -113,6 +126,7 @@ class MPC_control(BaseControl):
         P, L, K = control.dare(self.A, self.B, weight_tracking, weight_input)
         eig_val,eig_vec=np.linalg.eig(P)
         c=0.01
+
 
         for k in range(self.T):
             if k < self.T-1:
@@ -128,8 +142,10 @@ class MPC_control(BaseControl):
                 
             constraints += [self.x[2, :] >= 0.05]  # z >= 0.05 for all horizon states
 
+
             x_err = self.x[:, k] - self.x_target_param
             cost += cp.quad_form(x_err, weight_tracking) + cp.quad_form(self.u[:, k], weight_input)
+
          # ----- Terminal cost -----
         xT_err = self.x[:, self.T] - self.x_target_param
         cost += cp.quad_form(xT_err, P)
@@ -144,32 +160,128 @@ class MPC_control(BaseControl):
     # Update parameters 
     def update_param(self, cur_pos, r_drone, obstacles_center, r_obs):
         # Guard clause for 0 obstacles
-        if self.num_obstacles > 0:
-            self.A_param.value, self.b_param.value = self.convex_region(cur_pos, r_drone, obstacles_center, r_obs)
+            if self.num_halfspaces > 0:
+                A, b = self.convex_region(
+                    cur_pos=cur_pos,
+                    r_drone=r_drone,
+                    obstacle_list=obstacles_center,
+                    r_obstacle_list=r_obs,
+                    wall_list=self.static_walls
+                )
             
-        
-        # >>> ADDED: store the convex region so main.py can plot it
-        self.last_A = self.A_param.value
-        self.last_b = self.b_param.value
+           # >>> ADDED: enforce fixed size for CVXPY Parameters
+            K = self.num_halfspaces
 
-    # Convex region for the MPC problem
-    def convex_region(self, cur_pos, r_drone, obstacle_list, r_obstacle_list):
+            if A.shape[0] < K:
+                missing = K - A.shape[0]
+                A_pad = np.zeros((missing, 3))
+                b_pad = 1e6 * np.ones(missing)  # always satisfied: 0*x <= 1e6
+                A = np.vstack([A, A_pad])
+                b = np.hstack([b, b_pad])
+
+            elif A.shape[0] > K:
+                A = A[:K, :]
+                b = b[:K]
+
+            # store for plotting/debug
+            self.last_A = A.copy()
+            self.last_b = b.copy()
+
+            # set cvxpy params (NOW shapes always match)
+            self.A_param.value = A
+            self.b_param.value = b
+
+
+
+    def convex_region(self, cur_pos, r_drone, obstacle_list, r_obstacle_list, wall_list):
         A_rows, b_rows = [], []
+        cur_pos = np.asarray(cur_pos).reshape(3)
+
+        # ---------- 1) Dynamic spherical obstacles ----------
         for i, p_obs in enumerate(obstacle_list):
-            r_obs = r_obstacle_list[i]
+            p_obs = np.asarray(p_obs).reshape(3)
+            r_obs = float(r_obstacle_list[i])
+
             v = cur_pos - p_obs
             dist = np.linalg.norm(v)
             n = v / (dist + 1e-6)
-            R = r_drone + r_obs + 0.05 
+
+            R = r_drone + r_obs + 0.05
             q = p_obs + R * n
+
             b_plane = float(n @ q)
             A_obs, b_obs = -n, -b_plane
-            if A_obs @ cur_pos > b_obs: A_obs, b_obs = -A_obs, -b_obs 
+
+            # ensure current position satisfies the inequality
+            if A_obs @ cur_pos > b_obs:
+                A_obs, b_obs = -A_obs, -b_obs
 
             A_rows.append(A_obs)
             b_rows.append(b_obs)
 
+        # ---------- 2) Static box walls ----------
+        BOX_MARGIN = 0.05
+        for wall in wall_list:
+            ox, oy, oz, hx, hy, hz = map(float, wall)
+
+            # inflate box by drone radius + margin
+            hxI = hx + r_drone + BOX_MARGIN
+            hyI = hy + r_drone + BOX_MARGIN
+            hzI = hz + r_drone + BOX_MARGIN
+
+            lo = np.array([ox - hxI, oy - hyI, oz - hzI])
+            hi = np.array([ox + hxI, oy + hyI, oz + hzI])
+
+            # closest point on inflated box to cur_pos
+            q = np.minimum(np.maximum(cur_pos, lo), hi)
+
+            v = cur_pos - q
+            dist = np.linalg.norm(v)
+
+            if dist < 1e-6:
+                # inside/very close: push toward nearest face
+                d_to_faces = np.array([
+                    abs(cur_pos[0] - lo[0]), abs(hi[0] - cur_pos[0]),
+                    abs(cur_pos[1] - lo[1]), abs(hi[1] - cur_pos[1]),
+                    abs(cur_pos[2] - lo[2]), abs(hi[2] - cur_pos[2]),
+                ])
+                j = int(np.argmin(d_to_faces))
+                n = np.zeros(3)
+                if j == 0: n[0] = -1.0
+                elif j == 1: n[0] =  1.0
+                elif j == 2: n[1] = -1.0
+                elif j == 3: n[1] =  1.0
+                elif j == 4: n[2] = -1.0
+                else:        n[2] =  1.0
+
+                q = cur_pos.copy()
+                if n[0] < 0: q[0] = lo[0]
+                if n[0] > 0: q[0] = hi[0]
+                if n[1] < 0: q[1] = lo[1]
+                if n[1] > 0: q[1] = hi[1]
+                if n[2] < 0: q[2] = lo[2]
+                if n[2] > 0: q[2] = hi[2]
+            else:
+                n = v / dist
+
+            # plane: n^T x >= n^T q  ->  -n^T x <= -n^T q
+            b_plane = float(n @ q)
+            A_wall = -n
+            b_wall = -b_plane
+
+            if A_wall @ cur_pos > b_wall:
+                A_wall, b_wall = -A_wall, -b_wall
+
+            A_rows.append(A_wall)
+            b_rows.append(b_wall)
+
+        if len(A_rows) == 0:
+            return np.zeros((0, 3)), np.zeros((0,))
+
         return np.vstack(A_rows), np.array(b_rows).reshape(-1)
+
+
+        #return np.vstack(A_rows), np.array(b_rows).reshape(-1)
 
     # Compute the control action (RPMs) from the state (control_timestep not necessary)
     def computeControlFromState(self, control_timestep, state, target_pos, target_rpy=np.zeros(3), target_vel=np.zeros(3), target_rpy_rates=np.zeros(3)):
