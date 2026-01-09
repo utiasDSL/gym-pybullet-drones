@@ -182,7 +182,7 @@ class RRTStar:
             rnd = Node(
                 random.uniform(self.min_rand, self.max_rand),
                 random.uniform(self.min_rand, self.max_rand),
-                random.uniform(0.1, 2.0)
+                random.uniform(0.1, 3.0)
             )
         else:
             rnd = Node(self.goal.x, self.goal.y, self.goal.z)
