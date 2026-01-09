@@ -57,12 +57,32 @@ def main():
         [-3.0, 6.0, 3.0,  1.5, 7.5, 3.0], # 3. Left Boundary
         [12.0, 6.0, 3.0,  1.5, 7.5, 3.0], # 4. Right Boundary
         [3.0,  3.0, 3.0,  4.5, 1.5, 3.0], # 5. Inner Wall 1
-        [6.0,  9.0, 3.0,  4.5, 1.5, 3.0]  # 6. Inner Wall 2
+        [6.0,  9.0, 3.0,  4.5, 1.5, 3.0], # 6. Inner Wall 2'
+
+        [7.0, -1.0, 0.5,  0.5, 0.5, 0.5], # 1. First obstacle
+        [7.0,  0.0, 0.5,  0.5, 0.5, 0.5], # 1. First obstacle
+        [7.0,  0.0, 1.5,  0.5, 0.5, 0.5], # 1. First obstacle
+        [7.0,  1.0, 0.5,  0.5, 0.5, 0.5], # 1. First obstacle
+        [7.0,  1.0, 1.5,  0.5, 0.5, 0.5], # 1. First obstacle
+        [7.0,  1.0, 2.5,  0.5, 0.5, 0.5], # 1. First obstacle
+
+        [2.0,  5.0, 2.5,  0.5, 0.5, 0.5], # 2. Second obstacle
+        [2.0,  6.0, 0.5,  0.5, 0.5, 0.5], # 2. Second obstacle
+        [2.0,  6.0, 1.5,  0.5, 0.5, 0.5], # 2. Second obstacle
+        [2.0,  6.0, 2.5,  0.5, 0.5, 0.5], # 2. Second obstacle
+        [2.0,  7.0, 2.5,  0.5, 0.5, 0.5], # 2. Second obstacle
+
+        [2.0,  11.0, 0.5,  0.5, 0.5, 0.5], # 3. Third obstacle
+        [2.0,  11.0, 1.5,  0.5, 0.5, 0.5], # 3. Third obstacle
+        [2.0,  12.0, 0.5,  0.5, 0.5, 0.5], # 3. Third obstacle
+        [2.0,  12.0, 1.5,  0.5, 0.5, 0.5], # 3. Third obstacle
+        [2.0,  13.0, 0.5,  0.5, 0.5, 0.5], # 3. Third obstacle
+        [2.0,  13.0, 1.5,  0.5, 0.5, 0.5] # 3. Third obstacle
     ]
 
     # We add a safety margin (sort of boundig box for walls)
-    SAFETY_MARGIN = 0.8
-
+    SAFETY_MARGIN = 0.4
+    
     rrt_obstacles = []
 
     # Create array of safety bounded walls
@@ -95,7 +115,7 @@ def main():
             obstacle_list=rrt_obstacles,
             expand_dis=1.5,
             goal_sample_rate=30,
-            max_iter=10000
+            max_iter=20000
         )
 
         path_candidate = rrt.plan()

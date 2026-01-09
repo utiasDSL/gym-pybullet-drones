@@ -43,6 +43,130 @@ class CustomCtrlAviary(CtrlAviary):
             useFixedBase=True,         # Important: keeps the maze static
             physicsClientId=self.CLIENT
         )
+
+        # Obstacle 1
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [7.0, -1.0, 0.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 1
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [7.0, 0.0, 0.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 1
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [7.0, 0.0, 1.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 1
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [7.0, 1.0, 0.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 1
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [7.0, 1.0, 1.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 1
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [7.0, 1.0, 2.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+
+
+        # Obstacle 2
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 5.0, 2.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 2
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 6.0, 0.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 2
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 6.0, 1.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 2
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 6.0, 2.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 2
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 7.0, 2.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+
+
+        # Obstacle 3
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 11.0, 0.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 3
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 11.0, 1.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 3
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 12.0, 0.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 3
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 12.0, 1.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 3
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 13.0, 0.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
+        # Obstacle 3
+        p.loadURDF(
+            "cube_no_rotation.urdf",
+            [2.0, 13.0, 1.5],                # position [x, y, z]
+            p.getQuaternionFromEuler([0,0,0]),
+            physicsClientId=self.CLIENT
+        )
         # self.obstacle_ids.append(self.maze_id)
 
         # Define the maze layout (Your 4 pillars)
