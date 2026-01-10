@@ -157,7 +157,7 @@ def main():
 
         # 2. Select random waypoints for obstacle creation
         # (NOTE: your code uses 8 obstacles; keep as-is)
-        new_obstacles_idx = np.random.choice(range(1, path_candidate.shape[0] - 3), size=5, replace=False)
+        new_obstacles_idx = np.random.choice(range(1, path_candidate.shape[0] - 3), size=3, replace=False)
         new_obstacles_candidate = path_candidate[new_obstacles_idx]
 
         # 3. Calculate Segment Distances

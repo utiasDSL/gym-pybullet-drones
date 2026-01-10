@@ -12,7 +12,7 @@ class MPC_control(BaseControl):
 
     def __init__(self, drone_model: DroneModel, num_obstacles=0, static_walls=None, g: float=9.8):
         super().__init__(drone_model=drone_model, g=g)
-        self.T = 20
+        self.T = 30
         self.dt = 1/48
         # >>> CHANGED: keep dynamic obstacles separate from static walls
         self.num_dyn_obstacles = int(num_obstacles)
@@ -92,6 +92,9 @@ class MPC_control(BaseControl):
         self.solve_times = []
         self.solve_status = []
         self.solve_iters = []
+        # Fallback control if MPC fails/infeasible: start from hover-like thrust
+        self.u_prev = np.array([self.GRAVITY, 0.0, 0.0, 0.0], dtype=float)
+
         
         self.VXY_MAX = 5.0   # m/s (start with 0.6–1.2 depending on your map)
         #self.VZ_MAX  = 2.0   # m/s
@@ -114,7 +117,7 @@ class MPC_control(BaseControl):
         #                             2,   2, 0.5, 
         #                           0.5, 0.5, 0.5])
 
-        weight_tracking = np.diag([15,  15,  6, 
+        weight_tracking = np.diag([40,  40,  40, 
                                      3,   3,   4, 
                                      2,   2, 0.5, 
                                    0.5, 0.5, 0.5])
@@ -140,6 +143,7 @@ class MPC_control(BaseControl):
             if self.A_param is not None:
                 constraints += [self.A_param @ self.x[:3, k] <= self.b_param]
                 
+           
             constraints += [self.x[2, :] >= 0.05]  # z >= 0.05 for all horizon states
 
 
@@ -220,7 +224,7 @@ class MPC_control(BaseControl):
             b_rows.append(b_obs)
 
         # ---------- 2) Static box walls ----------
-        BOX_MARGIN = 0.05
+        BOX_MARGIN = 0.1
         for wall in wall_list:
             ox, oy, oz, hx, hy, hz = map(float, wall)
 
@@ -322,7 +326,7 @@ class MPC_control(BaseControl):
         # iterations (OSQP-specific, may not always exist)
         iters = np.nan
         try:
-            # In many CVXPY versions, OSQP exposes iteration count here
+            
             iters = self.problem.solver_stats.num_iters
         except Exception:
             pass
@@ -330,9 +334,11 @@ class MPC_control(BaseControl):
 
         # continue as before
         if self.u.value is None:
-            optimal_u = np.zeros(4)
+            optimal_u = self.u_prev
         else:
             optimal_u = self.u[:, 0].value
+            
+        self.u_prev = optimal_u.copy()
 
 
         #try:
