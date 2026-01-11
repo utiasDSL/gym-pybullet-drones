@@ -96,7 +96,7 @@ def main():
     cube_walls = [
         [7.0, -1.0, 0.5,  0.5, 0.5, 0.5],
         [7.0,  0.0, 0.5,  0.5, 0.5, 0.5],
-        [7.0,  0.0, 1.5,  0.5, 0.5, 0.5],
+        #[7.0,  0.0, 1.5,  0.5, 0.5, 0.5],
         [7.0,  1.0, 0.5,  0.5, 0.5, 0.5],
         [7.0,  1.0, 1.5,  0.5, 0.5, 0.5],
         [7.0,  1.0, 2.5,  0.5, 0.5, 0.5],
@@ -110,9 +110,9 @@ def main():
         [2.0,  11.0, 0.5,  0.5, 0.5, 0.5],
         [2.0,  11.0, 1.5,  0.5, 0.5, 0.5],
         [2.0,  12.0, 0.5,  0.5, 0.5, 0.5],
-        [2.0,  12.0, 1.5,  0.5, 0.5, 0.5],
+        #[2.0,  12.0, 1.5,  0.5, 0.5, 0.5],
         [2.0,  13.0, 0.5,  0.5, 0.5, 0.5],
-        [2.0,  13.0, 1.5,  0.5, 0.5, 0.5],
+        #[2.0,  13.0, 1.5,  0.5, 0.5, 0.5],
     ]
 
     # Safety margin setup (sort of Bounding box for walls)
@@ -169,7 +169,7 @@ def main():
         path_candidate = np.array(unique_path)
 
         # 2. Select RANDOM waypoints for obstacle creation
-        new_obstacles_idx = np.random.choice(range(1, path_candidate.shape[0] - 3), size=3, replace=False)
+        new_obstacles_idx = np.random.choice(range(1, path_candidate.shape[0] - 3), size=5, replace=False)
         new_obstacles_candidate = path_candidate[new_obstacles_idx]
 
         # 3. Calculate Segment Distances
@@ -366,7 +366,7 @@ def main():
 
 
     # Produce a 2D plot (x-y) with altitude shown by color + over/under markers
-    drone_traj = np.array(drone_traj)  # (T,3)
+    drone_traj = np.array(drone_traj) 
     plot_rrt_mpc_2d(
         path_xyz=path,                      # discrete RRT path nodes
         spline_xyz=spline_samples,          # spline samples
@@ -379,7 +379,7 @@ def main():
     )
 
     if num_obstacles > 0 and len(convex_log) > 0:
-        # 1) One clear snapshot (middle)
+        # Convex region one snapshot (middle)
         plot_convex_snapshot_xy(
             drone_traj=drone_traj,
             convex_log=convex_log,
@@ -390,7 +390,7 @@ def main():
             snap_index=len(convex_log)//2
         )
 
-        # 2) Evolution as animation
+        # Convex Region evolution as animation
         animate_convex_tunnel_xy(
             drone_traj=drone_traj,
             convex_log=convex_log,
@@ -400,11 +400,11 @@ def main():
             bbox=(-2, 12, -2, 16),
             stride=8,
             interval_ms=80,
-            save_path="convex_tunnel_evolution.gif",  # or .mp4
+            save_path="convex_tunnel_evolution.gif",  
             dpi=120
         )
 
-        # (Optional) Evolution as a grid of frames (no animation backend issues)
+        # Evolution as a grid of frames 
         plot_convex_frames_grid(
             drone_traj=drone_traj,
             convex_log=convex_log,

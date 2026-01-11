@@ -78,8 +78,7 @@ class MPC_control(BaseControl):
             self.MAX_XY_TORQUE = (self.L*self.KF*self.MAX_RPM**2)
         self.MAX_Z_TORQUE = (2*self.KM*self.MAX_RPM**2)
         
-        self.VXY_MAX = 5.0   # m/s (start with 0.6–1.2 depending on your map)
-        # self.VZ_MAX  = 2.0   # m/s
+
 
         # DYNAMICS MATRICES (Linearized Quadrotor Model) 
         self.A_c = np.zeros((12, 12))
@@ -156,6 +155,10 @@ class MPC_control(BaseControl):
 
         cost = 0.
         constraints = []
+        
+        # Slack variables to prevent infeasibility in tight maze spots
+        # One slack variable per hyperplane constraint, per horizon step
+        self.slack = cp.Variable((self.num_halfspaces, self.T), nonneg=True)
 
         # Build Horizon
         for k in range(self.T):
@@ -170,10 +173,15 @@ class MPC_control(BaseControl):
                 
             # Obstacle Avoidance (Linear Halfspaces)
             if self.A_param is not None:
-                constraints += [self.A_param @ self.x[:3, k] <= self.b_param]
+                #constraints += [self.A_param @ self.x[:3, k] <= self.b_param]
+                constraints += [self.A_param @ self.x[:3, k] <= self.b_param + self.slack[:, k]]
                 
             # Ground Constraint
             constraints += [self.x[2, :] >= 0.05]  # z >= 0.05 for all horizon states
+            
+            # Massive penalty for using slack (soft constraints)
+            # This ensures the drone only violates the margin if absolutely necessary.
+            cost += cp.sum(self.slack[:, k]) * 1e5
 
             # Stage Cost
             x_err = self.x[:, k] - self.x_target_param
@@ -196,7 +204,7 @@ class MPC_control(BaseControl):
     
 
     # 2. CONSTRAINT UPDATES (OBSTACLES)
-
+    '''
     def update_param(self, cur_pos, r_drone, obstacles_center, r_obs):
         """
         Updates the linear constraints (A x <= b) based on the current drone position
@@ -236,7 +244,69 @@ class MPC_control(BaseControl):
             self.A_param.value = A
             self.b_param.value = b
 
-    
+    '''
+    def update_param(self, cur_pos, r_drone, obstacles_center, r_obs):
+        """
+        Updates constraints by filtering for only the nearest obstacles 
+        and padding the rest to maintain fixed CVXPY parameter shapes.
+        """
+        if self.num_halfspaces > 0:
+            # 1. Calculate distances to all dynamic obstacles
+            dyn_obs_dists = []
+            for i, p_obs in enumerate(obstacles_center):
+                d = np.linalg.norm(cur_pos - np.array(p_obs))
+                dyn_obs_dists.append((d, p_obs, r_obs[i]))
+            
+            # Sort by distance (closest first)
+            dyn_obs_dists.sort(key=lambda x: x[0])
+            
+            # 2. Calculate distances to all walls (using center of the box)
+            wall_dists = []
+            for wall in self.static_walls:
+                wall_center = np.array([wall[0], wall[1], wall[2]])
+                d = np.linalg.norm(cur_pos - wall_center)
+                wall_dists.append((d, wall))
+                
+            wall_dists.sort(key=lambda x: x[0])
+
+            # 3. Pick a subset of the closest objects
+            SENSING_RADIUS = 2.5 
+            
+            near_obs_centers = [item[1] for item in dyn_obs_dists if item[0] < SENSING_RADIUS]
+            near_obs_radii = [item[2] for item in dyn_obs_dists if item[0] < SENSING_RADIUS]
+            near_walls = [item[1] for item in wall_dists if item[0] < SENSING_RADIUS + 1.0]
+
+            # 4. Generate hyperplanes for ONLY these nearby objects
+            A_real, b_real = self.convex_region(
+                cur_pos=cur_pos,
+                r_drone=r_drone,
+                obstacle_list=near_obs_centers,
+                r_obstacle_list=near_obs_radii,
+                wall_list=near_walls
+            )
+
+            # Store the UNPADDED versions for the plotting functions
+            self.last_A = A_real.copy()
+            self.last_b = b_real.copy()
+
+            # 5. Padding Logic to maintain fixed size for CVXPY Parameters
+            K = self.num_halfspaces 
+            if A_real.shape[0] < K:
+            
+                missing = K - A_real.shape[0]
+                A_pad = np.zeros((missing, 3))
+                b_pad = 100.0 * np.ones(missing)
+                
+                A_final = np.vstack([A_real, A_pad])
+                b_final = np.hstack([b_real, b_pad])
+            else:
+                # Truncate to the K most critical if necessary
+                A_final = A_real[:K, :]
+                b_final = b_real[:K]
+
+            # Update CVXPY parameters for the solver
+            self.A_param.value = A_final
+            self.b_param.value = b_final
 
     def convex_region(self, cur_pos, r_drone, obstacle_list, r_obstacle_list, wall_list):
         """
@@ -246,7 +316,7 @@ class MPC_control(BaseControl):
         A_rows, b_rows = [], []
         cur_pos = np.asarray(cur_pos).reshape(3)
 
-        # 1) Dynamic Spherical Obstacles 
+        # Dynamic Spherical Obstacles 
         for i, p_obs in enumerate(obstacle_list):
             p_obs = np.asarray(p_obs).reshape(3)
             r_obs = float(r_obstacle_list[i])
@@ -271,7 +341,7 @@ class MPC_control(BaseControl):
             A_rows.append(A_obs)
             b_rows.append(b_obs)
 
-        # 2) Static Box Walls 
+        # Static Box Walls 
         BOX_MARGIN = 0.1
         for wall in wall_list:
             ox, oy, oz, hx, hy, hz = map(float, wall)
@@ -324,8 +394,8 @@ class MPC_control(BaseControl):
             A_wall = -n
             b_wall = -b_plane
 
-            if A_wall @ cur_pos > b_wall:
-                A_wall, b_wall = -A_wall, -b_wall
+            #if A_wall @ cur_pos > b_wall:
+             #   A_wall, b_wall = -A_wall, -b_wall
 
             A_rows.append(A_wall)
             b_rows.append(b_wall)
@@ -384,11 +454,11 @@ class MPC_control(BaseControl):
         self.solve_iters.append(iters)
 
         # Retrieve Control Action
-        if self.u.value is None:
-            # Fallback to previous safe input if solver failed
-            optimal_u = self.u_prev
+        if self.problem.status in ["infeasible", "unbounded"] or self.x.value is None:
+                print(f"MPC Warning: {self.problem.status}. Using fallback.")
+                optimal_u = self.u_prev # Use last successful command
         else:
-            optimal_u = self.u[:, 0].value
+                optimal_u = self.u[:, 0].value
             
         self.u_prev = optimal_u.copy()
 

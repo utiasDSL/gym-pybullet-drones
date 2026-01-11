@@ -16,7 +16,17 @@ from matplotlib.patches import Polygon, Circle
 from matplotlib.animation import FuncAnimation
 
 
-# >>> ADDED: 2D plot showing RRT/spline, obstacles, and real drone trajectory with altitude encoding
+
+from collections import Counter
+
+import os
+import shutil
+from matplotlib.animation import FuncAnimation
+
+
+'''
+This module contains helper functions for visualization and geometric computations.
+'''
 def plot_rrt_mpc_2d(path_xyz,
                     spline_xyz,
                     maze_walls,
@@ -55,7 +65,7 @@ def plot_rrt_mpc_2d(path_xyz,
         lc.set_array(z[:-1])  # color per segment by altitude
         ax.add_collection(lc)
 
-        # Legend proxy
+        # Legend 
         if label is not None:
             ax.plot([], [], linestyle=linestyle, linewidth=linewidth, label=label)
 
@@ -72,15 +82,14 @@ def plot_rrt_mpc_2d(path_xyz,
     def point_in_circle_xy(x, y, cx, cy, r):
         return (x - cx) ** 2 + (y - cy) ** 2 <= r ** 2
 
-    # ---- draw maze walls (rectangles) ----
+    #  draw maze walls (rectangles)
     for wall in maze_walls:
         ox, oy, oz, hx, hy, hz = wall
         rect = Rectangle((ox - hx, oy - hy), 2 * hx, 2 * hy,
                          fill=True, alpha=0.15, linewidth=1.5)
         ax.add_patch(rect)
 
-    # ---- draw MPC obstacles (circles) ----
-    # expected dict fields from your code: o['pos'] and o['r']
+    # draw MPC obstacles (circles)
     for o in mpc_obstacles_info:
         c = o.get('pos', [0, 0, 0])
         r = float(o.get('r', 0.2))
@@ -88,21 +97,20 @@ def plot_rrt_mpc_2d(path_xyz,
         circ = Circle((cx, cy), r, fill=True, alpha=0.20, linewidth=1.5)
         ax.add_patch(circ)
 
-    # ---- plot RRT discrete path (thin dashed) ----
+    # plot RRT discrete path (thin dashed)
     ax.plot(path_xyz[:, 0], path_xyz[:, 1], '--', linewidth=1.5, label='RRT path (discrete)')
 
- # ---- plot spline reference (SINGLE COLOR) ----
-# >>> CHANGED: make reference spline a plain line (no colormap) so it differs clearly from the real trajectory
+ # plot spline reference (SINGLE COLOR)
+
     ax.plot(
         spline_xyz[:, 0], spline_xyz[:, 1],
         linewidth=3.0,
-        linestyle='--',   # dashed
-        color='blue',     # single color
+        linestyle='--',   
+        color='blue',     
         label='RRT spline (reference)'
     )
 
-    # ---- plot drone actual trajectory (ALTITUDE COLORED) ----
-    # >>> unchanged behavior: real trajectory stays colored by z
+    # plot drone actual trajectory (ALTITUDE COLORED)
     lc_real = add_colored_xy_line(
         ax,
         xy=drone_traj_xyz[:, 0:2],
@@ -113,7 +121,7 @@ def plot_rrt_mpc_2d(path_xyz,
     )
 
 
-    # ---- mark "over" / "under" obstacle footprints ----
+    # mark "over" / "under" obstacle footprints
     over_x, over_y = [], []
     under_x, under_y = [], []
 
@@ -127,8 +135,8 @@ def plot_rrt_mpc_2d(path_xyz,
                 elif z < zmin:
                     under_x.append(x); under_y.append(y)
 
-        # 2) check circular MPC obstacles
-        # assume vertical extent approx: cz±r (works for spheres; decent visual cue otherwise)
+        #check circular MPC obstacles
+
         for o in mpc_obstacles_info:
             c = o.get('pos', [0, 0, 0])
             r = float(o.get('r', 0.2))
@@ -158,7 +166,7 @@ def plot_rrt_mpc_2d(path_xyz,
     cbar = fig.colorbar(lc_real, ax=ax)
     cbar.set_label("Altitude z [m] (line color)")
 
-    # >>> CHANGED: smaller legend placed outside (below) so it doesn't cover the plot
+
     ax.legend(
         loc='upper center',
         bbox_to_anchor=(0.5, -0.12),
@@ -167,11 +175,11 @@ def plot_rrt_mpc_2d(path_xyz,
         frameon=True
     )
 
-    # >>> ADDED: make room for the legend below
+    
     plt.subplots_adjust(bottom=0.20)
 
 
-    # limits with margin
+    
     all_x = np.concatenate([path_xyz[:, 0], spline_xyz[:, 0], drone_traj_xyz[:, 0]])
     all_y = np.concatenate([path_xyz[:, 1], spline_xyz[:, 1], drone_traj_xyz[:, 1]])
     margin = 1.0
@@ -231,7 +239,7 @@ def _line_segment_in_bbox(a, b, c, xmin, xmax, ymin, ymax):
     """
     pts = []
 
-    # Intersect with x = xmin, xmax
+    
     if abs(b) > 1e-12:
         y = (-c - a * xmin) / b
         if ymin - 1e-9 <= y <= ymax + 1e-9:
@@ -240,7 +248,7 @@ def _line_segment_in_bbox(a, b, c, xmin, xmax, ymin, ymax):
         if ymin - 1e-9 <= y <= ymax + 1e-9:
             pts.append((xmax, y))
 
-    # Intersect with y = ymin, ymax
+    
     if abs(a) > 1e-12:
         x = (-c - b * ymin) / a
         if xmin - 1e-9 <= x <= xmax + 1e-9:
@@ -324,7 +332,6 @@ def plot_convex_snapshot_xy(drone_traj, convex_log, obs_centers, obs_radii, r_dr
         ax.plot(poly[:,0], poly[:,1], linewidth=2.0, alpha=0.5)
 
     # draw half-space boundary lines (one per obstacle constraint)
-    # inequality is: a*x + b*y + c <= 0
     for i in range(hs.shape[0]):
         a, bb, c = hs[i]
 
@@ -334,22 +341,20 @@ def plot_convex_snapshot_xy(drone_traj, convex_log, obs_centers, obs_radii, r_dr
         (x1, y1), (x2, y2) = seg
         ax.plot([x1, x2], [y1, y2], linestyle="--", linewidth=1.5, alpha=0.7)
 
-        # Arrow showing feasible side:
-        # feasible side for <=0 is opposite to normal [a,b]
+        # Arrow showing feasible side
         n = np.array([a, bb], dtype=float)
         nn = np.linalg.norm(n)
         if nn < 1e-9:
             continue
         n = n / nn
-        feasible_dir = -n  # points toward decreasing a*x+b*y+c
+        feasible_dir = -n  
 
-        # choose a point on the line to place arrow: midpoint of segment
+        
         xm, ym = 0.5*(x1+x2), 0.5*(y1+y2)
 
-        # ensure arrow points toward feasible side by checking interior point
-        # If interior point violates (positive), flip
+   
         val = a*pxy[0] + bb*pxy[1] + c
-        # If interior is not on feasible side (numerical edge), flip arrow direction
+        
         if val > 1e-6:
             feasible_dir = -feasible_dir
 
@@ -366,33 +371,32 @@ def plot_convex_snapshot_xy(drone_traj, convex_log, obs_centers, obs_radii, r_dr
     ax.legend(loc="upper left")
     plt.show()
 
-import os
-import shutil
-from matplotlib.animation import FuncAnimation
+
 
 def animate_convex_tunnel_xy(drone_traj, convex_log, obs_centers, obs_radii, r_drone,
                              bbox=(-2, 12, -2, 16), stride=8, interval_ms=80,
                              save_path=None, dpi=150):
     """
-    Saves an animation if save_path is provided.
-      - If save_path endswith .mp4 -> tries ffmpeg writer
-      - If save_path endswith .gif -> uses pillow writer
+    Saves an animation of the convex safe bubble evolving along the trajectory.
+    Handles empty local constraints by defaulting to the bounding box.
     """
-
     xmin, xmax, ymin, ymax = bbox
 
-    if len(convex_log) == 0:
+    # Robust check for data
+    if not convex_log or len(convex_log) == 0:
         print("convex_log is empty, nothing to animate.")
         return None
 
-    # subsample indices for speed
+    # Subsample indices for performance
     idxs = np.arange(0, len(convex_log), max(1, int(stride)))
+    if len(idxs) == 0:
+        idxs = np.array([0]) 
 
     fig, ax = plt.subplots(figsize=(9, 7))
 
-    # static: path + obstacles
+    # Static elements: Full drone path and obstacle footprints
     ax.plot(drone_traj[:,0], drone_traj[:,1], linewidth=2.0, alpha=0.5, label="Drone XY path")
-
+    
     margin = 0.05
     for c_obs, r_obs in zip(obs_centers, obs_radii):
         cx, cy = float(c_obs[0]), float(c_obs[1])
@@ -400,11 +404,11 @@ def animate_convex_tunnel_xy(drone_traj, convex_log, obs_centers, obs_radii, r_d
         ax.add_patch(Circle((cx, cy), R, alpha=0.10))
         ax.add_patch(Circle((cx, cy), float(r_obs), fill=False, linewidth=1.0, alpha=0.6))
 
-    # dynamic artists
-    poly_patch = Polygon(np.zeros((3,2)), closed=True, alpha=0.18)
+    # Dynamic elements: Polygon for safe region and scatter for current position
+    poly_patch = Polygon(np.zeros((3,2)), closed=True, alpha=0.18, label="Local Safe Region")
     ax.add_patch(poly_patch)
-    point_scatter = ax.scatter([], [], s=50)
-    title = ax.text(0.02, 0.98, "", transform=ax.transAxes, va="top")
+    point_scatter = ax.scatter([], [], s=50, color='red')
+    title = ax.text(0.02, 0.98, "", transform=ax.transAxes, va="top", fontweight='bold')
 
     ax.set_xlim(xmin, xmax)
     ax.set_ylim(ymin, ymax)
@@ -426,9 +430,18 @@ def animate_convex_tunnel_xy(drone_traj, convex_log, obs_centers, obs_radii, r_d
         z0 = entry["z"]
         pxy = entry["pos"][:2]
 
+        # Convert 3D halfspaces to 2D slice at height z0
         hs = halfspaces_xy_from_Ab_at_z(A3, b, z0)
-        hs_all = np.vstack([hs, add_bbox_halfspaces(xmin, xmax, ymin, ymax)])
+        
+        
+        if hs.size > 0:
+            # Combine local obstacles with the map bounding box
+            hs_all = np.vstack([hs, add_bbox_halfspaces(xmin, xmax, ymin, ymax)])
+        else:
+            # No nearby obstacles: Safe region is just the bounding box
+            hs_all = add_bbox_halfspaces(xmin, xmax, ymin, ymax)
 
+        # Generate the polygon vertices
         poly = polygon_from_halfspaces(hs_all, pxy)
         if poly is None:
             poly_patch.set_xy(np.zeros((3,2)))
@@ -442,56 +455,39 @@ def animate_convex_tunnel_xy(drone_traj, convex_log, obs_centers, obs_radii, r_d
 
     ani = FuncAnimation(
         fig, update,
-        frames=len(idxs),
+        frames=range(len(idxs)), 
         init_func=init,
         interval=interval_ms,
         blit=False,
         repeat=True
     )
 
-    # >>> ADDED: save video if requested
     if save_path is not None:
         os.makedirs(os.path.dirname(save_path) or ".", exist_ok=True)
-
         ext = os.path.splitext(save_path)[1].lower()
-
-        if ext == ".mp4":
-            # needs ffmpeg installed and on PATH
-            if shutil.which("ffmpeg") is None:
-                print("ffmpeg not found on PATH -> cannot save MP4. "
-                      "Install ffmpeg or save as .gif instead.")
-            else:
-                fps = max(1, int(1000 / interval_ms))
+        fps = max(1, int(1000 / interval_ms))
+        
+        try:
+            if ext == ".mp4" and shutil.which("ffmpeg"):
                 ani.save(save_path, writer="ffmpeg", fps=fps, dpi=dpi)
                 print(f"Saved MP4: {save_path}")
-
-        elif ext == ".gif":
-            # needs pillow: pip install pillow
-            fps = max(1, int(1000 / interval_ms))
-            ani.save(save_path, writer="pillow", fps=fps, dpi=dpi)
-            print(f"Saved GIF: {save_path}")
-
-        else:
-            print("Unsupported extension. Use .mp4 or .gif")
+            else:
+                ani.save(save_path, writer="pillow", fps=fps, dpi=dpi)
+                print(f"Saved GIF: {save_path}")
+        except Exception as e:
+            print(f"Animation save failed: {e}")
 
     plt.show()
     return ani
-
-
-    ani = FuncAnimation(fig, update, frames=len(idxs), init_func=init,
-                        interval=interval_ms, blit=False, repeat=True)
-    plt.show()
-    return ani
-
 
 def plot_convex_frames_grid(drone_traj, convex_log, obs_centers, obs_radii, r_drone,
                             bbox=(-2, 12, -2, 16), rows=2, cols=4):
     """
-    Alternative evolution view: a grid of frames (no animation required).
+    Displays a static grid of snapshots showing the safe region at different time steps.
     """
     xmin, xmax, ymin, ymax = bbox
 
-    if len(convex_log) == 0:
+    if not convex_log or len(convex_log) == 0:
         print("convex_log is empty, nothing to plot.")
         return
 
@@ -510,20 +506,28 @@ def plot_convex_frames_grid(drone_traj, convex_log, obs_centers, obs_radii, r_dr
         z0 = entry["z"]
         pxy = entry["pos"][:2]
 
+        # Background: Path and current position
         ax.plot(drone_traj[:,0], drone_traj[:,1], linewidth=1.5, alpha=0.4)
-        ax.scatter([pxy[0]], [pxy[1]], s=35)
+        ax.scatter([pxy[0]], [pxy[1]], s=35, color='red')
 
+        # Static Obstacles
         for c_obs, r_obs in zip(obs_centers, obs_radii):
             cx, cy = float(c_obs[0]), float(c_obs[1])
             R = float(r_obs) + float(r_drone) + margin
             ax.add_patch(Circle((cx, cy), R, alpha=0.08))
 
+       
         hs = halfspaces_xy_from_Ab_at_z(A3, b, z0)
-        hs_all = np.vstack([hs, add_bbox_halfspaces(xmin, xmax, ymin, ymax)])
+        if hs.size > 0:
+            hs_all = np.vstack([hs, add_bbox_halfspaces(xmin, xmax, ymin, ymax)])
+        else:
+            hs_all = add_bbox_halfspaces(xmin, xmax, ymin, ymax)
+
+        # Polygon generation
         poly = polygon_from_halfspaces(hs_all, pxy)
         if poly is not None:
-            ax.add_patch(Polygon(poly, closed=True, alpha=0.14))
-            ax.plot(poly[:,0], poly[:,1], linewidth=1.0, alpha=0.5)
+            ax.add_patch(Polygon(poly, closed=True, alpha=0.14, color='blue'))
+            ax.plot(poly[:,0], poly[:,1], linewidth=1.0, alpha=0.5, color='blue')
 
         ax.set_title(f"k={idx}", fontsize=10)
         ax.grid(True, alpha=0.2)
@@ -533,12 +537,11 @@ def plot_convex_frames_grid(drone_traj, convex_log, obs_centers, obs_radii, r_dr
         ax.set_xlim(xmin, xmax)
         ax.set_ylim(ymin, ymax)
 
-    fig.suptitle("Convex feasible set evolution (frames grid)", fontsize=14)
+    fig.suptitle("Convex feasible set evolution (frames grid)", fontsize=14, fontweight='bold')
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.show()
-# ===========================
-# Helper: MPC solver stats plot + summary
-# Put this in main.py (top-level, above main())
-# ===========================
+
+
 def plot_mpc_solver_stats(ctrl, save_path=None, show=True):
     """
     Plot and print solver performance metrics from your MPC controller.
@@ -551,9 +554,7 @@ def plot_mpc_solver_stats(ctrl, save_path=None, show=True):
     Usage (after simulation):
       plot_mpc_solver_stats(ctrl, save_path="results/solver_stats.png")
     """
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from collections import Counter
+
 
     if not hasattr(ctrl, "solve_times") or len(getattr(ctrl, "solve_times", [])) == 0:
         print("[plot_mpc_solver_stats] No solver logs found on ctrl (solve_times empty/missing).")
@@ -581,7 +582,7 @@ def plot_mpc_solver_stats(ctrl, save_path=None, show=True):
 
     print("Status counts:", dict(Counter(statuses)))
 
-    # --- Make status numeric for plotting ---
+    # Make status numeric for plotting
     uniq = list(dict.fromkeys(statuses))  # preserve order of first appearance
     status_to_id = {s: i for i, s in enumerate(uniq)}
     status_ids = np.array([status_to_id[s] for s in statuses], dtype=int)
@@ -594,7 +595,7 @@ def plot_mpc_solver_stats(ctrl, save_path=None, show=True):
     axs[0].grid(True, alpha=0.3)
 
     axs[1].plot(iters)
-    axs[1].set_ylabel("OSQP iterations")
+    axs[1].set_ylabel("Clarabel iterations")
     axs[1].grid(True, alpha=0.3)
 
     axs[2].plot(status_ids)
@@ -616,7 +617,7 @@ def plot_mpc_solver_stats(ctrl, save_path=None, show=True):
     else:
         plt.close(fig)
 
-    # Return raw data in case you want to compute more metrics
+    
     return {
         "solve_ms": solve_ms,
         "iters": iters,
