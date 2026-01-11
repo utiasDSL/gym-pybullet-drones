@@ -2,9 +2,12 @@ import numpy as np
 import random
 import math
 
+# NODE CLASS DEFINITION
 
-# --- NODE CLASS DEFINITION ---
 class Node:
+    """
+    Represents a single point in the RRT graph.
+    """
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
@@ -12,20 +15,29 @@ class Node:
         self.parent = None
         self.cost = 0.0
 
+# RRT* CLASS DEFINITION
 
-# --- RRT* CLASS DEFINITION ---
 class RRTStar:
+    """
+    RRT* (Rapidly-exploring Random Tree Star) Path Planner.
+    Finds an optimal path in 3D space avoiding obstacles.
+    """
 
     def __init__(self, start, goal, obstacle_list, rand_area, 
                  expand_dis=3.0, goal_sample_rate=20, max_iter=500,
                  search_radius=None): 
         
+        # Nodes
         self.start = Node(start[0], start[1], start[2])
         self.goal = Node(goal[0], goal[1], goal[2])
+        
+        # Sampling bounds
         self.min_rand = rand_area[0]
         self.max_rand = rand_area[1]
-        self.expand_dis = expand_dis
-        self.goal_sample_rate = goal_sample_rate
+        
+        # Algorithm parameters
+        self.expand_dis = expand_dis        # Maximum distance to extend tree per step
+        self.goal_sample_rate = goal_sample_rate # Percentage chance to sample goal
         self.max_iter = max_iter
         self.obstacle_list = obstacle_list
         
@@ -37,8 +49,13 @@ class RRTStar:
 
         self.resolution = 0.5   # Resolution for edge collision checking
 
-    # Plan RRT* trajectory
+    # MAIN PLANNING LOOP
+
     def plan(self):
+        """
+        Executes the RRT* algorithm.
+        Returns: A list of [x, y, z] coordinates representing the path, or None.
+        """
         self.node_list = [self.start]
         
         for i in range(self.max_iter):
@@ -48,20 +65,24 @@ class RRTStar:
             nearest_node = self.get_nearest_node(self.node_list, rnd_node)
 
             # 2. Steer towards the random node
+            # This creates a new candidate node at max dist 'expand_dis'
             new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
 
             # 3. Check segment collision between nearest and new node
             if not self.check_segment_collision(nearest_node, new_node, self.obstacle_list):
 
                 # 4. Find neighbors and choose parent
+                # We look for better parents in the vicinity to lower the cost
                 neighbors = self.find_neighbors(new_node)
                 new_node = self.choose_parent(neighbors, nearest_node, new_node)
                 self.node_list.append(new_node)
 
                 # 5. Rewire 
+                # Check if the new node can be a better parent for existing neighbors
                 self.rewire(new_node, neighbors)
 
                 # 6. Check Goal
+                # If close enough, try to connect directly to the goal
                 if self.calc_dist_to_goal(new_node.x, new_node.y, new_node.z) <= self.expand_dis:
                     final_node = self.steer(new_node, self.goal, self.expand_dis)
 
@@ -70,14 +91,20 @@ class RRTStar:
                         return self.generate_final_course(len(self.node_list) - 1)
         return None
 
-    # Steer towards the new node
+    # CORE OPERATIONS (STEER & COLLISION)
+    
     def steer(self, from_node, to_node, extend_length=float("inf")):
+        """
+        Moves from 'from_node' towards 'to_node' by at most 'extend_length'.
+        """
         new_node = Node(from_node.x, from_node.y, from_node.z)
         d, theta, phi = self.calc_distance_and_angle(new_node, to_node)
 
+        # Clamp distance to max expansion distance
         if extend_length > d:
             extend_length = d
 
+        # Spherical coordinates to Cartesian
         new_node.x += extend_length * math.sin(phi) * math.cos(theta)
         new_node.y += extend_length * math.sin(phi) * math.sin(theta)
         new_node.z += extend_length * math.cos(phi)
@@ -86,9 +113,12 @@ class RRTStar:
         new_node.cost = from_node.cost + extend_length
         return new_node
 
-    # Check if the segment betweem p1 and p2 is collision free (it is done every self.resolution meters)
-    def check_segment_collision(self, p1, p2, obstacle_list):
 
+    def check_segment_collision(self, p1, p2, obstacle_list):
+        """
+        Check if the segment betweem p1 and p2 is collision free.
+        (it is done every self.resolution meters)
+        """
         # Calculate distance between nodes
         dx = p2.x - p1.x
         dy = p2.y - p1.y
@@ -112,9 +142,11 @@ class RRTStar:
                 return True
         return False
 
-    # Helper function to detect if a point is inside an obstacle
-    def is_point_in_obstacle(self, x, y, z, obstacle_list):
 
+    def is_point_in_obstacle(self, x, y, z, obstacle_list):
+        """
+        Helper function to detect if a point is inside an obstacle (AABB check).
+        """
         for (ox, oy, oz, hx, hy, hz) in obstacle_list:
 
             if (ox - hx <= x <= ox + hx) and \
@@ -123,8 +155,12 @@ class RRTStar:
                 return True
         return False
 
-    # Find nodes that are within a self.search_radius of new node
+    # RRT* OPTIMIZATION (NEIGHBORS & REWIRING)
+
     def find_neighbors(self, new_node):
+        """
+        Find nodes that are within a self.search_radius of new node.
+        """
         neighbors = []
 
         for node in self.node_list:
@@ -134,8 +170,11 @@ class RRTStar:
                 neighbors.append(node)
         return neighbors
     
-    # Choose the best parent (the one that minimizes the cost) among the neighbors of new node
+    
     def choose_parent(self, neighbors, nearest_node, new_node):
+        """
+        Choose the best parent (the one that minimizes the cost) among the neighbors of new node.
+        """
         min_cost = nearest_node.cost + np.linalg.norm([new_node.x - nearest_node.x, new_node.y - nearest_node.y, new_node.z - nearest_node.z])
         best_node = nearest_node
 
@@ -152,9 +191,11 @@ class RRTStar:
         new_node.parent = best_node
         return new_node
 
-    # Rewire function
-    def rewire(self, new_node, neighbors):
 
+    def rewire(self, new_node, neighbors):
+        """
+        Rewire function: Checks if the new node can be a better parent for its neighbors.
+        """
         for neighbor in neighbors:
             dist = np.linalg.norm([neighbor.x - new_node.x, neighbor.y - new_node.y, neighbor.z - new_node.z])
             cost = new_node.cost + dist
@@ -164,8 +205,12 @@ class RRTStar:
                 neighbor.parent = new_node
                 neighbor.cost = cost
 
-    # Calculate the nearest node
+    # SAMPLING & MATH FUNCTIONS
+
     def get_nearest_node(self, node_list, rnd_node):
+        """
+        Calculate the nearest node in the tree to the random node.
+        """
         distances = []
 
         for node in node_list:
@@ -175,22 +220,27 @@ class RRTStar:
         nearest_node = node_list[np.argmin(distances)]
         return nearest_node
 
-    # Pick a random node
-    def get_random_node(self):
 
+    def get_random_node(self):
+        """
+        Pick a random node (with a bias towards the goal).
+        """
         if random.randint(0, 100) > self.goal_sample_rate:
             rnd = Node(
                 random.uniform(self.min_rand, self.max_rand),
                 random.uniform(self.min_rand, self.max_rand),
-                random.uniform(0.1, 3.0)
+                random.uniform(0.1, 3.0) # Allows height up to 3.0m
             )
         else:
             rnd = Node(self.goal.x, self.goal.y, self.goal.z)
 
         return rnd
 
-    # Computes final path
+
     def generate_final_course(self, goal_ind):
+        """
+        Backtracks from the goal to the start to reconstruct the path.
+        """
         path = [[self.goal.x, self.goal.y, self.goal.z]]
         node = self.node_list[goal_ind]
 
@@ -199,18 +249,26 @@ class RRTStar:
             node = node.parent
 
         path.append([self.start.x, self.start.y, self.start.z])
-        return path[::-1]
+        return path[::-1] # Return reversed path (Start -> Goal)
 
-    # Calculate the distance to the goal
+
     def calc_dist_to_goal(self, x, y, z):
+        """
+        Calculate the Euclidean distance to the goal.
+        """
         return np.linalg.norm([x - self.goal.x, y - self.goal.y, z - self.goal.z])
 
-    # Calculate distance and angle to steer towards a node
+
     def calc_distance_and_angle(self, from_node, to_node):
+        """
+        Calculate distance, azimuth (theta), and elevation (phi) between two nodes.
+        """
         dx = to_node.x - from_node.x
         dy = to_node.y - from_node.y
         dz = to_node.z - from_node.z
         d = math.sqrt(dx**2 + dy**2 + dz**2)
+        
         theta = math.atan2(dy, dx)
+        # Avoid division by zero
         phi = math.acos(max(-1.0, min(1.0, dz / d))) if d > 0 else 0
         return d, theta, phi

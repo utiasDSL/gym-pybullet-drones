@@ -11,6 +11,7 @@ class CustomCtrlAviary(CtrlAviary):
     """
 
     def __init__(self, obstacles_pos, *args, **kwargs):
+        # Ensure obstacles_pos is a valid numpy array of shape (N, 3)
         if obstacles_pos is None:
             self.obstacles_pos = np.zeros((0, 3), dtype=float)
         else:
@@ -20,6 +21,7 @@ class CustomCtrlAviary(CtrlAviary):
                 raise ValueError(f"obstacles_pos must have shape (N,3). Got {self.obstacles_pos.shape}.")
 
         super().__init__(*args, **kwargs)
+        
         # Keep track of visual spheres for debugging
         self.obstacle_sphere_ids = []
         self.drone_sphere_id = None
@@ -32,148 +34,51 @@ class CustomCtrlAviary(CtrlAviary):
         """
         self.obstacle_ids = []
 
-        # Load the entire maze at once
+        # 1. LOAD STATIC MAZE (Base Environment)
         script_dir = os.path.dirname(os.path.abspath(__file__))
         urdf_path = os.path.join(script_dir, "../gym_pybullet_drones/assets/maze.urdf")
 
         self.maze_id = p.loadURDF(
-            urdf_path,               # Path to the file you just created
-            [0, 0, 0],                 # Base position (0,0,0)
+            urdf_path,               
+            [0, 0, 0],               
             p.getQuaternionFromEuler([0, 0, 0]),
-            useFixedBase=True,         # Important: keeps the maze static
+            useFixedBase=True,         
             physicsClientId=self.CLIENT
         )
 
-        # Obstacle 1
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [7.0, -1.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 1
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [7.0, 0.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 1
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [7.0, 0.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 1
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [7.0, 1.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 1
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [7.0, 1.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 1
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [7.0, 1.0, 2.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
+        # 2. LOAD STATIC OBSTACLES (Hardcoded Walls/Pillars)
 
+        # Format: [x, y, z]
+        static_cubes_coords = [
+            # Obstacle Cluster 1
+            [7.0, -1.0, 0.5], [7.0, 0.0, 0.5], [7.0, 0.0, 1.5],
+            [7.0, 1.0, 0.5],  [7.0, 1.0, 1.5], [7.0, 1.0, 2.5],
 
-        # Obstacle 2
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 5.0, 2.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 2
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 6.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 2
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 6.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 2
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 6.0, 2.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 2
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 7.0, 2.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
+            # Obstacle Cluster 2
+            [2.0, 5.0, 2.5],
+            [2.0, 6.0, 0.5], [2.0, 6.0, 1.5], [2.0, 6.0, 2.5],
+            [2.0, 7.0, 2.5],
 
+            # Obstacle Cluster 3
+            [2.0, 11.0, 0.5], [2.0, 11.0, 1.5],
+            [2.0, 12.0, 0.5], [2.0, 12.0, 1.5],
+            [2.0, 13.0, 0.5], [2.0, 13.0, 1.5]
+        ]
 
-        # Obstacle 3
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 11.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 3
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 11.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 3
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 12.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 3
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 12.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 3
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 13.0, 0.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # Obstacle 3
-        p.loadURDF(
-            "cube_no_rotation.urdf",
-            [2.0, 13.0, 1.5],                # position [x, y, z]
-            p.getQuaternionFromEuler([0,0,0]),
-            physicsClientId=self.CLIENT
-        )
-        # self.obstacle_ids.append(self.maze_id)
+        for pos in static_cubes_coords:
+            p.loadURDF(
+                "cube_no_rotation.urdf",
+                pos,
+                p.getQuaternionFromEuler([0, 0, 0]),
+                physicsClientId=self.CLIENT
+            )
 
-        # Define the maze layout (Your 4 pillars)
-        # We use the list of positions you used in RRT
+        # 3. LOAD RANDOM OBSTACLES (Passed from RRT/Main)
 
         for i in range(self.obstacles_pos.shape[0]):
             self._add_single_cube(self.obstacles_pos[i])
+
+        # 4. VISUALIZATION
 
         # Visualize the safety spheres (useful for MPC debugging)
         obstacles_info = self.get_obstacles_info()
@@ -181,16 +86,13 @@ class CustomCtrlAviary(CtrlAviary):
 
 
     def _add_single_cube(self, pos):
-        # Helper to add a single cube and store its ID.
-        #self.obstacle_pos = pos
-        # Robust path finding using os (fixes the 'file not found' error)
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        # Go up two levels to find gym_pybullet_drones if necessary, or adjust relative to project root
-        urdf_path = os.path.join(script_dir, "../gym_pybullet_drones/assets/big_box.urdf")
+        """Helper to add a single dynamic cube and store its ID."""
         
-        # Fallback: if running from root, path might differ. Check existence.
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
+        urdf_path = os.path.join(script_dir, "../gym_pybullet_drones/assets/big_box.urdf")
+
         if not os.path.exists(urdf_path):
-             # Try simpler path if running from root
              urdf_path = "./gym_pybullet_drones/assets/big_box.urdf"
 
         obs_id = p.loadURDF(
@@ -204,7 +106,10 @@ class CustomCtrlAviary(CtrlAviary):
 
         
     def get_obstacles_info(self):
-        """Returns position and radius of all obstacles for the MPC."""
+        """
+        Returns position and radius of all dynamic obstacles for the MPC.
+        This calculates the bounding sphere for collision checking.
+        """
         obstacles_info = []
 
         p.performCollisionDetection(physicsClientId=self.CLIENT)
@@ -213,9 +118,9 @@ class CustomCtrlAviary(CtrlAviary):
             pos, _ = p.getBasePositionAndOrientation(obs_id, physicsClientId=self.CLIENT)
             
             # Get Dimensions to calculate bounding sphere
-            # visual_data = p.getVisualShapeData(obs_id, physicsClientId=self.CLIENT)[0]
             aabb_min, aabb_max = p.getAABB(obs_id, physicsClientId=self.CLIENT)
             extents = np.array(aabb_max) - np.array(aabb_min)
+            
             # Radius is half the diagonal of the bounding box
             r_sphere = 0.5 * np.linalg.norm(extents)
 
@@ -224,11 +129,13 @@ class CustomCtrlAviary(CtrlAviary):
                 'r': float(r_sphere)
             })
             
-        return obstacles_info
+        return obstacles_info        # this is a list of dictionaries with keys 'pos' and 'r'
     
 
     def _draw_obstacle_spheres(self, obstacles_info):
-        """Draws red translucent spheres around obstacles."""
+        """Draws red translucent spheres around obstacles for visual debugging."""
+        
+        # Clear previous spheres if they exist
         for sid in getattr(self, "obstacle_sphere_ids", []):
             p.removeBody(sid, physicsClientId=self.CLIENT)
         self.obstacle_sphere_ids = []
@@ -237,7 +144,7 @@ class CustomCtrlAviary(CtrlAviary):
             vis_id = p.createVisualShape(
                 shapeType=p.GEOM_SPHERE,
                 radius=info['r'],
-                rgbaColor=[1, 0, 0, 0.2],
+                rgbaColor=[1, 0, 0, 0.2], # Red, translucent
                 physicsClientId=self.CLIENT
             )
             body_id = p.createMultiBody(
@@ -257,6 +164,6 @@ class CustomCtrlAviary(CtrlAviary):
     
 
     def step(self, action):
-        """Standard step, but updates visual markers."""
+        """Standard step wrapper."""
         obs, reward, terminated, truncated, info = super().step(action)
         return obs, reward, terminated, truncated, info

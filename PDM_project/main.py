@@ -3,25 +3,30 @@ import time
 import pybullet as p
 from scipy.interpolate import CubicSpline
 
+# PROJECT IMPORTS 
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 from gym_pybullet_drones.utils.Logger import Logger
 from env import CustomCtrlAviary
 from RRT import RRTStar
 from MPC import MPC_control
 
+# HELPER IMPORTS
 import helpers
-from helpers import plot_mpc_solver_stats
-from helpers import plot_rrt_mpc_2d
-from helpers import plot_convex_snapshot_xy
-from helpers import animate_convex_tunnel_xy
-from helpers import plot_convex_frames_grid
+from helpers import (
+    plot_mpc_solver_stats,
+    plot_rrt_mpc_2d,
+    plot_convex_snapshot_xy,
+    animate_convex_tunnel_xy,
+    plot_convex_frames_grid
+)
 
+# HELPER FUNCTION
 
-
-
-
-# Safety check: ensures the spline does not cut into obstacles
 def check_spline_collision(spline, total_time, obstacle_list, dt=0.1):
+    """
+    Safety check: ensures the generated spline trajectory does not 
+    intersect with the ground or any defined obstacles.
+    """
     times = np.arange(0, total_time, dt)
     for t in times:
         pos = spline(t)
@@ -39,16 +44,22 @@ def check_spline_collision(spline, total_time, obstacle_list, dt=0.1):
                 return True
     return False
 
+# MAIN EXECUTION
+
 def main():
 
-    # --- CONFIGURATION ---
+    # 1. CONFIGURATION
+
     drone_model = DroneModel.CF2X
     physics = Physics.PYB
-    control_freq_hz = 48
-    sim_freq_hz = 240
+    control_freq_hz = 48    # Control loop frequency
+    sim_freq_hz = 240       # Simulation frequency 
 
+    # Start and end position 
     start_pos = [0.0, 0.0, 0.1]
     goal_pos = [9.0, 12.0, 0.2]
+
+    # ENVIRONMENT SETUP
 
     # RRT* takes into account the maze walls - Format: [x, y, z, half_x, half_y, half_z]
     maze_walls = [
@@ -57,75 +68,77 @@ def main():
         [-3.0, 6.0, 3.0,  1.5, 7.5, 3.0], # 3. Left Boundary
         [12.0, 6.0, 3.0,  1.5, 7.5, 3.0], # 4. Right Boundary
         [3.0,  3.0, 3.0,  4.5, 1.5, 3.0], # 5. Inner Wall 1
-        [6.0,  9.0, 3.0,  4.5, 1.5, 3.0], # 6. Inner Wall 2'
+        [6.0,  9.0, 3.0,  4.5, 1.5, 3.0], # 6. Inner Wall 2
 
-        [7.0, -1.0, 0.5,  0.5, 0.5, 0.5], # 1. First obstacle
-        [7.0,  0.0, 0.5,  0.5, 0.5, 0.5], # 1. First obstacle
-        [7.0,  0.0, 1.5,  0.5, 0.5, 0.5], # 1. First obstacle
-        [7.0,  1.0, 0.5,  0.5, 0.5, 0.5], # 1. First obstacle
-        [7.0,  1.0, 1.5,  0.5, 0.5, 0.5], # 1. First obstacle
-        [7.0,  1.0, 2.5,  0.5, 0.5, 0.5], # 1. First obstacle
+        # Detailed obstacles for RRT 
+        [7.0, -1.0, 0.5,  0.5, 0.5, 0.5], 
+        [7.0,  0.0, 0.5,  0.5, 0.5, 0.5], 
+        [7.0,  0.0, 1.5,  0.5, 0.5, 0.5], 
+        [7.0,  1.0, 0.5,  0.5, 0.5, 0.5], 
+        [7.0,  1.0, 1.5,  0.5, 0.5, 0.5], 
+        [7.0,  1.0, 2.5,  0.5, 0.5, 0.5], 
 
-        [2.0,  5.0, 2.5,  0.5, 0.5, 0.5], # 2. Second obstacle
-        [2.0,  6.0, 0.5,  0.5, 0.5, 0.5], # 2. Second obstacle
-        [2.0,  6.0, 1.5,  0.5, 0.5, 0.5], # 2. Second obstacle
-        [2.0,  6.0, 2.5,  0.5, 0.5, 0.5], # 2. Second obstacle
-        [2.0,  7.0, 2.5,  0.5, 0.5, 0.5], # 2. Second obstacle
+        [2.0,  5.0, 2.5,  0.5, 0.5, 0.5], 
+        [2.0,  6.0, 0.5,  0.5, 0.5, 0.5], 
+        [2.0,  6.0, 1.5,  0.5, 0.5, 0.5], 
+        [2.0,  6.0, 2.5,  0.5, 0.5, 0.5], 
+        [2.0,  7.0, 2.5,  0.5, 0.5, 0.5], 
 
-        [2.0,  11.0, 0.5,  0.5, 0.5, 0.5], # 3. Third obstacle
-        [2.0,  11.0, 1.5,  0.5, 0.5, 0.5], # 3. Third obstacle
-        [2.0,  12.0, 0.5,  0.5, 0.5, 0.5], # 3. Third obstacle
-        [2.0,  12.0, 1.5,  0.5, 0.5, 0.5], # 3. Third obstacle
-        [2.0,  13.0, 0.5,  0.5, 0.5, 0.5], # 3. Third obstacle
-        [2.0,  13.0, 1.5,  0.5, 0.5, 0.5] # 3. Third obstacle
+        [2.0,  11.0, 0.5,  0.5, 0.5, 0.5], 
+        [2.0,  11.0, 1.5,  0.5, 0.5, 0.5], 
+        [2.0,  12.0, 0.5,  0.5, 0.5, 0.5], 
+        [2.0,  12.0, 1.5,  0.5, 0.5, 0.5], 
+        [2.0,  13.0, 0.5,  0.5, 0.5, 0.5], 
+        [2.0,  13.0, 1.5,  0.5, 0.5, 0.5] 
     ]
-    cube_walls = [
-    [7.0, -1.0, 0.5,  0.5, 0.5, 0.5],
-    [7.0,  0.0, 0.5,  0.5, 0.5, 0.5],
-    [7.0,  0.0, 1.5,  0.5, 0.5, 0.5],
-    [7.0,  1.0, 0.5,  0.5, 0.5, 0.5],
-    [7.0,  1.0, 1.5,  0.5, 0.5, 0.5],
-    [7.0,  1.0, 2.5,  0.5, 0.5, 0.5],
-
-    [2.0,  5.0, 2.5,  0.5, 0.5, 0.5],
-    [2.0,  6.0, 0.5,  0.5, 0.5, 0.5],
-    [2.0,  6.0, 1.5,  0.5, 0.5, 0.5],
-    [2.0,  6.0, 2.5,  0.5, 0.5, 0.5],
-    [2.0,  7.0, 2.5,  0.5, 0.5, 0.5],
-
-    [2.0,  11.0, 0.5,  0.5, 0.5, 0.5],
-    [2.0,  11.0, 1.5,  0.5, 0.5, 0.5],
-    [2.0,  12.0, 0.5,  0.5, 0.5, 0.5],
-    [2.0,  12.0, 1.5,  0.5, 0.5, 0.5],
-    [2.0,  13.0, 0.5,  0.5, 0.5, 0.5],
-    [2.0,  13.0, 1.5,  0.5, 0.5, 0.5],
-]
-    # We add a safety margin (sort of boundig box for walls)
-    SAFETY_MARGIN = 0.4
     
+    # Simplified obstacle list for MPC or other uses
+    cube_walls = [
+        [7.0, -1.0, 0.5,  0.5, 0.5, 0.5],
+        [7.0,  0.0, 0.5,  0.5, 0.5, 0.5],
+        [7.0,  0.0, 1.5,  0.5, 0.5, 0.5],
+        [7.0,  1.0, 0.5,  0.5, 0.5, 0.5],
+        [7.0,  1.0, 1.5,  0.5, 0.5, 0.5],
+        [7.0,  1.0, 2.5,  0.5, 0.5, 0.5],
+
+        [2.0,  5.0, 2.5,  0.5, 0.5, 0.5],
+        [2.0,  6.0, 0.5,  0.5, 0.5, 0.5],
+        [2.0,  6.0, 1.5,  0.5, 0.5, 0.5],
+        [2.0,  6.0, 2.5,  0.5, 0.5, 0.5],
+        [2.0,  7.0, 2.5,  0.5, 0.5, 0.5],
+
+        [2.0,  11.0, 0.5,  0.5, 0.5, 0.5],
+        [2.0,  11.0, 1.5,  0.5, 0.5, 0.5],
+        [2.0,  12.0, 0.5,  0.5, 0.5, 0.5],
+        [2.0,  12.0, 1.5,  0.5, 0.5, 0.5],
+        [2.0,  13.0, 0.5,  0.5, 0.5, 0.5],
+        [2.0,  13.0, 1.5,  0.5, 0.5, 0.5],
+    ]
+
+    # Safety margin setup (sort of Bounding box for walls)
+    SAFETY_MARGIN = 0.4
     rrt_obstacles = []
 
     # Create array of safety bounded walls
     for wall in maze_walls:
         inflated_wall = list(wall)
-
-        # Add margin to x-width and y-width
         inflated_wall[3] += SAFETY_MARGIN  # half_x
         inflated_wall[4] += SAFETY_MARGIN  # half_y
-
         rrt_obstacles.append(inflated_wall)
 
-    # --- PHASE 1: PLANNING (RRT* + SPLINE) ---
+    # 2. PHASE 1: PLANNING (RRT* + SPLINE)
+
     print("Starting Planning...")
     traj_spline = None
     total_time = 0
 
-    # >>> ADDED: keep these so we can plot them later
+    # Data containers for plotting later
     path = None
     new_obstacles = None
-    convex_log = []  # to log convex regions along the path for plotting later
+    convex_log = []  # Log convex regions along the path
 
-    for attempt in range(100):  # Tries many times to find a suitable SPLine
+    # RRT* Execution Loop
+    for attempt in range(100):  
         print(f"Planning Attempt {attempt + 1}...")
 
         rrt = RRTStar(
@@ -155,8 +168,7 @@ def main():
                 unique_path.append(path_candidate[p_idx])
         path_candidate = np.array(unique_path)
 
-        # 2. Select random waypoints for obstacle creation
-        # (NOTE: your code uses 8 obstacles; keep as-is)
+        # 2. Select RANDOM waypoints for obstacle creation
         new_obstacles_idx = np.random.choice(range(1, path_candidate.shape[0] - 3), size=3, replace=False)
         new_obstacles_candidate = path_candidate[new_obstacles_idx]
 
@@ -196,7 +208,7 @@ def main():
             traj_spline = temp_spline
             total_time = total_time_candidate
 
-            # >>> ADDED: keep the winning path/obstacles for plotting later
+            # Store the winning path/obstacles for plotting
             path = path_candidate
             new_obstacles = new_obstacles_candidate
 
@@ -207,12 +219,13 @@ def main():
         print("Failed to find path.")
         return
 
-    # >>> ADDED: sample the spline densely for the final 2D plot
+    # Sample the spline densely for the final 2D plot
     plot_N = 600
     t_plot = np.linspace(0.0, total_time, plot_N)
     spline_samples = np.array([traj_spline(t) for t in t_plot])  # shape (N,3)
 
-    # --- PHASE 2: SIMULATION SETUP ---
+    # 3. PHASE 2: SIMULATION SETUP
+
     env = CustomCtrlAviary(
         drone_model=drone_model,
         num_drones=1,
@@ -266,13 +279,14 @@ def main():
 
     r_drone = env.drone_radius()
 
-    # --- PHASE 3: EXECUTION ---
+    # 4. PHASE 3: EXECUTION LOOP
+
     print(f"Flying. Duration: {total_time:.2f}s")
 
-    # >>> ADDED: store real drone trajectory for final 2D plotting
+    # Store real drone trajectory for final 2D plotting
     drone_traj = []
 
-    # Run loop
+    # Run loop with buffer
     for i in range(int(total_time * control_freq_hz) + 200):
         now = i / control_freq_hz
 
@@ -296,7 +310,8 @@ def main():
                     "z": float(obs[0][2]),
                     "pos": obs[0][0:3].copy()
                 })
-        # >>> ADDED: build reference horizon for corridor constraint (k=0..T)  (ALWAYS)
+        
+        # Build reference horizon for corridor constraint (k=0..T)
         ref_h = np.zeros((3, ctrl.T + 1))
         for k in range(ctrl.T + 1):
             tk = now + k * ctrl.dt           # use MPC dt
@@ -317,17 +332,15 @@ def main():
         # 4. Step environment
         obs, _, _, _, _ = env.step(np.array([action]))
 
-        # Chase camera logic
+        # CAMERA LOGIC 
         drone_pos = obs[0][0:3]
         drone_rpy = obs[0][7:10]  # Roll, Pitch, Yaw
 
-        # >>> ADDED: log position for 2D plot
+        # Log position for 2D plot
         drone_traj.append(drone_pos.copy())
 
-        # Convert Yaw from Radians to Degrees for PyBullet
-        yaw_degrees = np.degrees(drone_rpy[2])
-
         # Update Camera
+        yaw_degrees = np.degrees(drone_rpy[2])
         p.resetDebugVisualizerCamera(
             cameraDistance=2.0,
             cameraYaw=yaw_degrees - 90,
@@ -343,6 +356,8 @@ def main():
         # Sync realtime
         time.sleep(1 / control_freq_hz)
 
+    # 5. POST-PROCESSING & VISUALIZATION
+
     # Close the environment and plot
     env.close()
     logger.save()
@@ -350,7 +365,7 @@ def main():
     plot_mpc_solver_stats(ctrl, save_path="results/solver_stats.png")
 
 
-    # >>> ADDED: produce a dedicated 2D plot (x-y) with altitude shown by color + over/under markers
+    # Produce a 2D plot (x-y) with altitude shown by color + over/under markers
     drone_traj = np.array(drone_traj)  # (T,3)
     plot_rrt_mpc_2d(
         path_xyz=path,                      # discrete RRT path nodes
@@ -389,8 +404,6 @@ def main():
             dpi=120
         )
 
-
-
         # (Optional) Evolution as a grid of frames (no animation backend issues)
         plot_convex_frames_grid(
             drone_traj=drone_traj,
@@ -401,9 +414,6 @@ def main():
             bbox=(-2, 12, -2, 16),
             rows=2, cols=4
         )
-        
-        
-
 
 
 if __name__ == "__main__":
