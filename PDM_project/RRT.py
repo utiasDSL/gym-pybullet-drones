@@ -22,7 +22,7 @@ class RRTStar:
     RRT* (Rapidly-exploring Random Tree Star) Path Planner.
     Finds an optimal path in 3D space avoiding obstacles.
     """
-
+    
     def __init__(self, start, goal, obstacle_list, rand_area, 
                  expand_dis=3.0, goal_sample_rate=20, max_iter=500,
                  search_radius=None): 
@@ -41,13 +41,35 @@ class RRTStar:
         self.max_iter = max_iter
         self.obstacle_list = obstacle_list
         
-        # Search radius logic
-        if search_radius is None:
-            self.search_radius = self.expand_dis * 2.0 
-        else:
-            self.search_radius = search_radius
+        # Store the user's preference, but don't calculate the dynamic one yet
+        self.fixed_search_radius = search_radius
+        self.dim = 3
 
         self.resolution = 0.5   # Resolution for edge collision checking
+
+    # RRT* SEARCH RADIUS (SHRINKING WITH n)
+
+    def current_search_radius(self):
+        """
+        RRT* shrinking radius:
+        r(n) = gamma * (log(n)/n)^(1/d)
+        If the user provided a fixed search_radius, we keep it constant.
+        """
+
+        if self.fixed_search_radius is not None:
+            return self.fixed_search_radius
+
+        n = max(2, len(self.node_list))
+        gamma = 2.0 * self.expand_dis
+
+        r = gamma * ((math.log(n) / n) ** (1.0 / self.dim))
+
+        # Clamp radius to reasonable bounds
+
+        r_min = 0.5 * self.expand_dis
+        r_max = 5.0 * self.expand_dis
+
+        return max(r_min, min(r, r_max))
 
     # MAIN PLANNING LOOP
 
@@ -161,12 +183,15 @@ class RRTStar:
         """
         Find nodes that are within a self.search_radius of new node.
         """
+
+        radius = self.current_search_radius()
+
         neighbors = []
 
         for node in self.node_list:
             dist = np.linalg.norm([node.x - new_node.x, node.y - new_node.y, node.z - new_node.z])
 
-            if dist < self.search_radius:
+            if dist < radius:
                 neighbors.append(node)
         return neighbors
     
