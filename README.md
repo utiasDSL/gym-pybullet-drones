@@ -3,7 +3,7 @@
 >
 > For GPU-accelerated, **differentiable, JAX-based simulation**, also try [`crazyflow`](https://github.com/utiasDSL/crazyflow)
 >
-> For production-grade deployment of **ROS2, PX4/ArduPilot, YOLO/LiDAR perception**, use [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack)
+> For production-grade deployment of **ROS2 + PX4/ArduPilot + YOLO/LiDAR**, use [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack)
 
 # gym-pybullet-drones
 
