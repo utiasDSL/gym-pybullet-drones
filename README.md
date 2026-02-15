@@ -66,15 +66,6 @@ cd gym-pybullet-drones/
 pytest tests/
 ```
 
-### utiasDSL `pycffirmware` Python Bindings example (multiplatform, single-drone)
-
-Install [`pycffirmware`](https://github.com/utiasDSL/pycffirmware?tab=readme-ov-file#installation) for Ubuntu, macOS, or Windows
-
-```sh
-cd gym_pybullet_drones/examples/
-python3 cff-dsl.py
-```
-
 ### Betaflight SITL example (Ubuntu only)
 
 ```sh
@@ -93,6 +84,15 @@ In another terminal, run the example
 conda activate drones
 cd gym_pybullet_drones/examples/
 python3 beta.py --num_drones 1 # check the steps in the file's docstrings to use multiple drones
+```
+
+### utiasDSL `pycffirmware` Python Bindings example (multiplatform, single-drone)
+
+First, install [`pycffirmware`](https://github.com/utiasDSL/pycffirmware?tab=readme-ov-file#installation) for Ubuntu, macOS, or Windows, then
+
+```sh
+cd gym_pybullet_drones/examples/
+python3 cf.py
 ```
 
 ## Citation
