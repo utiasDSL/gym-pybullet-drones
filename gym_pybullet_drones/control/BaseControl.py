@@ -206,7 +206,7 @@ class BaseControl(object):
             return float(URDF_TREE[1][0][1].attrib['value'])
         elif parameter_name in ['ixx', 'iyy', 'izz']:
             return float(URDF_TREE[1][0][2].attrib[parameter_name])
-        elif parameter_name in ['arm', 'thrust2weight', 'kf', 'km', 'max_speed_kmh', 'gnd_eff_coeff' 'prop_radius', \
+        elif parameter_name in ['arm', 'thrust2weight', 'kf', 'km', 'max_speed_kmh', 'gnd_eff_coeff', 'prop_radius', \
                                 'drag_coeff_xy', 'drag_coeff_z', 'dw_coeff_1', 'dw_coeff_2', 'dw_coeff_3']:
             return float(URDF_TREE[0].attrib[parameter_name])
         elif parameter_name in ['length', 'radius']:
