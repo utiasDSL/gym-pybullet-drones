@@ -277,9 +277,9 @@ class DSLPIDControl(BaseControl):
 
         """
         DIM = len(np.array(thrust))
-        pwm = np.clip((np.sqrt(np.array(thrust)/(self.KF*(4/DIM)))-self.PWM2RPM_CONST)/self.PWM2RPM_SCALE, self.MIN_PWM, self.MAX_PWM)
+        pwm = np.clip((np.sqrt(np.array(thrust)/(self.KF*(4//DIM)))-self.PWM2RPM_CONST)/self.PWM2RPM_SCALE, self.MIN_PWM, self.MAX_PWM)
         if DIM in [1, 4]:
-            return np.repeat(pwm, 4/DIM)
+            return np.repeat(pwm, 4//DIM)
         elif DIM==2:
             return np.hstack([pwm, np.flip(pwm)])
         else:
