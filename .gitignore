@@ -10,6 +10,9 @@ tmp/
 # Learning results
 experiments/learning/results/save-*
 
+# Replay logs
+logs_playback/
+
 # Betaflight
 betaflight_sitl/
 
