@@ -227,7 +227,7 @@ class BaseAviary(gym.Env):
         seed : int, optional
             Random seed.
         options : dict[..], optional
-            Additinonal options, unused
+            Additional options, unused
 
         Returns
         -------
@@ -240,7 +240,7 @@ class BaseAviary(gym.Env):
 
         """
 
-        # TODO : initialize random number generator with seed
+        super().reset(seed=seed, options=options)
 
         p.resetSimulation(physicsClientId=self.CLIENT)
         #### Housekeeping ##########################################
@@ -282,7 +282,7 @@ class BaseAviary(gym.Env):
             Whether the current episode is truncated, check the specific implementation of `_computeTruncated()`
             in each subclass for its format.
         bool | dict[..]
-            Whether the current episode is trunacted, always false.
+            Whether the current episode is truncated, always false.
         dict[..]
             Additional information as a dictionary, check the specific implementation of `_computeInfo()`
             in each subclass for its format.
