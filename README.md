@@ -15,7 +15,7 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 
 ## Installation
 
-Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 14.1.
+Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 26.2.
 
 ```sh
 git clone https://github.com/utiasDSL/gym-pybullet-drones.git
