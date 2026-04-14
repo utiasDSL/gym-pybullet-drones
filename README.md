@@ -24,7 +24,6 @@ cd gym-pybullet-drones/
 conda create -n drones python=3.10
 conda activate drones
 
-pip3 install --upgrade pip
 pip3 install -e . # if needed, `sudo apt install build-essential` to install `gcc` and build `pybullet`
 
 # check installed packages with `conda list`, deactivate with `conda deactivate`, remove with `conda remove -n drones --all`
@@ -53,6 +52,7 @@ python3 downwash.py
 cd gym_pybullet_drones/examples/
 python learn.py # task: single drone hover at z == 1.0
 python learn.py --multiagent true # task: 2-drone hover at z == 1.2 and 0.7
+
 LATEST_MODEL=$(ls -t results | head -n 1) && python play.py --model_path "results/${LATEST_MODEL}/best_model.zip" # play and visualize the most recent learned policy after training
 ```
 

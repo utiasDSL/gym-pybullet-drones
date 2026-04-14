@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gym-pybullet-drones"
-version = "2.0.0"
+version = "2.1.0"
 description = "PyBullet Gym environments for single and multi-agent reinforcement learning of quadcopter control"
 authors = ["Jacopo Panerati <jacopo.panerati@utoronto.ca>"]
 license = "MIT"
@@ -13,14 +13,14 @@ packages = [
 [tool.poetry.dependencies]
 python = "^3.10"
 numpy = "^2.2"
-scipy = "^1.10"
-transforms3d = "^0.4.1"
-matplotlib = "^3.7"
-pytest = ">=7.3,<10.0"
-pybullet = "^3.2.5"
-gymnasium = "~=1.2"
-stable-baselines3 = "^2.0.0"
+scipy = "^1.15"
+transforms3d = "^0.4"
+matplotlib = "^3.10"
+pybullet = "^3.2.7"
+gymnasium = "^1.2"
+stable-baselines3 = "^2.8"
 control = "^0.10.2"
+pytest = "^9.0"
 
 [tool.poetry.dev-dependencies]
 
