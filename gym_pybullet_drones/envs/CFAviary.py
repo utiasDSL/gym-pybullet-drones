@@ -9,8 +9,8 @@ from gym_pybullet_drones.envs.BaseAviary import BaseAviary
 from gym_pybullet_drones.utils.enums import DroneModel, Physics
 try:
     import pycffirmware as firm 
-except ImportError:
-    raise "PyCFFirmware required for CF Aviary. Please install it from https://github.com/learnsyslab/pycffirmware or use a different aviary class."
+except ImportError as e:
+    raise ImportError("PyCFFirmware required for CF Aviary. Please install it from https://github.com/learnsyslab/pycffirmware or use a different aviary class.") from e
 
 
 class CFAviary(BaseAviary):
