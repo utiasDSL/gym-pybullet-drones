@@ -86,7 +86,7 @@ cd gym_pybullet_drones/examples/
 python3 beta.py --num_drones 1 # check the steps in the file's docstrings to use multiple drones
 ```
 
-### learnsyslab `pycffirmware` Python Bindings example (multiplatform, single-drone)
+### `pycffirmware` Python Bindings example (multiplatform, single-drone)
 
 First, install [`pycffirmware`](https://github.com/learnsyslab/pycffirmware?tab=readme-ov-file#installation) for Ubuntu, macOS, or Windows, then
 
@@ -126,7 +126,7 @@ If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
 
 -----
-> University of Toronto / [Learning Systems and Robotics Lab](https://github.com/learnsyslab) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
+> UTIAS / [Learning Systems and Robotics Lab](https://github.com/learnsyslab) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
 
 <!--
 ## WIP/Desired Contributions/PRs
