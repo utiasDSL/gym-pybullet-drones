@@ -1,7 +1,7 @@
 > [!TIP]
-> For research work with **symbolic dynamics and constraints**, also try [`safe-control-gym`](https://github.com/utiasDSL/safe-control-gym)
+> For research work with **symbolic dynamics and constraints**, also try [`safe-control-gym`](https://github.com/learnsyslab/safe-control-gym)
 >
-> For GPU-accelerated, **differentiable, JAX-based simulation**, also try [`crazyflow`](https://github.com/utiasDSL/crazyflow)
+> For GPU-accelerated, **differentiable, JAX-based simulation**, also try [`crazyflow`](https://github.com/learnsyslab/crazyflow)
 >
 > For production-grade deployment of **ROS2 + PX4/ArduPilot + YOLO/LiDAR**, use [`aerial-autonomy-stack`](https://github.com/JacopoPan/aerial-autonomy-stack)
 
@@ -18,7 +18,7 @@ This is a minimalist refactoring of the original `gym-pybullet-drones` repositor
 Tested on Intel x64/Ubuntu 22.04 and Apple Silicon/macOS 26.2.
 
 ```sh
-git clone https://github.com/utiasDSL/gym-pybullet-drones.git
+git clone https://github.com/learnsyslab/gym-pybullet-drones.git
 cd gym-pybullet-drones/
 
 conda create -n drones python=3.10
@@ -86,9 +86,9 @@ cd gym_pybullet_drones/examples/
 python3 beta.py --num_drones 1 # check the steps in the file's docstrings to use multiple drones
 ```
 
-### utiasDSL `pycffirmware` Python Bindings example (multiplatform, single-drone)
+### `pycffirmware` Python Bindings example (multiplatform, single-drone)
 
-First, install [`pycffirmware`](https://github.com/utiasDSL/pycffirmware?tab=readme-ov-file#installation) for Ubuntu, macOS, or Windows, then
+First, install [`pycffirmware`](https://github.com/learnsyslab/pycffirmware?tab=readme-ov-file#installation) for Ubuntu, macOS, or Windows, then
 
 ```sh
 cd gym_pybullet_drones/examples/
@@ -97,7 +97,7 @@ python3 cf.py
 
 ## Citation
 
-If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142) ([and original codebase](https://github.com/utiasDSL/gym-pybullet-drones/tree/paper)) as
+If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142) ([and original codebase](https://github.com/learnsyslab/gym-pybullet-drones/tree/paper)) as
 
 ```bibtex
 @INPROCEEDINGS{panerati2021learning,
@@ -126,7 +126,7 @@ If you wish, please cite our [IROS 2021 paper](https://arxiv.org/abs/2103.02142)
 - Yunlong Song, Selim Naji, Elia Kaufmann, Antonio Loquercio, and Davide Scaramuzza (2020) [*Flightmare: A Flexible Quadrotor Simulator*](https://arxiv.org/pdf/2009.00563.pdf)
 
 -----
-> University of Toronto's [Dynamic Systems Lab](https://github.com/utiasDSL) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
+> UTIAS / [Learning Systems and Robotics Lab](https://github.com/learnsyslab) / [Vector Institute](https://github.com/VectorInstitute) / University of Cambridge's [Prorok Lab](https://github.com/proroklab)
 
 <!--
 ## WIP/Desired Contributions/PRs
