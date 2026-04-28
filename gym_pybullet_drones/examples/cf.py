@@ -2,7 +2,7 @@
 
 Setup
 -----
-Step 1: Clone pycffirmware from https://github.com/utiasDSL/pycffirmware
+Step 1: Clone pycffirmware from https://github.com/learnsyslab/pycffirmware
 Step 2: Follow the install instructions for pycffirmware in its README 
 
 Example

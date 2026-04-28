@@ -5,7 +5,7 @@ description = "PyBullet Gym environments for single and multi-agent reinforcemen
 authors = ["Jacopo Panerati <jacopo.panerati@utoronto.ca>"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/utiasDSL/gym-pybullet-drones"
+repository = "https://github.com/learnsyslab/gym-pybullet-drones"
 packages = [
     { include = "gym_pybullet_drones" }
 ]
