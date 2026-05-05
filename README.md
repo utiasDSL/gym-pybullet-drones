@@ -9,7 +9,7 @@
 
 This is a minimalist refactoring of the original `gym-pybullet-drones` repository, designed for compatibility with [`gymnasium`](https://github.com/Farama-Foundation/Gymnasium), [`stable-baselines3` 2.0](https://github.com/DLR-RM/stable-baselines3/pull/1327), and [`betaflight`](https://github.com/betaflight/betaflight)/[`crazyflie-firmware`](https://github.com/bitcraze/crazyflie-firmware/) SITL.
 
-> **NEWS**: `gym-pybullet-drones` was featured in [GitHub's Maintainer Month 2026](https://maintainermonth.github.com/academia/gym-pybullet-drones-maintainer-spotlight)
+> **NEWS**: `gym-pybullet-drones` was featured in [GitHub's Maintainer Spotlight 2026](https://maintainermonth.github.com/academia/gym-pybullet-drones-maintainer-spotlight)
 
 > **NOTE**: if you want to access the original codebase, presented at IROS in 2021, please `git checkout [paper|master]`
 
