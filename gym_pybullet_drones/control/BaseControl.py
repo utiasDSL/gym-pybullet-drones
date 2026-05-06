@@ -1,4 +1,3 @@
-import os
 import numpy as np
 import xml.etree.ElementTree as etxml
 import pkg_resources

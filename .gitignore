@@ -10,6 +10,9 @@ tmp/
 # Learning results
 experiments/learning/results/save-*
 
+# Replay logs
+logs_playback/
+
 # Betaflight
 betaflight_sitl/
 
@@ -69,6 +72,9 @@ coverage.xml
 *.py,cover
 .hypothesis/
 .pytest_cache/
+
+# Ruff cache
+.ruff_cache/
 
 # Translations
 *.mo
