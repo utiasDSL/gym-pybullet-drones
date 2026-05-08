@@ -134,7 +134,7 @@ def run(
                                                     target_pos=target["pos"]+[INIT_XYZ[j][0], INIT_XYZ[j][1], 0],
                                                     target_vel=target["vel"]
                                                     )
-                except:
+                except Exception:
                     break
         
 

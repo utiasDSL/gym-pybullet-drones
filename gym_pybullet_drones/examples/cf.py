@@ -95,7 +95,7 @@ def run(
                 yaw = i*np.pi/delta/2
                 rpy_rate = np.zeros(3)
                 env.sendFullStateCmd(pos, vel, acc, yaw, rpy_rate, t)
-            except:
+            except Exception:
                 break
 
         #### Log the simulation ####################################
