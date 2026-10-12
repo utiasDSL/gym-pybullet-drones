@@ -168,8 +168,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                     timestamp=i/test_env.CTRL_FREQ,
                     state=np.hstack([obs2[0:3],
                                         np.zeros(4),
-                                        obs2[3:15],
-                                        act2
+                                        obs2[3:12],
+                                        np.resize(act2, 4)
                                         ]),
                     control=np.zeros(12)
                     )
@@ -179,8 +179,8 @@ def run(multiagent=DEFAULT_MA, output_folder=DEFAULT_OUTPUT_FOLDER, gui=DEFAULT_
                         timestamp=i/test_env.CTRL_FREQ,
                         state=np.hstack([obs2[d][0:3],
                                             np.zeros(4),
-                                            obs2[d][3:15],
-                                            act2[d]
+                                            obs2[d][3:12],
+                                            np.resize(act2[d], 4)
                                             ]),
                         control=np.zeros(12)
                         )
