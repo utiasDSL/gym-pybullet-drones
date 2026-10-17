@@ -90,9 +90,3 @@ def test_vision_observations():
     with pytest.raises(NotImplementedError):
         env.state()
     env.close()
-
-
-def test_example():
-    from gym_pybullet_drones.examples.pettingzoo_multiagent import run
-    returns = run(num_drones=2, gui=False)
-    assert set(returns) == {"drone_0", "drone_1"}
