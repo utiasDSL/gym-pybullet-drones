@@ -13,3 +13,7 @@ def test_downwash():
 def test_learn():
     from gym_pybullet_drones.examples.learn import run
     run(gui=False, plot=False, output_folder='tmp', local=False)
+
+def test_pettingzoo_multiagent():
+    from gym_pybullet_drones.examples.pettingzoo_multiagent import run
+    run(gui=False, plot=False, output_folder='tmp', local=False)
